@@ -1,5 +1,6 @@
 ---
 title: Java HashMap — how it works inside
+nav: HashMap
 slug: java-hashmap
 summary: Buckets, hash codes, collisions, treeification, resizing and the hashCode()/equals() contract — with animations you can replay and interview questions with sample answers.
 tags: [Java, Collections, Data structures]

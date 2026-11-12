@@ -1,5 +1,6 @@
 ---
 title: Design patterns — common solutions with Java and Spring examples
+nav: Design patterns
 slug: design-patterns
 summary: What design patterns are, the creational, structural and behavioural patterns interviewers ask about, where you already use them in the JDK and Spring, the enterprise patterns, and the anti-patterns to avoid, with interview questions.
 tags: [Design patterns, OOP, Java, Spring]

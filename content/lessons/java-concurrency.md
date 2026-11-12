@@ -1,5 +1,6 @@
 ---
 title: Java concurrency — threads, locks, executors and virtual threads
+nav: Concurrency
 slug: java-concurrency
 summary: How threads share data safely: race conditions, deadlocks, synchronized and locks, atomics, thread pools, CompletableFuture, concurrent collections and virtual threads, with animations and interview questions.
 tags: [Java, Concurrency, Threads]
