@@ -1,4 +1,5 @@
 import { JavaTimeline } from './JavaTimeline.jsx';
+import { MemoryWalk } from './MemoryWalk.jsx';
 import { Playground } from './Playground.jsx';
 
 const FRUITS = ['apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 'grape', 'kiwi', 'lemon', 'mango', 'nectarine', 'orange', 'papaya'];
@@ -121,7 +122,7 @@ const DEMOS = {
 };
 
 // demos that are not HashMap simulations plug in here
-const CUSTOM = { 'java-timeline': JavaTimeline };
+const CUSTOM = { 'java-timeline': JavaTimeline, 'memory-walk': MemoryWalk };
 
 export function DemoFrame({ name }) {
   const Custom = CUSTOM[name];
