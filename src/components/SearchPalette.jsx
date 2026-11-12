@@ -46,20 +46,22 @@ export function SearchPalette({ open, onClose }) {
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={onKey}
       >
-        <div className="flex items-center gap-2 border-b border-rule px-4">
-          <span aria-hidden="true">🔎</span>
-          <input
-            ref={input}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            role="combobox"
-            aria-expanded="true"
-            aria-controls="search-results"
-            aria-activedescendant={results[sel] ? `sr-${sel}` : undefined}
-            placeholder="Search lessons, interview questions, terms…"
-            className="flex-1 py-3 bg-transparent text-lg outline-none"
-          />
-          <span className="kbd">Esc</span>
+        <div className="p-3 border-b border-rule">
+          <div className="palette-field flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3">
+            <span aria-hidden="true">🔎</span>
+            <input
+              ref={input}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              role="combobox"
+              aria-expanded="true"
+              aria-controls="search-results"
+              aria-activedescendant={results[sel] ? `sr-${sel}` : undefined}
+              placeholder="Search lessons, interview questions, terms…"
+              className="palette-input flex-1 min-w-0 py-2.5 bg-transparent text-lg"
+            />
+            <span className="kbd">Esc</span>
+          </div>
         </div>
         <ul id="search-results" role="listbox" className="max-h-[60vh] overflow-y-auto list-none m-0 p-1">
           {q && !results.length && <li className="px-4 py-6 text-soft">Nothing found for “{q}”.</li>}

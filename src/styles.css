@@ -629,6 +629,20 @@ mark.reading-word {
   background: #fff;
   color: var(--color-soft);
 }
+/* search box: the focus ring belongs to the whole field (inside the dialog's padding), not the bare input */
+.palette-input:focus-visible,
+.palette-input:focus {
+  outline: none;
+}
+.palette-field {
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.palette-field:focus-within {
+  border-color: var(--color-pen);
+  box-shadow: 0 0 0 3px var(--color-pen-soft);
+}
 .skip-link {
   position: absolute;
   left: -999px;
