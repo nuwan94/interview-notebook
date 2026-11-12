@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { lessons, topicTree } from '../lib/content.js';
 import { glossary } from '../lib/glossary.js';
 import { Holes } from '../components/Holes.jsx';
+import { OpenToWorkSeal } from '../components/OpenToWorkSeal.jsx';
 
 /** Lessons grouped under their (nested) topic headings. */
 function TopicContents({ node, depth }) {
@@ -42,6 +43,7 @@ export function Home() {
   return (
     <div className="paper prose-nb">
       <Holes />
+      <OpenToWorkSeal />
       <h1 className="font-hand font-bold text-[2.4rem] m-0" style={{ lineHeight: 'calc(var(--lh) * 2)' }}>
         Interview Notebook
       </h1>
