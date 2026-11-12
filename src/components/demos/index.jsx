@@ -2,7 +2,7 @@ import { JavaTimeline } from './JavaTimeline.jsx';
 import { ConcurrencyWalk } from './ConcurrencyWalk.jsx';
 import { GcWalk } from './GcWalk.jsx';
 import { MemoryWalk } from './MemoryWalk.jsx';
-import { PatternsWalk, SolidWalk } from './DesignWalk.jsx';
+import { CryptoWalk, PatternsWalk, SolidWalk } from './DesignWalk.jsx';
 import { OopWalk } from './OopWalk.jsx';
 import { Playground } from './Playground.jsx';
 
@@ -126,7 +126,7 @@ const DEMOS = {
 };
 
 // demos that are not HashMap simulations plug in here
-const CUSTOM = { 'java-timeline': JavaTimeline, 'memory-walk': MemoryWalk, 'gc-walk': GcWalk, 'concurrency-walk': ConcurrencyWalk, 'oop-walk': OopWalk, 'solid-walk': SolidWalk, 'patterns-walk': PatternsWalk };
+const CUSTOM = { 'java-timeline': JavaTimeline, 'memory-walk': MemoryWalk, 'gc-walk': GcWalk, 'concurrency-walk': ConcurrencyWalk, 'oop-walk': OopWalk, 'solid-walk': SolidWalk, 'patterns-walk': PatternsWalk, 'crypto-walk': CryptoWalk };
 
 export function DemoFrame({ name }) {
   const Custom = CUSTOM[name];

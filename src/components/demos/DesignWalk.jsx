@@ -3,6 +3,7 @@ import { useReducedMotion } from '../../lib/prefs.jsx';
 import { Glossed } from '../Term.jsx';
 import { usePlayer, useOnceVisible } from './usePlayer.js';
 import { SOLID_SCENES, PATTERN_SCENES } from './designScenes.js';
+import { CRYPTO_SCENES } from './cryptoScenes.js';
 
 const TONE = {
   ok: { border: '2px solid var(--color-ok)', background: 'var(--color-ok-soft)', badge: 'var(--color-ok)' },
@@ -13,7 +14,7 @@ const TONE = {
 };
 const DEP_COLOR = { ok: 'var(--color-ok)', bad: 'var(--color-bad)', none: 'var(--color-soft)' };
 
-function Walk({ scenes, ariaLabel }) {
+export function Walk({ scenes, ariaLabel }) {
   const reduced = useReducedMotion();
   const rootRef = useRef(null);
   const [sceneId, setSceneId] = useState(scenes[0].id);
@@ -120,3 +121,4 @@ function Walk({ scenes, ariaLabel }) {
 
 export const SolidWalk = () => <Walk scenes={SOLID_SCENES} ariaLabel="SOLID principles walk-through" />;
 export const PatternsWalk = () => <Walk scenes={PATTERN_SCENES} ariaLabel="Design patterns walk-through" />;
+export const CryptoWalk = () => <Walk scenes={CRYPTO_SCENES} ariaLabel="Encryption walk-through" />;
