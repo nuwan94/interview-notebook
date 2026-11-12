@@ -12,6 +12,7 @@ import { SECURITY_SCENES } from './securityScenes.js';
 import { MICROSERVICE_SCENES } from './microserviceScenes.js';
 import { SAGA_SCENES } from './sagaScenes.js';
 import { SCHEDULER_SCENES } from './schedulerScenes.js';
+import { MESSAGING_SCENES } from './messagingScenes.js';
 
 const TONE = {
   ok: { border: '2px solid var(--color-ok)', background: 'var(--color-ok-soft)', badge: 'var(--color-ok)' },
@@ -25,7 +26,7 @@ const DEP_COLOR = { ok: 'var(--color-ok)', bad: 'var(--color-bad)', none: 'var(-
 // Icon for an actor or an item, picked from its name. First match wins; null means "no icon".
 const ICONS = [
   [/attacker|mallory|eve\b|thief|malicious/i, '🕵️'],
-  [/alice|bob|carol|user|owner/i, '🧑'],
+  [/alice|bob|carol|user|owner|engineer|operator/i, '🧑'],
   [/browser/i, '🌐'],
   [/job|batch|daemon/i, '⚙️'],
   [/client|app\b|job|mobile/i, '📱'],
@@ -33,7 +34,7 @@ const ICONS = [
   [/session store|store\b|database|db\b/i, '🗄️'],
   [/lock table|lease/i, '🔐'],
   [/task table|task database|coordination store/i, '🗄️'],
-  [/worker|instance/i, '🖥️'],
+  [/worker|instance|consumer|producer|publisher|subscriber/i, '🖥️'],
   [/policy/i, '📋'],
   [/orchestrator/i, '🎼'],
   [/registry|discovery/i, '📇'],
@@ -216,3 +217,4 @@ export const SecurityWalk = () => <Walk scenes={SECURITY_SCENES} ariaLabel="Spri
 export const MicroserviceWalk = () => <Walk scenes={MICROSERVICE_SCENES} icons ariaLabel="Microservice patterns walk-through" />;
 export const SagaWalk = () => <Walk scenes={SAGA_SCENES} icons ariaLabel="Saga pattern walk-through" />;
 export const SchedulerWalk = () => <Walk scenes={SCHEDULER_SCENES} icons ariaLabel="Distributed scheduler walk-through" />;
+export const MessagingWalk = () => <Walk scenes={MESSAGING_SCENES} icons ariaLabel="Messaging walk-through" />;
