@@ -94,7 +94,7 @@ Java went from a browser curiosity to the standard enterprise platform. The lang
 **September 2004** (codename Tiger). The largest language update before Java 8.
 
 - **Language:** **generics** (implemented with type erasure so old code keeps working), **annotations**, **enums**, **autoboxing and unboxing**, the enhanced `for` loop, varargs, static imports, `@Override`.
-- **Concurrency:** **`java.util.concurrent`** (JSR 166): thread pools (`ExecutorService`), `Future`, locks, atomic classes, `ConcurrentHashMap`, blocking queues. The **Java Memory Model** was rewritten (JSR 133), finally giving `volatile` and `synchronized` a precise meaning.
+- **Concurrency:** **[`java.util.concurrent`](lesson:java-concurrency#executors)** (JSR 166): thread pools (`ExecutorService`), `Future`, locks, atomic classes, `ConcurrentHashMap`, blocking queues. The **Java Memory Model** was rewritten (JSR 133), finally giving `volatile` and `synchronized` a precise meaning (see [happens-before](lesson:java-memory-model#happens-before)).
 - **Libraries:** `StringBuilder`, `printf`/`Formatter`, `Scanner`, `ProcessBuilder`, JMX monitoring, the `java.lang.instrument` agent API.
 
 ### Java 6 {#java-6}
@@ -110,8 +110,8 @@ Java went from a browser curiosity to the standard enterprise platform. The lang
 **July 2011** (Dolphin), the first Oracle release, after five years.
 
 - **Language (Project Coin):** the **diamond operator** `<>`, **try-with-resources**, strings in `switch`, multi-catch, binary literals and underscores in numbers (`1_000_000`).
-- **Libraries:** **NIO.2** (`Path`, `Files`, `WatchService`), the **Fork/Join** framework, `java.util.Objects`, `AutoCloseable`, `Phaser`, `ThreadLocalRandom`.
-- **JVM and GC:** `invokedynamic` (JSR 292, the foundation for lambdas and dynamic languages), the **[G1 collector](lesson:garbage-collector#g1)** supported from update 7u4, interned strings moved from the permanent generation to the heap.
+- **Libraries:** **NIO.2** (`Path`, `Files`, `WatchService`), the **[Fork/Join](lesson:java-concurrency#fork-join)** framework, `java.util.Objects`, `AutoCloseable`, `Phaser`, `ThreadLocalRandom`.
+- **JVM and GC:** `invokedynamic` (JSR 292, the foundation for lambdas and dynamic languages), the **[G1 collector](lesson:garbage-collector#g1)** supported from update 7u4, [interned strings moved from the permanent generation to the heap](lesson:java-memory-model#pool-location).
 - **Security and hashing:** update 7u6 added optional alternative String hashing to defend `HashMap` against collision attacks (see [hash flooding](lesson:java-hashmap#q-hash-flooding)).
 - **Support:** public updates ended in April 2015.
 
@@ -122,7 +122,7 @@ Java went from a browser curiosity to the standard enterprise platform. The lang
 **March 2014 · LTS.** The release that changed how Java is written, and still the most widely deployed old version.
 
 - **Language:** **lambda expressions** and **method references** (JSR 335), **functional interfaces**, **default and static methods in interfaces**, repeating annotations and type annotations.
-- **Libraries:** the **Stream API**, `Optional`, the new date/time API `java.time` (JSR 310), `CompletableFuture`, `StampedLock`, `LongAdder`, `Base64`, `String.join`, new `Map` methods (`computeIfAbsent`, `merge`, `getOrDefault`, `forEach`), `Arrays.parallelSort`, reflection on parameter names (`-parameters`).
+- **Libraries:** the **Stream API**, `Optional`, the new date/time API `java.time` (JSR 310), [`CompletableFuture`](lesson:java-concurrency#futures), `StampedLock`, [`LongAdder`](lesson:java-concurrency#atomics), `Base64`, `String.join`, new `Map` methods (`computeIfAbsent`, `merge`, `getOrDefault`, `forEach`), `Arrays.parallelSort`, reflection on parameter names (`-parameters`).
 - **JVM and GC:** the permanent generation is removed and class metadata moves to native memory: **[Metaspace](lesson:garbage-collector#metaspace)** (JEP 122). G1 string deduplication arrives in update 8u20. `HashMap` buckets can become trees (JEP 180, see [treeification](lesson:java-hashmap#treeify)).
 - **Tools:** the **Nashorn** JavaScript engine (JEP 174), compact profiles for small devices, JavaFX bundled with the JDK.
 
@@ -132,7 +132,7 @@ Java went from a browser curiosity to the standard enterprise platform. The lang
 
 - **Language:** the **module system** (Project Jigsaw, JPMS, JEP 261), private interface methods, effectively-final variables allowed directly in try-with-resources, diamond with anonymous classes.
 - **Libraries:** `List.of`, `Set.of`, `Map.of` (JEP 269), stream additions (`takeWhile`, `dropWhile`, `iterate` with a predicate, `ofNullable`), `Optional.ifPresentOrElse`, the Flow API for reactive streams (JEP 266), the Process API (JEP 102), the stack-walking API, variable handles, an HTTP/2 client as an incubator module (JEP 110).
-- **JVM and GC:** **[G1 becomes the default collector](lesson:garbage-collector#g1)** (JEP 248) on server-class machines; **compact strings** store Latin-1 text in one byte per character (JEP 254); unified JVM logging (`-Xlog`); multi-release JARs.
+- **JVM and GC:** **[G1 becomes the default collector](lesson:garbage-collector#g1)** (JEP 248) on server-class machines; **[compact strings](lesson:java-memory-model#string-storage)** store Latin-1 text in one byte per character (JEP 254); unified JVM logging (`-Xlog`); multi-release JARs.
 - **Tools:** **JShell** (the REPL, JEP 222), `jlink` to build a trimmed runtime image.
 - **Deprecated:** the Applet API (JEP 289), the **[CMS collector](lesson:garbage-collector#cms)** (JEP 291), `Object.finalize()`.
 
@@ -231,7 +231,7 @@ Most of this stretch is Project Amber delivering small language features through
 
 **September 2022.**
 
-- **Concurrency:** **virtual threads** as a preview (JEP 425), **structured concurrency** as an incubator (JEP 428).
+- **Concurrency:** **[virtual threads](lesson:java-concurrency#virtual-threads-basics)** as a preview (JEP 425), **structured concurrency** as an incubator (JEP 428).
 - **Language:** **record patterns** as a preview (JEP 405), third preview of `switch` patterns.
 - **Native interop:** the Foreign Function and Memory API as a preview (JEP 424).
 - **Platforms:** a Linux/RISC-V port.
@@ -247,7 +247,7 @@ Most of this stretch is Project Amber delivering small language features through
 
 **September 2023 · LTS.** The biggest LTS since 8.
 
-- **Concurrency:** **virtual threads are final** (JEP 444): millions of cheap threads for blocking-style code (Project Loom).
+- **Concurrency:** **[virtual threads are final](lesson:java-concurrency#virtual-threads-basics)** (JEP 444): millions of cheap threads for blocking-style code (Project Loom).
 - **Language:** **pattern matching for `switch` is final** (JEP 441) and **record patterns are final** (JEP 440). Previews: string templates (JEP 430), unnamed patterns and variables (JEP 443), unnamed classes and instance `main` (JEP 445).
 - **Libraries:** **sequenced collections** (JEP 431): `SequencedCollection`, `SequencedSet` and `SequencedMap` add `getFirst()`, `getLast()` and `reversed()` to `List`, `Deque`, `LinkedHashMap` and friends. Key encapsulation (KEM) API (JEP 452).
 - **JVM and GC:** **[generational ZGC](lesson:garbage-collector#generational-zgc)** (JEP 439, opt-in).
@@ -279,7 +279,7 @@ Most of this stretch is Project Amber delivering small language features through
 **March 2025.**
 
 - **Libraries:** **Stream Gatherers are final** (JEP 485), the **Class-File API is final** (JEP 484).
-- **Concurrency:** virtual threads can synchronise without pinning their carrier thread (JEP 491).
+- **Concurrency:** virtual threads can synchronise without [pinning](lesson:java-concurrency#q-pinning) their carrier thread (JEP 491).
 - **JVM and GC:** **[compact object headers](lesson:garbage-collector#compact-object-headers)** (experimental, JEP 450, from Project Lilliput), generational Shenandoah (experimental, JEP 404), the non-generational mode of ZGC is removed (JEP 490), ahead-of-time class loading and linking for faster startup (JEP 483, from Project Leyden).
 - **Security:** quantum-resistant ML-KEM and ML-DSA (JEP 496 and 497); the **Security Manager is permanently disabled** (JEP 486).
 - **Warnings:** use of `sun.misc.Unsafe` memory access (JEP 498) and JNI (JEP 472) starts to warn.
@@ -289,7 +289,7 @@ Most of this stretch is Project Amber delivering small language features through
 
 **September 2025 · LTS.**
 
-- **Language:** **scoped values are final** (JEP 506), **module import declarations** (`import module java.base;`, JEP 511), **compact source files and instance `main` methods** so a first program is `void main() { ... }` (JEP 512), **flexible constructor bodies** that allow statements before `super(...)` (JEP 513).
+- **Language:** **[scoped values are final](lesson:java-concurrency#structured)** (JEP 506), **module import declarations** (`import module java.base;`, JEP 511), **compact source files and instance `main` methods** so a first program is `void main() { ... }` (JEP 512), **flexible constructor bodies** that allow statements before `super(...)` (JEP 513).
 - **JVM and GC:** **[compact object headers](lesson:garbage-collector#compact-object-headers) are a product feature** (JEP 519), **generational [Shenandoah](lesson:garbage-collector#shenandoah)** is a product feature (JEP 521), ahead-of-time command-line ergonomics and method profiling (JEP 514 and 515).
 - **Observability:** JFR cooperative sampling and method timing and tracing (JEP 518 and 520).
 - **Security:** key derivation function API (JEP 510).
@@ -323,6 +323,8 @@ The best way to remember the history is to follow a single thread. These trails 
 
 ### Garbage collectors {#trail-gc}
 
+The full story of each collector is in the [garbage collector lesson](lesson:garbage-collector).
+
 | Version | Change |
 | --- | --- |
 | 1.2 to 7 | Serial and Parallel collectors; **CMS** for low pause times |
@@ -355,6 +357,8 @@ The best way to remember the history is to follow a single thread. These trails 
 | 23 to 27 | Primitive types in patterns, still previewing in Java 27 |
 
 ### Concurrency {#trail-concurrency}
+
+Details and examples are in the [concurrency lesson](lesson:java-concurrency#history).
 
 | Version | Change |
 | --- | --- |
@@ -554,7 +558,7 @@ Spring Framework 6, which Spring Boot 3 is built on, has **Java 17 as its baseli
 
 ### [deep] How did Java's concurrency model evolve? {#concurrency-evolution}
 
-Java 1.0 had `Thread` and `synchronized`. **Java 5** added `java.util.concurrent` (executors, locks, atomics, concurrent collections) and fixed the **memory model**. **Java 7** added Fork/Join for divide-and-conquer. **Java 8** added `CompletableFuture` and parallel streams for composing async work. **Java 9** added the Flow API for reactive streams. **Java 21** made **virtual threads** final so blocking code scales again; **structured concurrency** (still previewing through 27) treats a group of tasks as one unit, and **scoped values** (final in 25) replace `ThreadLocal` for passing data to child tasks. The trend: from managing threads by hand, to composing futures, to cheap threads with simple code.
+Java 1.0 had `Thread` and `synchronized`. **Java 5** added `java.util.concurrent` (executors, locks, atomics, concurrent collections) and fixed the **memory model**. **Java 7** added Fork/Join for divide-and-conquer. **Java 8** added `CompletableFuture` and parallel streams for composing async work. **Java 9** added the Flow API for reactive streams. **Java 21** made **virtual threads** final so blocking code scales again; **structured concurrency** (still previewing through 27) treats a group of tasks as one unit, and **scoped values** (final in 25) replace `ThreadLocal` for passing data to child tasks. The trend: from managing threads by hand, to composing futures, to cheap threads with simple code. More in the [concurrency lesson](lesson:java-concurrency).
 
 ### [deep] How did Java's garbage collectors evolve? {#gc-evolution}
 

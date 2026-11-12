@@ -71,7 +71,7 @@ A **stop-the-world** (STW) pause freezes every application thread so the collect
 | **Weak** (`WeakReference`, `WeakHashMap`) | at the next collection if only weakly reachable | canonicalising maps, listeners |
 | **Phantom** (`PhantomReference`) | after the object is finalised; get is always null | cleanup actions |
 
-**Finalizers** (`Object.finalize()`) were the old way to run cleanup code and are slow and unreliable; they were deprecated in Java 9 and **deprecated for removal in Java 18** (JEP 421). Use `try`-with-resources for deterministic cleanup and `java.lang.ref.Cleaner` as a safety net.
+**Finalizers** (`Object.finalize()`) were the old way to run cleanup code and are slow and unreliable; they were deprecated in Java 9 and **deprecated for removal in [Java 18](lesson:java-version-history#java-18)** (JEP 421). Use `try`-with-resources for deterministic cleanup and `java.lang.ref.Cleaner` as a safety net.
 
 ## The collectors {#collectors}
 
@@ -95,7 +95,7 @@ The **Parallel** collector (the throughput collector) does the same work with ma
 
 ### CMS: the collector that was retired {#cms}
 
-**Concurrent Mark Sweep** was the first low-pause collector for the old generation: it marked and swept concurrently with your threads. Its weaknesses were that it **never compacted**, so the old generation **fragmented** until a long full GC was forced (a *concurrent mode failure*), and that it used a lot of CPU and memory. G1 replaced it. CMS was **deprecated in Java 9** (JEP 291) and **removed in Java 14** (JEP 363). If an old application still passes `-XX:+UseConcMarkSweepGC`, newer JVMs refuse to start or ignore the flag, so move it to G1 (see the [removals table](lesson:java-version-history#removed)).
+**Concurrent Mark Sweep** was the first low-pause collector for the old generation: it marked and swept concurrently with your threads. Its weaknesses were that it **never compacted**, so the old generation **fragmented** until a long full GC was forced (a *concurrent mode failure*), and that it used a lot of CPU and memory. G1 replaced it. CMS was **deprecated in [Java 9](lesson:java-version-history#java-9)** (JEP 291) and **removed in [Java 14](lesson:java-version-history#java-14)** (JEP 363). If an old application still passes `-XX:+UseConcMarkSweepGC`, newer JVMs refuse to start or ignore the flag, so move it to G1 (see the [removals table](lesson:java-version-history#removed)).
 
 ### G1: the default {#g1}
 
@@ -105,9 +105,9 @@ The **Parallel** collector (the throughput collector) does the same work with ma
 - **Young collections** copy live objects out of the young regions (an **evacuation pause**), stop-the-world and in parallel.
 - **Concurrent marking:** when the heap passes an occupancy threshold, G1 marks the old regions concurrently (using a snapshot-at-the-beginning technique) and then runs **mixed collections** that clean young and the most profitable old regions together.
 - **Humongous objects:** an object bigger than half a region is allocated in its own contiguous run of regions. Many short-lived humongous objects (large arrays, big `byte[]` buffers) cause extra work and fragmentation; larger regions (`-XX:G1HeapRegionSize`) or smaller buffers fix it.
-- **Fallback:** if G1 cannot keep up, it does a **full GC**, which was single-threaded until Java 10 made it parallel (JEP 307).
+- **Fallback:** if G1 cannot keep up, it does a **full GC**, which was single-threaded until [Java 10](lesson:java-version-history#java-10) made it parallel (JEP 307).
 
-G1 was supported in Java 7u4, became the **default in Java 9** (JEP 248) and, as announced, is the default in every environment in Java 27. It is the right starting point for most services. See the [GC trail in the version history](lesson:java-version-history#trail-gc).
+G1 was supported in [Java 7](lesson:java-version-history#java-7)u4, became the **default in [Java 9](lesson:java-version-history#java-9)** (JEP 248) and, as announced, is the default in every environment in Java 27. It is the right starting point for most services. See the [GC trail in the version history](lesson:java-version-history#trail-gc).
 
 ### ZGC: pauses that do not grow with the heap {#zgc}
 
@@ -115,23 +115,23 @@ ZGC does nearly everything concurrently, including **compaction**, so its pauses
 
 | Java | ZGC status |
 | --- | --- |
-| 11 | experimental, non-generational (JEP 333) |
-| 15 | production-ready (JEP 377) |
-| 21 | generational mode added, opt-in with `-XX:+ZGenerational` |
-| 23 | generational mode becomes the default (JEP 474) |
-| 24 | the old non-generational mode is removed (JEP 490) |
+| [11](lesson:java-version-history#java-11) | experimental, non-generational (JEP 333) |
+| [15](lesson:java-version-history#java-15) | production-ready (JEP 377) |
+| [21](lesson:java-version-history#java-21) | generational mode added, opt-in with `-XX:+ZGenerational` |
+| [23](lesson:java-version-history#java-23) | generational mode becomes the default (JEP 474) |
+| [24](lesson:java-version-history#java-24) | the old non-generational mode is removed (JEP 490) |
 
 ### Generational ZGC {#generational-zgc}
 
-The original ZGC treated the whole heap alike, so it paid to scan short-lived garbage that a generational collector never touches. **Generational ZGC** (Java 21, JEP 439) adds a young and an old generation, so it collects the young one much more often with far less work. The result is lower CPU use, better throughput and less memory headroom needed for the same latency. Since **Java 23** `-XX:+UseZGC` means the generational mode, and from **Java 24** the non-generational mode no longer exists.
+The original ZGC treated the whole heap alike, so it paid to scan short-lived garbage that a generational collector never touches. **Generational ZGC** ([Java 21](lesson:java-version-history#java-21), JEP 439) adds a young and an old generation, so it collects the young one much more often with far less work. The result is lower CPU use, better throughput and less memory headroom needed for the same latency. Since **Java 23** `-XX:+UseZGC` means the generational mode, and from **Java 24** the non-generational mode no longer exists.
 
 ### Shenandoah {#shenandoah}
 
-Shenandoah (from Red Hat) has the same goal as ZGC: **concurrent compaction** with pauses independent of the heap size. It uses a different barrier design, moving objects while the program runs and fixing references through load-reference barriers. It was **experimental in Java 12** and **production-ready in Java 15** (JEP 379). A **generational mode** was experimental in Java 24 (JEP 404) and became a product feature in **Java 25** (JEP 521). It is included in OpenJDK-based builds such as Eclipse Temurin and Amazon Corretto but not in the Oracle JDK builds, which matters when you choose a distribution.
+Shenandoah (from Red Hat) has the same goal as ZGC: **concurrent compaction** with pauses independent of the heap size. It uses a different barrier design, moving objects while the program runs and fixing references through load-reference barriers. It was **experimental in [Java 12](lesson:java-version-history#java-12)** and **production-ready in [Java 15](lesson:java-version-history#java-15)** (JEP 379). A **generational mode** was experimental in Java 24 (JEP 404) and became a product feature in **Java 25** (JEP 521). It is included in OpenJDK-based builds such as Eclipse Temurin and Amazon Corretto but not in the Oracle JDK builds, which matters when you choose a distribution.
 
 ### Epsilon: the collector that collects nothing {#epsilon}
 
-**Epsilon** (Java 11, JEP 318, an experimental flag) allocates memory but never reclaims it, so the JVM exits with `OutOfMemoryError` when the heap is full. It sounds useless but has real uses: measuring the cost of a real collector by comparison, memory-pressure testing, very short-lived jobs that finish before the heap fills, and tests that assert an allocation budget.
+**Epsilon** ([Java 11](lesson:java-version-history#java-11), JEP 318, an experimental flag) allocates memory but never reclaims it, so the JVM exits with `OutOfMemoryError` when the heap is full. It sounds useless but has real uses: measuring the cost of a real collector by comparison, memory-pressure testing, very short-lived jobs that finish before the heap fills, and tests that assert an allocation budget.
 
 ## Metaspace and class unloading {#metaspace}
 
@@ -139,7 +139,7 @@ Class metadata is not on the Java heap. Since Java 8 it sits in **Metaspace** in
 
 ## Smaller objects, less work {#compact-object-headers}
 
-Every object has a header, and the collector must copy, mark and scan every live object, so smaller objects mean less heap and less GC work. **Compact object headers** (Project Lilliput) shrink the header from 12 to 8 bytes on 64-bit HotSpot. They were **experimental in Java 24** (JEP 450), became a **product feature in Java 25** (JEP 519) and, as announced, are on by default in Java 27. Workloads made of many small objects can see noticeably smaller heaps and fewer collections. See [object layout in the memory lesson](lesson:java-memory-model#object-layout).
+Every object has a header, and the collector must copy, mark and scan every live object, so smaller objects mean less heap and less GC work. **Compact object headers** (Project Lilliput) shrink the header from 12 to 8 bytes on 64-bit HotSpot. They were **experimental in [Java 24](lesson:java-version-history#java-24)** (JEP 450), became a **product feature in [Java 25](lesson:java-version-history#java-25)** (JEP 519) and, as announced, are on by default in Java 27. Workloads made of many small objects can see noticeably smaller heaps and fewer collections. See [object layout in the memory lesson](lesson:java-memory-model#object-layout).
 
 ## Choosing and tuning {#choosing}
 

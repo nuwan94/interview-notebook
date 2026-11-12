@@ -212,7 +212,7 @@ public record Point(int x, int y) {}
 - **Null.** One `null` key is allowed; its hash is defined as 0, so it lives in bucket 0. Any number of `null` values are allowed.
 - **No order.** Iteration goes bucket by bucket, so the order depends on hash codes and on the capacity, and it can change after a resize. Never depend on it.
 - **Fail-fast iterators.** Each structural change bumps `modCount`; an iterator remembers the value it saw and throws `ConcurrentModificationException` if it differs. It is a best-effort bug detector, not a guarantee. Remove during iteration with `iterator.remove()` or `removeIf`.
-- **Not thread-safe.** Concurrent writers can lose updates. In Java 7 a concurrent resize could also create a cycle in a chain, and a later `get` would spin forever at 100% CPU.
+- **Not thread-safe.** Concurrent writers can lose updates. In [Java 7](lesson:java-version-history#java-7) a concurrent resize could also create a cycle in a chain, and a later `get` would spin forever at 100% CPU.
 - **Memory.** Each entry costs a node object (about 32 bytes with compressed pointers) plus a table slot, on top of the key and value objects.
 
 | Map | Order | Null key | Thread-safe | get / put |
@@ -250,12 +250,12 @@ Capacity **16**, load factor **0.75**, so the threshold is **12**: the 13th entr
 
 ### [basic] What is a hash collision, and how does HashMap handle it? {#collision-q}
 
-A collision is two different keys mapping to the same bucket. They are unavoidable because there are far more possible keys than buckets. HashMap uses **separate chaining**: the bucket holds a linked list of nodes, and the lookup walks it comparing hash then `equals()`. Since Java 8, a chain of more than 8 nodes in a table of at least 64 buckets is converted to a red-black tree, so a bucket costs O(log n) rather than O(n).
+A collision is two different keys mapping to the same bucket. They are unavoidable because there are far more possible keys than buckets. HashMap uses **separate chaining**: the bucket holds a linked list of nodes, and the lookup walks it comparing hash then `equals()`. Since [Java 8](lesson:java-version-history#java-8), a chain of more than 8 nodes in a table of at least 64 buckets is converted to a red-black tree, so a bucket costs O(log n) rather than O(n).
 
 ### [basic] What is the time complexity of get and put? {#complexity}
 
 - **Average:** O(1) for both, as long as the hash function spreads keys well.
-- **Worst case:** O(n) if every key lands in one bucket and the bucket is a list (Java 7 and earlier). In Java 8+ a tree bucket gives **O(log n)**, provided the keys are `Comparable`.
+- **Worst case:** O(n) if every key lands in one bucket and the bucket is a list ([Java 7](lesson:java-version-history#java-7) and earlier). In [Java 8](lesson:java-version-history#java-8)+ a tree bucket gives **O(log n)**, provided the keys are `Comparable`.
 - A **resize** is O(n), but it is rare, so `put` is amortized O(1).
 - **Iteration** is O(capacity + size), so a huge, mostly empty map is slow to iterate.
 
@@ -279,7 +279,7 @@ Yes: **one** `null` key (its hash is 0, so it sits in bucket 0) and any number o
 
 ### [basic] Is HashMap thread-safe? What do you use instead? {#thread-safe}
 
-No. Two threads calling `put` at the same time can lose updates, and a `get` racing with a resize can miss entries. In Java 7 concurrent resizes could even create a cycle in a chain and hang a thread. Options: `ConcurrentHashMap` (the default choice), `Collections.synchronizedMap` (one lock around everything), or confining the map to one thread. See the "make it thread-safe" question for trade-offs.
+No. Two threads calling `put` at the same time can lose updates, and a `get` racing with a resize can miss entries. In [Java 7](lesson:java-version-history#java-7) concurrent resizes could even create a cycle in a chain and hang a thread. Options: `ConcurrentHashMap` (the default choice), `Collections.synchronizedMap` (one lock around everything), or confining the map to one thread. See the "make it thread-safe" question for trade-offs.
 
 ### [basic] What happens when you put() a key that already exists? {#duplicate-key}
 
@@ -287,7 +287,7 @@ The lookup finds the node whose key `equals()` the new key. HashMap **replaces t
 
 ### [basic] Is the iteration order of a HashMap guaranteed? {#iteration-order}
 
-No. Iteration walks the table bucket by bucket, so the order depends on the hash codes and the capacity, and it can change after a resize. Code that works "because it came out in the right order" is a bug waiting to happen. Use `LinkedHashMap` for insertion order or `TreeMap` for sorted order. (The immutable `Map.of(...)` collections even randomize their order per JVM run on purpose.)
+No. Iteration walks the table bucket by bucket, so the order depends on the hash codes and the capacity, and it can change after a resize. Code that works "because it came out in the right order" is a bug waiting to happen. Use `LinkedHashMap` for insertion order or `TreeMap` for sorted order. (The immutable [`Map.of(...)`](lesson:java-version-history#java-9) collections even randomize their order per JVM run on purpose.)
 
 ### [basic] How are HashSet and HashMap related? {#hashset}
 
@@ -316,18 +316,18 @@ Three reasons: (1) it lets `(n - 1) & hash` replace the modulo operation; (2) ev
 
 ### [intermediate] Why does HashMap XOR the hash with its upper 16 bits? {#spread}
 
-In a small table only the lowest bits pick the bucket. Hash codes that differ only in their upper bits (for example some `Float` values, or numbers that are multiples of a large power of two) would all fall into the same few buckets. `h ^ (h >>> 16)` folds the high half into the low half so every bit of the hash affects the index. It costs one shift and one XOR, and it is a cheap defence against poorly distributed hash codes. Java 7 used a longer sequence of shifts; Java 8 simplified it because tree bins now limit the damage of collisions.
+In a small table only the lowest bits pick the bucket. Hash codes that differ only in their upper bits (for example some `Float` values, or numbers that are multiples of a large power of two) would all fall into the same few buckets. `h ^ (h >>> 16)` folds the high half into the low half so every bit of the hash affects the index. It costs one shift and one XOR, and it is a cheap defence against poorly distributed hash codes. [Java 7](lesson:java-version-history#java-7) used a longer sequence of shifts; [Java 8](lesson:java-version-history#java-8) simplified it because tree bins now limit the damage of collisions.
 
 ### [intermediate] What is the load factor, and why is the default 0.75? {#load-factor}
 
 The load factor is how full the table may get before it grows: resize when `size > capacity × loadFactor`. A lower value means fewer collisions but more wasted memory; a higher value saves memory but lengthens chains. 0.75 is a well-tested compromise between time and space (the JDK source notes that at this level the number of nodes per bucket follows a Poisson distribution with a mean around 0.5, so long chains are very rare).
 ### [intermediate] What happens during a resize? Are all keys rehashed? {#resize-q}
 
-The table is replaced by one twice as large and every node is moved. But **no hash is recomputed**: each node stores its hash, and the capacity is a power of two, so one bit (`hash & oldCap`) decides whether it stays at index `i` or goes to `i + oldCap`. Each chain is split into a "lo" and a "hi" list, preserving relative order. The cost is O(n), paid rarely, hence amortized O(1) per `put`. In Java 7 the nodes were re-indexed one by one and inserted at the head, which reversed chains and caused the concurrent-resize loop.
+The table is replaced by one twice as large and every node is moved. But **no hash is recomputed**: each node stores its hash, and the capacity is a power of two, so one bit (`hash & oldCap`) decides whether it stays at index `i` or goes to `i + oldCap`. Each chain is split into a "lo" and a "hi" list, preserving relative order. The cost is O(n), paid rarely, hence amortized O(1) per `put`. In [Java 7](lesson:java-version-history#java-7) the nodes were re-indexed one by one and inserted at the head, which reversed chains and caused the concurrent-resize loop.
 
 ### [intermediate] What changed in HashMap in Java 8? {#java8}
 
-- **Tree bins:** long chains turn into red-black trees (JEP 180), improving the worst case from O(n) to O(log n).
+- **Tree bins:** long chains turn into red-black trees ([JEP 180](lesson:java-version-history#java-8)), improving the worst case from O(n) to O(log n).
 - **Tail insertion** instead of head insertion, and resize that preserves node order (no more reversed chains).
 - **Simplified hash function:** `h ^ (h >>> 16)`.
 - **Cheaper resize:** the lo/hi split using one bit, with no re-hash.
@@ -440,7 +440,7 @@ Roughly **32 bytes per node** on a 64-bit JVM with compressed pointers (12-byte 
 
 ### [deep] What is a hash-flooding attack, and how does Java defend against it? {#hash-flooding}
 
-If an attacker can choose the keys (HTTP parameters, JSON field names) and knows the hash function, they can send thousands of keys with the same hash code so one bucket becomes a long chain, and each request costs O(n) instead of O(1): a cheap denial-of-service. For `String` it is easy to produce collisions because of blocks such as `"Aa"`/`"BB"`. Defences: Java 8 tree bins make the per-lookup cost O(log n) for `Comparable` keys (JEP 180 replaced Java 7's optional alternative hashing); frameworks cap the number of parameters and request size; and sensitive code can use a keyed or randomized hash.
+If an attacker can choose the keys (HTTP parameters, JSON field names) and knows the hash function, they can send thousands of keys with the same hash code so one bucket becomes a long chain, and each request costs O(n) instead of O(1): a cheap denial-of-service. For `String` it is easy to produce collisions because of blocks such as `"Aa"`/`"BB"`. Defences: [Java 8](lesson:java-version-history#java-8) tree bins make the per-lookup cost O(log n) for `Comparable` keys (JEP 180 replaced Java 7's optional alternative hashing); frameworks cap the number of parameters and request size; and sensitive code can use a keyed or randomized hash.
 
 ### [deep] Why doesn't HashMap shrink, and does remove() free memory? {#no-shrink}
 
@@ -448,7 +448,7 @@ If an attacker can choose the keys (HTTP parameters, JSON field names) and knows
 
 ### [deep] What are the pitfalls of computeIfAbsent, compute and merge? {#compute-pitfalls}
 
-- The **mapping function must not modify the same map**. In Java 9+, `HashMap` detects it and throws `ConcurrentModificationException` (earlier versions could corrupt the map). That bites recursive memoization such as a Fibonacci cache that calls `computeIfAbsent` recursively.
+- The **mapping function must not modify the same map**. In [Java 9](lesson:java-version-history#java-9)+, `HashMap` detects it and throws `ConcurrentModificationException` (earlier versions could corrupt the map). That bites recursive memoization such as a Fibonacci cache that calls `computeIfAbsent` recursively.
 - On `ConcurrentHashMap` a recursive update can **deadlock or throw** `IllegalStateException("Recursive update")`.
 - They are atomic only on `ConcurrentHashMap`. On `HashMap` they are just convenient.
 - Returning `null` from the function means "no mapping": `compute` removes the key and `computeIfAbsent` stores nothing.

@@ -207,11 +207,11 @@ String s2 = sb.toString();
 | `StringBuilder` | yes | no | building text in a single thread |
 | `StringBuffer` | yes | yes (synchronized) | rarely needed; legacy |
 
-A single `a + b + c` expression is fine: since Java 9 it is compiled to an `invokedynamic` call that sizes the result once (JEP 280).
+A single `a + b + c` expression is fine: since [Java 9](lesson:java-version-history#java-9) it is compiled to an `invokedynamic` call that sizes the result once (JEP 280).
 
 ### Storage inside a String {#string-storage}
 
-Before Java 9 a `String` held a `char[]` with two bytes per character. **Compact strings** (Java 9, JEP 254) store text that fits in Latin-1 as a `byte[]` with one byte per character, which roughly halves memory for typical English and numeric text. The G1 collector can also *deduplicate* equal strings behind the scenes (`-XX:+UseStringDeduplication`), sharing the underlying array without changing their identity.
+Before Java 9 a `String` held a `char[]` with two bytes per character. **Compact strings** ([Java 9](lesson:java-version-history#java-9), JEP 254) store text that fits in Latin-1 as a `byte[]` with one byte per character, which roughly halves memory for typical English and numeric text. The G1 collector can also *deduplicate* equal strings behind the scenes (`-XX:+UseStringDeduplication`), sharing the underlying array without changing their identity.
 
 ## Other caches that look like pools {#caches}
 
@@ -261,7 +261,7 @@ Java has a garbage collector, but you can still leak memory: keep a reference to
 
 ## The Java Memory Model {#jmm}
 
-Everything so far was about *where* data lives. The JMM (specified in JSR 133, Java 5) is about *when changes become visible* between threads.
+Everything so far was about *where* data lives. The JMM (specified in JSR 133, [Java 5](lesson:java-version-history#java-5)) is about *when changes become visible* between threads. The [concurrency lesson](lesson:java-concurrency) builds on it with locks, executors and virtual threads.
 
 ### Why it is needed {#jmm-why}
 
@@ -366,7 +366,7 @@ Local variables (and parameters) are in the **stack frame** of their method. Ins
 
 ### [basic] What is the string pool? {#what-is-pool}
 
-A table of unique `String` objects that the JVM keeps so that equal string literals share one object. Literals are put in the pool when their class is loaded, and `String.intern()` can add or look up strings at run time. Since Java 7 the pool is part of the heap, so unused pooled strings can be garbage-collected.
+A table of unique `String` objects that the JVM keeps so that equal string literals share one object. Literals are put in the pool when their class is loaded, and `String.intern()` can add or look up strings at run time. Since [Java 7](lesson:java-version-history#java-7) the pool is part of the heap, so unused pooled strings can be garbage-collected.
 
 ### [basic] What is the difference between == and equals() for strings? {#string-equality}
 
@@ -418,7 +418,7 @@ Because most objects die young, the heap is split by age. New objects are alloca
 
 ### [intermediate] What is Metaspace, and how does it differ from PermGen? {#metaspace-q}
 
-Both hold class metadata. PermGen was a fixed-size part of the Java heap, so you had to size it (`-XX:MaxPermSize`) and could run out. **Metaspace** (Java 8, JEP 122) lives in **native memory**, grows on demand and is limited only by `-XX:MaxMetaspaceSize` or the machine. Class metadata is freed when its class loader becomes unreachable, so Metaspace growth usually points to a class-loader leak or runaway class generation.
+Both hold class metadata. PermGen was a fixed-size part of the Java heap, so you had to size it (`-XX:MaxPermSize`) and could run out. **Metaspace** ([Java 8](lesson:java-version-history#java-8), JEP 122) lives in **native memory**, grows on demand and is limited only by `-XX:MaxMetaspaceSize` or the machine. Class metadata is freed when its class loader becomes unreachable, so Metaspace growth usually points to a class-loader leak or runaway class generation.
 
 ### [intermediate] What is a GC root? Give examples. {#gc-root-q}
 
