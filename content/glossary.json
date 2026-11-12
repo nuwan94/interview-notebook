@@ -444,5 +444,13 @@
   {"term":"two-phase commit","aliases":["2PC"],"short":"Distributed commit with prepare and commit phases; blocks on failures and couples participants, so microservices avoid it."},
   {"term":"service mesh","short":"Sidecar proxies (Istio, Linkerd) providing mutual TLS, retries and telemetry for all service traffic outside the application code."},
   {"term":"distributed tracing","aliases":["trace id","correlation id"],"short":"A trace id follows a request across services so its path and timings can be reconstructed."},
-  {"term":"consumer-driven contract","aliases":["contract test"],"short":"Consumers state the API or messages they rely on; providers verify them in tests (Pact, Spring Cloud Contract)."}
+  {"term":"consumer-driven contract","aliases":["contract test"],"short":"Consumers state the API or messages they rely on; providers verify them in tests (Pact, Spring Cloud Contract)."},
+  {"term":"saga","aliases":["Saga pattern"],"short":"A business transaction across services as a sequence of local transactions; if one fails, compensating transactions undo the earlier ones. Eventual consistency without 2PC."},
+  {"term":"compensating transaction","aliases":["compensation"],"short":"A new business action that semantically undoes a committed step (cancel a reservation, refund). Must be idempotent and retriable."},
+  {"term":"orchestration","aliases":["orchestrator","saga orchestrator"],"short":"A central coordinator sends commands to each participant, tracks the saga state and triggers compensation. Explicit flow, one extra component."},
+  {"term":"choreography","short":"No coordinator: each service reacts to events and publishes its own. Loosely coupled, but the flow is implicit and hard to follow as it grows."},
+  {"term":"semantic lock","short":"A state flag such as PENDING that marks data touched by an unfinished saga so other transactions treat it carefully. Counters missing isolation."},
+  {"term":"pivot transaction","aliases":["pivot step"],"short":"The go/no-go step of a saga: if it succeeds the saga will complete; it is not compensated. Later steps are retriable."},
+  {"term":"TCC","aliases":["Try-Confirm/Cancel"],"short":"Try reserves resources, Confirm commits them, Cancel releases them. Better isolation than a saga but three operations per service."},
+  {"term":"tombstone","short":"A record of a cancellation kept so that a late-arriving original request can be recognised and ignored."}
 ]
