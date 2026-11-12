@@ -10,6 +10,7 @@ import { OIDC_SCENES } from './oidcScenes.js';
 import { JWT_SCENES } from './jwtScenes.js';
 import { SECURITY_SCENES } from './securityScenes.js';
 import { MICROSERVICE_SCENES } from './microserviceScenes.js';
+import { SAGA_SCENES } from './sagaScenes.js';
 
 const TONE = {
   ok: { border: '2px solid var(--color-ok)', background: 'var(--color-ok-soft)', badge: 'var(--color-ok)' },
@@ -30,6 +31,7 @@ const ICONS = [
   [/authorization server|auth server|issuer|identity provider/i, '🛡️'],
   [/session store|store\b|database|db\b/i, '🗄️'],
   [/policy/i, '📋'],
+  [/orchestrator/i, '🎼'],
   [/registry|discovery/i, '📇'],
   [/broker|queue|topic|kafka/i, '📬'],
   [/circuit breaker|relay/i, '🔌'],
@@ -208,3 +210,4 @@ export const OidcWalk = () => <Walk scenes={OIDC_SCENES} icons ariaLabel="OpenID
 export const JwtWalk = () => <Walk scenes={JWT_SCENES} icons ariaLabel="JWT walk-through" />;
 export const SecurityWalk = () => <Walk scenes={SECURITY_SCENES} ariaLabel="Spring Security filter chain walk-through" />;
 export const MicroserviceWalk = () => <Walk scenes={MICROSERVICE_SCENES} icons ariaLabel="Microservice patterns walk-through" />;
+export const SagaWalk = () => <Walk scenes={SAGA_SCENES} icons ariaLabel="Saga pattern walk-through" />;

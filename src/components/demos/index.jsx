@@ -2,7 +2,7 @@ import { JavaTimeline } from './JavaTimeline.jsx';
 import { ConcurrencyWalk } from './ConcurrencyWalk.jsx';
 import { GcWalk } from './GcWalk.jsx';
 import { MemoryWalk } from './MemoryWalk.jsx';
-import { AuthWalk, CryptoWalk, OauthWalk, OidcWalk, JwtWalk, MicroserviceWalk, SecurityWalk, PatternsWalk, SolidWalk } from './DesignWalk.jsx';
+import { AuthWalk, CryptoWalk, OauthWalk, OidcWalk, JwtWalk, MicroserviceWalk, SagaWalk, SecurityWalk, PatternsWalk, SolidWalk } from './DesignWalk.jsx';
 import { OopWalk } from './OopWalk.jsx';
 import { Playground } from './Playground.jsx';
 
@@ -126,7 +126,7 @@ const DEMOS = {
 };
 
 // demos that are not HashMap simulations plug in here
-const CUSTOM = { 'java-timeline': JavaTimeline, 'memory-walk': MemoryWalk, 'gc-walk': GcWalk, 'concurrency-walk': ConcurrencyWalk, 'oop-walk': OopWalk, 'solid-walk': SolidWalk, 'patterns-walk': PatternsWalk, 'crypto-walk': CryptoWalk, 'auth-walk': AuthWalk, 'oauth-walk': OauthWalk, 'oidc-walk': OidcWalk, 'jwt-walk': JwtWalk, 'security-walk': SecurityWalk, 'microservice-walk': MicroserviceWalk };
+const CUSTOM = { 'java-timeline': JavaTimeline, 'memory-walk': MemoryWalk, 'gc-walk': GcWalk, 'concurrency-walk': ConcurrencyWalk, 'oop-walk': OopWalk, 'solid-walk': SolidWalk, 'patterns-walk': PatternsWalk, 'crypto-walk': CryptoWalk, 'auth-walk': AuthWalk, 'oauth-walk': OauthWalk, 'oidc-walk': OidcWalk, 'jwt-walk': JwtWalk, 'security-walk': SecurityWalk, 'microservice-walk': MicroserviceWalk, 'saga-walk': SagaWalk };
 
 export function DemoFrame({ name }) {
   const Custom = CUSTOM[name];
