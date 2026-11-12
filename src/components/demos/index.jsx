@@ -1,3 +1,4 @@
+import { JavaTimeline } from './JavaTimeline.jsx';
 import { Playground } from './Playground.jsx';
 
 const FRUITS = ['apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 'grape', 'kiwi', 'lemon', 'mango', 'nectarine', 'orange', 'papaya'];
@@ -119,7 +120,12 @@ const DEMOS = {
   },
 };
 
+// demos that are not HashMap simulations plug in here
+const CUSTOM = { 'java-timeline': JavaTimeline };
+
 export function DemoFrame({ name }) {
+  const Custom = CUSTOM[name];
+  if (Custom) return <Custom />;
   const demo = DEMOS[name];
   if (!demo) {
     return (
