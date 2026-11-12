@@ -5,6 +5,7 @@ import { usePlayer, useOnceVisible } from './usePlayer.js';
 import { SOLID_SCENES, PATTERN_SCENES } from './designScenes.js';
 import { CRYPTO_SCENES } from './cryptoScenes.js';
 import { AUTH_SCENES } from './authScenes.js';
+import { OAUTH_SCENES } from './oauthScenes.js';
 
 const TONE = {
   ok: { border: '2px solid var(--color-ok)', background: 'var(--color-ok-soft)', badge: 'var(--color-ok)' },
@@ -15,7 +16,42 @@ const TONE = {
 };
 const DEP_COLOR = { ok: 'var(--color-ok)', bad: 'var(--color-bad)', none: 'var(--color-soft)' };
 
-export function Walk({ scenes, ariaLabel }) {
+// Icon for an actor or an item, picked from its name. First match wins; null means "no icon".
+const ICONS = [
+  [/attacker|mallory|eve\b|thief|malicious/i, '🕵️'],
+  [/alice|bob|carol|user|owner/i, '🧑'],
+  [/browser/i, '🌐'],
+  [/job|batch|daemon/i, '⚙️'],
+  [/client|app\b|job|mobile/i, '📱'],
+  [/authorization server|auth server|issuer|identity provider/i, '🛡️'],
+  [/session store|store\b|database|db\b/i, '🗄️'],
+  [/policy/i, '📋'],
+  [/\bCA\b|authority/i, '🏛️'],
+  [/server|api|service|gateway/i, '🖥️'],
+  [/refresh token|access token|token|credential|cookie/i, '🎫'],
+  [/ciphertext|encrypt/i, '🔒'],
+  [/signature/i, '✍️'],
+  [/certificate/i, '📜'],
+  [/key/i, '🔑'],
+  [/message|request/i, '✉️'],
+];
+const iconFor = (name = '') => ICONS.find(([re]) => re.test(name))?.[1] ?? null;
+
+function Avatar({ name, tone = 'none', size = 'md' }) {
+  const t = TONE[tone] || TONE.none;
+  const icon = iconFor(name);
+  if (!icon) return <span className="font-mono text-xs font-bold">{name}</span>;
+  return (
+    <span className="inline-flex flex-col items-center gap-0.5 min-w-[3.5rem] text-center">
+      <span className={`walk-avatar ${size === 'sm' ? 'walk-avatar-sm' : ''}`} style={{ borderColor: t.badge, background: t.background }} aria-hidden="true">
+        {icon}
+      </span>
+      <span className="font-mono text-[0.65rem] font-bold leading-tight">{name}</span>
+    </span>
+  );
+}
+
+export function Walk({ scenes, ariaLabel, icons = false }) {
   const reduced = useReducedMotion();
   const rootRef = useRef(null);
   const [sceneId, setSceneId] = useState(scenes[0].id);
@@ -81,6 +117,31 @@ export function Walk({ scenes, ariaLabel }) {
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {f.boxes.map((bx) => {
           const t = TONE[bx.tone || 'none'];
+          const icon = icons ? iconFor(bx.title) : null;
+          if (icon) {
+            return (
+              <div key={bx.id} className="walk-actor rounded-md px-2 py-1.5 flex items-start gap-2" style={{ border: t.border, background: t.background }}>
+                <span className="walk-avatar" style={{ borderColor: t.badge, background: '#fff' }} aria-hidden="true">
+                  {icon}
+                </span>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span className="font-mono text-sm font-bold">{bx.title}</span>
+                    {bx.badge && (
+                      <span className="rounded-full px-2 text-[0.62rem] font-bold tracking-wide text-white" style={{ background: t.badge }}>
+                        {bx.badge}
+                      </span>
+                    )}
+                  </div>
+                  {bx.lines.map((ln) => (
+                    <div key={ln} className="text-xs font-mono text-soft">
+                      {ln}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
           return (
             <div key={bx.id} className="rounded-md px-2 py-1.5" style={{ border: t.border, background: t.background }}>
               <div className="flex flex-wrap items-center gap-2">
@@ -102,7 +163,17 @@ export function Walk({ scenes, ariaLabel }) {
       </div>
 
       <div className="mt-2 min-h-[1.5rem] flex flex-col gap-1" aria-label="Dependencies">
-        {f.deps.map((dp) => (
+        {f.deps.map((dp) =>
+          icons ? (
+            <div key={`${dp.from}-${dp.to}-${dp.label}`} className="walk-flow">
+              <Avatar name={dp.from} tone={dp.tone || 'none'} size="sm" />
+              <span className="walk-arrow" style={{ '--arrow': DEP_COLOR[dp.tone || 'none'] }}>
+                <span className="walk-arrow-label">{dp.label}</span>
+                <span className="walk-arrow-line" aria-hidden="true" />
+              </span>
+              <Avatar name={dp.to} tone={dp.tone || 'none'} size="sm" />
+            </div>
+          ) : (
           <div key={`${dp.from}-${dp.to}-${dp.label}`} className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
             <span className="font-bold">{dp.from}</span>
             <span className="font-bold" style={{ color: DEP_COLOR[dp.tone || 'none'] }}>
@@ -110,7 +181,8 @@ export function Walk({ scenes, ariaLabel }) {
             </span>
             <span className="font-bold">{dp.to}</span>
           </div>
-        ))}
+          ),
+        )}
       </div>
 
       <div className="mt-2 rounded-md border border-pen/30 bg-pen-soft/60 px-3 py-2 min-h-[5rem] text-[0.95rem] leading-snug" role="status" aria-live="polite">
@@ -122,5 +194,6 @@ export function Walk({ scenes, ariaLabel }) {
 
 export const SolidWalk = () => <Walk scenes={SOLID_SCENES} ariaLabel="SOLID principles walk-through" />;
 export const PatternsWalk = () => <Walk scenes={PATTERN_SCENES} ariaLabel="Design patterns walk-through" />;
-export const CryptoWalk = () => <Walk scenes={CRYPTO_SCENES} ariaLabel="Encryption walk-through" />;
-export const AuthWalk = () => <Walk scenes={AUTH_SCENES} ariaLabel="Authentication walk-through" />;
+export const CryptoWalk = () => <Walk scenes={CRYPTO_SCENES} icons ariaLabel="Encryption walk-through" />;
+export const AuthWalk = () => <Walk scenes={AUTH_SCENES} icons ariaLabel="Authentication walk-through" />;
+export const OauthWalk = () => <Walk scenes={OAUTH_SCENES} icons ariaLabel="OAuth 2.0 walk-through" />;
