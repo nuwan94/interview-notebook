@@ -393,5 +393,12 @@
   {"term":"backend-for-frontend","aliases":["BFF"],"short":"A server-side component acting as the OAuth client for a SPA: it keeps the tokens and gives the browser only an HttpOnly session cookie."},
   {"term":"confused deputy","short":"A privileged service is tricked into using its rights for a caller who lacks them, such as accepting a token meant for another API. Validate audience."},
   {"term":"OAuth 2.1","short":"Consolidation of OAuth 2.0 best practice: PKCE required, implicit and password grants removed, exact redirect URI matching."},
-  {"term":"refresh token rotation","short":"Each refresh returns a new refresh token and invalidates the old one; reuse of an old token revokes the whole family."}
+  {"term":"refresh token rotation","short":"Each refresh returns a new refresh token and invalidates the old one; reuse of an old token revokes the whole family."},
+  {"term":"ID token","short":"OIDC signed JWT addressed to the app: says who logged in (sub), from which issuer, for which client (aud), and when. Not for calling APIs."},
+  {"term":"relying party","aliases":["RP"],"short":"In OIDC, the application that relies on the identity provider to log users in (the OAuth client)."},
+  {"term":"OpenID Provider","aliases":["OP"],"short":"In OIDC, the identity provider: authenticates users and issues ID tokens."},
+  {"term":"userinfo endpoint","aliases":["userinfo"],"short":"OIDC endpoint that returns the user claims allowed by the granted scopes when called with the access token."},
+  {"term":"discovery document","aliases":["openid-configuration"],"short":"JSON at /.well-known/openid-configuration listing the provider endpoints, scopes, algorithms and the JWKS URI."},
+  {"term":"back-channel logout","aliases":["front-channel logout","RP-initiated logout"],"short":"Ways to end sessions at other apps after SSO logout: the provider posts a signed logout token server to server (back channel) or uses browser iframes (front channel)."},
+  {"term":"identity federation","aliases":["federated identity"],"short":"Trusting an external identity provider (Google, corporate directory) to authenticate users instead of keeping separate passwords."}
 ]
