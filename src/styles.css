@@ -253,6 +253,17 @@ body {
   color: inherit;
 }
 
+/* link to a lesson that does not exist yet: shown as a muted word, becomes a normal link once the lesson is added */
+.pending-link {
+  border-bottom: 1.5px dashed #9aa7b8;
+  color: var(--color-soft);
+  cursor: help;
+}
+.pending-link::after {
+  content: ' ⏳';
+  font-size: 0.7em;
+}
+
 /* ---------- glossary tooltips ---------- */
 .term {
   border-bottom: 1.5px dotted var(--color-pen);

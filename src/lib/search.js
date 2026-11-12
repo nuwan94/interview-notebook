@@ -17,10 +17,22 @@ for (const l of lessons) {
       id: `section:${l.slug}:${s.id}`,
       type: 'section',
       title: s.title,
-      text: plainText(s.md),
+      // sections with ### sub-sections index those separately so a result lands on the exact heading
+      text: plainText(s.subs?.length ? s.lead : s.md),
       url: `/lessons/${l.slug}/${s.id}`,
       lessonTitle: l.title,
     });
+    for (const sub of s.subs || []) {
+      if (s.isQuestions) continue;
+      docs.push({
+        id: `sub:${l.slug}:${sub.id}`,
+        type: 'section',
+        title: sub.title,
+        text: plainText(sub.md),
+        url: `/lessons/${l.slug}/${sub.id}`,
+        lessonTitle: `${l.title} › ${s.title}`,
+      });
+    }
   }
   for (const q of l.questions) {
     docs.push({

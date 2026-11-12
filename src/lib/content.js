@@ -58,6 +58,14 @@ function splitLines(body, re, onMatch) {
   return chunks.map((c) => ({ ...c, md: c.lines.join('\n').trim() }));
 }
 
+const H3 = /^###\s+(.+?)\s*(?:\{#([a-z0-9-]+)\})?\s*$/;
+
+/** Split a section into its lead-in text and its ### sub-sections (each gets a stable id for links and search). */
+function parseSubs(md) {
+  const chunks = splitLines(md, H3, (m) => ({ title: m[1], id: m[2] || slugify(m[1]) }));
+  return { lead: chunks[0].md, subs: chunks.slice(1).map((c) => ({ ...c.head, md: c.md })) };
+}
+
 function parseLesson(path, src) {
   const { meta, body } = parseFrontMatter(src);
   const slug = meta.slug || path.split('/').pop().replace(/\.md$/, '');
@@ -73,7 +81,7 @@ function parseLesson(path, src) {
         .map((q) => ({ ...q.head, id: `q-${q.head.id}`, md: q.md }))
         .filter((q) => q.title);
       sections.push({ ...c.head, md: qs[0].md, isQuestions: true });
-    } else sections.push({ ...c.head, md: c.md });
+    } else sections.push({ ...c.head, md: c.md, ...parseSubs(c.md) });
   }
   return {
     slug,
@@ -82,6 +90,7 @@ function parseLesson(path, src) {
     tags: meta.tags || [],
     order: Number(meta.order || 99),
     updated: meta.updated || '',
+    subnav: meta.subnav === 'true', // list ### sub-sections under each section in the sidebar
     intro,
     sections,
     questions,
@@ -93,5 +102,16 @@ export const lessons = Object.entries(files)
   .sort((a, b) => a.order - b.order);
 
 export const getLesson = (slug) => lessons.find((l) => l.slug === slug);
+
+/**
+ * Resolve a cross-lesson link written in Markdown as [text](lesson:slug#anchor).
+ * Returns { to } when the lesson exists, or { pending: true } so links can be written before the target lesson is.
+ */
+export function resolveLessonLink(spec) {
+  const [slug, anchor] = spec.split('#');
+  const lesson = getLesson(slug);
+  if (!lesson) return { pending: true, slug };
+  return { to: `/lessons/${slug}${anchor ? `/${anchor}` : ''}` };
+}
 
 export const LEVELS = ['basic', 'intermediate', 'deep', 'coding'];

@@ -56,7 +56,9 @@ function visit(node, seen) {
   const out = [];
   for (const child of node.children) {
     if (child.type === 'text') {
-      for (const p of splitByGlossary(child.value)) {
+      // heading id markers such as "{#trail-gc}" must stay literal text for the Heading renderer
+      const pieces = child.value.split(/(\{#[a-z0-9-]+\})/).flatMap((seg) => (/^\{#[a-z0-9-]+\}$/.test(seg) ? [{ text: seg }] : splitByGlossary(seg)));
+      for (const p of pieces) {
         if (!p.entry) {
           out.push({ type: 'text', value: p.text });
           continue;

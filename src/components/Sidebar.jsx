@@ -59,6 +59,21 @@ export function Sidebar({ lesson, onNavigate }) {
                 >
                   {s.title}
                 </Link>
+                {lesson.subnav && s.subs?.length > 0 && !s.isQuestions && (
+                  <ul className="list-none m-0 pl-3 mb-1">
+                    {s.subs.map((sub) => (
+                      <li key={sub.id}>
+                        <Link
+                          to={`/lessons/${lesson.slug}/${sub.id}`}
+                          onClick={onNavigate}
+                          className="block px-2 py-0.5 text-[0.85rem] leading-snug hover:bg-white/70 rounded"
+                        >
+                          {sub.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {s.isQuestions && (
                   <ul className="list-none m-0 pl-3">
                     {LEVELS.map((lv) => {

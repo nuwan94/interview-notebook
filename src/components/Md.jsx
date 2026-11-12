@@ -1,16 +1,17 @@
 import { Children, isValidElement, memo, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { Link, useOutletContext, useParams } from 'react-router-dom';
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import java from 'highlight.js/lib/languages/java';
 import javascript from 'highlight.js/lib/languages/javascript';
 import bash from 'highlight.js/lib/languages/bash';
 import { rehypeGlossary } from '../lib/glossary.js';
-import { slugify } from '../lib/content.js';
+import { resolveLessonLink, slugify } from '../lib/content.js';
 import { Term } from './Term.jsx';
 import { DemoFrame } from './demos/index.jsx';
 import { useReaderCtx } from '../lib/reader.jsx';
-import { copyText } from '../lib/share.js';
+import { copyText, lessonUrl } from '../lib/share.js';
 
 const textOf = (n) =>
   typeof n === 'string'
@@ -50,13 +51,50 @@ function CodeBlock({ children }) {
   );
 }
 
+const ID_MARK = /\s*\{#([a-z0-9-]+)\}\s*$/;
+
+/** Cross-lesson link: [text](lesson:slug#anchor). If the target lesson does not exist yet it shows as a "coming soon" word. */
+function LessonLink({ spec, children }) {
+  const r = resolveLessonLink(spec);
+  if (r.pending) {
+    return (
+      <span className="pending-link" title={`Linked lesson “${r.slug}” is not written yet`}>
+        {children}
+      </span>
+    );
+  }
+  return <Link to={r.to}>{children}</Link>;
+}
+
 function Heading({ level, children }) {
   const reader = useReaderCtx();
   const Tag = `h${level}`;
-  const id = slugify(textOf(children));
+  // "### Java 8 {#java-8}" gives the heading a stable id for share links and cross-lesson links
+  const mark = ID_MARK.exec(textOf(children));
+  const id = mark ? mark[1] : slugify(textOf(children));
+  if (mark) {
+    const kids = Children.toArray(children);
+    const last = kids.length - 1;
+    if (typeof kids[last] === 'string') kids[last] = kids[last].replace(ID_MARK, '');
+    children = kids;
+  }
+  const { slug } = useParams();
+  const outlet = useOutletContext();
   return (
     <Tag id={id} className="group">
       {children}
+      {mark && slug && (
+        <button
+          type="button"
+          data-noread
+          className="ml-2 align-middle text-sm text-soft opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-pen"
+          aria-label="Copy link to this heading"
+          title="Copy link to this heading"
+          onClick={async () => outlet?.toast?.((await copyText(lessonUrl(slug, id))) ? 'Link copied to clipboard' : 'Could not copy the link')}
+        >
+          🔗
+        </button>
+      )}
       {reader?.supported && (
         <button
           type="button"
@@ -85,11 +123,14 @@ const components = {
   pre: CodeBlock,
   h3: (p) => <Heading level={3} {...p} />,
   h4: (p) => <Heading level={4} {...p} />,
-  a: ({ href, children }) => (
-    <a href={href} target={href?.startsWith('http') ? '_blank' : undefined} rel="noreferrer noopener">
-      {children}
-    </a>
-  ),
+  a: ({ href, children }) =>
+    href?.startsWith('lesson:') ? (
+      <LessonLink spec={href.slice('lesson:'.length)}>{children}</LessonLink>
+    ) : (
+      <a href={href} target={href?.startsWith('http') ? '_blank' : undefined} rel="noreferrer noopener">
+        {children}
+      </a>
+    ),
   table: ({ children }) => (
     <div className="table-wrap" tabIndex={0} role="region" aria-label="Table, scrollable">
       <table>{children}</table>
@@ -105,11 +146,13 @@ const rehypePlugins = [
   rehypeGlossary,
 ];
 const remarkPlugins = [remarkGfm];
+// react-markdown drops unknown URL schemes; let our lesson: links through
+const urlTransform = (url) => (url.startsWith('lesson:') ? url : defaultUrlTransform(url));
 
 /** Renders lesson markdown: GFM, syntax highlighting, glossary tooltips, ```demo fences. */
 export const Md = memo(function Md({ children }) {
   return (
-    <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins} components={components}>
+    <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins} components={components} urlTransform={urlTransform}>
       {children}
     </ReactMarkdown>
   );
