@@ -6,6 +6,7 @@ import { SOLID_SCENES, PATTERN_SCENES } from './designScenes.js';
 import { CRYPTO_SCENES } from './cryptoScenes.js';
 import { AUTH_SCENES } from './authScenes.js';
 import { OAUTH_SCENES } from './oauthScenes.js';
+import { OIDC_SCENES } from './oidcScenes.js';
 
 const TONE = {
   ok: { border: '2px solid var(--color-ok)', background: 'var(--color-ok-soft)', badge: 'var(--color-ok)' },
@@ -197,3 +198,4 @@ export const PatternsWalk = () => <Walk scenes={PATTERN_SCENES} ariaLabel="Desig
 export const CryptoWalk = () => <Walk scenes={CRYPTO_SCENES} icons ariaLabel="Encryption walk-through" />;
 export const AuthWalk = () => <Walk scenes={AUTH_SCENES} icons ariaLabel="Authentication walk-through" />;
 export const OauthWalk = () => <Walk scenes={OAUTH_SCENES} icons ariaLabel="OAuth 2.0 walk-through" />;
+export const OidcWalk = () => <Walk scenes={OIDC_SCENES} icons ariaLabel="OpenID Connect walk-through" />;
