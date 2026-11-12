@@ -4,6 +4,7 @@ import { Glossed } from '../Term.jsx';
 import { usePlayer, useOnceVisible } from './usePlayer.js';
 import { SOLID_SCENES, PATTERN_SCENES } from './designScenes.js';
 import { CRYPTO_SCENES } from './cryptoScenes.js';
+import { AUTH_SCENES } from './authScenes.js';
 
 const TONE = {
   ok: { border: '2px solid var(--color-ok)', background: 'var(--color-ok-soft)', badge: 'var(--color-ok)' },
@@ -122,3 +123,4 @@ export function Walk({ scenes, ariaLabel }) {
 export const SolidWalk = () => <Walk scenes={SOLID_SCENES} ariaLabel="SOLID principles walk-through" />;
 export const PatternsWalk = () => <Walk scenes={PATTERN_SCENES} ariaLabel="Design patterns walk-through" />;
 export const CryptoWalk = () => <Walk scenes={CRYPTO_SCENES} ariaLabel="Encryption walk-through" />;
+export const AuthWalk = () => <Walk scenes={AUTH_SCENES} ariaLabel="Authentication walk-through" />;
