@@ -11,6 +11,7 @@ import { JWT_SCENES } from './jwtScenes.js';
 import { SECURITY_SCENES } from './securityScenes.js';
 import { MICROSERVICE_SCENES } from './microserviceScenes.js';
 import { SAGA_SCENES } from './sagaScenes.js';
+import { SCHEDULER_SCENES } from './schedulerScenes.js';
 
 const TONE = {
   ok: { border: '2px solid var(--color-ok)', background: 'var(--color-ok-soft)', badge: 'var(--color-ok)' },
@@ -30,6 +31,9 @@ const ICONS = [
   [/client|app\b|job|mobile/i, '📱'],
   [/authorization server|auth server|issuer|identity provider/i, '🛡️'],
   [/session store|store\b|database|db\b/i, '🗄️'],
+  [/lock table|lease/i, '🔐'],
+  [/task table|task database|coordination store/i, '🗄️'],
+  [/worker|instance/i, '🖥️'],
   [/policy/i, '📋'],
   [/orchestrator/i, '🎼'],
   [/registry|discovery/i, '📇'],
@@ -211,3 +215,4 @@ export const JwtWalk = () => <Walk scenes={JWT_SCENES} icons ariaLabel="JWT walk
 export const SecurityWalk = () => <Walk scenes={SECURITY_SCENES} ariaLabel="Spring Security filter chain walk-through" />;
 export const MicroserviceWalk = () => <Walk scenes={MICROSERVICE_SCENES} icons ariaLabel="Microservice patterns walk-through" />;
 export const SagaWalk = () => <Walk scenes={SAGA_SCENES} icons ariaLabel="Saga pattern walk-through" />;
+export const SchedulerWalk = () => <Walk scenes={SCHEDULER_SCENES} icons ariaLabel="Distributed scheduler walk-through" />;
