@@ -452,5 +452,17 @@
   {"term":"semantic lock","short":"A state flag such as PENDING that marks data touched by an unfinished saga so other transactions treat it carefully. Counters missing isolation."},
   {"term":"pivot transaction","aliases":["pivot step"],"short":"The go/no-go step of a saga: if it succeeds the saga will complete; it is not compensated. Later steps are retriable."},
   {"term":"TCC","aliases":["Try-Confirm/Cancel"],"short":"Try reserves resources, Confirm commits them, Cancel releases them. Better isolation than a saga but three operations per service."},
-  {"term":"tombstone","short":"A record of a cancellation kept so that a late-arriving original request can be recognised and ignored."}
+  {"term":"tombstone","short":"A record of a cancellation kept so that a late-arriving original request can be recognised and ignored."},
+  {"term":"distributed lock","short":"A lock in a shared store (database, Redis, ZooKeeper) letting processes on different machines exclude each other. Usually has an expiry."},
+  {"term":"lease","short":"A lock with a time limit that the holder must keep renewing; if it stops (crash, pause) the lease lapses and someone else can take over."},
+  {"term":"fencing token","short":"An increasing number issued with each lease. The resource rejects writes carrying a lower token than the highest it has seen, neutralising a stale leader."},
+  {"term":"leader election","short":"Nodes agree on one leader (via ZooKeeper, etcd, Consul, a Kubernetes Lease) that does the scheduling; failover happens when its lease expires."},
+  {"term":"zombie leader","short":"A paused or partitioned old leader that wakes up still believing it is the leader after a new one was elected."},
+  {"term":"ShedLock","short":"Spring library that takes a named lock in a shared store so a scheduled method runs on only one instance per tick (lockAtMostFor, lockAtLeastFor)."},
+  {"term":"Quartz","short":"Classic Java job scheduler with triggers, calendars, misfire policies and a clustered JDBC job store."},
+  {"term":"misfire","short":"A trigger that could not fire on time (nodes down or busy). A policy decides: skip, run once now, or catch up every missed run."},
+  {"term":"SKIP LOCKED","aliases":["FOR UPDATE SKIP LOCKED"],"short":"SQL clause: lock the selected rows but skip rows already locked by others, so concurrent workers claim different tasks without blocking."},
+  {"term":"CronJob","aliases":["Kubernetes CronJob"],"short":"A Kubernetes resource that creates a Job (pod) on a cron schedule; concurrencyPolicy controls overlapping runs."},
+  {"term":"timing wheel","short":"A circular array of time slots for scheduling huge numbers of timers cheaply; hierarchical wheels handle long delays."},
+  {"term":"thundering herd","short":"Many clients acting at the same moment (every job at :00), causing a load spike. Add jitter to spread them."}
 ]
