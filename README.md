@@ -81,7 +81,21 @@ Levels: `basic`, `intermediate`, `deep`, `coding`.
 
 - `{#id}` after a heading sets the anchor used in share links (otherwise it is derived from the title).
 - The section whose id is `questions` becomes the filterable question list.
-- Demo names live in `src/components/demos/index.jsx`.
+- Demo names live in `src/components/demos/index.jsx` (HashMap simulations in `DEMOS`, other components such as `java-timeline` in `CUSTOM`).
+- `{#id}` also works on `###` sub-headings. Add `subnav: true` to the front matter to list them under their section in the sidebar; they are searchable and linkable on their own.
+
+### Linking lessons together
+
+Link to another lesson, or to an anchor inside it, with the `lesson:` scheme:
+
+```markdown
+See [treeification](lesson:java-hashmap#treeify) or [the G1 collector](lesson:garbage-collector#g1).
+```
+
+If the target lesson does not exist yet, the text renders as a muted dashed "coming soon" word (⏳) instead of a broken link. As soon as
+`content/lessons/<slug>.md` exists it becomes a normal link, so a lesson can reference lessons that are still to be written.
+Anchors used by the Java version-history lesson that a future garbage-collector lesson should provide: `#g1`, `#zgc`,
+`#generational-zgc`, `#shenandoah`, `#cms`, `#metaspace`, `#epsilon`, `#compact-object-headers`.
 
 ### Glossary tooltips
 
