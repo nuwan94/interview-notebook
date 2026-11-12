@@ -369,7 +369,7 @@
   {"term":"ABAC","aliases":["attribute-based access control"],"short":"Attribute-based access control: policies evaluate attributes of the user, resource and context."},
   {"term":"IDOR","aliases":["broken object-level authorization","insecure direct object reference"],"short":"An endpoint returns or changes an object by client-supplied id without checking the caller may access it. Fix with ownership checks."},
   {"term":"CSRF","aliases":["cross-site request forgery"],"short":"A malicious site makes the victim's browser send a state-changing request with their cookie. Defend with SameSite cookies and CSRF tokens."},
-  {"term":"XSS","aliases":["cross-site scripting"],"short":"Attacker script runs in your page and can steal cookies or tokens. Defend with output escaping, CSP and HttpOnly cookies."},
+  {"term":"cross-site scripting","aliases":["XSS"],"short":"Attacker script runs in your page and can steal cookies or tokens. Defend with output escaping, CSP and HttpOnly cookies."},
   {"term":"session fixation","short":"The attacker sets a known session id before the victim logs in. Fix by issuing a new session id on login."},
   {"term":"credential stuffing","short":"Trying leaked username and password pairs from other breaches at scale. Defend with rate limits, MFA and breach checks."},
   {"term":"HttpOnly","short":"Cookie flag that stops JavaScript reading the cookie, limiting theft through XSS."},
