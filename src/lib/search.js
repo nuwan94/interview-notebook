@@ -48,7 +48,13 @@ for (const g of glossary) {
 const index = new MiniSearch({
   fields: ['title', 'text', 'lessonTitle'],
   storeFields: ['title', 'type', 'url', 'lessonTitle', 'level', 'text'],
-  searchOptions: { boost: { title: 3, lessonTitle: 0.5 }, prefix: true, fuzzy: 0.15 },
+  searchOptions: {
+    boost: { title: 6, lessonTitle: 0.5 },
+    prefix: true,
+    fuzzy: 0.15,
+    // for interview prep, questions and sections matter more than glossary entries
+    boostDocument: (_id, _term, stored) => (stored?.type === 'question' ? 1.4 : stored?.type === 'term' ? 0.6 : 1),
+  },
 });
 index.addAll(docs);
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Link, useOutletContext, useParams } from 'react-router-dom';
+import { Link, useLocation, useOutletContext, useParams } from 'react-router-dom';
 import { getLesson } from '../lib/content.js';
 import { copyText, lessonUrl } from '../lib/share.js';
 import { ReaderProvider, useReader } from '../lib/reader.jsx';
@@ -55,6 +55,7 @@ function ShareButton({ slug, anchor, label, toast, className = 'btn' }) {
 
 function LessonView({ lesson, anchor }) {
   const { toast } = useOutletContext();
+  const { key: navKey } = useLocation(); // changes on every navigation, even to the same link
   const articleRef = useRef(null);
   const reader = useReader(articleRef);
 
@@ -70,7 +71,7 @@ function LessonView({ lesson, anchor }) {
     if (!anchor || anchor.startsWith('q-')) return;
     const t = setTimeout(() => document.getElementById(anchor)?.scrollIntoView({ block: 'start' }), 80);
     return () => clearTimeout(t);
-  }, [anchor, lesson]);
+  }, [anchor, lesson, navKey]);
 
   return (
     <ReaderProvider value={reader}>
@@ -119,7 +120,7 @@ function LessonView({ lesson, anchor }) {
               </span>
             </h2>
             {s.md && <Md>{s.md}</Md>}
-            {s.isQuestions && <QuestionList slug={lesson.slug} questions={lesson.questions} focusId={anchor} onToast={toast} />}
+            {s.isQuestions && <QuestionList slug={lesson.slug} questions={lesson.questions} focusId={anchor} navKey={navKey} onToast={toast} />}
           </section>
         ))}
       </article>

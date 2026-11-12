@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { LEVELS } from '../lib/content.js';
+import { LEVELS, plainText } from '../lib/content.js';
 import { copyText, lessonUrl } from '../lib/share.js';
 import { Md } from './Md.jsx';
 import { useReaderCtx } from '../lib/reader.jsx';
@@ -12,34 +12,46 @@ const LEVEL_HELP = {
 };
 
 /** Filterable, searchable interview Q&A. Answers are native <details>, so find-in-page and keyboard work. */
-export function QuestionList({ slug, questions, focusId, onToast }) {
+export function QuestionList({ slug, questions, focusId, navKey, onToast }) {
   const [level, setLevel] = useState('all');
   const [text, setText] = useState('');
   const box = useRef(null);
   const reader = useReaderCtx();
 
   const counts = useMemo(() => Object.fromEntries(LEVELS.map((l) => [l, questions.filter((q) => q.level === l).length])), [questions]);
+  // searchable text per question (title + answer without markdown markup), lower-cased once
+  const haystacks = useMemo(() => new Map(questions.map((q) => [q.id, `${q.title} ${plainText(q.md)}`.toLowerCase()])), [questions]);
   const shown = useMemo(() => {
-    const t = text.trim().toLowerCase();
-    return questions.filter((q) => (level === 'all' || q.level === level) && (!t || `${q.title} ${q.md}`.toLowerCase().includes(t)));
-  }, [questions, level, text]);
+    const tokens = text.toLowerCase().split(/\s+/).filter(Boolean);
+    // every word must appear somewhere (any order), so "factor load" finds the load factor questions too
+    return questions.filter((q) => (level === 'all' || q.level === level) && tokens.every((t) => haystacks.get(q.id).includes(t)));
+  }, [questions, haystacks, level, text]);
+  const filtered = level !== 'all' || text.trim() !== '';
 
-  // deep link: make sure the target question is visible, open it, scroll to it
+  // Deep link / sidebar / search click: reveal the question once, open it, scroll to it.
+  // `pending` makes this run once per navigation, so later typing or filtering never re-triggers it.
+  const pending = useRef(null);
+  const shownRef = useRef(shown);
+  shownRef.current = shown;
   useEffect(() => {
-    if (!focusId || !focusId.startsWith('q-')) return;
-    if (!shown.some((q) => q.id === focusId)) {
-      setLevel('all');
+    if (!focusId?.startsWith('q-') || !questions.some((q) => q.id === focusId)) return;
+    pending.current = focusId;
+    if (!shownRef.current.some((q) => q.id === focusId)) {
+      setLevel('all'); // the target is hidden by the current filter: clear it
       setText('');
-      return;
     }
-    const el = document.getElementById(focusId);
+  }, [focusId, navKey, questions]);
+  useEffect(() => {
+    if (!pending.current) return;
+    const el = document.getElementById(pending.current);
     if (!el) return;
+    pending.current = null;
     el.open = true;
     el.scrollIntoView({ block: 'start' });
     el.classList.remove('flash');
     void el.offsetWidth;
     el.classList.add('flash');
-  }, [focusId, shown]);
+  }, [shown, focusId, navKey]);
 
   const setAll = (open) => box.current?.querySelectorAll('details.q-item').forEach((d) => (d.open = open));
 
@@ -55,6 +67,7 @@ export function QuestionList({ slug, questions, focusId, onToast }) {
             type="search"
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => e.key === 'Escape' && setText('')}
             placeholder={`Filter ${questions.length} questions…`}
             className="flex-1 min-w-[12rem] border border-slate-300 rounded px-2 py-1.5 bg-white"
           />
@@ -74,8 +87,20 @@ export function QuestionList({ slug, questions, focusId, onToast }) {
               {l} {counts[l]}
             </button>
           ))}
-          <span className="text-xs text-soft ml-auto" aria-live="polite">
-            showing {shown.length}
+          <span className="text-xs text-soft ml-auto flex items-center gap-2" aria-live="polite">
+            showing {shown.length} of {questions.length}
+            {filtered && (
+              <button
+                type="button"
+                className="underline text-pen font-bold"
+                onClick={() => {
+                  setLevel('all');
+                  setText('');
+                }}
+              >
+                clear
+              </button>
+            )}
           </span>
         </div>
       </div>
