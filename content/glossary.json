@@ -400,5 +400,16 @@
   {"term":"userinfo endpoint","aliases":["userinfo"],"short":"OIDC endpoint that returns the user claims allowed by the granted scopes when called with the access token."},
   {"term":"discovery document","aliases":["openid-configuration"],"short":"JSON at /.well-known/openid-configuration listing the provider endpoints, scopes, algorithms and the JWKS URI."},
   {"term":"back-channel logout","aliases":["front-channel logout","RP-initiated logout"],"short":"Ways to end sessions at other apps after SSO logout: the provider posts a signed logout token server to server (back channel) or uses browser iframes (front channel)."},
-  {"term":"identity federation","aliases":["federated identity"],"short":"Trusting an external identity provider (Google, corporate directory) to authenticate users instead of keeping separate passwords."}
+  {"term":"identity federation","aliases":["federated identity"],"short":"Trusting an external identity provider (Google, corporate directory) to authenticate users instead of keeping separate passwords."},
+  {"term":"JWS","aliases":["JSON Web Signature"],"short":"A signed JWT: three Base64URL parts (header.payload.signature). Gives integrity and authenticity, not secrecy."},
+  {"term":"JWE","aliases":["JSON Web Encryption"],"short":"An encrypted JWT (five parts): the claims are hidden from everyone except the recipient."},
+  {"term":"JWK","aliases":["JSON Web Key"],"short":"A cryptographic key in JSON form; a JWKS is a set of them published by the issuer."},
+  {"term":"Base64URL","short":"Base64 with - and _ instead of + and / and no padding, safe in URLs and headers. It is encoding, not encryption."},
+  {"term":"HS256","aliases":["HMAC-SHA-256 signature"],"short":"JWT signing with HMAC-SHA-256 and one shared secret. Every verifier can also forge tokens."},
+  {"term":"RS256","aliases":["ES256","EdDSA"],"short":"Asymmetric JWT signing: the issuer signs with a private key, verifiers use the public key and cannot forge tokens."},
+  {"term":"alg none attack","aliases":["alg: none"],"short":"The header claims no signature and a careless verifier accepts it. Prevent with an algorithm allow-list that excludes none."},
+  {"term":"algorithm confusion","short":"Attacker switches a token from RS256 to HS256 and signs with the public key as the HMAC secret. Prevent by pinning the algorithm to the key."},
+  {"term":"kid","aliases":["key id"],"short":"JWT header naming the key that signed the token; the verifier picks that key from its trusted JWKS, which enables key rotation."},
+  {"term":"jti","aliases":["JWT ID"],"short":"Unique JWT id claim, used for deny lists and replay detection."},
+  {"term":"clock skew","short":"Small clock differences between machines; allow a short leeway when checking exp and nbf."}
 ]
