@@ -411,5 +411,17 @@
   {"term":"algorithm confusion","short":"Attacker switches a token from RS256 to HS256 and signs with the public key as the HMAC secret. Prevent by pinning the algorithm to the key."},
   {"term":"kid","aliases":["key id"],"short":"JWT header naming the key that signed the token; the verifier picks that key from its trusted JWKS, which enables key rotation."},
   {"term":"jti","aliases":["JWT ID"],"short":"Unique JWT id claim, used for deny lists and replay detection."},
-  {"term":"clock skew","short":"Small clock differences between machines; allow a short leeway when checking exp and nbf."}
+  {"term":"clock skew","short":"Small clock differences between machines; allow a short leeway when checking exp and nbf."},
+  {"term":"SecurityFilterChain","short":"A bean that defines one chain of Spring Security filters for the requests matching it. Replaced WebSecurityConfigurerAdapter."},
+  {"term":"FilterChainProxy","aliases":["DelegatingFilterProxy"],"short":"The single servlet filter through which Spring Security runs; it selects the matching SecurityFilterChain for each request."},
+  {"term":"SecurityContext","aliases":["SecurityContextHolder"],"short":"Holds the current Authentication, by default in a ThreadLocal, so it is available anywhere on the request thread."},
+  {"term":"AuthenticationManager","aliases":["ProviderManager","AuthenticationProvider"],"short":"authenticate(Authentication): ProviderManager asks each AuthenticationProvider in turn until one supports the credential type."},
+  {"term":"UserDetailsService","aliases":["UserDetails"],"short":"Loads a user (name, password hash, authorities) by username from a database, LDAP or memory."},
+  {"term":"PasswordEncoder","aliases":["DelegatingPasswordEncoder"],"short":"Hashes and verifies passwords. The delegating encoder prefixes hashes with their algorithm id ({bcrypt}) so algorithms can be upgraded."},
+  {"term":"GrantedAuthority","aliases":["authority"],"short":"A permission string on an Authentication, such as ROLE_ADMIN or SCOPE_reports.read."},
+  {"term":"AuthenticationEntryPoint","short":"Starts authentication for an anonymous user who was denied: redirect to the login page or 401 with WWW-Authenticate."},
+  {"term":"AccessDeniedHandler","short":"Answers 403 when an authenticated user lacks permission."},
+  {"term":"method security","aliases":["@PreAuthorize","@PostAuthorize","@EnableMethodSecurity"],"short":"Annotations evaluated around bean method calls through proxies, allowing object-level rules. Not applied on self-invocation or private methods."},
+  {"term":"CORS","aliases":["cross-origin resource sharing"],"short":"Browser rule: the server states which other origins may read its responses. Not protection against non-browser clients."},
+  {"term":"HSTS","short":"HTTP Strict Transport Security header: tells browsers to use HTTPS only for the site."}
 ]
