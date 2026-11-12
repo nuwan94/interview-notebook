@@ -86,6 +86,7 @@ function parseLesson(path, src) {
   return {
     slug,
     title: meta.title || slug,
+    nav: meta.nav || meta.title || slug,
     summary: meta.summary || '',
     tags: meta.tags || [],
     order: Number(meta.order || 99),

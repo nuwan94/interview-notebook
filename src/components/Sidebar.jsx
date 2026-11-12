@@ -23,7 +23,7 @@ function TopicBranch({ node, lesson, onNavigate, link, closed, toggle }) {
             end
             className={({ isActive }) => `${link} font-bold ${isActive || lesson?.slug === l.slug ? 'bg-white text-pen shadow-sm' : ''}`}
           >
-            {l.title}
+            {l.nav}
           </NavLink>
         </li>
       ))}

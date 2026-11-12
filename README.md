@@ -51,6 +51,7 @@ Create `content/lessons/<slug>.md`. It appears on the home page, in the sidebar 
 ````markdown
 ---
 title: Java Streams — how they work
+nav: Streams
 slug: java-streams
 summary: One sentence shown on the contents page and in search.
 tags: [Java, Streams]
