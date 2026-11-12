@@ -7,7 +7,7 @@ import { SearchPalette } from './SearchPalette.jsx';
 import { Sidebar } from './Sidebar.jsx';
 
 export function Layout() {
-  const { prefs, set } = usePrefs();
+  const { prefs, set, zoom } = usePrefs();
   const loc = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -27,11 +27,17 @@ export function Layout() {
       if ((e.key === 'k' && (e.ctrlKey || e.metaKey)) || (e.key === '/' && !typing)) {
         e.preventDefault();
         setSearchOpen(true);
+        return;
       }
+      // + / - / 0 change the text size (plain keys only, so the browser's own Ctrl +/- zoom keeps working)
+      if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === '+' || e.key === '=') zoom(1);
+      else if (e.key === '-' || e.key === '_') zoom(-1);
+      else if (e.key === '0') zoom(0);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [zoom]);
 
   // plain page navigations (not in-lesson anchors) start at the top
   useEffect(() => {
@@ -69,7 +75,8 @@ export function Layout() {
               className={scaleBtn}
               onClick={() => set({ scaleIdx: Math.max(0, prefs.scaleIdx - 1) })}
               disabled={prefs.scaleIdx === 0}
-              aria-label="Smaller text"
+              aria-label="Smaller text (minus key)"
+              title="Smaller text: press -"
             >
               <span className="text-sm">A−</span>
             </button>
@@ -81,7 +88,8 @@ export function Layout() {
               className={scaleBtn}
               onClick={() => set({ scaleIdx: Math.min(SCALES.length - 1, prefs.scaleIdx + 1) })}
               disabled={prefs.scaleIdx === SCALES.length - 1}
-              aria-label="Larger text"
+              aria-label="Larger text (plus key)"
+              title="Larger text: press + (0 resets)"
             >
               <span className="text-lg leading-none">A+</span>
             </button>

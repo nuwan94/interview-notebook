@@ -25,7 +25,16 @@ export function PrefsProvider({ children }) {
     }
   }, [prefs]);
   const set = useCallback((patch) => setPrefs((p) => ({ ...p, ...patch })), []);
-  const value = useMemo(() => ({ prefs, set }), [prefs, set]);
+  // delta: +1 / -1 steps through SCALES; 0 resets to 100%
+  const zoom = useCallback(
+    (delta) =>
+      setPrefs((p) => ({
+        ...p,
+        scaleIdx: delta === 0 ? DEFAULTS.scaleIdx : Math.min(SCALES.length - 1, Math.max(0, p.scaleIdx + delta)),
+      })),
+    [],
+  );
+  const value = useMemo(() => ({ prefs, set, zoom }), [prefs, set, zoom]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

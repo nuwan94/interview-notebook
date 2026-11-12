@@ -104,7 +104,8 @@ autoplays; step manually instead.
 
 ## Accessibility
 
-- **A− / A+** in the header scales all text (87.5% – 175%) and the ruled lines scale with it. Saved in the browser.
+- **A− / A+** in the header, or the **+** / **-** keys (and **0** to reset), scale all text (87.5% – 175%) and the ruled
+  lines scale with it. Saved in the browser. Ctrl +/- still zooms the whole page as usual.
 - **Read aloud** uses the browser's speech synthesis, highlights the current word (CSS Custom Highlight API) and
   scrolls along; scrolling by hand pauses the auto-scroll for a few seconds. Pause, skip, speed and voice controls
   appear at the bottom. Voices that do not report word positions fall back to a timed estimate.
