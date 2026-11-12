@@ -464,5 +464,18 @@
   {"term":"SKIP LOCKED","aliases":["FOR UPDATE SKIP LOCKED"],"short":"SQL clause: lock the selected rows but skip rows already locked by others, so concurrent workers claim different tasks without blocking."},
   {"term":"CronJob","aliases":["Kubernetes CronJob"],"short":"A Kubernetes resource that creates a Job (pod) on a cron schedule; concurrencyPolicy controls overlapping runs."},
   {"term":"timing wheel","short":"A circular array of time slots for scheduling huge numbers of timers cheaply; hierarchical wheels handle long delays."},
-  {"term":"thundering herd","short":"Many clients acting at the same moment (every job at :00), causing a load spike. Add jitter to spread them."}
+  {"term":"thundering herd","short":"Many clients acting at the same moment (every job at :00), causing a load spike. Add jitter to spread them."},
+  {"term":"message broker","aliases":["broker"],"short":"Middleware that stores and routes messages between producers and consumers (RabbitMQ, ActiveMQ, SQS, Kafka, Pulsar)."},
+  {"term":"competing consumers","short":"Several consumers read from one queue and share the work; each message goes to exactly one of them."},
+  {"term":"consumer group","short":"Instances of one subscriber sharing a subscription so each message is handled by one instance; other groups get their own copy."},
+  {"term":"visibility timeout","aliases":["ack timeout"],"short":"How long a delivered but unacknowledged message is hidden from others; after that it is redelivered. Set above the longest processing time."},
+  {"term":"poison message","short":"A message that always fails processing (malformed or hits a bug). Retrying forever blocks the queue; send it to a dead-letter queue."},
+  {"term":"idempotent receiver","aliases":["idempotent consumer"],"short":"A consumer whose effect is the same if a message arrives twice, usually by recording processed message ids in the same transaction as its work."},
+  {"term":"publisher confirms","short":"The broker tells the producer it has safely stored a message, so the producer knows it was not lost."},
+  {"term":"consumer lag","short":"How far a consumer is behind: queue depth or age of the oldest unprocessed message. A key health metric."},
+  {"term":"prefetch","short":"The number of unacknowledged messages a consumer may hold at once; limits memory and unfair work distribution."},
+  {"term":"claim check pattern","aliases":["claim check"],"short":"Store a large payload elsewhere and send only a reference in the message."},
+  {"term":"tolerant reader","short":"A consumer that ignores unknown fields so producers can add fields without breaking it."},
+  {"term":"schema registry","short":"A service storing message schemas (Avro, Protobuf, JSON Schema) and checking compatibility between versions."},
+  {"term":"event-carried state transfer","short":"Events that carry the data consumers need, so they keep a local copy instead of calling back."}
 ]
