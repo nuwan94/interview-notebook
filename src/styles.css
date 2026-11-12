@@ -812,3 +812,78 @@ mark.reading-word {
 .skip-link:focus {
   left: 0.5rem;
 }
+
+/* icon avatars and animated arrows for the actor walk-throughs */
+.walk-avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid;
+  border-radius: 9999px;
+  font-size: 1.35rem;
+  line-height: 1;
+  box-shadow: 1px 2px 0 rgba(27, 36, 51, 0.12);
+}
+.walk-avatar-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.05rem;
+}
+.walk-flow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.walk-arrow {
+  flex: 1 1 8rem;
+  max-width: 24rem;
+  min-width: 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  color: var(--arrow);
+}
+.walk-arrow-label {
+  font: 700 0.68rem/1.15 var(--font-mono, ui-monospace, monospace);
+  text-align: center;
+}
+.walk-arrow-line {
+  position: relative;
+  height: 0;
+  border-top: 3px dashed currentColor;
+  margin-right: 0.45rem;
+}
+.walk-arrow-line::after {
+  content: '';
+  position: absolute;
+  right: -0.45rem;
+  top: -0.5rem;
+  border: 0.45rem solid transparent;
+  border-left: 0.7rem solid currentColor;
+  border-right: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .walk-arrow-line {
+    background: repeating-linear-gradient(90deg, currentColor 0 0.5rem, transparent 0.5rem 0.9rem);
+    background-size: 0.9rem 3px;
+    border-top: 0;
+    height: 3px;
+    animation: walk-flow 0.6s linear infinite;
+  }
+  .walk-actor {
+    animation: walk-pop 0.25s ease-out;
+  }
+}
+@keyframes walk-flow {
+  to {
+    background-position: 0.9rem 0;
+  }
+}
+@keyframes walk-pop {
+  from {
+    transform: scale(0.96);
+    opacity: 0.4;
+  }
+}
