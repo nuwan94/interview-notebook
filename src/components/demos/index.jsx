@@ -1,4 +1,5 @@
 import { JavaTimeline } from './JavaTimeline.jsx';
+import { GcWalk } from './GcWalk.jsx';
 import { MemoryWalk } from './MemoryWalk.jsx';
 import { Playground } from './Playground.jsx';
 
@@ -122,7 +123,7 @@ const DEMOS = {
 };
 
 // demos that are not HashMap simulations plug in here
-const CUSTOM = { 'java-timeline': JavaTimeline, 'memory-walk': MemoryWalk };
+const CUSTOM = { 'java-timeline': JavaTimeline, 'memory-walk': MemoryWalk, 'gc-walk': GcWalk };
 
 export function DemoFrame({ name }) {
   const Custom = CUSTOM[name];
