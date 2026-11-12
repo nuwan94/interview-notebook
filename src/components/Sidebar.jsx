@@ -2,17 +2,19 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { LEVELS, topicContains, topicLessonCount, topicTree } from '../lib/content.js';
 
-const findTopic = (node, path) => {
+// paths of every topic (at any depth) that contains the lesson
+const ancestorsOf = (node, slug, out = []) => {
   for (const c of node.children) {
-    if (c.path === path) return c;
-    const hit = findTopic(c, path);
-    if (hit) return hit;
+    if (topicContains(c, slug)) {
+      out.push(c.path);
+      ancestorsOf(c, slug, out);
+    }
   }
-  return null;
+  return out;
 };
 
 /** One level of the topic tree: its lessons first, then collapsible sub-topics (which nest the same way). */
-function TopicBranch({ node, lesson, onNavigate, link, closed, toggle }) {
+function TopicBranch({ node, lesson, onNavigate, link, expanded, toggle }) {
   return (
     <>
       {node.lessons.map((l) => (
@@ -28,7 +30,7 @@ function TopicBranch({ node, lesson, onNavigate, link, closed, toggle }) {
         </li>
       ))}
       {node.children.map((c) => {
-        const open = !closed.has(c.path);
+        const open = expanded.has(c.path);
         return (
           <li key={c.path}>
             <button
@@ -45,7 +47,7 @@ function TopicBranch({ node, lesson, onNavigate, link, closed, toggle }) {
             </button>
             {open && (
               <ul className="list-none m-0 ml-2 pl-2 border-l-2 border-slate-300">
-                <TopicBranch node={c} lesson={lesson} onNavigate={onNavigate} link={link} closed={closed} toggle={toggle} />
+                <TopicBranch node={c} lesson={lesson} onNavigate={onNavigate} link={link} expanded={expanded} toggle={toggle} />
               </ul>
             )}
           </li>
@@ -58,21 +60,23 @@ function TopicBranch({ node, lesson, onNavigate, link, closed, toggle }) {
 /** Index tabs: all lessons grouped by topic, plus "on this page" navigation (sections and questions) for the open lesson. */
 export function Sidebar({ lesson, onNavigate }) {
   const [active, setActive] = useState('');
-  const [closed, setClosed] = useState(() => new Set()); // topic paths the reader collapsed
+  const [expanded, setExpanded] = useState(() => new Set()); // topic paths the reader opened; everything starts collapsed
+  // accordion: opening a topic closes its siblings (and everything inside them), except the topics holding the open lesson, which stay open until you navigate elsewhere
   const toggle = (path) =>
-    setClosed((s) => {
-      const n = new Set(s);
-      n.has(path) ? n.delete(path) : n.add(path);
-      return n;
+    setExpanded((s) => {
+      const parentOf = (p) => p.slice(0, Math.max(p.lastIndexOf('/'), 0));
+      const inside = (p, root) => p === root || p.startsWith(root + '/');
+      if (s.has(path)) return new Set([...s].filter((p) => !inside(p, path)));
+      const keep = lesson ? ancestorsOf(topicTree, lesson.slug) : [];
+      const siblings = [...s].filter((p) => p !== path && parentOf(p) === parentOf(path) && !keep.includes(p));
+      return new Set([...s].filter((p) => !siblings.some((x) => inside(p, x))).concat(path));
     });
 
-  // opening a lesson (link, search, deep link) expands the topics that contain it
+  // opening a lesson (link, search, deep link) shows only the path to it and closes the rest
   useEffect(() => {
     if (!lesson) return;
-    setClosed((s) => {
-      const n = new Set([...s].filter((p) => !topicContains(findTopic(topicTree, p) ?? { lessons: [], children: [] }, lesson.slug)));
-      return n.size === s.size ? s : n;
-    });
+    const path = ancestorsOf(topicTree, lesson.slug);
+    setExpanded((s) => (s.size === path.length && path.every((p) => s.has(p)) ? s : new Set(path)));
   }, [lesson]);
 
   useEffect(() => {
@@ -100,7 +104,7 @@ export function Sidebar({ lesson, onNavigate }) {
             Home
           </NavLink>
         </li>
-        <TopicBranch node={topicTree} lesson={lesson} onNavigate={onNavigate} link={link} closed={closed} toggle={toggle} />
+        <TopicBranch node={topicTree} lesson={lesson} onNavigate={onNavigate} link={link} expanded={expanded} toggle={toggle} />
         <li>
           <NavLink to="/glossary" onClick={onNavigate} className={({ isActive }) => `${link} ${isActive ? 'bg-white text-pen font-bold shadow-sm' : ''}`}>
             Glossary
