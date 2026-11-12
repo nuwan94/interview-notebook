@@ -50,6 +50,42 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ---------- scrollbars: slim, in the notebook's blue-grey, everywhere (page, sidebar, code, tables, search) ---------- */
+:root {
+  --scroll-thumb: #9fb0c8;
+  --scroll-thumb-hover: var(--color-pen);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+html {
+  scrollbar-color: var(--scroll-thumb) var(--color-desk);
+}
+@supports not (scrollbar-color: auto) {
+  /* browsers without the standard properties */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  html::-webkit-scrollbar-track {
+    background: var(--color-desk);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scroll-thumb);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scroll-thumb-hover);
+    background-clip: content-box;
+  }
+}
+
 :focus-visible {
   outline: 3px solid var(--color-pen);
   outline-offset: 2px;
