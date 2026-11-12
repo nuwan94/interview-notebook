@@ -195,10 +195,19 @@ new ThreadPoolExecutor(
 
 For each submitted task:
 
-1. If fewer than *core* threads exist, start a new thread for it.
-2. Otherwise, put it in the queue.
-3. If the queue is full and fewer than *maximum* threads exist, start an extra thread.
-4. Otherwise apply the **rejection policy**: `AbortPolicy` (the default, throws `RejectedExecutionException`), `CallerRunsPolicy` (runs the task on the submitting thread, which slows down the producer: natural back-pressure), `DiscardPolicy` or `DiscardOldestPolicy`.
+```mermaid
+flowchart TD
+  A{{"Fewer than core threads exist?"}} -- yes --> A1["Start a new thread for the task"]
+  A -- no --> B["Put the task in the queue"]
+  B --> C{{"Queue full and fewer than maximum threads?"}}
+  C -- yes --> C1["Start an extra thread for the task"]
+  C -- no --> D["Apply the rejection policy<br/>AbortPolicy (default, throws RejectedExecutionException)<br/>CallerRunsPolicy (caller runs it: back-pressure)<br/>DiscardPolicy or DiscardOldestPolicy"]
+  style A1 fill:#dff3e6,stroke:#2f7d4f
+  style C1 fill:#dff3e6,stroke:#2f7d4f
+  style A fill:#fdeccd,stroke:#a65b0a
+  style C fill:#fdeccd,stroke:#a65b0a
+  style D fill:#fbe0de,stroke:#b4332f
+```
 
 Note the order: the pool queues **before** it grows beyond the core size. With an *unbounded* queue the maximum size is therefore never used.
 

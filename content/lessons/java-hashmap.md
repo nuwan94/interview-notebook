@@ -14,10 +14,13 @@ Read the sections top to bottom once, play every animation, then jump to the **i
 
 A `HashMap` is an **array of buckets**. To store or find a key it does four things:
 
-1. Ask the key for its `hashCode()`, a 32-bit int.
-2. Mix the high bits into the low bits: `h ^ (h >>> 16)`.
-3. Keep only the low bits to get a bucket number: `(n - 1) & hash`.
-4. Look inside that bucket. Compare the stored hash first, then `==` and `equals()`.
+```mermaid
+flowchart LR
+  A["Hash code<br/>key.hashCode(), a 32-bit int"] --> B["Spread the bits<br/>h XOR (h shifted right 16)"]
+  B --> C["Pick the bucket<br/>keep the low bits: (n - 1) AND hash"]
+  C --> D["Look inside the bucket<br/>compare the stored hash, then == and equals()"]
+  style D fill:#dff3e6,stroke:#2f7d4f
+```
 
 Two different keys can end up in the same bucket. That is a collision, and the bucket then holds a chain of nodes. If the chain gets long the bucket becomes a tree, and if the whole table gets too full the array doubles.
 
@@ -85,15 +88,23 @@ name: bucket-index
 
 `put(key, value)` follows these steps (`putVal` in the source):
 
-1. If the table is `null` or empty, allocate it (`resize()`), 16 buckets by default.
-2. Compute `i = (n - 1) & hash`.
-3. If bucket `i` is empty, put a new node there. Done.
-4. Otherwise compare the first node. Same key? Remember it as `e`.
-5. If the bucket is a tree, ask the tree. If it is a chain, walk it; at the end append a new node at the **tail**. If the chain now has more than 8 nodes, call `treeifyBin`.
-6. If an existing node `e` was found, replace its value and return the old value. The size does not change.
-7. Otherwise increase `modCount` and `size`; if `size > threshold`, resize.
+```mermaid
+flowchart TD
+  A["Allocate the table if needed<br/>null or empty: resize(), 16 buckets"] --> B["Compute the index<br/>i = (n - 1) AND hash"]
+  B --> C{{"Is bucket i empty?"}}
+  C -- yes --> C1["Put a new node there. Done."]
+  C -- no --> D["Compare the first node<br/>same key? remember it as e"]
+  D --> E["Tree or chain<br/>tree: ask the tree. chain: walk it and append at the tail,<br/>treeifyBin if the chain is now longer than 8"]
+  E --> F{{"Was an existing node e found?"}}
+  F -- yes --> F1["Replace its value, return the old value.<br/>Size does not change."]
+  F -- no --> G["Count the new entry<br/>modCount and size grow, resize if size > threshold"]
+  style C1 fill:#dff3e6,stroke:#2f7d4f
+  style F1 fill:#dff3e6,stroke:#2f7d4f
+  style C fill:#fdeccd,stroke:#a65b0a
+  style F fill:#fdeccd,stroke:#a65b0a
+```
 
-`get(key)` is steps 2 to 5 without the writing. The test used at every node is:
+`get(key)` follows the same path as far as finding the node, without the writing. The test used at every node is:
 
 ```java
 e.hash == hash && ((k = e.key) == key || (key != null && key.equals(k)))

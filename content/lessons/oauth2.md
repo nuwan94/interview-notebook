@@ -52,12 +52,23 @@ The authorization server and resource server are often separate deployments, but
 
 The flow for anything with a user: server-rendered web apps, single-page apps, mobile and desktop apps.
 
-1. The client creates a random **code verifier** and its hash, the **code challenge** (PKCE).
-2. It redirects the user's browser to the AS **authorization endpoint** with `client_id`, `redirect_uri`, `scope`, `state` and the challenge.
-3. The user logs in at the AS and consents.
-4. The AS redirects back to the `redirect_uri` with a short-lived, single-use **authorization code** and the `state`.
-5. The client calls the **token endpoint** over the back channel with the code (and the code verifier, plus its client secret if it is confidential).
-6. The AS checks the verifier against the stored challenge and returns the access token (and often a refresh token).
+```mermaid
+sequenceDiagram
+  actor U as Alice (browser)
+  participant C as Client app
+  participant AS as Authorization server
+  participant RS as Resource server (API)
+  Note over C: Create code_verifier and code_challenge
+  C->>AS: Redirect: client_id, redirect_uri, scope, state, code_challenge
+  AS->>U: Login page and consent screen
+  U->>AS: Authenticates and approves the scopes
+  AS->>C: Redirect back with one-time code and state
+  C->>AS: POST /token with code and code_verifier
+  Note over AS: Check verifier against the stored challenge
+  AS->>C: Access token and refresh token
+  C->>RS: GET /photos with Bearer access token
+  RS->>C: 200 OK (scope allows it)
+```
 
 Why two steps and a code? The browser (front channel) can leak URLs, so tokens are never placed in the redirect. The code is exchanged over a direct, TLS-protected back channel.
 

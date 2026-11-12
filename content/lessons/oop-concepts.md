@@ -63,10 +63,12 @@ A constructor has the class name and no return type. It runs once when the objec
 
 When you write `new FrozenItem()`, a parent is always built before its child. The order is:
 
-1. The class is loaded, and its `static` fields and static blocks run (parent class first, once only).
-2. Memory is allocated and every field gets its default (0, `false`, `null`).
-3. The constructor starts. Its first step is `super(...)`, so the parent constructor runs completely first, including the parent's field initialisers.
-4. Back in the child: its field initialisers and instance blocks run, in the order they are written, and then the rest of the constructor body.
+```mermaid
+flowchart TD
+  A["Load the class<br/>static fields and blocks run, parent first, once only"] --> B["Allocate memory<br/>every field gets its default: 0, false, null"]
+  B --> C["Parent constructor<br/>super(...) runs completely first, with the parent's field initialisers"]
+  C --> D["Child initialisation<br/>field initialisers and instance blocks in written order,<br/>then the rest of the constructor body"]
+```
 
 The third animation scene shows it. A consequence: **never call an overridable method from a constructor**. The parent constructor runs before the child's fields are set, so the child's override can see `null` or 0 where it expects real values.
 

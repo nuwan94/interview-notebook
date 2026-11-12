@@ -226,10 +226,19 @@ When a client validates a certificate it checks: the **signature chain** up to a
 
 ### How HTTPS (TLS 1.3) works, in outline {#handshake}
 
-1. **Client hello:** the client lists the cipher suites it supports and sends its key-agreement public value (ECDHE).
-2. **Server hello:** the server picks a suite, sends its own key-agreement value, its **certificate**, and a **signature** over the handshake made with its private key (proving it owns the certificate).
-3. The client validates the certificate chain and the signature, both sides compute the **same shared secret** with ECDHE and derive **session keys**.
-4. Both send a **Finished** message, and then all data flows encrypted with an AEAD cipher (AES-GCM or ChaCha20-Poly1305).
+```mermaid
+sequenceDiagram
+  participant C as Client (browser)
+  participant S as Server
+  C->>S: Client hello: cipher suites and ECDHE public value
+  S->>C: Server hello: chosen suite, ECDHE value, certificate, signature over the handshake
+  Note over C: Validate the certificate chain, hostname and signature
+  Note over C,S: Both derive the same shared secret and session keys
+  C->>S: Finished
+  S->>C: Finished
+  C->>S: Application data, encrypted (AES-GCM or ChaCha20-Poly1305)
+  S->>C: Application data, encrypted
+```
 
 Properties worth naming: **forward secrecy** (the session keys are ephemeral, so stealing the server's long-term key later does not decrypt recorded traffic); **one round trip** before data can flow; and TLS 1.3 removed weak options (RSA key exchange, CBC, RC4, SHA-1). Optional **0-RTT** early data is faster but replayable, so use it only for idempotent requests. Java has supported TLS 1.3 since [Java 11](lesson:java-version-history#java-11).
 

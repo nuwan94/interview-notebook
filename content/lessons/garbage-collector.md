@@ -23,9 +23,11 @@ name: gc-walk
 
 An object is **garbage** when no running code can reach it any more. The collector's job is to find that garbage and make its memory available again. Almost every collector works with the same three steps in some form:
 
-1. **Mark:** start from the **GC roots** (local variables and parameters on thread stacks, static fields, live threads, JNI references) and follow references, marking each object reached. See [reachability and GC roots](lesson:java-memory-model#gc-roots) for where the roots live.
-2. **Reclaim:** free the unmarked objects, either by **sweeping** (adding their space to a free list) or by **copying** the live ones elsewhere and discarding the old area.
-3. **Compact** (optional): slide live objects together to remove gaps, so new objects can be allocated by bumping a pointer instead of searching for a hole.
+```mermaid
+flowchart LR
+  A["Mark<br/>follow references from the GC roots,<br/>mark every object reached"] --> B["Reclaim<br/>free the unmarked objects:<br/>sweep, or copy the live ones away"]
+  B --> C["Compact (optional)<br/>slide live objects together,<br/>no gaps left"]
+```
 
 Because Java uses reachability and not reference counting, a group of objects that only refer to each other is still garbage if no root reaches the group.
 
