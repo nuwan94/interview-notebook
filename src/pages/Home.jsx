@@ -1,7 +1,41 @@
 import { Link } from 'react-router-dom';
-import { lessons } from '../lib/content.js';
+import { lessons, topicTree } from '../lib/content.js';
 import { glossary } from '../lib/glossary.js';
 import { Holes } from '../components/Holes.jsx';
+
+/** Lessons grouped under their (nested) topic headings. */
+function TopicContents({ node, depth }) {
+  return (
+    <>
+      {node.lessons.length > 0 && (
+        <ul className="!list-none !p-0">
+          {node.lessons.map((l) => (
+            <li key={l.slug} className="mb-[var(--lh)]">
+              <Link to={`/lessons/${l.slug}`} className="font-hand font-bold text-xl no-underline">
+                {l.title}
+              </Link>
+              <br />
+              <span className="text-soft">{l.summary}</span>
+              <br />
+              <span className="text-sm font-bold text-pen">
+                {l.questions.length} questions · {l.tags.join(', ')}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {node.children.map((c) => {
+        const H = depth === 0 ? 'h3' : 'h4';
+        return (
+          <section key={c.path} aria-label={c.path.replace(/\//g, ' › ')}>
+            <H>{c.name}</H>
+            <TopicContents node={c} depth={depth + 1} />
+          </section>
+        );
+      })}
+    </>
+  );
+}
 
 export function Home() {
   const totalQ = lessons.reduce((n, l) => n + l.questions.length, 0);
@@ -17,21 +51,7 @@ export function Home() {
       </p>
 
       <h2>Contents</h2>
-      <ul className="!list-none !p-0">
-        {lessons.map((l) => (
-          <li key={l.slug} className="mb-[var(--lh)]">
-            <Link to={`/lessons/${l.slug}`} className="font-hand font-bold text-xl no-underline">
-              {l.title}
-            </Link>
-            <br />
-            <span className="text-soft">{l.summary}</span>
-            <br />
-            <span className="text-sm font-bold text-pen">
-              {l.questions.length} questions · {l.tags.join(', ')}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <TopicContents node={topicTree} depth={0} />
 
       <h2>How to use this notebook</h2>
       <ul>

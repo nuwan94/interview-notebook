@@ -90,6 +90,8 @@ function parseLesson(path, src) {
     tags: meta.tags || [],
     order: Number(meta.order || 99),
     updated: meta.updated || '',
+    // "Java / Collections" -> ['Java', 'Collections']: where the lesson sits in the topic tree
+    topic: (meta.topic || '').split('/').map((s) => s.trim()).filter(Boolean),
     subnav: meta.subnav === 'true', // list ### sub-sections under each section in the sidebar
     intro,
     sections,
@@ -102,6 +104,29 @@ export const lessons = Object.entries(files)
   .sort((a, b) => a.order - b.order);
 
 export const getLesson = (slug) => lessons.find((l) => l.slug === slug);
+
+/**
+ * Nested topics built from each lesson's `topic:` front matter ("Java / Collections").
+ * Node: { name, path, children: Node[], lessons: Lesson[] }. Lessons without a topic sit at the root.
+ */
+function buildTopicTree(list) {
+  const root = { name: '', path: '', children: [], lessons: [] };
+  for (const l of list) {
+    let node = root;
+    for (const name of l.topic) {
+      const path = node.path ? `${node.path}/${name}` : name;
+      let child = node.children.find((c) => c.name === name);
+      if (!child) node.children.push((child = { name, path, children: [], lessons: [] }));
+      node = child;
+    }
+    node.lessons.push(l);
+  }
+  return root;
+}
+export const topicTree = buildTopicTree(lessons);
+
+export const topicLessonCount = (node) => node.lessons.length + node.children.reduce((n, c) => n + topicLessonCount(c), 0);
+export const topicContains = (node, slug) => node.lessons.some((l) => l.slug === slug) || node.children.some((c) => topicContains(c, slug));
 
 /**
  * Resolve a cross-lesson link written in Markdown as [text](lesson:slug#anchor).

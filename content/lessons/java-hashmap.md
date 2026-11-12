@@ -4,6 +4,7 @@ slug: java-hashmap
 summary: Buckets, hash codes, collisions, treeification, resizing and the hashCode()/equals() contract — with animations you can replay and interview questions with sample answers.
 tags: [Java, Collections, Data structures]
 order: 1
+topic: Java / Collections
 updated: 2026-11-12
 ---
 

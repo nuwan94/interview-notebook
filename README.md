@@ -84,6 +84,12 @@ Levels: `basic`, `intermediate`, `deep`, `coding`.
 - Demo names live in `src/components/demos/index.jsx` (HashMap simulations in `DEMOS`, other components such as `java-timeline` in `CUSTOM`).
 - `{#id}` also works on `###` sub-headings. Add `subnav: true` to the front matter to list them under their section in the sidebar; they are searchable and linkable on their own.
 
+### Topics
+
+`topic: Java / Collections` in the front matter places a lesson in a nested topic tree (any depth, separated by `/`). The sidebar shows
+collapsible groups with lesson counts, and the home page lists lessons under matching headings. Opening a lesson expands its groups.
+Lessons without a `topic` appear at the top level.
+
 ### Linking lessons together
 
 Link to another lesson, or to an anchor inside it, with the `lesson:` scheme:
