@@ -495,8 +495,9 @@ mark.reading-word {
 }
 
 /* Java release timeline tiles */
-.jt-grid {
-  list-style: none;
+.jt-grid,
+.prose-nb .jt-grid {
+  list-style: none; /* beats ".prose-nb ol { list-style: decimal }", which printed faded 1. 2. 3. beside the tiles */
   margin: 0;
   padding: 0;
   display: grid;
