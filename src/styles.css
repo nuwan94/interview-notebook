@@ -6,6 +6,7 @@
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
 
   --color-desk: #e4e8ec;
+  --color-sidebar: #f4f6f9; /* the contents panel: a lighter card on the desk */
   --color-paper: #fefefb;
   --color-rule: #cfe0ef;
   --color-margin: #e9a9a9;

@@ -121,7 +121,7 @@ export function Layout() {
       <div className="max-w-[88rem] mx-auto px-3 py-5 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-6">
         <aside
           id="sidebar"
-          className={`${menuOpen ? 'block' : 'hidden'} lg:block mb-4 lg:mb-0 lg:sticky lg:top-[4.6rem] lg:self-start lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto pr-1`}
+          className={`${menuOpen ? 'block' : 'hidden'} lg:block mb-4 lg:mb-0 lg:sticky lg:top-[4.6rem] lg:self-start lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto rounded-lg border border-slate-300 bg-sidebar p-3 shadow-sm`}
         >
           <Sidebar lesson={lesson} onNavigate={() => setMenuOpen(false)} />
         </aside>
