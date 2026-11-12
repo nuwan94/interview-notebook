@@ -52,10 +52,22 @@ export function Layout() {
       </a>
       <header className="md:sticky top-0 z-30 bg-desk/95 backdrop-blur border-b border-slate-300">
         <div className="max-w-[88rem] mx-auto flex flex-wrap items-center gap-2 px-3 py-2">
-          <button type="button" className="btn lg:hidden" onClick={() => setMenuOpen((o) => !o)} aria-expanded={menuOpen} aria-controls="sidebar">
-            ☰ Contents
+          {/* narrow screens: the title is the menu button (the sidebar has a Home link); wide screens: the title is the home link */}
+          <button
+            type="button"
+            className="btn lg:!hidden !px-2.5 mr-2 font-hand font-bold text-xl text-pen flex items-center gap-2"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-expanded={menuOpen}
+            aria-controls="sidebar"
+            aria-label="Interview Notebook: open the contents menu"
+          >
+            <span aria-hidden="true" className="font-sans text-base">
+              ☰
+            </span>
+            <img src="./favicon.svg" alt="" width="24" height="24" />
+            Interview Notebook
           </button>
-          <Link to="/" className="font-hand font-bold text-xl text-pen no-underline mr-2 flex items-center gap-2">
+          <Link to="/" className="hidden lg:flex font-hand font-bold text-xl text-pen no-underline mr-2 items-center gap-2">
             <img src="./favicon.svg" alt="" width="24" height="24" />
             Interview Notebook
           </Link>

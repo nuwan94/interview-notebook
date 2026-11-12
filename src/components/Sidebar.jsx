@@ -95,6 +95,11 @@ export function Sidebar({ lesson, onNavigate }) {
     <nav aria-label="Notebook navigation" className="text-sm">
       <p className="font-hand font-bold text-lg text-pen m-0 mb-1">Lessons</p>
       <ul className="list-none m-0 p-0 mb-4">
+        <li className="lg:hidden">
+          <NavLink to="/" end onClick={onNavigate} className={({ isActive }) => `${link} ${isActive ? 'bg-white text-pen font-bold shadow-sm' : ''}`}>
+            Home
+          </NavLink>
+        </li>
         <TopicBranch node={topicTree} lesson={lesson} onNavigate={onNavigate} link={link} closed={closed} toggle={toggle} />
         <li>
           <NavLink to="/glossary" onClick={onNavigate} className={({ isActive }) => `${link} ${isActive ? 'bg-white text-pen font-bold shadow-sm' : ''}`}>
