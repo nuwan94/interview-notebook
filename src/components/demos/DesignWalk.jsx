@@ -8,6 +8,7 @@ import { AUTH_SCENES } from './authScenes.js';
 import { OAUTH_SCENES } from './oauthScenes.js';
 import { OIDC_SCENES } from './oidcScenes.js';
 import { JWT_SCENES } from './jwtScenes.js';
+import { SECURITY_SCENES } from './securityScenes.js';
 
 const TONE = {
   ok: { border: '2px solid var(--color-ok)', background: 'var(--color-ok-soft)', badge: 'var(--color-ok)' },
@@ -201,3 +202,4 @@ export const AuthWalk = () => <Walk scenes={AUTH_SCENES} icons ariaLabel="Authen
 export const OauthWalk = () => <Walk scenes={OAUTH_SCENES} icons ariaLabel="OAuth 2.0 walk-through" />;
 export const OidcWalk = () => <Walk scenes={OIDC_SCENES} icons ariaLabel="OpenID Connect walk-through" />;
 export const JwtWalk = () => <Walk scenes={JWT_SCENES} icons ariaLabel="JWT walk-through" />;
+export const SecurityWalk = () => <Walk scenes={SECURITY_SCENES} ariaLabel="Spring Security filter chain walk-through" />;
