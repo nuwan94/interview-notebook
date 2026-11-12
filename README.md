@@ -68,6 +68,15 @@ Normal Markdown: tables, code fences (java, javascript, bash), blockquotes (show
 name: bucket-index
 ```
 
+Flow charts and sequence diagrams use a `mermaid` fence ([Mermaid](https://mermaid.js.org) syntax). The library is loaded only on lessons that contain one. Use `flowchart` for procedures and decisions, `sequenceDiagram` for conversations between systems. Avoid `;` and `#` inside labels.
+
+```mermaid
+flowchart TD
+  A[Parse request] --> B{Logged in?}
+  B -- yes --> C[Serve the page]
+  B -- no --> D[Redirect to login]
+```
+
 ## Interview questions {#questions}
 
 ### [basic] What is a stream? {#what-is-a-stream}

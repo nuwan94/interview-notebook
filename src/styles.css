@@ -887,3 +887,14 @@ mark.reading-word {
     opacity: 0.4;
   }
 }
+
+/* mermaid diagrams */
+.mermaid-fig {
+  text-align: center;
+  min-height: 4rem;
+}
+.mermaid-svg svg {
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}

@@ -10,6 +10,7 @@ import { rehypeGlossary } from '../lib/glossary.js';
 import { resolveLessonLink, slugify } from '../lib/content.js';
 import { Term } from './Term.jsx';
 import { DemoFrame } from './demos/index.jsx';
+import { MermaidDiagram } from './Mermaid.jsx';
 import { useReaderCtx } from '../lib/reader.jsx';
 import { copyText, lessonUrl } from '../lib/share.js';
 
@@ -30,6 +31,7 @@ function CodeBlock({ children }) {
     const name = /name:\s*([\w-]+)/.exec(textOf(code.props.children))?.[1];
     return <DemoFrame name={name} />;
   }
+  if (cls.includes('language-mermaid')) return <MermaidDiagram code={textOf(code.props.children)} />;
   const lang = /language-(\w+)/.exec(cls)?.[1];
   return (
     <div className="relative" data-noread>
@@ -144,7 +146,7 @@ const components = {
 const rehypePlugins = [
   [
     rehypeHighlight,
-    { languages: { java, javascript, bash }, aliases: { javascript: ['js'] }, detect: false, plainText: ['demo', 'text', 'txt', 'console'] },
+    { languages: { java, javascript, bash }, aliases: { javascript: ['js'] }, detect: false, plainText: ['demo', 'mermaid', 'text', 'txt', 'console'] },
   ],
   rehypeGlossary,
 ];
