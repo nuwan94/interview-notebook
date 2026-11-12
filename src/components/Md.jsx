@@ -132,8 +132,11 @@ const components = {
       </a>
     ),
   table: ({ children }) => (
-    <div className="table-wrap" tabIndex={0} role="region" aria-label="Table, scrollable">
-      <table>{children}</table>
+    // outer = the taped card (can draw outside its box); inner = the horizontal scroller
+    <div className="table-wrap">
+      <div className="table-scroll" tabIndex={0} role="region" aria-label="Table, scrollable">
+        <table>{children}</table>
+      </div>
     </div>
   ),
 };

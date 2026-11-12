@@ -191,7 +191,7 @@ html {
 .prose-nb code {
   font-family: var(--font-mono);
   font-size: 0.86em;
-  line-height: inherit;
+  line-height: 1; /* an inline box with its own font must not grow the line (it pushed table rows to 33px and off the ruled lines) */
   background: #eef2f7;
   padding: 0.05em 0.35em;
   border-radius: 4px;
@@ -228,9 +228,35 @@ html {
 .prose-nb blockquote p + p {
   margin-top: 0;
 }
+/* tables sit on a taped card, like the animations. Vertical padding + border add exactly one line (--lh) so the ruled lines stay registered. */
 .prose-nb .table-wrap {
+  position: relative;
+  background: #fff;
+  border: 1px solid #c9d5e3;
+  border-radius: 6px;
+  padding: calc(var(--lh) / 2 - 1px) 0.75rem;
+  box-shadow: 3px 4px 0 rgba(27, 36, 51, 0.1);
+}
+.prose-nb .table-wrap::before,
+.prose-nb .table-wrap::after {
+  content: '';
+  position: absolute;
+  top: -0.6rem;
+  width: 4rem;
+  height: 1.2rem;
+  background: rgba(255, 228, 92, 0.65);
+  border: 1px solid rgba(190, 160, 20, 0.3);
+}
+.prose-nb .table-wrap::before {
+  left: 1.2rem;
+  transform: rotate(-3deg);
+}
+.prose-nb .table-wrap::after {
+  right: 1.2rem;
+  transform: rotate(2.5deg);
+}
+.prose-nb .table-scroll {
   overflow-x: auto;
-  background: var(--color-paper);
 }
 .prose-nb table {
   border-collapse: collapse;
@@ -242,12 +268,24 @@ html {
   padding: 0 0.75rem;
   text-align: left;
   vertical-align: top;
-  box-shadow: inset 0 -1px 0 #b9cde0;
+  box-shadow: inset 0 -1px 0 #d3deea;
+}
+.prose-nb tbody tr:last-child td {
+  box-shadow: none; /* the card border closes the table */
 }
 .prose-nb th {
   font-weight: 700;
   color: var(--color-pen);
   white-space: nowrap;
+  box-shadow: inset 0 -2px 0 #9fb6d1; /* heavier rule under the header row */
+}
+.prose-nb th:first-child,
+.prose-nb td:first-child {
+  padding-left: 0.25rem;
+}
+.prose-nb th:last-child,
+.prose-nb td:last-child {
+  padding-right: 0.25rem;
 }
 .prose-nb td p {
   margin: 0;
@@ -723,6 +761,9 @@ mark.reading-word {
 .q-item .answer.prose-nb .table-wrap {
   margin-top: 0.6rem;
   margin-bottom: 0;
+}
+.q-item .answer.prose-nb .table-wrap {
+  margin-top: 1.1rem; /* room for the tape strips above the card */
 }
 .flash {
   animation: flash 1.6s;
