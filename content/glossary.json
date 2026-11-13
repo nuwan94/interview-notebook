@@ -651,5 +651,14 @@
   {"term":"cursor pagination","short":"Paging by an opaque cursor for the last seen item instead of an offset; stable under inserts and fast for deep pages."},
   {"term":"HATEOAS","short":"Hypermedia as the engine of application state: responses carry links to next actions (Richardson maturity level 3)."},
   {"term":"429 Too Many Requests","aliases":["rate limiting"],"short":"Status returned when a client exceeds a rate limit, with Retry-After telling when to try again."},
-  {"term":"202 Accepted","short":"The request was accepted for asynchronous processing; the Location header points at a status resource to poll."}
+  {"term":"202 Accepted","short":"The request was accepted for asynchronous processing; the Location header points at a status resource to poll."},
+  {"term":"@Cacheable","short":"Caches a method result by key; on a hit the method is skipped. A caching proxy implements it (cache-aside)."},
+  {"term":"cache-aside","short":"Read the cache first; on a miss load from the source, store it, and return it."},
+  {"term":"cache stampede","short":"A hot cache entry expires and many requests hit the source at once; mitigate with sync loading, jittered TTLs and refresh-ahead."},
+  {"term":"TTL","aliases":["time to live"],"short":"How long a cache entry (or message) stays valid before it expires."},
+  {"term":"Caffeine","short":"High-performance in-process Java cache with size and time-based eviction."},
+  {"term":"Redis","short":"In-memory data store used for shared caches, sessions, rate limits and locks."},
+  {"term":"@Async","short":"Runs a method on a separate executor thread so the caller returns immediately; needs a bounded pool and a call through the proxy."},
+  {"term":"@Scheduled","short":"Runs a method on a schedule (fixedRate, fixedDelay, cron); runs on every instance unless locked."},
+  {"term":"TaskExecutor","aliases":["ThreadPoolTaskExecutor"],"short":"Spring thread-pool abstraction for async work: core size, max size, queue capacity, rejection policy."}
 ]
