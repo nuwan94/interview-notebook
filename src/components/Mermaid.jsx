@@ -31,7 +31,7 @@ function loadMermaid() {
         sequenceNumberColor: '#ffffff',
       },
       flowchart: { curve: 'basis', htmlLabels: true, padding: 10, nodeSpacing: 36, rankSpacing: 30, wrappingWidth: 420, useMaxWidth: true },
-      sequence: { mirrorActors: false, showSequenceNumbers: false, actorMargin: 40, messageMargin: 28, wrap: true },
+      sequence: { mirrorActors: false, showSequenceNumbers: false, actorMargin: 50, messageMargin: 32, boxMargin: 12, wrap: true, wrapPadding: 8 },
     });
     return mermaid;
   });

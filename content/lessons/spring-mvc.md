@@ -25,20 +25,16 @@ sequenceDiagram
   participant C as Client
   participant F as Servlet filters
   participant D as DispatcherServlet
-  participant H as HandlerMapping
-  participant I as Interceptors
   participant K as Controller
   participant M as Message converters
   C->>F: HTTP request
-  F->>D: doFilter chain
-  D->>H: which handler
-  H-->>D: controller method and interceptors
-  D->>I: preHandle
-  D->>M: read request body to object
+  F->>D: filter chain passes it on
+  Note over D: HandlerMapping finds the handler, interceptors preHandle
+  D->>M: read request body into an object
   D->>K: invoke with resolved arguments
   K-->>D: return value
-  D->>M: write object to response body
-  D->>I: postHandle and afterCompletion
+  D->>M: write the object as the response body
+  Note over D: interceptors postHandle and afterCompletion
   D-->>F: response
   F-->>C: HTTP response
 ```

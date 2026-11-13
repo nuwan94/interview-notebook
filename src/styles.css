@@ -1005,3 +1005,16 @@ mark.reading-word {
     box-shadow: inset 0 0 0 40px rgba(250, 204, 21, 0.55);
   }
 }
+
+/* diagram text never sits directly on a line: a paper-coloured halo keeps it readable over lifelines and edges */
+.mermaid-svg .messageText,
+.mermaid-svg .noteText,
+.mermaid-svg .labelText,
+.mermaid-svg .loopText,
+.mermaid-svg .edgeLabel,
+.mermaid-svg .relationshipLabel {
+  paint-order: stroke fill;
+  stroke: #fffffe !important;
+  stroke-width: 6px !important;
+  stroke-linejoin: round;
+}
