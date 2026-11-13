@@ -16,6 +16,7 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { SPRING_TESTING_SCENES } from './springTestingScenes.js';
 import { SPRING_CLOUD_SCENES } from './springCloudScenes.js';
 import { SPRING_TX_SCENES } from './springTxScenes.js';
 import { SPRING_MVC_SCENES } from './springMvcScenes.js';
@@ -61,6 +62,7 @@ const ICONS = [
   [/auto-?configuration/i, '🪄'],
   [/config|properties/i, '🗂️'],
   [/gateway/i, '🚪'],
+  [/\btest/i, '🧪'],
   [/policy/i, '📋'],
   [/orchestrator/i, '🎼'],
   [/registry|discovery/i, '📇'],
@@ -254,3 +256,4 @@ export const SpringJpaWalk = () => <Walk scenes={SPRING_JPA_SCENES} icons ariaLa
 export const SpringMvcWalk = () => <Walk scenes={SPRING_MVC_SCENES} icons ariaLabel="Spring MVC walk-through" />;
 export const SpringTxWalk = () => <Walk scenes={SPRING_TX_SCENES} icons ariaLabel="Spring transactions walk-through" />;
 export const SpringCloudWalk = () => <Walk scenes={SPRING_CLOUD_SCENES} icons ariaLabel="Spring Cloud walk-through" />;
+export const SpringTestingWalk = () => <Walk scenes={SPRING_TESTING_SCENES} icons ariaLabel="Spring testing walk-through" />;
