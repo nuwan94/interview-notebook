@@ -1,4 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
+import { LuRotateCcw } from 'react-icons/lu';
+import { PlayLabel } from '../PlayLabel.jsx';
+import { iconFor } from './icons.jsx';
 import { useReducedMotion } from '../../lib/prefs.jsx';
 import { Glossed } from '../Term.jsx';
 import { usePlayer, useOnceVisible } from './usePlayer.js';
@@ -16,6 +19,8 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { KUBERNETES_SCENES } from './kubernetesScenes.js';
+import { DOCKER_SCENES } from './dockerScenes.js';
 import { JAVA_CONCURRENT_COLLECTIONS_SCENES } from './javaConcurrentCollectionsScenes.js';
 import { JAVA_STREAMS_SCENES } from './javaStreamsScenes.js';
 import { JAVA_FUNCTIONAL_SCENES } from './javaFunctionalScenes.js';
@@ -44,71 +49,6 @@ const TONE = {
 };
 const DEP_COLOR = { ok: 'var(--color-ok)', bad: 'var(--color-bad)', none: 'var(--color-soft)' };
 
-// Icon for an actor or an item, picked from its name. First match wins; null means "no icon".
-const ICONS = [
-  // Java collections, lambdas, streams (kept specific so older lessons keep their icons)
-  [/comparable|comparator|^by(amount|merchant)|list\.sort|combined comparator|integer\.compare|a\.amount - b\.amount/i, '↕️'],
-  [/predicate|function<|consumer<|supplier<|operator<|isactive|hasfunds|feerule|method reference|^lambda|lambda$|four kinds/i, '🧩'],
-  [/optional|^find\(|find\(id\)|orelse/i, '🎁'],
-  [/\bstream|\.collect|collect\(|groupingby|partitioningby|flatmap|\.map\(|element \d|^intermediate|^terminal|joining|teeing|tolist|toset|tomap/i, '🌊'],
-  [/forkjoin/i, '🧵'],
-  [/iterator|for-each/i, '➡️'],
-  [/exception$|error message/i, '💥'],
-  [/atomic|adder/i, '🔢'],
-  [/hashmap|synchronizedmap|^table$|bucket|^map$|treemap|balance per account/i, '🗺️'],
-  [/hashset|treeset|processed account|^set$/i, '🧮'],
-  [/arraylist|linkedlist|backing array|array v\d|old array|new array|copyonwrite|^list$|statements by date/i, '📋'],
-  [/attacker|mallory|eve\b|thief|malicious/i, '🕵️'],
-  [/alice|bob|carol|user|owner|engineer|operator/i, '🧑'],
-  [/browser/i, '🌐'],
-  [/job|batch|daemon/i, '⚙️'],
-  [/client|app\b|job|mobile/i, '📱'],
-  [/authorization server|auth server|issuer|identity provider/i, '🛡️'],
-  [/session store|store\b|database|db\b/i, '🗄️'],
-  [/lock table|lease/i, '🔐'],
-  [/task table|task database|coordination store/i, '🗄️'],
-  [/worker|instance|consumer|producer|publisher|subscriber|replica|node|coordinator/i, '🖥️'],
-  [/transaction/i, '🧾'],
-  [/write-ahead log/i, '📒'],
-  [/persistence context|repository|entity manager/i, '🗃️'],
-  [/application context|container|bean factory/i, '📦'],
-  [/bean/i, '🫘'],
-  [/entity/i, '📄'],
-  [/converter|serializer/i, '🔄'],
-  [/validator|validation/i, '✅'],
-  [/proxy/i, '🎭'],
-  [/aspect|advice/i, '🎯'],
-  [/dispatcher|servlet/i, '🚦'],
-  [/controller/i, '🎛️'],
-  [/filter|interceptor/i, '🧰'],
-  [/auto-?configuration/i, '🪄'],
-  [/config|properties/i, '🗂️'],
-  [/gateway/i, '🚪'],
-  [/\btest/i, '🧪'],
-  [/executor|thread/i, '🧵'],
-  [/scheduler|timer/i, '⏰'],
-  [/metric|prometheus|dashboard|alert/i, '📈'],
-  [/trace|span|\blogs?\b/i, '🔎'],
-  [/event loop/i, '🔁'],
-  [/observation/i, '🔭'],
-  [/native|executable/i, '🚀'],
-  [/kubernetes|probe/i, '☸️'],
-  [/cache/i, '⚡'],
-  [/policy/i, '📋'],
-  [/orchestrator/i, '🎼'],
-  [/registry|discovery/i, '📇'],
-  [/broker|queue|topic|kafka/i, '📬'],
-  [/circuit breaker|relay/i, '🔌'],
-  [/\bCA\b|authority/i, '🏛️'],
-  [/server|api|service|gateway/i, '🖥️'],
-  [/refresh token|access token|token|credential|cookie/i, '🎫'],
-  [/ciphertext|encrypt/i, '🔒'],
-  [/signature/i, '✍️'],
-  [/certificate/i, '📜'],
-  [/key/i, '🔑'],
-  [/message|request/i, '✉️'],
-];
-const iconFor = (name = '') => ICONS.find(([re]) => re.test(name))?.[1] ?? null;
 
 function Avatar({ name, tone = 'none', size = 'md' }) {
   const t = TONE[tone] || TONE.none;
@@ -171,10 +111,10 @@ export function Walk({ scenes, ariaLabel, icons = false }) {
 
       <div className="flex flex-wrap items-center gap-2 mb-2">
         <button type="button" className="btn primary" onClick={() => (p.playing ? p.pause() : p.play())}>
-          {p.playing ? '⏸ Pause' : p.index >= p.last ? '▶ Play again' : '▶ Play'}
+          <PlayLabel p={p} />
         </button>
         <button type="button" className="btn" onClick={p.replay}>
-          ↺ Replay
+          <LuRotateCcw aria-hidden="true" className="btn-icon" /> Replay
         </button>
         <button type="button" className="btn" onClick={() => p.step(-1)} disabled={p.index === 0} aria-label="Previous step">
           ◀
@@ -298,3 +238,5 @@ export const JavaCollectionsWalk = () => <Walk scenes={JAVA_COLLECTIONS_SCENES} 
 export const JavaFunctionalWalk = () => <Walk scenes={JAVA_FUNCTIONAL_SCENES} icons ariaLabel="Lambdas and Optional walk-through" />;
 export const JavaStreamsWalk = () => <Walk scenes={JAVA_STREAMS_SCENES} icons ariaLabel="Java streams walk-through" />;
 export const JavaConcurrentCollectionsWalk = () => <Walk scenes={JAVA_CONCURRENT_COLLECTIONS_SCENES} icons ariaLabel="Concurrent collections walk-through" />;
+export const DockerWalk = () => <Walk scenes={DOCKER_SCENES} icons ariaLabel="Docker walk-through" />;
+export const KubernetesWalk = () => <Walk scenes={KUBERNETES_SCENES} icons ariaLabel="Kubernetes walk-through" />;

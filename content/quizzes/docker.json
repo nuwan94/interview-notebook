@@ -1,0 +1,52 @@
+{
+  "questions": [
+    {
+      "q": "What is the main difference between a container and a virtual machine?",
+      "o": ["A container shares the host kernel and is isolated with namespaces and cgroups", "A container runs its own full operating system kernel on a hypervisor", "A container needs a separate physical server for each application", "A container can only run one process written in a single language"],
+      "w": "Because the kernel is shared, containers start fast and are small. The trade-off is weaker isolation than a VM.",
+      "s": 25
+    },
+    {
+      "q": "A Dockerfile runs `COPY . .` and then `RUN mvn package`. Why is every rebuild slow?",
+      "o": ["Any source change invalidates the copy layer, so dependencies download again", "Maven refuses to run in a layer that was copied from the host", "Docker rebuilds every image from scratch regardless of the order", "The jar is rebuilt twice because of the duplicate instruction"],
+      "w": "Copy `pom.xml` and download dependencies first, then copy the source. Unchanged layers come from the cache.",
+      "s": 35
+    },
+    {
+      "q": "Why prefer `ENTRYPOINT [\"java\", \"-jar\", \"app.jar\"]` over `CMD java -jar app.jar`?",
+      "o": ["The JVM becomes PID 1 and receives SIGTERM for a graceful shutdown", "The exec form starts the JVM faster than the shell form does", "The shell form cannot pass arguments to the java command at all", "The exec form lets the container run without any base image"],
+      "w": "In shell form `/bin/sh` is PID 1 and may not forward signals, so the app is killed after the grace period.",
+      "s": 30
+    },
+    {
+      "q": "A container writes database files to its own file system and is then removed. What happens to the data?",
+      "o": ["It is lost, because the writable layer is deleted with the container", "It is kept, because Docker copies it into the image automatically", "It is kept, because the data moves into the nearest volume", "It is lost only when the image is also removed from the registry"],
+      "w": "Use a volume for data that must survive. The writable layer is for scratch files only.",
+      "s": 25
+    },
+    {
+      "q": "In Docker Compose the app needs the database. Which JDBC host name works?",
+      "o": ["The service name, for example `db`", "`localhost`, because they are on the same machine", "The host machine's public IP address only", "`127.0.0.1`, as the compose network is flat"],
+      "w": "Inside a container `localhost` is the container itself. Compose provides DNS names for its services.",
+      "s": 30
+    },
+    {
+      "q": "A Spring Boot container with `-Xmx1g` and a 1 GiB memory limit keeps being OOMKilled. What is the likely cause?",
+      "o": ["Non-heap memory (metaspace, threads, buffers) pushes it over the limit", "Docker caps the heap at half of the limit and kills the JVM", "The garbage collector is disabled inside containers", "The heap flag is ignored, so the heap grows without a bound"],
+      "w": "Use `-XX:MaxRAMPercentage=75` or leave headroom. Exit code 137 indicates the kernel killed the process.",
+      "s": 35
+    },
+    {
+      "q": "What does `depends_on` alone guarantee in Docker Compose?",
+      "o": ["Only the start order: it does not wait until the dependency is ready", "That the database accepts connections before the app starts", "That the dependency is restarted whenever the app restarts", "That both containers run on the same CPU core"],
+      "w": "Add a healthcheck and `condition: service_healthy`, or make the application retry its connection.",
+      "s": 30
+    },
+    {
+      "q": "Which practice best keeps a database password out of a Docker image?",
+      "o": ["Inject it at run time from a secret store or mounted secret", "Set it with `ENV` in the Dockerfile and delete it later", "Pass it as an `ARG`, because build arguments are not stored", "Commit a `.env` file into the image for convenience"],
+      "w": "`ENV`, `ARG` and copied files stay in image layers and history. Secrets belong to the runtime environment.",
+      "s": 30
+    }
+  ]
+}
