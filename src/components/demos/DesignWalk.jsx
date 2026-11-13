@@ -16,6 +16,7 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { SPRING_MVC_SCENES } from './springMvcScenes.js';
 import { SPRING_JPA_SCENES } from './springJpaScenes.js';
 import { SPRING_AOP_SCENES } from './springAopScenes.js';
 import { SPRING_BOOT_SCENES } from './springBootScenes.js';
@@ -48,6 +49,8 @@ const ICONS = [
   [/application context|container|bean factory/i, '📦'],
   [/bean/i, '🫘'],
   [/entity/i, '📄'],
+  [/converter|serializer/i, '🔄'],
+  [/validator|validation/i, '✅'],
   [/proxy/i, '🎭'],
   [/aspect|advice/i, '🎯'],
   [/dispatcher|servlet/i, '🚦'],
@@ -246,3 +249,4 @@ export const SpringCoreWalk = () => <Walk scenes={SPRING_CORE_SCENES} icons aria
 export const SpringBootWalk = () => <Walk scenes={SPRING_BOOT_SCENES} icons ariaLabel="Spring Boot walk-through" />;
 export const SpringAopWalk = () => <Walk scenes={SPRING_AOP_SCENES} icons ariaLabel="Spring AOP walk-through" />;
 export const SpringJpaWalk = () => <Walk scenes={SPRING_JPA_SCENES} icons ariaLabel="Spring Data JPA walk-through" />;
+export const SpringMvcWalk = () => <Walk scenes={SPRING_MVC_SCENES} icons ariaLabel="Spring MVC walk-through" />;
