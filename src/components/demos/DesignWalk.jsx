@@ -16,6 +16,7 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { SPRING_MSG_SCENES } from './springMsgScenes.js';
 import { SPRING_OBS_SCENES } from './springObsScenes.js';
 import { SPRING_ASYNC_SCENES } from './springAsyncScenes.js';
 import { REST_API_SCENES } from './restApiScenes.js';
@@ -269,3 +270,4 @@ export const SpringTestingWalk = () => <Walk scenes={SPRING_TESTING_SCENES} icon
 export const RestApiWalk = () => <Walk scenes={REST_API_SCENES} icons ariaLabel="REST API design walk-through" />;
 export const SpringAsyncWalk = () => <Walk scenes={SPRING_ASYNC_SCENES} icons ariaLabel="Caching and async walk-through" />;
 export const SpringObsWalk = () => <Walk scenes={SPRING_OBS_SCENES} icons ariaLabel="Observability walk-through" />;
+export const SpringMsgWalk = () => <Walk scenes={SPRING_MSG_SCENES} icons ariaLabel="Spring messaging walk-through" />;
