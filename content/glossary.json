@@ -516,5 +516,21 @@
   {"term":"pessimistic locking","aliases":["pessimistic lock"],"short":"Lock the row when reading (SELECT FOR UPDATE) so others wait. Avoids retries; costs blocking and deadlock risk."},
   {"term":"two-phase locking","aliases":["2PL"],"short":"Acquire all locks before releasing any, holding them until commit; gives serializability at the cost of blocking."},
   {"term":"savepoint","short":"A named point inside a transaction you can roll back to without aborting the whole transaction (used by NESTED propagation)."},
-  {"term":"read-your-writes","short":"A session guarantee: after you write, your own later reads see that write, even on a replicated store."}
+  {"term":"read-your-writes","short":"A session guarantee: after you write, your own later reads see that write, even on a replicated store."},
+  {"term":"NoSQL","short":"Umbrella for non-relational databases (key-value, document, wide-column, graph) with flexible schemas, query-shaped models and built-in horizontal scaling."},
+  {"term":"relational database","aliases":["RDBMS","SQL database"],"short":"Stores data in tables linked by keys, queried with SQL, with a fixed schema, constraints and ACID transactions."},
+  {"term":"normalisation","aliases":["normalization","normal form"],"short":"Organising tables so each fact is stored once, avoiding duplication and update anomalies; joins reassemble the data."},
+  {"term":"denormalisation","aliases":["denormalization"],"short":"Deliberately duplicating or embedding data so a query is one read; faster reads, but copies must be kept in sync."},
+  {"term":"document database","aliases":["document store"],"short":"Stores JSON-like documents (nested, varied shape) by key with field indexes. Example: MongoDB."},
+  {"term":"key-value store","short":"The simplest NoSQL model: get and set a value by key, very fast. Used for caches and sessions. Examples: Redis, DynamoDB."},
+  {"term":"wide-column store","aliases":["column-family store"],"short":"Rows grouped by a partition key with sorted columns, built for huge write volumes and queries known in advance. Examples: Cassandra, HBase."},
+  {"term":"graph database","short":"Stores nodes and relationships and traverses them efficiently; suits connected data such as fraud rings or recommendations. Example: Neo4j."},
+  {"term":"NewSQL","aliases":["distributed SQL"],"short":"SQL with ACID transactions and horizontal scaling through consensus between nodes. Examples: Spanner, CockroachDB."},
+  {"term":"polyglot persistence","short":"Using a different database for each need (relational, key-value, search, analytics) within one system."},
+  {"term":"partition key","aliases":["shard key"],"short":"The field whose value decides which partition or shard stores a row; a good key spreads load and keeps co-read data together."},
+  {"term":"hot partition","aliases":["hot spot"],"short":"One partition receiving far more traffic than others because of a skewed or monotonic key, limiting scale."},
+  {"term":"LSM tree","aliases":["log-structured merge tree"],"short":"Storage structure that buffers writes in memory and flushes sorted immutable files, merged later by compaction. Fast writes; used by Cassandra and RocksDB."},
+  {"term":"B-tree","aliases":["B-tree index"],"short":"Balanced tree index used by most relational databases for fast point and range lookups, updating pages in place."},
+  {"term":"N+1 problem","aliases":["N+1 query"],"short":"Loading N parents then lazily loading the children issues 1 + N queries; fix with join fetch, batch fetching or projections."},
+  {"term":"schema on read","short":"The data has no enforced shape in storage; the reading application interprets it. Contrast schema on write in relational databases."}
 ]
