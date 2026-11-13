@@ -4,7 +4,7 @@ nav: Spring core (IoC and DI)
 slug: spring-core
 summary: What Inversion of Control and dependency injection are, how the Spring container creates and wires beans, injection styles, bean scopes and lifecycle, configuration with annotations and Java config, and common pitfalls, with Java examples and interview questions.
 tags: [Spring, IoC, Dependency Injection, Beans, ApplicationContext]
-order: 26
+order: 28
 topic: Spring / Fundamentals
 updated: 2026-11-13
 subnav: true

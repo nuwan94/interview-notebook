@@ -4,7 +4,7 @@ nav: REST API design
 slug: rest-api-design
 summary: Designing REST APIs that survive retries and change, resource modelling and HTTP semantics, idempotency keys, pagination (offset versus cursor), filtering, versioning, conditional requests with ETags, error contracts, long-running operations and rate limiting, with Spring examples and interview questions.
 tags: [REST, API Design, Idempotency, Pagination, HTTP, Spring]
-order: 31
+order: 33
 topic: Spring / Web
 updated: 2026-11-13
 subnav: true
