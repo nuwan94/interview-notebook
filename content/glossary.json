@@ -532,5 +532,21 @@
   {"term":"LSM tree","aliases":["log-structured merge tree"],"short":"Storage structure that buffers writes in memory and flushes sorted immutable files, merged later by compaction. Fast writes; used by Cassandra and RocksDB."},
   {"term":"B-tree","aliases":["B-tree index"],"short":"Balanced tree index used by most relational databases for fast point and range lookups, updating pages in place."},
   {"term":"N+1 problem","aliases":["N+1 query"],"short":"Loading N parents then lazily loading the children issues 1 + N queries; fix with join fetch, batch fetching or projections."},
-  {"term":"schema on read","short":"The data has no enforced shape in storage; the reading application interprets it. Contrast schema on write in relational databases."}
+  {"term":"schema on read","short":"The data has no enforced shape in storage; the reading application interprets it. Contrast schema on write in relational databases."},
+  {"term":"1NF","aliases":["first normal form"],"short":"Every column holds a single atomic value, with no repeating groups."},
+  {"term":"2NF","aliases":["second normal form"],"short":"1NF plus every non-key column depends on the whole composite key, not part of it."},
+  {"term":"3NF","aliases":["third normal form"],"short":"2NF plus no non-key column depends on another non-key column (no transitive dependency)."},
+  {"term":"BCNF","aliases":["Boyce-Codd normal form"],"short":"Stricter 3NF: for every non-trivial dependency A -> B, A must be a superkey."},
+  {"term":"functional dependency","short":"A -> B: rows with the same A always have the same B (customer_id determines email)."},
+  {"term":"candidate key","short":"A minimal set of columns that uniquely identifies a row; the primary key is the chosen one."},
+  {"term":"composite key","short":"A key made of two or more columns together, such as (account_id, fund_id)."},
+  {"term":"partial dependency","short":"A non-key column that depends on only part of a composite key; removed by 2NF."},
+  {"term":"transitive dependency","short":"A non-key column that depends on another non-key column, so on the key only indirectly; removed by 3NF."},
+  {"term":"update anomaly","short":"A repeated fact is changed in some rows but not others, leaving contradictory data."},
+  {"term":"insert anomaly","short":"A fact cannot be recorded without an unrelated fact that does not exist yet."},
+  {"term":"delete anomaly","short":"Deleting a row also destroys unrelated facts that shared it."},
+  {"term":"materialized view","aliases":["materialised view"],"short":"A stored query result refreshed on demand or schedule: fast reads, possibly stale."},
+  {"term":"star schema","short":"Analytics design: a central fact table of measurements joined to dimension tables."},
+  {"term":"OLTP","short":"Online transaction processing: many small concurrent reads and writes; favours normalised schemas."},
+  {"term":"OLAP","short":"Online analytical processing: large read-heavy aggregations; favours denormalised, column-oriented stores."}
 ]
