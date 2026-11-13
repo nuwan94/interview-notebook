@@ -1,0 +1,52 @@
+{
+  "questions": [
+    {
+      "q": "Two threads call `put` on the same plain `HashMap` at the same time. What is the risk?",
+      "o": ["Lost updates or a corrupted internal structure", "The second thread always throws an exception", "The map becomes read-only", "The map sorts its entries automatically"],
+      "w": "`HashMap` is not thread-safe. Use `ConcurrentHashMap`, or confine the map to one thread.",
+      "s": 25
+    },
+    {
+      "q": "Which statement about `ConcurrentHashMap` in Java 8+ is correct?",
+      "o": ["Writers lock only the affected bin, and reads do not lock at all", "A single lock protects the whole map", "Reads and writes both take the same global lock", "It copies the whole table on every write"],
+      "w": "Empty bins are filled with CAS and occupied bins are locked individually. This lets many threads work in parallel.",
+      "s": 30
+    },
+    {
+      "q": "Which code is a check-then-act race on a `ConcurrentHashMap`?",
+      "o": ["`if (!map.containsKey(k)) map.put(k, v);`", "`map.putIfAbsent(k, v);`", "`map.computeIfAbsent(k, f);`", "`map.merge(k, 1, Integer::sum);`"],
+      "w": "Each call is atomic, but two calls in a row are not. Use the single atomic methods instead.",
+      "s": 30
+    },
+    {
+      "q": "Why does `ConcurrentHashMap` reject `null` values?",
+      "o": ["So that `get` returning `null` always means the key is absent", "Because null values would be slower to store", "Because Java 8 removed null from collections", "To save memory in each bin"],
+      "w": "In a concurrent map you cannot safely call `containsKey` afterwards to tell \"absent\" from \"mapped to null\", because another thread may change it in between.",
+      "s": 30
+    },
+    {
+      "q": "A list of event listeners is read thousands of times per second and changed once a day. Which collection suits it?",
+      "o": ["`CopyOnWriteArrayList`", "`Vector`", "`LinkedList` with a lock", "`PriorityBlockingQueue`"],
+      "w": "Reads take no lock and iterate a snapshot. Writes copy the whole array, which is fine when they are rare.",
+      "s": 25
+    },
+    {
+      "q": "A producer is faster than its consumers. How does a bounded `BlockingQueue` help?",
+      "o": ["`put` blocks when the queue is full, so the producer slows down", "The queue drops the oldest items silently", "The queue grows until memory is full", "The queue converts itself into a topic"],
+      "w": "This is backpressure. An unbounded queue hides overload until the heap is exhausted.",
+      "s": 30
+    },
+    {
+      "q": "Does iterating a `ConcurrentHashMap` while another thread modifies it throw `ConcurrentModificationException`?",
+      "o": ["No: its iterators are weakly consistent", "Yes, exactly like a `HashMap`", "Yes, but only for removals", "Only when the map has more than 1,000 entries"],
+      "w": "Weakly consistent iterators keep going and may or may not reflect later changes. Plain collections use fail-fast iterators.",
+      "s": 25
+    },
+    {
+      "q": "A shared request counter is updated by hundreds of threads. Why might `LongAdder` beat `AtomicLong`?",
+      "o": ["It spreads updates over several cells, so threads retry far less", "It uses a global lock that is cheaper", "It stores the counter in a database", "It guarantees an exact snapshot on every read"],
+      "w": "Under contention many CAS attempts on one variable fail and retry. `LongAdder` sums its cells on read, which is not an atomic snapshot.",
+      "s": 35
+    }
+  ]
+}

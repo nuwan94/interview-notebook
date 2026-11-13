@@ -16,6 +16,10 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { JAVA_CONCURRENT_COLLECTIONS_SCENES } from './javaConcurrentCollectionsScenes.js';
+import { JAVA_STREAMS_SCENES } from './javaStreamsScenes.js';
+import { JAVA_FUNCTIONAL_SCENES } from './javaFunctionalScenes.js';
+import { JAVA_COLLECTIONS_SCENES } from './javaCollectionsScenes.js';
 import { SPRING_BOOT3_SCENES } from './springBoot3Scenes.js';
 import { SPRING_REACTIVE_SCENES } from './springReactiveScenes.js';
 import { SPRING_MSG_SCENES } from './springMsgScenes.js';
@@ -42,6 +46,18 @@ const DEP_COLOR = { ok: 'var(--color-ok)', bad: 'var(--color-bad)', none: 'var(-
 
 // Icon for an actor or an item, picked from its name. First match wins; null means "no icon".
 const ICONS = [
+  // Java collections, lambdas, streams (kept specific so older lessons keep their icons)
+  [/comparable|comparator|^by(amount|merchant)|list\.sort|combined comparator|integer\.compare|a\.amount - b\.amount/i, '↕️'],
+  [/predicate|function<|consumer<|supplier<|operator<|isactive|hasfunds|feerule|method reference|^lambda|lambda$|four kinds/i, '🧩'],
+  [/optional|^find\(|find\(id\)|orelse/i, '🎁'],
+  [/\bstream|\.collect|collect\(|groupingby|partitioningby|flatmap|\.map\(|element \d|^intermediate|^terminal|joining|teeing|tolist|toset|tomap/i, '🌊'],
+  [/forkjoin/i, '🧵'],
+  [/iterator|for-each/i, '➡️'],
+  [/exception$|error message/i, '💥'],
+  [/atomic|adder/i, '🔢'],
+  [/hashmap|synchronizedmap|^table$|bucket|^map$|treemap|balance per account/i, '🗺️'],
+  [/hashset|treeset|processed account|^set$/i, '🧮'],
+  [/arraylist|linkedlist|backing array|array v\d|old array|new array|copyonwrite|^list$|statements by date/i, '📋'],
   [/attacker|mallory|eve\b|thief|malicious/i, '🕵️'],
   [/alice|bob|carol|user|owner|engineer|operator/i, '🧑'],
   [/browser/i, '🌐'],
@@ -278,3 +294,7 @@ export const SpringObsWalk = () => <Walk scenes={SPRING_OBS_SCENES} icons ariaLa
 export const SpringMsgWalk = () => <Walk scenes={SPRING_MSG_SCENES} icons ariaLabel="Spring messaging walk-through" />;
 export const SpringReactiveWalk = () => <Walk scenes={SPRING_REACTIVE_SCENES} icons ariaLabel="Reactive and virtual threads walk-through" />;
 export const SpringBoot3Walk = () => <Walk scenes={SPRING_BOOT3_SCENES} icons ariaLabel="Spring Boot 3 walk-through" />;
+export const JavaCollectionsWalk = () => <Walk scenes={JAVA_COLLECTIONS_SCENES} icons ariaLabel="Java collections walk-through" />;
+export const JavaFunctionalWalk = () => <Walk scenes={JAVA_FUNCTIONAL_SCENES} icons ariaLabel="Lambdas and Optional walk-through" />;
+export const JavaStreamsWalk = () => <Walk scenes={JAVA_STREAMS_SCENES} icons ariaLabel="Java streams walk-through" />;
+export const JavaConcurrentCollectionsWalk = () => <Walk scenes={JAVA_CONCURRENT_COLLECTIONS_SCENES} icons ariaLabel="Concurrent collections walk-through" />;

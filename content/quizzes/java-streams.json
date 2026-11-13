@@ -1,0 +1,52 @@
+{
+  "questions": [
+    {
+      "q": "You build `list.stream().filter(p).map(f)` and never call a terminal operation. What happens?",
+      "o": ["Nothing runs: intermediate operations are lazy", "The pipeline runs and results are discarded", "The pipeline runs and the list is modified", "It does not compile without a terminal call"],
+      "w": "Streams are lazy. Only a terminal operation such as `collect`, `count` or `forEach` triggers the work.",
+      "s": 25
+    },
+    {
+      "q": "What happens if you call a terminal operation twice on the same stream?",
+      "o": ["`IllegalStateException`: the stream was already operated upon", "The second call returns the same result again", "The second call returns an empty result", "The stream restarts from the first element"],
+      "w": "Streams are single-use. Call `stream()` on the source again for another pass.",
+      "s": 25
+    },
+    {
+      "q": "A stream of customers, each with a list of accounts. Which operation yields one flat `Stream<Account>`?",
+      "o": ["`flatMap(c -> c.accounts().stream())`", "`map(Customer::accounts)`", "`filter(c -> !c.accounts().isEmpty())`", "`collect(Collectors.toList())`"],
+      "w": "`map` gives a `Stream<List<Account>>`. `flatMap` flattens the inner streams into one.",
+      "s": 30
+    },
+    {
+      "q": "`Collectors.toMap(Account::branch, Account::id)` is used on accounts where two share a branch. What happens?",
+      "o": ["`IllegalStateException` for the duplicate key", "The second value silently replaces the first", "Both values are stored in a list", "The duplicate is skipped and the stream continues"],
+      "w": "`toMap` fails on duplicates unless you give a merge function, or use `groupingBy` to collect all values per key.",
+      "s": 30
+    },
+    {
+      "q": "Which collector splits accounts into exactly two groups, active and inactive?",
+      "o": ["`partitioningBy(Account::isActive)`", "`groupingBy(Account::branch)`", "`toMap(Account::id, Account::isActive)`", "`counting()`"],
+      "w": "`partitioningBy` always returns a map with both a `true` and a `false` key. `groupingBy` can have any number of keys.",
+      "s": 25
+    },
+    {
+      "q": "Which parallel stream use is the most likely to be correct and fast?",
+      "o": ["A pure CPU-heavy computation over a large `ArrayList`", "Calling a remote service for each element", "Adding results to a shared `ArrayList` from the lambda", "Streaming a tiny list of five elements"],
+      "w": "Parallel streams use the shared common pool and need stateless, CPU-bound work on large, splittable data. Always measure.",
+      "s": 35
+    },
+    {
+      "q": "What is the difference between `reduce` and `collect`?",
+      "o": ["`collect` is a mutable reduction into a container, `reduce` folds into one value", "`reduce` builds lists and maps, `collect` only adds numbers", "`reduce` is lazy and `collect` is eager", "They are the same operation with different names"],
+      "w": "Building a list with `reduce` copies it at every step. `collect` is designed for containers and is parallel-safe.",
+      "s": 30
+    },
+    {
+      "q": "Why is `peek` a poor place for required logic?",
+      "o": ["It may not run at all, for example after short-circuiting or when the size is known", "It always runs twice for each element", "It modifies the elements of the source", "It forces the stream to become parallel"],
+      "w": "`peek` exists mainly for debugging. Required side effects belong in a terminal operation such as `forEach`.",
+      "s": 30
+    }
+  ]
+}

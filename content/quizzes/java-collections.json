@@ -1,0 +1,52 @@
+{
+  "questions": [
+    {
+      "q": "You must check quickly whether a transaction id has already been processed, and order does not matter. Which collection fits best?",
+      "o": ["`HashSet`, with O(1) average `contains`", "`ArrayList`, scanning with `contains`", "`LinkedList`, scanning from the head", "`PriorityQueue`, peeking at the head"],
+      "w": "A set answers membership questions. `ArrayList.contains` is O(n), so a loop over many ids becomes O(n²).",
+      "s": 25
+    },
+    {
+      "q": "What happens when `ArrayList` is full and you call `add`?",
+      "o": ["It allocates a larger array (about 1.5×) and copies the elements", "It throws an `IllegalStateException` for a full list", "It links a new node to the end of the list", "It overwrites the oldest element in the array"],
+      "w": "The copy is O(n) but rare, so appending is amortised O(1). Pre-size with `new ArrayList<>(n)` when you know the size.",
+      "s": 30
+    },
+    {
+      "q": "A for-each loop over a list calls `list.remove(item)` inside the body. What is the usual result?",
+      "o": ["`ConcurrentModificationException` on the next iteration", "The item is removed and the loop continues normally", "A `NullPointerException` from the iterator", "The loop restarts from the first element"],
+      "w": "The iterator's expected `modCount` no longer matches. Use `removeIf` or `Iterator.remove()` instead.",
+      "s": 30
+    },
+    {
+      "q": "What does `PriorityQueue` guarantee about iteration order?",
+      "o": ["Nothing useful: only `poll` returns elements in priority order", "Elements come out sorted from smallest to largest", "Elements come out in insertion order", "Elements come out in reverse sorted order"],
+      "w": "It is a binary heap. The head is the smallest, but the rest of the array is only partially ordered. Poll repeatedly to get sorted output.",
+      "s": 30
+    },
+    {
+      "q": "Which is the best choice for a stack or a simple FIFO queue in single-threaded code?",
+      "o": ["`ArrayDeque`", "`Stack`", "`LinkedList`", "`Vector`"],
+      "w": "`ArrayDeque` is a circular array with O(1) at both ends and no node overhead. `Stack` and `Vector` are legacy synchronized classes.",
+      "s": 25
+    },
+    {
+      "q": "`Collections.unmodifiableList(list)` is returned from a method. The owner later adds an element to `list`. What does the caller see?",
+      "o": ["The new element, because the wrapper is only a read-only view", "The old contents, because the wrapper copied the list", "An `UnsupportedOperationException` on the next read", "An empty list, because the wrapper was invalidated"],
+      "w": "An unmodifiable wrapper blocks changes through itself, not through the original. `List.copyOf` makes an independent immutable snapshot.",
+      "s": 35
+    },
+    {
+      "q": "A `TreeSet<BigDecimal>` receives `new BigDecimal(\"1.0\")` and then `new BigDecimal(\"1.00\")`. How many elements does it hold?",
+      "o": ["One, because `compareTo` treats them as equal", "Two, because `equals` treats them as different", "Zero, because both values are rejected", "Two, because the scale is different"],
+      "w": "`TreeSet` uses `compareTo`, which ignores scale. A `HashSet` uses `equals`, which does not, so it would keep both.",
+      "s": 35
+    },
+    {
+      "q": "What is a safe, idiomatic way to remove duplicates from a list while keeping first-seen order?",
+      "o": ["`new ArrayList<>(new LinkedHashSet<>(list))`", "`new ArrayList<>(new HashSet<>(list))`", "`new ArrayList<>(new TreeSet<>(list))`", "`Collections.unmodifiableList(list)`"],
+      "w": "`HashSet` loses order and `TreeSet` sorts. `LinkedHashSet` removes duplicates and remembers insertion order. `stream().distinct()` also works.",
+      "s": 30
+    }
+  ]
+}
