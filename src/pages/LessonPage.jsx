@@ -7,6 +7,7 @@ import { Md } from '../components/Md.jsx';
 import { QuestionList } from '../components/QuestionList.jsx';
 import { ReaderBar } from '../components/ReaderBar.jsx';
 import { Holes } from '../components/Holes.jsx';
+import { QuizButton } from '../components/Quiz.jsx';
 
 export function LessonPage() {
   const { slug, anchor } = useParams();
@@ -91,6 +92,7 @@ function LessonView({ lesson, anchor }) {
                 {reader.status === 'idle' ? '🔊 Read aloud' : '⏹ Stop reading'}
               </button>
             )}
+            <QuizButton slug={lesson.slug} />
             <ShareButton slug={lesson.slug} label="Share this lesson" toast={toast} />
             <span className="text-sm text-soft self-center">
               {lesson.questions.length} interview questions · {lesson.sections.length} sections
@@ -123,6 +125,9 @@ function LessonView({ lesson, anchor }) {
             {s.isQuestions && <QuestionList slug={lesson.slug} questions={lesson.questions} focusId={anchor} navKey={navKey} onToast={toast} />}
           </section>
         ))}
+        <aside data-noread className="quiz-cta">
+          <QuizButton slug={lesson.slug} label="📝 Check what you learned: take the quiz" />
+        </aside>
       </article>
       <ReaderBar reader={reader} />
       <div className="h-24" aria-hidden="true" />
