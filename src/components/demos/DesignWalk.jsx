@@ -16,6 +16,7 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { SPRING_AOP_SCENES } from './springAopScenes.js';
 import { SPRING_BOOT_SCENES } from './springBootScenes.js';
 import { SPRING_CORE_SCENES } from './springCoreScenes.js';
 
@@ -241,3 +242,4 @@ export const AcidWalk = () => <Walk scenes={ACID_SCENES} icons ariaLabel="ACID a
 export const SqlNosqlWalk = () => <Walk scenes={SQLNOSQL_SCENES} icons ariaLabel="SQL vs NoSQL walk-through" />;
 export const SpringCoreWalk = () => <Walk scenes={SPRING_CORE_SCENES} icons ariaLabel="Spring core walk-through" />;
 export const SpringBootWalk = () => <Walk scenes={SPRING_BOOT_SCENES} icons ariaLabel="Spring Boot walk-through" />;
+export const SpringAopWalk = () => <Walk scenes={SPRING_AOP_SCENES} icons ariaLabel="Spring AOP walk-through" />;
