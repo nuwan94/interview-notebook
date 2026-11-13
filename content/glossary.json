@@ -672,5 +672,10 @@
   {"term":"readiness probe","aliases":["readiness"],"short":"Health check saying the instance can take traffic; failure removes it from rotation without restarting."},
   {"term":"SLO","aliases":["service level objective"],"short":"A reliability target such as 99.9 percent of requests under 500 ms over 30 days; the remainder is the error budget."},
   {"term":"golden signals","short":"Latency, traffic, errors and saturation: the four core service health measurements."},
-  {"term":"cardinality","short":"Number of distinct values of a metric tag; high cardinality (user ids) explodes time series."}
+  {"term":"cardinality","short":"Number of distinct values of a metric tag; high cardinality (user ids) explodes time series."},
+  {"term":"@KafkaListener","aliases":["@RabbitListener"],"short":"Marks a method as a message consumer handled by a Spring listener container."},
+  {"term":"partition","short":"An ordered log shard of a Kafka topic; ordering is guaranteed only within a partition."},
+  {"term":"offset","short":"A message position in a partition; consumers commit offsets to record progress."},
+  {"term":"Spring Cloud Stream","short":"Broker-agnostic messaging with functional Consumer, Function and Supplier beans bound to destinations by binders."},
+  {"term":"rebalance","short":"Reassignment of partitions when consumers join or leave a group; redelivers from the last committed offset."}
 ]
