@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "Where do objects and where do local primitive variables normally live in the JVM?",
+      "o": [
+        "Objects on the heap; locals on the thread's stack",
+        "Objects on the stack; locals on the heap",
+        "Both objects and locals on the heap",
+        "Both objects and locals on the stack"
+      ],
+      "w": "Each thread has its own stack of frames. The heap is shared. References on the stack point to objects on the heap.",
+      "s": 25
+    },
+    {
+      "q": "Thread A sets `ready = true` (a plain field) and thread B loops `while(!ready)`. Why might B never stop?",
+      "o": [
+        "Without synchronisation B may keep reading a cached value",
+        "Booleans cannot be shared between two threads",
+        "The JVM kills any thread that spins in a loop",
+        "The write is always delayed by about a second"
+      ],
+      "w": "The Java Memory Model gives no visibility guarantee for plain fields. Mark the field `volatile` or use a proper synchroniser.",
+      "s": 30
+    },
+    {
+      "q": "What does a happens-before relationship guarantee?",
+      "o": [
+        "Actions in one thread are visible and ordered for another",
+        "The first action runs earlier by the wall clock",
+        "Both actions run on the same CPU core",
+        "The second action is guaranteed not to fail"
+      ],
+      "w": "Examples: unlock happens-before a later lock of the same monitor; a volatile write happens-before a later read of it; `Thread.start()` happens-before the thread's actions.",
+      "s": 30
+    },
+    {
+      "q": "Which statement about `final` fields is correct for safe publication?",
+      "o": [
+        "Other threads see correctly initialised final fields after construction",
+        "Final fields can still be changed by using `volatile`",
+        "Final fields are stored outside the heap",
+        "Final fields are checked only at compile time"
+      ],
+      "w": "The JMM gives final fields special initialisation safety, provided `this` does not escape the constructor.",
+      "s": 30
+    },
+    {
+      "q": "What is Metaspace used for in modern JVMs?",
+      "o": [
+        "Class metadata, held in native memory",
+        "The stack frames of every thread",
+        "Interned strings only, nothing else",
+        "Young-generation objects awaiting collection"
+      ],
+      "w": "Metaspace replaced PermGen in Java 8. It grows in native memory and can leak through class loader leaks.",
+      "s": 25
+    },
+    {
+      "q": "A recursive method has no base case. Which error do you get?",
+      "o": [
+        "`StackOverflowError`",
+        "`OutOfMemoryError: Metaspace`",
+        "`ClassCastException`",
+        "`ConcurrentModificationException`"
+      ],
+      "w": "Each call adds a stack frame. Deep recursion exhausts the thread stack. Heap exhaustion gives `OutOfMemoryError: Java heap space`.",
+      "s": 25
+    },
+    {
+      "q": "What can the JVM and CPU do to code that has no synchronisation?",
+      "o": [
+        "Reorder independent reads and writes if one thread sees no change",
+        "Never change the order of any statements",
+        "Run each statement at most once per second",
+        "Convert every field into a volatile field"
+      ],
+      "w": "Reordering is legal within a thread's own view. Synchronisation (volatile, locks) establishes the ordering other threads can rely on.",
+      "s": 30
+    },
+    {
+      "q": "Why is double-checked locking for a lazy singleton only correct with a `volatile` field?",
+      "o": [
+        "Another thread could see a reference to a partly built object",
+        "Volatile makes the lock itself run faster",
+        "Without it the class cannot be loaded",
+        "Volatile stops the object being garbage collected"
+      ],
+      "w": "The reference can become visible before the constructor's writes. A volatile write prevents that reordering.",
+      "s": 35
+    }
+  ]
+}

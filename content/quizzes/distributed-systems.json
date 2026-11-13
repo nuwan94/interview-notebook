@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "The CAP theorem says that during a network partition a system must choose between which two properties?",
+      "o": [
+        "Consistency and availability",
+        "Consistency and partition tolerance",
+        "Availability and low latency",
+        "Durability and throughput"
+      ],
+      "w": "Partitions happen, so partition tolerance is not optional. The real choice during one is consistency (refuse some requests) or availability (answer, possibly stale).",
+      "s": 30
+    },
+    {
+      "q": "A bank's ledger node cannot reach the other replicas. It rejects writes until the partition heals. Which choice is this?",
+      "o": [
+        "CP: it chooses consistency over availability",
+        "AP: it chooses availability over consistency",
+        "Neither, since this is simply a bug",
+        "Eventual consistency between replicas"
+      ],
+      "w": "Rejecting requests to avoid divergent data is the CP trade-off. AP systems keep serving and reconcile later.",
+      "s": 25
+    },
+    {
+      "q": "A client calls a payment service and the request times out. What can the client conclude?",
+      "o": [
+        "Nothing for sure, the payment may or may not have happened",
+        "The payment definitely failed, so retry freely",
+        "The payment definitely succeeded, so do nothing",
+        "The network is down and the client can stop"
+      ],
+      "w": "This is why retries need idempotency keys. Without one, a retry can charge twice.",
+      "s": 30
+    },
+    {
+      "q": "What does an idempotent operation guarantee?",
+      "o": [
+        "Repeating it has the same effect as doing it once",
+        "It is guaranteed to succeed on the first try",
+        "It always runs in constant time",
+        "It is never retried by clients"
+      ],
+      "w": "`PUT` and `DELETE` are idempotent by definition. `POST` is not, so add an idempotency key for payments.",
+      "s": 25
+    },
+    {
+      "q": "Why can't you rely on wall-clock timestamps from different servers to order events?",
+      "o": [
+        "Clocks drift and are never perfectly synchronised",
+        "Timestamps are too large to store in a database",
+        "Servers always run in different time zones",
+        "Only databases are allowed to keep a clock"
+      ],
+      "w": "Use logical clocks, version vectors or a single sequencer when order matters. Even NTP leaves skew of milliseconds or more.",
+      "s": 30
+    },
+    {
+      "q": "Quorum reads and writes (R + W > N) are used to:",
+      "o": [
+        "Any read overlaps at least one replica with the latest write",
+        "Writes become faster than reads on every node",
+        "Replication is no longer needed for durability",
+        "A leader is elected without any voting"
+      ],
+      "w": "With N=3, W=2 and R=2 the read and write sets always share a node, so a read sees the latest acknowledged write.",
+      "s": 35
+    },
+    {
+      "q": "What problem does consensus (Raft, Paxos) solve?",
+      "o": [
+        "Getting several nodes to agree on a value despite failures",
+        "Compressing the traffic between data centres",
+        "Encrypting messages before they are sent",
+        "Balancing HTTP requests across web servers"
+      ],
+      "w": "Coordination services like etcd and ZooKeeper use consensus for leader election, configuration and locks.",
+      "s": 30
+    },
+    {
+      "q": "A leader is elected and then loses connectivity, while a new leader takes over. What mechanism stops the old leader from corrupting data?",
+      "o": [
+        "Fencing tokens or epochs that storage rejects when stale",
+        "Hoping the old leader notices the change soon",
+        "Using longer timeouts on every client",
+        "Restarting every client in the cluster"
+      ],
+      "w": "Each election increments a number. Storage refuses writes carrying an older number, so a zombie leader cannot win.",
+      "s": 35
+    }
+  ]
+}

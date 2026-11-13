@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What are the three parts of a JWT?",
+      "o": [
+        "Header, payload (claims) and signature",
+        "Key, value and checksum",
+        "Token, secret and expiry",
+        "Issuer, subject and password"
+      ],
+      "w": "The parts are Base64URL encoded and joined by dots. The header names the algorithm and the payload holds the claims.",
+      "s": 25
+    },
+    {
+      "q": "Is the payload of a normal signed JWT (JWS) secret?",
+      "o": [
+        "No, it is only encoded, so anyone with the token can read it",
+        "Yes, it is encrypted with the signing key",
+        "Yes, but only while sent over HTTPS",
+        "No, because it is always empty by design"
+      ],
+      "w": "Signing protects integrity, not confidentiality. Never put secrets or sensitive personal data in claims, or use JWE for encryption.",
+      "s": 30
+    },
+    {
+      "q": "What does the signature let a resource server verify?",
+      "o": [
+        "That a trusted party issued it and nobody has altered it",
+        "That the user is still logged in right now",
+        "That the user's password is still correct",
+        "That the token has never been used before"
+      ],
+      "w": "The server verifies the signature with a shared secret (HS256) or the issuer's public key (RS256, ES256). It does not know if the token was revoked.",
+      "s": 30
+    },
+    {
+      "q": "Which claims should a resource server always validate?",
+      "o": [
+        "Signature, `exp`, `iss` and `aud`",
+        "Only the signature, nothing more",
+        "Only the user name inside the token",
+        "Only the total length of the token"
+      ],
+      "w": "An expired, wrongly-issued or wrongly-targeted token must be rejected even if the signature is valid. Pin the accepted algorithms too.",
+      "s": 30
+    },
+    {
+      "q": "A JWT header says `\"alg\": \"none\"`. How should a secure server react?",
+      "o": [
+        "Reject it, since only the expected algorithms are accepted",
+        "Accept it, because no signature means no risk",
+        "Accept it when the caller is an internal user",
+        "Switch to HS256 automatically and carry on"
+      ],
+      "w": "The `alg=none` and RS256-to-HS256 confusion attacks come from trusting the algorithm named in the token. Configure it on the server.",
+      "s": 30
+    },
+    {
+      "q": "Where is the safest place for a browser app to keep a long-lived refresh token?",
+      "o": [
+        "An `HttpOnly`, `Secure`, `SameSite` cookie",
+        "`localStorage` in the browser",
+        "A global JavaScript variable",
+        "The URL query string"
+      ],
+      "w": "Script-readable storage can be stolen by XSS. An HttpOnly cookie cannot be read by JavaScript, though you must then defend against CSRF.",
+      "s": 35
+    },
+    {
+      "q": "Why are access tokens kept short-lived (minutes) and paired with a refresh token?",
+      "o": [
+        "A stolen access token expires fast, and refresh tokens can be revoked",
+        "Short tokens are cheaper for the server to sign than long ones",
+        "Browsers automatically delete any token that lives too long",
+        "Refresh tokens are never kept anywhere on a server"
+      ],
+      "w": "Stateless JWTs cannot be revoked easily. A short lifetime limits exposure and the refresh flow gives the server a revocation point.",
+      "s": 35
+    },
+    {
+      "q": "When might you prefer an opaque session id over a JWT?",
+      "o": [
+        "You need instant revocation and server-side control of sessions",
+        "You want the system to keep no server state of any kind",
+        "Every client must be able to read the claims itself",
+        "The credential has to be larger than a normal token"
+      ],
+      "w": "JWTs are great for stateless APIs between services. Server sessions revoke instantly, but need shared storage when scaled out.",
+      "s": 30
+    }
+  ]
+}

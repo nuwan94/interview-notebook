@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What does `@Cacheable` do on a method?",
+      "o": [
+        "Returns the cached result for the same key and skips the method",
+        "Runs the method twice in a row for extra safety",
+        "Stores the result as a new row in a database table",
+        "Caches only the exceptions that the method throws"
+      ],
+      "w": "It is implemented by a proxy (cache-aside). On a miss it runs the method and stores the result under the key.",
+      "s": 25
+    },
+    {
+      "q": "Which annotation removes stale data after an update?",
+      "o": [
+        "`@CacheEvict`",
+        "`@Cacheable`",
+        "`@CacheConfig`",
+        "`@EnableCaching`"
+      ],
+      "w": "`@CachePut` updates the entry with the new value and always runs the method. `@CacheEvict` removes entries.",
+      "s": 25
+    },
+    {
+      "q": "What is a cache stampede?",
+      "o": [
+        "A hot entry expires and many requests hit the source at once",
+        "The cache runs out of disk space under heavy load",
+        "Two caches end up holding different copies of data",
+        "A cache key collides with another key of the same hash"
+      ],
+      "w": "Mitigate with `sync = true`, jittered TTLs, request coalescing or refresh-ahead.",
+      "s": 30
+    },
+    {
+      "q": "Why should cached account balances usually have a short TTL, or not be cached at all?",
+      "o": [
+        "A stale value can mislead users or drive wrong decisions",
+        "Caches are not able to store numeric values at all",
+        "Balances never change over the life of an account",
+        "TTLs are not supported for entries that hold numbers"
+      ],
+      "w": "Cache data that is read often, changes rarely and tolerates some staleness. Money values need strict freshness or event-based eviction.",
+      "s": 30
+    },
+    {
+      "q": "A cache lives in each JVM instance (Caffeine). What happens when one instance updates data?",
+      "o": [
+        "Other instances keep stale copies until they expire or are evicted",
+        "All the instances update themselves instantly and together",
+        "The cache is shared between them automatically by Spring",
+        "The update fails with an exception on every other node"
+      ],
+      "w": "For shared state use a distributed cache such as Redis, or publish eviction events to all nodes.",
+      "s": 30
+    },
+    {
+      "q": "A `@Async` method is called from another method in the same class. What happens?",
+      "o": [
+        "It runs synchronously, because the call bypasses the proxy",
+        "It runs on a new thread, exactly as the annotation suggests",
+        "Spring throws an exception when the application starts",
+        "It runs twice, once in each of two different threads"
+      ],
+      "w": "Like other proxy features, `@Async` works only when called through the bean from outside. Call it from another bean.",
+      "s": 30
+    },
+    {
+      "q": "Why configure a custom `TaskExecutor` for `@Async` instead of relying on defaults?",
+      "o": [
+        "To bound the pool and queue, name threads and handle rejection",
+        "Because Spring does not create any default executor at all",
+        "To make the methods run in the caller's own thread",
+        "To remove the need for a proxy around the bean"
+      ],
+      "w": "Unbounded or misconfigured pools can exhaust memory or threads. Name threads for easier debugging.",
+      "s": 30
+    },
+    {
+      "q": "Where does an exception thrown in a `void` `@Async` method go?",
+      "o": [
+        "To the `AsyncUncaughtExceptionHandler`; the caller never sees it",
+        "Back to the caller, the same as with a normal call",
+        "It is retried automatically by Spring a few times",
+        "It stops the whole application from running"
+      ],
+      "w": "Return a `CompletableFuture` so the caller can handle failures, or register an uncaught exception handler that logs them.",
+      "s": 30
+    }
+  ]
+}

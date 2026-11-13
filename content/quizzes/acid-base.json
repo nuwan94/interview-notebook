@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "In ACID, what does the \"A\" guarantee?",
+      "o": [
+        "All steps of a transaction succeed together or none take effect",
+        "Data stays available on every node even during failures",
+        "Concurrent transactions can never see each other's changes",
+        "Each transaction is executed on the fastest replica only"
+      ],
+      "w": "Atomicity means all-or-nothing. A failure halfway rolls every step back. Availability is a different idea, from CAP.",
+      "s": 25
+    },
+    {
+      "q": "A transfer debits account A, then the server crashes before crediting B. Which ACID property makes the debit disappear after recovery?",
+      "o": [
+        "Atomicity, using the write-ahead log to undo partial work",
+        "Isolation, because other transactions never see the debit",
+        "Consistency, because balances must always stay positive",
+        "Durability, because committed data survives the crash"
+      ],
+      "w": "The write-ahead log lets the database undo uncommitted changes on restart. That is atomicity in practice.",
+      "s": 30
+    },
+    {
+      "q": "What does Durability promise?",
+      "o": [
+        "Once a commit is acknowledged, the data survives a crash",
+        "The database can never go down while handling writes",
+        "Stored data is always encrypted with a strong cipher",
+        "Old versions of every row are kept forever for audit"
+      ],
+      "w": "Durability is usually delivered by flushing the write-ahead log to disk before acknowledging the commit.",
+      "s": 25
+    },
+    {
+      "q": "Which isolation problem occurs when a transaction reads a row twice and gets different values because another transaction committed in between?",
+      "o": [
+        "Non-repeatable read: the same row returns a different value",
+        "Dirty read: the transaction sees uncommitted changes",
+        "Phantom read: new rows appear in a repeated range query",
+        "Lost update: two writers silently overwrite each other"
+      ],
+      "w": "A dirty read sees uncommitted data. A non-repeatable read sees two different committed values of the same row. A phantom read sees new or missing rows in a repeated range query.",
+      "s": 30
+    },
+    {
+      "q": "What does BASE stand for in the context of distributed data stores?",
+      "o": [
+        "Basically Available, Soft state, Eventual consistency",
+        "Balanced, Atomic, Serializable, Efficient replication",
+        "Backup, Archive, Snapshot and Export for every node",
+        "Basic Atomic Storage Engine with strict consistency"
+      ],
+      "w": "BASE trades strict consistency for availability and scale: the system keeps answering and replicas converge over time.",
+      "s": 25
+    },
+    {
+      "q": "Which system is the better fit for an account ledger where a balance must never be wrong, even briefly?",
+      "o": [
+        "A relational database with ACID transactions",
+        "An eventually consistent key-value store",
+        "A cache in front of the database with a long TTL",
+        "A full-text search index fed by change events"
+      ],
+      "w": "Money needs strong consistency and atomic multi-row updates. Eventual consistency suits feeds, counters and caches.",
+      "s": 25
+    },
+    {
+      "q": "A shopping-style social feed shows a like count that is a few seconds stale on some replicas. Which description fits?",
+      "o": [
+        "Eventual consistency, an accepted BASE trade-off",
+        "A violation of atomicity inside one transaction",
+        "A durability failure after a database crash",
+        "A deadlock between two competing transactions"
+      ],
+      "w": "Replicas that lag but converge are eventually consistent. For a like count that trade-off buys availability and speed.",
+      "s": 25
+    },
+    {
+      "q": "Which statement about ACID versus BASE is correct?",
+      "o": [
+        "They are ends of a spectrum, and systems often pick per operation",
+        "BASE databases are unable to commit data at all",
+        "ACID databases can never be run across several nodes",
+        "BASE guarantees stronger consistency than ACID does"
+      ],
+      "w": "Real systems mix them: for example strong consistency for payments and eventual consistency for analytics in the same product.",
+      "s": 30
+    }
+  ]
+}

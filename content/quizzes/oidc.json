@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What does OpenID Connect (OIDC) add on top of OAuth 2.0?",
+      "o": [
+        "An identity layer that tells the client who the user is",
+        "A faster way of refreshing access tokens",
+        "Encryption for every API response",
+        "A new transport protocol for tokens"
+      ],
+      "w": "OAuth 2.0 answers what the app may access. OIDC answers who logged in, using an ID token and the userinfo endpoint.",
+      "s": 25
+    },
+    {
+      "q": "Which token carries the user's identity claims for the client app?",
+      "o": [
+        "The ID token",
+        "The access token",
+        "The refresh token",
+        "The authorization code"
+      ],
+      "w": "The ID token is a JWT meant for the client. The access token is meant for the API and should not be parsed by the client for identity.",
+      "s": 25
+    },
+    {
+      "q": "Which scope tells the server you want an OIDC login rather than plain OAuth?",
+      "o": [
+        "`openid`",
+        "`profile`",
+        "`offline_access`",
+        "`login`"
+      ],
+      "w": "Without `openid` the response is plain OAuth 2.0. `profile` and `email` request extra claims. `offline_access` requests a refresh token.",
+      "s": 25
+    },
+    {
+      "q": "What is the `nonce` in an OIDC request for?",
+      "o": [
+        "It ties the ID token to the request, so a captured token can't be replayed",
+        "It sets how long the user's session stays valid at the provider",
+        "It encrypts the ID token so only the client can read it",
+        "It picks which signature algorithm the provider will use"
+      ],
+      "w": "The client sends a random value and checks that the same value appears inside the ID token.",
+      "s": 30
+    },
+    {
+      "q": "What must a client check in an ID token before trusting it?",
+      "o": [
+        "Signature, issuer, audience (its own client id), expiry and nonce",
+        "Only that the string is a validly formed JWT token",
+        "Only that the same token has not been seen earlier today",
+        "Only that the user name inside the token is not empty"
+      ],
+      "w": "The `aud` must match the client, otherwise a token issued for another app could be replayed against yours.",
+      "s": 30
+    },
+    {
+      "q": "How does a client discover the endpoints and signing keys of an OIDC provider?",
+      "o": [
+        "From the discovery document at `/.well-known/openid-configuration`",
+        "By hard-coding the values after reading them in a blog post",
+        "By scanning the open ports of the provider's servers",
+        "By asking each user to paste the endpoints in manually"
+      ],
+      "w": "The discovery document lists the issuer, authorization and token endpoints and `jwks_uri`, where the public keys rotate.",
+      "s": 30
+    },
+    {
+      "q": "A resource server receives an ID token in the `Authorization` header instead of an access token. What is the right response?",
+      "o": [
+        "Reject it, since ID tokens are for the client, not for APIs",
+        "Accept it, because it holds the user's name",
+        "Accept it only for read requests",
+        "Convert it into an access token first"
+      ],
+      "w": "Mixing up the two tokens is a common mistake. APIs should validate access tokens with the correct audience.",
+      "s": 30
+    },
+    {
+      "q": "What does single sign-on (SSO) give users through OIDC?",
+      "o": [
+        "One login at an identity provider that many apps trust",
+        "One password reused across all the apps",
+        "One shared cookie across every domain",
+        "One token that never expires"
+      ],
+      "w": "Apps redirect to the identity provider. If the user already has a session there, they get back a token without typing credentials again.",
+      "s": 25
+    }
+  ]
+}

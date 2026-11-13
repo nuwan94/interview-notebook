@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What is the main goal of normalising a relational schema?",
+      "o": [
+        "Remove redundancy so each fact is stored once and stays consistent",
+        "Make every query faster by joining fewer tables",
+        "Keep each table on a separate database server",
+        "Convert all columns to text so types never clash"
+      ],
+      "w": "Duplicated facts drift apart and cause update, insert and delete anomalies. Normalisation trades some join cost for correctness.",
+      "s": 25
+    },
+    {
+      "q": "A table has a column `phones` holding \"555-1234, 555-9876\". Which normal form does this violate?",
+      "o": [
+        "First normal form: values must be atomic",
+        "Second normal form: no partial dependencies",
+        "Third normal form: no transitive dependencies",
+        "Boyce-Codd normal form: every determinant is a key"
+      ],
+      "w": "1NF requires one value per cell and no repeating groups. Move phones into a child table with one row per number.",
+      "s": 30
+    },
+    {
+      "q": "In a table keyed by (`order_id`, `product_id`), the column `product_name` depends only on `product_id`. What is this?",
+      "o": [
+        "A partial dependency, which breaks 2NF",
+        "A transitive dependency, which breaks 3NF",
+        "A multi-valued dependency, which breaks 4NF",
+        "An ordinary dependency that every table needs"
+      ],
+      "w": "A non-key column must depend on the whole composite key. Move product details into a `product` table.",
+      "s": 35
+    },
+    {
+      "q": "A customer table stores `branch_id`, `branch_city` and `branch_manager`. `branch_city` is determined by `branch_id`. Which rule does that break?",
+      "o": [
+        "Third normal form: non-key columns depend only on the key",
+        "First normal form: values must be atomic",
+        "Second normal form: no partial dependencies",
+        "Fourth normal form: no multi-valued dependencies"
+      ],
+      "w": "That is a transitive dependency: customer to branch to city. Split out a `branch` table.",
+      "s": 35
+    },
+    {
+      "q": "Which anomaly happens when you cannot record a new product until someone orders it?",
+      "o": [
+        "Insertion anomaly",
+        "Update anomaly",
+        "Deletion anomaly",
+        "Rollback anomaly"
+      ],
+      "w": "Mixing facts about different entities in one table forces unrelated data to be stored together. Deleting the last order could also erase the product (deletion anomaly).",
+      "s": 25
+    },
+    {
+      "q": "Why do reporting or read-heavy systems sometimes denormalise on purpose?",
+      "o": [
+        "It avoids costly joins on reads, at the price of duplicated data",
+        "Normalised tables cannot carry any indexes",
+        "Relational databases do not support joins at all",
+        "It reduces the storage taken by every row"
+      ],
+      "w": "Denormalisation is a deliberate trade: faster reads against extra write work and the risk of inconsistency. Do it after measuring.",
+      "s": 30
+    },
+    {
+      "q": "What does 3NF informally say about a non-key column?",
+      "o": [
+        "It depends on the key, the whole key and nothing but the key",
+        "It may depend on any other non-key column",
+        "It must be unique across the whole table",
+        "It must always carry an index"
+      ],
+      "w": "A well-known mnemonic: the key (1NF), the whole key (2NF), and nothing but the key (3NF).",
+      "s": 25
+    },
+    {
+      "q": "A payments table keeps a copy of the customer's name for each row, so that old statements still show the old name. Is this a normalisation bug?",
+      "o": [
+        "Not necessarily: it is a deliberate snapshot of history",
+        "Yes, it always breaks first normal form",
+        "Yes, it must instead be a foreign key to the current name",
+        "No, because names are never normalised"
+      ],
+      "w": "Records such as invoices and statements should preserve what was true at the time. A snapshot is a different fact from the current name.",
+      "s": 35
+    }
+  ]
+}

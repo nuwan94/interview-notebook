@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "How does `HashMap` find the bucket for a key?",
+      "o": [
+        "It spreads `hashCode()` and maps it to an array index",
+        "It compares the key with every stored entry in turn",
+        "It sorts the keys and then uses binary search",
+        "It converts the key to a string and indexes by its length"
+      ],
+      "w": "Index is derived from the hash (roughly `(n - 1) & hash`). Within the bucket, `equals()` picks the exact key.",
+      "s": 25
+    },
+    {
+      "q": "Two different keys land in the same bucket. What is this called, and how is it handled?",
+      "o": [
+        "A collision; entries chain in a list or tree inside the bucket",
+        "A conflict; the second key replaces the first one",
+        "An overflow; the map throws an exception",
+        "A mismatch; the map rehashes both keys forever"
+      ],
+      "w": "Since Java 8 a long chain (8 or more entries, table big enough) is converted to a red-black tree, so the worst case is O(log n).",
+      "s": 30
+    },
+    {
+      "q": "You use a mutable object as a key and change a field used in `hashCode()` after inserting it. What happens on `get()`?",
+      "o": [
+        "The lookup probably misses, because the entry sits in the old bucket",
+        "The map moves the entry to its new bucket on its own",
+        "The map throws `ConcurrentModificationException`",
+        "The lookup still works because the reference is the same"
+      ],
+      "w": "Keys should be effectively immutable, like `String`, `Integer` or records.",
+      "s": 30
+    },
+    {
+      "q": "What contract links `equals()` and `hashCode()`?",
+      "o": [
+        "Equal objects must return the same hash code",
+        "Objects with the same hash code must be equal",
+        "Unequal objects must return different hash codes",
+        "`hashCode()` must return the object's memory address"
+      ],
+      "w": "Equal hashes with unequal objects are allowed (collisions). Equal objects with different hashes break the map.",
+      "s": 25
+    },
+    {
+      "q": "When does `HashMap` resize by default?",
+      "o": [
+        "When size passes capacity times the 0.75 load factor",
+        "As soon as any bucket holds more than one entry",
+        "Every time a new entry is added",
+        "Only when `rehash()` is called by hand"
+      ],
+      "w": "Resizing doubles the table and redistributes entries, which is costly. Pre-size the map when you know the entry count.",
+      "s": 30
+    },
+    {
+      "q": "Is `HashMap` safe for concurrent updates from several threads?",
+      "o": [
+        "No; use `ConcurrentHashMap` or synchronise externally",
+        "Yes; every operation is locked inside the class",
+        "Yes, but only for read operations",
+        "Yes, provided the keys are all strings"
+      ],
+      "w": "Concurrent writes can lose entries or corrupt the structure. Reads during a write may also see inconsistent state.",
+      "s": 25
+    },
+    {
+      "q": "What is the average time complexity of `get()` and `put()` in a well-distributed `HashMap`?",
+      "o": [
+        "O(1)",
+        "O(n)",
+        "O(log n) always",
+        "O(n log n)"
+      ],
+      "w": "Constant on average. A bad `hashCode()` that clusters keys degrades towards O(n) or O(log n) with tree bins.",
+      "s": 20
+    },
+    {
+      "q": "What does `HashMap` do with a `null` key?",
+      "o": [
+        "It allows one `null` key, kept in bucket 0",
+        "It throws `NullPointerException` at once",
+        "It ignores the call without any error",
+        "It stores the key in a separate sorted list"
+      ],
+      "w": "`HashMap` allows one `null` key and many `null` values. `ConcurrentHashMap` and `Hashtable` reject both.",
+      "s": 25
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What is the difference between `Mono` and `Flux` in Project Reactor?",
+      "o": [
+        "`Mono` emits zero or one item, `Flux` zero to many",
+        "`Mono` is synchronous, `Flux` is asynchronous",
+        "`Mono` is for numbers, `Flux` is for strings",
+        "`Flux` can only emit a fixed number of items"
+      ],
+      "w": "Both are lazy publishers. Nothing happens until something subscribes.",
+      "s": 25
+    },
+    {
+      "q": "You build a `Flux` pipeline but nothing happens. What is the most likely cause?",
+      "o": [
+        "Nobody has subscribed to it",
+        "The pipeline has too many operators",
+        "Reactor needs to be restarted",
+        "The Flux has been marked read-only"
+      ],
+      "w": "Reactive streams are lazy. In WebFlux the framework subscribes for you when you return the `Mono` or `Flux` from a handler.",
+      "s": 25
+    },
+    {
+      "q": "What is backpressure?",
+      "o": [
+        "The subscriber tells the publisher how many items it can take",
+        "A lock that is held on a single database row until commit",
+        "A cache eviction policy that removes the oldest entries first",
+        "A way of compressing messages before they cross the network"
+      ],
+      "w": "Subscribers request items with `request(n)`. Operators such as `onBackpressureBuffer` and `onBackpressureDrop` define what happens when demand is exceeded.",
+      "s": 30
+    },
+    {
+      "q": "A WebFlux handler calls a blocking JDBC query on the event loop thread. What is the effect?",
+      "o": [
+        "It blocks one of a few event-loop threads, so throughput can collapse",
+        "Nothing happens, because the framework unblocks the call for you",
+        "The query runs faster than usual because Netty tunes it",
+        "Netty retries the blocked call automatically on another thread"
+      ],
+      "w": "Use a non-blocking driver (R2DBC) or move blocking work to `Schedulers.boundedElastic()`. BlockHound can detect such calls in tests.",
+      "s": 30
+    },
+    {
+      "q": "When is WebFlux a good fit?",
+      "o": [
+        "Many concurrent I/O-bound connections with non-blocking dependencies",
+        "Heavy CPU-bound computation that keeps every core busy",
+        "Applications that talk to the database only through JDBC and JPA",
+        "Small apps whose team only knows how to write blocking code"
+      ],
+      "w": "Reactive code needs reactive dependencies end to end and a different mindset. For simple blocking stacks, Spring MVC (possibly with virtual threads) is easier.",
+      "s": 30
+    },
+    {
+      "q": "What does `flatMap` do compared with `map` on a `Flux`?",
+      "o": [
+        "`flatMap` turns each item into a publisher and merges them",
+        "`flatMap` filters the items while `map` sorts all the items",
+        "`flatMap` blocks the thread while `map` never blocks at all",
+        "The two operators are identical and can be swapped freely"
+      ],
+      "w": "Use `flatMap` when the transformation itself is asynchronous, such as a non-blocking call returning a `Mono`.",
+      "s": 30
+    },
+    {
+      "q": "How do Java 21 virtual threads compare with reactive programming?",
+      "o": [
+        "They let blocking-style code scale without reactive operators",
+        "They replace the JVM itself with a lighter runtime",
+        "They only work when the application is also using Kafka",
+        "They move the code from the CPU onto the GPU for speed"
+      ],
+      "w": "Both address thread-per-request limits. Virtual threads keep simple imperative code, while reactive adds streaming and backpressure semantics.",
+      "s": 30
+    },
+    {
+      "q": "How do you handle an error in a reactive chain?",
+      "o": [
+        "Operators like `onErrorResume`, `onErrorReturn` or `retryWhen`",
+        "A `try/catch` around the whole pipeline",
+        "Nothing, because Reactor retries by default",
+        "Throw the error from `subscribe()` only"
+      ],
+      "w": "Errors are signals in the stream. A `try/catch` around the assembly code will not see failures that happen later during execution.",
+      "s": 30
+    }
+  ]
+}

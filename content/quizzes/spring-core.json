@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What is Inversion of Control in Spring?",
+      "o": [
+        "The container creates objects and supplies their dependencies",
+        "Objects call the container to start the JVM",
+        "Controllers run before services do",
+        "Beans are created in reverse alphabetical order"
+      ],
+      "w": "You declare what a class needs, and the container wires it. Dependency injection is the main way IoC is applied.",
+      "s": 25
+    },
+    {
+      "q": "What is the default scope of a Spring bean?",
+      "o": [
+        "Singleton: one shared instance per container",
+        "Prototype: a new instance per injection",
+        "Request: one instance per HTTP request",
+        "Session: one instance per user"
+      ],
+      "w": "Singleton beans must be stateless or thread-safe, because many threads use the same instance.",
+      "s": 25
+    },
+    {
+      "q": "A singleton bean injects a prototype bean via the constructor. How many prototype instances does the singleton see?",
+      "o": [
+        "One, created when the singleton itself was built",
+        "A new one on every method call",
+        "One per thread that uses the singleton",
+        "None, because the injection fails"
+      ],
+      "w": "Use `ObjectProvider<T>`, `@Lookup` or a scoped proxy to get a fresh prototype each time.",
+      "s": 35
+    },
+    {
+      "q": "Why is constructor injection preferred over field injection?",
+      "o": [
+        "Dependencies are explicit and final, and the class tests easily",
+        "It is the only way in which Spring can inject any bean",
+        "Spring does not support field injection at all",
+        "It makes every bean in the container prototype scoped"
+      ],
+      "w": "Constructor injection also reveals when a class has too many dependencies, a hint it is doing too much.",
+      "s": 25
+    },
+    {
+      "q": "Two beans implement `PaymentGateway`. Injecting `PaymentGateway` fails with `NoUniqueBeanDefinitionException`. How do you fix it?",
+      "o": [
+        "Mark one `@Primary` or select one with `@Qualifier`",
+        "Delete one of the two interfaces",
+        "Make both beans prototype scoped",
+        "Add `@Autowired(required = false)`"
+      ],
+      "w": "You can also inject a `List<PaymentGateway>` or a `Map<String, PaymentGateway>` to use all of them.",
+      "s": 30
+    },
+    {
+      "q": "Two beans depend on each other through constructors. What happens at startup?",
+      "o": [
+        "Spring fails with a circular dependency error",
+        "Both beans are created without a problem",
+        "Spring creates them lazily on demand",
+        "One of the beans is silently ignored"
+      ],
+      "w": "Circular constructor dependencies cannot be resolved. Redesign by extracting a third bean or using events. Boot 2.6+ disables circular references by default.",
+      "s": 30
+    },
+    {
+      "q": "What is the order of a typical bean lifecycle?",
+      "o": [
+        "Instantiate, inject, `@PostConstruct`, use, `@PreDestroy`",
+        "Use, instantiate, inject, `@PreDestroy`, `@PostConstruct`",
+        "Inject, `@PreDestroy`, instantiate, use, `@PostConstruct`",
+        "Instantiate, `@PreDestroy`, use, inject, `@PostConstruct`"
+      ],
+      "w": "`BeanPostProcessor`s run around initialisation. That is where proxies for `@Transactional` and `@Async` are created.",
+      "s": 30
+    },
+    {
+      "q": "What does `@Configuration` with `@Bean` methods let you do?",
+      "o": [
+        "Define beans in Java, even for third-party classes you cannot annotate",
+        "Replace the Maven dependencies declared in a project",
+        "Run SQL scripts against the database at startup",
+        "Create REST endpoints automatically for every bean"
+      ],
+      "w": "`@Component` stereotypes work for your own classes. `@Bean` is for objects that need custom construction.",
+      "s": 25
+    }
+  ]
+}

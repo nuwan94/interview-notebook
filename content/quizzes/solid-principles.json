@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What does the Single Responsibility Principle say?",
+      "o": [
+        "A class should have one reason to change",
+        "A class should contain only one method",
+        "A class should have only one field",
+        "A class should have only one caller"
+      ],
+      "w": "\"Responsibility\" means a reason to change, such as business rules versus persistence. It is not a method count.",
+      "s": 25
+    },
+    {
+      "q": "A `ReportService` has a long `if/else` over report types and you edit it for every new type. Which principle does this violate?",
+      "o": [
+        "Open-Closed: extend behaviour instead of editing existing code",
+        "Liskov Substitution",
+        "Interface Segregation",
+        "Dependency Inversion"
+      ],
+      "w": "Introduce a `ReportGenerator` interface and a class per type, for example with the Strategy pattern, so new types do not touch old code.",
+      "s": 30
+    },
+    {
+      "q": "What does the Liskov Substitution Principle require?",
+      "o": [
+        "A subtype must work wherever the base type is expected",
+        "A subclass must override every inherited method",
+        "A base class must always be abstract",
+        "A subtype must add more fields than its base"
+      ],
+      "w": "A subtype must not strengthen preconditions or weaken postconditions. A `ReadOnlyList` that throws on `add` breaks it.",
+      "s": 30
+    },
+    {
+      "q": "An interface `Worker` has `work()`, `eat()` and `sleep()`, and a `Robot` has to implement `eat()` with an exception. Which principle is violated?",
+      "o": [
+        "Interface Segregation: don't depend on methods you don't use",
+        "Single Responsibility",
+        "Open-Closed",
+        "Liskov Substitution alone"
+      ],
+      "w": "Split into smaller role interfaces such as `Workable` and `Feedable`. Classes then implement only what applies to them.",
+      "s": 30
+    },
+    {
+      "q": "What does Dependency Inversion say?",
+      "o": [
+        "High-level code should depend on abstractions, not concrete classes",
+        "Low-level code should call high-level code directly",
+        "All dependencies should be made static",
+        "Classes should create their own dependencies"
+      ],
+      "w": "The business service depends on a `PaymentGateway` interface and the concrete implementation is supplied from outside.",
+      "s": 25
+    },
+    {
+      "q": "How does Spring's dependency injection support Dependency Inversion?",
+      "o": [
+        "The container supplies implementations, so classes see only interfaces",
+        "It turns every bean into a static singleton in the JVM",
+        "It hides every interface from the developers who use it",
+        "It generates the business logic itself from the configuration"
+      ],
+      "w": "Constructor injection of an interface makes classes easy to test with fakes, and implementations easy to swap.",
+      "s": 25
+    },
+    {
+      "q": "A `UserService` builds emails, writes to the database and formats PDF statements. What is the most sensible fix?",
+      "o": [
+        "Split it into focused classes, one per reason to change",
+        "Add more methods with clearer names",
+        "Make the class final so nobody extends it",
+        "Move everything into a static utility class"
+      ],
+      "w": "Separate notification, persistence and reporting so a change in one does not risk the others.",
+      "s": 25
+    },
+    {
+      "q": "Is applying every SOLID principle to the extreme always good?",
+      "o": [
+        "No, over-abstraction adds complexity, so apply them where change happens",
+        "Yes, because adding more interfaces is always an improvement",
+        "Yes, every single class in the codebase needs its own interface",
+        "No, because the principles only apply to Java code and nothing else"
+      ],
+      "w": "Principles are guidelines. Premature abstraction creates indirection with no benefit. Refactor when a second variation appears.",
+      "s": 30
+    }
+  ]
+}

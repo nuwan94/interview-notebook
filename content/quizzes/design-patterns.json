@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "Which pattern lets you swap interchangeable algorithms, such as different fee calculations, behind one interface at runtime?",
+      "o": [
+        "Strategy",
+        "Singleton",
+        "Builder",
+        "Adapter"
+      ],
+      "w": "Strategy encapsulates each algorithm in its own class and lets the context pick one, replacing long if/else or switch chains.",
+      "s": 25
+    },
+    {
+      "q": "A legacy payment class has the wrong method names for your interface and you cannot change it. Which pattern fits?",
+      "o": [
+        "Adapter",
+        "Decorator",
+        "Observer",
+        "Prototype"
+      ],
+      "w": "Adapter wraps an incompatible class and translates calls to the interface the client expects.",
+      "s": 25
+    },
+    {
+      "q": "What is the Decorator pattern for?",
+      "o": [
+        "Adds behaviour to an object by wrapping it, keeping the interface",
+        "Creates objects without naming their concrete class",
+        "Makes exactly one instance globally available",
+        "Defines the skeleton of an algorithm for subclasses"
+      ],
+      "w": "Java's `BufferedInputStream` wrapping `FileInputStream` is the textbook example. Spring AOP proxies work in a similar wrapping spirit.",
+      "s": 30
+    },
+    {
+      "q": "Why is a classic hand-written Singleton often criticised?",
+      "o": [
+        "It hides global state, hurts testability and needs thread-safety care",
+        "It uses far too much memory for each instance",
+        "It cannot be written in Java without reflection",
+        "It forces every class to use inheritance"
+      ],
+      "w": "In Spring, singleton scope for beans gives the one-instance benefit while dependency injection keeps code testable.",
+      "s": 30
+    },
+    {
+      "q": "Which pattern notifies many dependants automatically when one object changes state?",
+      "o": [
+        "Observer",
+        "Factory Method",
+        "Facade",
+        "Flyweight"
+      ],
+      "w": "Observer decouples the subject from its listeners. Spring application events and message topics follow the same idea.",
+      "s": 25
+    },
+    {
+      "q": "A constructor has eight parameters, most optional. Which pattern improves readability?",
+      "o": [
+        "Builder",
+        "Visitor",
+        "Chain of Responsibility",
+        "Mediator"
+      ],
+      "w": "Builder sets only the needed fields with named steps and then calls `build()`, avoiding telescoping constructors.",
+      "s": 25
+    },
+    {
+      "q": "A request must pass through validation, authentication and logging handlers, each deciding whether to continue. Which pattern is this?",
+      "o": [
+        "Chain of Responsibility",
+        "Template Method",
+        "Memento",
+        "Bridge"
+      ],
+      "w": "Servlet filters and Spring Security's filter chain are real-world examples.",
+      "s": 30
+    },
+    {
+      "q": "What is the Template Method pattern?",
+      "o": [
+        "A base class fixes the steps while subclasses override some of them",
+        "A class that creates families of related objects",
+        "An object that produces copies of itself on request",
+        "One class that hides a complex subsystem behind a simple API"
+      ],
+      "w": "The superclass controls the order and subclasses fill in the variable parts. `JdbcTemplate` uses the same principle with callbacks.",
+      "s": 30
+    }
+  ]
+}

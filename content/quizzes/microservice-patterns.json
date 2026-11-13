@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What does an API gateway typically do?",
+      "o": [
+        "One entry point that routes calls and handles auth and rate limits",
+        "A central store holding the data for every service",
+        "A replacement for service discovery inside the cluster",
+        "A place that runs the business logic of every service"
+      ],
+      "w": "It hides the internal topology from clients. Keep business logic out of it to avoid a distributed monolith.",
+      "s": 25
+    },
+    {
+      "q": "A downstream service is failing and slow. What does a circuit breaker do?",
+      "o": [
+        "Stops calling for a while and fails fast, then probes for recovery",
+        "Retries as fast as possible until a response arrives",
+        "Restarts the failing downstream service itself",
+        "Caches every response for ever after"
+      ],
+      "w": "States are closed, open and half-open. Failing fast frees threads and gives the failing service room to recover.",
+      "s": 30
+    },
+    {
+      "q": "Why is retrying a failed call with no delay dangerous?",
+      "o": [
+        "It can overload a struggling service; use backoff with jitter",
+        "Retries are not allowed over HTTP at all",
+        "Retries always create duplicate data",
+        "Retries automatically disable the circuit breaker"
+      ],
+      "w": "Synchronised retries create a retry storm. Backoff spreads load and jitter stops clients from retrying in lockstep. Retry only idempotent calls.",
+      "s": 30
+    },
+    {
+      "q": "What does the bulkhead pattern protect against?",
+      "o": [
+        "One slow dependency using all threads and sinking the service",
+        "Data being lost after a disk failure",
+        "Unauthorised users reaching internal services",
+        "Version mismatches between two deployed services"
+      ],
+      "w": "Isolating resources (separate pools per dependency) contains the failure, like watertight compartments in a ship.",
+      "s": 30
+    },
+    {
+      "q": "Which statement about the database-per-service pattern is correct?",
+      "o": [
+        "Each service owns its data; others use its API or events",
+        "All services share one schema for easy joins",
+        "Services read each other's tables directly for speed",
+        "Only a single service is allowed a database"
+      ],
+      "w": "It enables independent deployment and scaling, but cross-service queries and consistency need new patterns such as sagas and CQRS views.",
+      "s": 30
+    },
+    {
+      "q": "What is service discovery for?",
+      "o": [
+        "Services find the current network locations of other services",
+        "Services are scanned automatically for security flaws",
+        "Request latency is measured for every call",
+        "Service traffic is encrypted in transit"
+      ],
+      "w": "Instances come and go. A registry (Eureka, Consul) or the platform DNS (Kubernetes services) keeps track of healthy instances.",
+      "s": 25
+    },
+    {
+      "q": "What is the strangler fig pattern used for?",
+      "o": [
+        "Gradually replace a legacy system by routing slices to new services",
+        "Kill any request that takes too long to be answered",
+        "Compress the responses coming from the older services",
+        "Rewrite everything and release it in a single big bang"
+      ],
+      "w": "A facade routes some traffic to the new code while the rest still hits the old system, until the old one can be switched off.",
+      "s": 30
+    },
+    {
+      "q": "In CQRS, what is separated?",
+      "o": [
+        "The model that writes (commands) from the model that reads (queries)",
+        "The front end of an app from its back end",
+        "Test code from the production code that it checks",
+        "Public APIs from the private APIs of a service"
+      ],
+      "w": "Read models can be denormalised and scaled on their own, updated from events. It adds eventual consistency, so use it where reads and writes differ a lot.",
+      "s": 30
+    }
+  ]
+}

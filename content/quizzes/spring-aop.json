@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What is a cross-cutting concern that AOP is designed to handle?",
+      "o": [
+        "Logging, security checks or transactions applied across many classes",
+        "The main business rule of a single service",
+        "The schema of a single database table",
+        "The layout of one web page"
+      ],
+      "w": "AOP lets you write such behaviour once and apply it to many methods without touching their code.",
+      "s": 25
+    },
+    {
+      "q": "How does Spring AOP apply advice to a bean?",
+      "o": [
+        "It wraps the bean in a runtime proxy that runs advice around calls",
+        "It rewrites the bytecode of the class on disk",
+        "It copies the method body into every caller",
+        "It uses reflection to edit private fields"
+      ],
+      "w": "Spring uses JDK dynamic proxies for interfaces and CGLIB subclass proxies otherwise. AspectJ weaving is a separate, heavier option.",
+      "s": 30
+    },
+    {
+      "q": "`OrderService.place()` calls `this.audit()`, which carries an `@Audited` aspect. Why is the aspect skipped?",
+      "o": [
+        "The call on `this` bypasses the proxy, so the advice never runs",
+        "Aspects can only ever be applied to static methods",
+        "`@Audited` is ignored whenever it sits on a public method",
+        "Spring caches only the very first call of each method"
+      ],
+      "w": "Self-invocation is the classic proxy pitfall. Move the method to another bean or inject the proxy.",
+      "s": 30
+    },
+    {
+      "q": "Which advice type runs whether the method returns normally or throws an exception?",
+      "o": [
+        "`@After` (finally)",
+        "`@AfterReturning`",
+        "`@AfterThrowing`",
+        "`@Before`"
+      ],
+      "w": "`@Around` is the most powerful: it controls whether and how the target runs, and can change the result.",
+      "s": 25
+    },
+    {
+      "q": "In an `@Around` advice, what happens if you never call `proceed()`?",
+      "o": [
+        "The target method does not run",
+        "The target method runs anyway",
+        "Spring calls it after the advice finishes",
+        "An exception is thrown at startup"
+      ],
+      "w": "That is how caching and security aspects short-circuit a call. Remember to return the value from `proceed()`.",
+      "s": 25
+    },
+    {
+      "q": "What is a pointcut?",
+      "o": [
+        "An expression that selects which join points the advice applies to",
+        "The block of code that always runs before a method starts",
+        "A breakpoint that is set in the debugger by a developer",
+        "A configuration file that tells Spring how to build proxies"
+      ],
+      "w": "Example: `execution(* com.bank.service..*.*(..))` matches every method in the service package.",
+      "s": 25
+    },
+    {
+      "q": "Which Spring features are implemented with AOP proxies?",
+      "o": [
+        "`@Transactional`, `@Cacheable`, `@Async` and method security",
+        "`@Autowired` and `@Value`",
+        "`@Entity` and `@Id`",
+        "`@RequestMapping` and `@GetMapping`"
+      ],
+      "w": "They all intercept method calls through a proxy, so they share the same limits: public methods, called through the bean reference.",
+      "s": 30
+    },
+    {
+      "q": "A `private` method is annotated `@Transactional`. What happens with Spring's proxy-based AOP?",
+      "o": [
+        "The annotation has no effect, since proxies skip private calls",
+        "The transaction starts normally, just as the developer expected",
+        "The application fails to start with a configuration error",
+        "The method silently becomes public so the proxy can reach it"
+      ],
+      "w": "Proxy-based AOP cannot intercept private methods or self-invocation. Use public methods on a separate bean.",
+      "s": 30
+    }
+  ]
+}

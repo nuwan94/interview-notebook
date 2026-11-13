@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "Two threads run `count++` on a shared `int` without synchronisation. Why can updates be lost?",
+      "o": [
+        "The increment is read, add, write, so threads can overwrite each other",
+        "The JVM lets only one thread touch an int at a time",
+        "Integers are immutable, so the write is ignored",
+        "The garbage collector resets the value between threads"
+      ],
+      "w": "`count++` is three steps, not one atomic action. Use `AtomicInteger`, `LongAdder` or a lock.",
+      "s": 25
+    },
+    {
+      "q": "What does the `volatile` keyword guarantee for a field?",
+      "o": [
+        "Writes are visible to other threads, but compound actions stay non-atomic",
+        "Every method touching the field becomes synchronized",
+        "The field is held in a faster CPU register only",
+        "The field can no longer change after construction"
+      ],
+      "w": "`volatile` gives visibility and ordering for single reads and writes. `volatile int x; x++` is still a race.",
+      "s": 30
+    },
+    {
+      "q": "What is the main difference between `synchronized` and `ReentrantLock`?",
+      "o": [
+        "`ReentrantLock` adds timeouts, interruptible waits and fairness",
+        "`synchronized` works across several JVMs, `ReentrantLock` does not",
+        "`ReentrantLock` releases itself at the end of the block",
+        "`synchronized` can guard only a single variable"
+      ],
+      "w": "`ReentrantLock` must be unlocked in a `finally` block. Prefer `synchronized` for simple cases and a lock when you need its extra features.",
+      "s": 35
+    },
+    {
+      "q": "Two threads each hold one lock and wait forever for the other's lock. What is this called, and what is the standard prevention?",
+      "o": [
+        "Deadlock; always acquire locks in one global order",
+        "Livelock; add more threads to the pool",
+        "Starvation; raise the priority of the waiting thread",
+        "Race condition; mark both locks volatile"
+      ],
+      "w": "Consistent lock ordering removes the circular wait. Also keep critical sections small and use timeouts such as `tryLock`.",
+      "s": 30
+    },
+    {
+      "q": "You submit 10,000 short tasks. Which approach is the most sensible?",
+      "o": [
+        "A bounded thread pool from an `ExecutorService`",
+        "A brand new `Thread` for each of the tasks",
+        "One `synchronized` method that runs them all",
+        "A `Thread.sleep` between every submission"
+      ],
+      "w": "Pools reuse threads and cap resource use. Unbounded thread creation can exhaust memory and slow the whole JVM.",
+      "s": 25
+    },
+    {
+      "q": "What does `CompletableFuture.thenApply` do?",
+      "o": [
+        "Transforms the result when it arrives, without blocking the caller",
+        "Blocks until the future completes and returns the value",
+        "Cancels the future when it takes too long",
+        "Runs the stage again every time it is called"
+      ],
+      "w": "It chains non-blocking steps. `get()` and `join()` are the blocking calls. Pass your own executor to avoid saturating the common pool.",
+      "s": 30
+    },
+    {
+      "q": "Why is `ConcurrentHashMap` preferred over `Collections.synchronizedMap` for heavy concurrent use?",
+      "o": [
+        "It locks only small parts of the map, so contention drops",
+        "It keeps keys in sorted order for quicker lookups",
+        "It permits `null` keys and values to skip checks",
+        "It never needs to resize as it grows"
+      ],
+      "w": "A synchronized wrapper uses one lock for every call. `ConcurrentHashMap` uses CAS and fine-grained locking per bin. It rejects `null` keys and values.",
+      "s": 35
+    },
+    {
+      "q": "A task in a thread pool throws an exception inside `Runnable.run()` submitted with `execute()`. What typically happens?",
+      "o": [
+        "The worker thread dies from the exception and the pool replaces it",
+        "The exception is rethrown to the code that called `execute`",
+        "The pool shuts itself down at once",
+        "The task is silently retried three times"
+      ],
+      "w": "With `submit()` the exception is captured inside the `Future` and only appears on `get()`. Always handle or log task failures.",
+      "s": 35
+    }
+  ]
+}

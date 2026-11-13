@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "A `@Transactional` service method throws a checked `IOException` and nothing else is configured. What happens to the transaction?",
+      "o": [
+        "It commits, as only unchecked exceptions and errors roll back",
+        "It rolls back, because any exception rolls back",
+        "It rolls back only if the exception is in `throws`",
+        "It stays open until the caller decides"
+      ],
+      "w": "By default Spring rolls back on RuntimeException and Error only. Use `rollbackFor = Exception.class` to include checked exceptions.",
+      "s": 30
+    },
+    {
+      "q": "`transfer()` is `@Transactional` and calls `this.audit()` in the same class. `audit()` is `@Transactional(propagation = REQUIRES_NEW)`. What happens?",
+      "o": [
+        "`audit()` joins the same transaction, as the call skips the proxy",
+        "`audit()` starts a new, independent transaction as annotated",
+        "Spring throws an exception about the annotation at startup",
+        "`audit()` runs with no transaction at all, not even a joined one"
+      ],
+      "w": "The transaction advice lives in a proxy. A call on `this` is a plain method call, so the annotation on the inner method is ignored. Move it to another bean.",
+      "s": 40
+    },
+    {
+      "q": "An outer `REQUIRED` method catches a `RuntimeException` thrown by an inner `REQUIRED` method and returns normally. What does the commit do?",
+      "o": [
+        "It fails with `UnexpectedRollbackException`: the transaction is rollback-only",
+        "It succeeds and saves all of the work done by the outer method",
+        "It succeeds but silently skips only the work of the inner method",
+        "It retries the inner method once and then commits the result"
+      ],
+      "w": "REQUIRED joins one physical transaction. The inner failure marks it rollback-only, and catching the exception does not clear that mark.",
+      "s": 40
+    },
+    {
+      "q": "Which propagation suits an audit record that must be saved even if the main business transaction rolls back?",
+      "o": [
+        "`REQUIRES_NEW`",
+        "`REQUIRED`",
+        "`MANDATORY`",
+        "`SUPPORTS`"
+      ],
+      "w": "REQUIRES_NEW suspends the outer transaction and commits independently on its own connection.",
+      "s": 25
+    },
+    {
+      "q": "You publish a message to a broker inside a `@Transactional` method just before it returns. What is the main risk?",
+      "o": [
+        "The consumer may act before commit, or the transaction may roll back",
+        "The broker rejects any message that is sent inside a transaction",
+        "The message is always delivered twice by the broker",
+        "The transaction cannot commit while a message is being sent"
+      ],
+      "w": "Use `@TransactionalEventListener(AFTER_COMMIT)` for simple cases or the transactional outbox for guaranteed delivery.",
+      "s": 35
+    },
+    {
+      "q": "Why is calling a slow remote service inside a transaction a problem?",
+      "o": [
+        "It holds a pooled connection and locks, so slow calls exhaust the pool",
+        "Remote calls are simply not allowed inside any transaction",
+        "The remote call is rolled back automatically by Spring",
+        "It turns the whole transaction into a read-only one"
+      ],
+      "w": "Keep transactions short: no remote calls, file I/O or waiting inside them.",
+      "s": 30
+    },
+    {
+      "q": "A method annotated `@Async` and `@Transactional` is called from another bean. In which transaction does the async body run?",
+      "o": [
+        "In its own new transaction on the async thread",
+        "In the caller's transaction",
+        "In no transaction at all",
+        "In one transaction shared by all async threads"
+      ],
+      "w": "The transaction is bound to a thread. The caller's transaction does not follow the work onto another thread.",
+      "s": 30
+    },
+    {
+      "q": "What does `@Transactional(readOnly = true)` guarantee?",
+      "o": [
+        "Nothing strict: a hint that skips dirty checking, may use a replica",
+        "Any attempt to write always throws an exception right away",
+        "The method runs without any transaction being started",
+        "The transaction is run with SERIALIZABLE isolation instead"
+      ],
+      "w": "readOnly is an optimisation hint, not a security or integrity mechanism.",
+      "s": 25
+    }
+  ]
+}

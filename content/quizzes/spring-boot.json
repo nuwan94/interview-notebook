@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What does `@SpringBootApplication` combine?",
+      "o": [
+        "`@Configuration`, `@EnableAutoConfiguration` and `@ComponentScan`",
+        "`@Controller`, `@Service` and `@Repository`",
+        "`@Bean`, `@Value` and `@Autowired`",
+        "`@Entity`, `@Table` and `@Id`"
+      ],
+      "w": "It marks the configuration class, turns on auto-configuration and scans the package of the class and its sub-packages.",
+      "s": 25
+    },
+    {
+      "q": "How does Spring Boot auto-configuration decide what to set up?",
+      "o": [
+        "It checks the classpath, beans and properties via `@Conditional` rules",
+        "It reads a hidden file listing which beans to create",
+        "It asks the developer questions at startup",
+        "It scans the file system for installed databases"
+      ],
+      "w": "For example, with `spring-boot-starter-data-jpa` and a datasource on the classpath, it configures `EntityManagerFactory`. Your own bean usually wins via `@ConditionalOnMissingBean`.",
+      "s": 30
+    },
+    {
+      "q": "What is a Spring Boot starter?",
+      "o": [
+        "A dependency bundle that pulls in a consistent set of libraries",
+        "A class that contains the `main` method of an application",
+        "A command-line tool that generates the project folders",
+        "A plugin that restarts the server when code changes"
+      ],
+      "w": "`spring-boot-starter-web` brings Spring MVC, Jackson and embedded Tomcat with compatible versions managed by the Boot BOM.",
+      "s": 25
+    },
+    {
+      "q": "A property is defined in `application.properties`, an environment variable and a command-line argument. Which wins?",
+      "o": [
+        "The command-line argument, which has the highest precedence",
+        "The properties file, because it is read first",
+        "The environment variable, because it is global",
+        "Whichever of them was defined first"
+      ],
+      "w": "Order, high to low (simplified): command-line args, environment variables, profile-specific files, `application.properties`, defaults.",
+      "s": 30
+    },
+    {
+      "q": "How do you activate different configuration per environment?",
+      "o": [
+        "Profiles, e.g. `application-prod.yml` with `spring.profiles.active=prod`",
+        "Edit the source code and rebuild it for each environment",
+        "Rename the JAR file differently for every environment",
+        "Keep a separate Git branch for each of the environments"
+      ],
+      "w": "One artefact runs everywhere, with configuration injected from outside. Never commit secrets: use environment variables or a vault.",
+      "s": 25
+    },
+    {
+      "q": "What does Spring Boot Actuator provide?",
+      "o": [
+        "Production endpoints such as health, metrics and info",
+        "A visual designer that lets you draw your controllers",
+        "Automatic database migrations that run on each startup",
+        "A replacement runtime that is used instead of the JVM"
+      ],
+      "w": "Expose only what you need, and secure the endpoints. Health groups feed Kubernetes liveness and readiness probes.",
+      "s": 25
+    },
+    {
+      "q": "A bean has a constructor with its dependencies. How should they be injected?",
+      "o": [
+        "Constructor injection: dependencies are explicit, final and testable",
+        "Field injection with `@Autowired` on each private field",
+        "Static setter methods that are called from `main`",
+        "Calling `new` for each dependency inside the class itself"
+      ],
+      "w": "Constructor injection makes dependencies explicit, supports immutability and works without the container in unit tests.",
+      "s": 25
+    },
+    {
+      "q": "How does a Boot app typically run as a single deployable?",
+      "o": [
+        "An executable JAR with an embedded server such as Tomcat",
+        "A WAR that only a shared application server can run",
+        "Source code compiled on the server at start",
+        "A Docker image that contains no JVM"
+      ],
+      "w": "`java -jar app.jar` starts the embedded server. A WAR is still possible but optional.",
+      "s": 25
+    }
+  ]
+}

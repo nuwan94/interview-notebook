@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "Which Java release introduced lambdas and the Stream API?",
+      "o": [
+        "Java 8",
+        "Java 7",
+        "Java 11",
+        "Java 17"
+      ],
+      "w": "Java 8 (2014) added lambdas, streams, `Optional`, default methods and the new date-time API.",
+      "s": 20
+    },
+    {
+      "q": "Which feature arrived in Java 9 and reshaped how large applications are packaged?",
+      "o": [
+        "The module system (JPMS)",
+        "Records",
+        "Virtual threads",
+        "Text blocks"
+      ],
+      "w": "Java 9 added modules with `module-info.java`. Many projects still run on the classpath.",
+      "s": 25
+    },
+    {
+      "q": "What does `var` do in `var list = new ArrayList<String>();` (Java 10)?",
+      "o": [
+        "The compiler infers the type; the variable stays statically typed",
+        "The variable becomes dynamically typed at run time",
+        "The variable can hold any other type later on",
+        "The variable is made automatically final"
+      ],
+      "w": "`var` is only for local variables with an initialiser. It is not a keyword for fields or method parameters.",
+      "s": 25
+    },
+    {
+      "q": "Which of these is a long-term support (LTS) release?",
+      "o": [
+        "Java 17",
+        "Java 16",
+        "Java 18",
+        "Java 20"
+      ],
+      "w": "LTS releases are 8, 11, 17, 21 and 25. Between them are six-month feature releases. Spring Boot 3 requires Java 17 or later.",
+      "s": 25
+    },
+    {
+      "q": "What is a `record` (Java 16)?",
+      "o": [
+        "A concise immutable data carrier with generated accessors and `equals`",
+        "A class that logs every method call it receives",
+        "A database row that only Hibernate can map",
+        "A thread-safe list implementation for queues"
+      ],
+      "w": "Records suit DTOs and value objects. Their fields are final and they cannot extend another class.",
+      "s": 30
+    },
+    {
+      "q": "What problem do virtual threads (Java 21) mainly address?",
+      "o": [
+        "Handling very many blocking tasks without one OS thread each",
+        "Speeding up CPU-heavy number crunching on all cores",
+        "Replacing the garbage collector with a new one",
+        "Encrypting network traffic between services"
+      ],
+      "w": "Virtual threads are scheduled by the JVM on a few carrier threads. Blocking I/O parks them cheaply. CPU-bound work gains nothing.",
+      "s": 30
+    },
+    {
+      "q": "What do sealed classes (Java 17) let you do?",
+      "o": [
+        "Restrict which classes may extend or implement a type",
+        "Prevent any class from ever being instantiated",
+        "Encrypt the class files on disk",
+        "Make every field of the class private"
+      ],
+      "w": "`sealed ... permits A, B` gives a closed hierarchy. Together with pattern matching in `switch`, the compiler can check exhaustiveness.",
+      "s": 30
+    },
+    {
+      "q": "Which Java 15+ feature makes multi-line strings, such as embedded JSON or SQL, easier to write?",
+      "o": [
+        "Text blocks written with triple quotes",
+        "String templates written with backticks",
+        "The `var` keyword for local variables",
+        "Switch expressions with arrows"
+      ],
+      "w": "Text blocks (`\"\"\" ... \"\"\"`) remove most escaping and keep indentation sensible.",
+      "s": 25
+    }
+  ]
+}

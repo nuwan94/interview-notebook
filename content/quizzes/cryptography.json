@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What is the main difference between symmetric and asymmetric encryption?",
+      "o": [
+        "Symmetric uses one shared key; asymmetric uses a key pair",
+        "Symmetric encryption is always slower than asymmetric",
+        "Asymmetric encryption works without any keys at all",
+        "Symmetric keys can encrypt data but never decrypt it"
+      ],
+      "w": "Symmetric (AES) is fast and used for bulk data. Asymmetric (RSA, ECC) solves key exchange and signatures but is slower.",
+      "s": 25
+    },
+    {
+      "q": "How does HTTPS (TLS) typically combine the two?",
+      "o": [
+        "Asymmetric crypto agrees a session key, then AES protects the data",
+        "TLS uses only RSA to encrypt every byte of the traffic",
+        "TLS uses AES with a key that is hard-coded in the browser",
+        "TLS hashes all traffic so that nobody can read the content"
+      ],
+      "w": "The handshake authenticates the server and derives a shared session key. The bulk traffic then uses a symmetric cipher.",
+      "s": 30
+    },
+    {
+      "q": "Which is the right tool to check that a downloaded file was not tampered with, when you have a trusted published value?",
+      "o": [
+        "A cryptographic hash such as SHA-256",
+        "Symmetric encryption with a shared key",
+        "Base64 encoding of the downloaded file",
+        "Compression of the file before download"
+      ],
+      "w": "A hash gives a fixed fingerprint. Any change to the input changes it. Base64 is only an encoding, not security.",
+      "s": 25
+    },
+    {
+      "q": "A digital signature is created with which key, and verified with which?",
+      "o": [
+        "Signed with the sender's private key, checked with the public key",
+        "Signed with the public key, checked with the private key",
+        "Signed and checked with one shared secret value",
+        "Signed with the receiver's private key and public key"
+      ],
+      "w": "Only the owner holds the private key, so a valid signature proves origin and integrity. Anyone can verify with the public key.",
+      "s": 30
+    },
+    {
+      "q": "What is a salt in password hashing?",
+      "o": [
+        "A random per-password value mixed in before hashing",
+        "A secret key shared by every user of the system",
+        "A second hash applied on top of the first hash",
+        "An encryption key kept in the user's browser"
+      ],
+      "w": "Salts are not secret. They make identical passwords hash differently and break precomputed rainbow tables.",
+      "s": 25
+    },
+    {
+      "q": "Why must a nonce or IV never be reused with the same key in AES-GCM?",
+      "o": [
+        "Reuse can leak message relationships and break authentication",
+        "Reuse makes the encryption noticeably slower for large files",
+        "Reuse makes the nonce grow larger than the size of the key",
+        "Reuse makes the cipher refuse to start until it is restarted"
+      ],
+      "w": "GCM nonce reuse is catastrophic: an attacker can recover the authentication key and forge messages. Use a fresh random or counter nonce each time.",
+      "s": 35
+    },
+    {
+      "q": "What does a certificate authority (CA) provide in public-key infrastructure?",
+      "o": [
+        "A signed statement binding a public key to an identity",
+        "The private key belonging to each website",
+        "A mechanism that makes the TLS handshake faster",
+        "A free allowance of bandwidth for secure sites"
+      ],
+      "w": "Browsers trust a set of root CAs. A server certificate chains up to one of them, so clients know the key belongs to that domain.",
+      "s": 30
+    },
+    {
+      "q": "Which statement about hashing versus encryption is true?",
+      "o": [
+        "Hashing is one-way, encryption can be reversed with the key",
+        "Both hashing and encryption can be reversed freely",
+        "Hashing can be reversed only with a secret key",
+        "Encryption is one-way and cannot be reversed"
+      ],
+      "w": "Use hashing for passwords and integrity. Use encryption when you must recover the original data.",
+      "s": 25
+    }
+  ]
+}

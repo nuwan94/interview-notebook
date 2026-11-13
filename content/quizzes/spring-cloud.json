@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What problem does Spring Cloud Config solve?",
+      "o": [
+        "Centralised, versioned configuration shared by many services",
+        "Faster compilation of microservices",
+        "Encrypted traffic between browsers and servers",
+        "Automatic creation of database tables"
+      ],
+      "w": "Config lives in Git and is served to apps. Secrets still belong in a vault, not in the config repository.",
+      "s": 25
+    },
+    {
+      "q": "What does service discovery with Eureka or Consul give you?",
+      "o": [
+        "Services look each other up by name, not fixed IPs",
+        "Pods are scaled automatically on demand",
+        "All services share a single database",
+        "One login works across every service"
+      ],
+      "w": "Instances register on startup and send heartbeats, so callers get only live instances. On Kubernetes you can use built-in DNS instead.",
+      "s": 25
+    },
+    {
+      "q": "What does Spring Cloud Gateway do?",
+      "o": [
+        "It routes external requests and applies filters such as auth and rate limits",
+        "It stores messages for later consumers to read",
+        "It generates documentation for every API it fronts",
+        "It replicates databases between several regions"
+      ],
+      "w": "It is a reactive edge service built on WebFlux. Routes match on predicates (path, header) and apply filters.",
+      "s": 25
+    },
+    {
+      "q": "Which library is the recommended way to add circuit breakers and retries in Spring Cloud today?",
+      "o": [
+        "Resilience4j",
+        "Hystrix",
+        "Ribbon",
+        "Zuul 1"
+      ],
+      "w": "Hystrix and Ribbon are in maintenance or removed. Resilience4j offers circuit breaker, retry, rate limiter, bulkhead and time limiter.",
+      "s": 25
+    },
+    {
+      "q": "A declarative HTTP client for calling another service by interface is provided by:",
+      "o": [
+        "OpenFeign or the Spring `RestClient` with HTTP interfaces",
+        "Spring Batch with a job and step configuration",
+        "Spring Integration channels only",
+        "`JdbcTemplate` with a prepared statement"
+      ],
+      "w": "You write an interface with annotated methods and Spring generates the implementation, with timeouts and resilience added through configuration.",
+      "s": 25
+    },
+    {
+      "q": "A client calls a service with a 30-second default timeout while the service is hanging. What is the best protection?",
+      "o": [
+        "Set short explicit timeouts and add a circuit breaker with a fallback",
+        "Retry immediately and without any upper limit on tries",
+        "Raise the timeout to five minutes so the call can finish",
+        "Give the caller many more threads to wait with"
+      ],
+      "w": "Every remote call needs a timeout. Without one, slow dependencies tie up threads and cascade failures upwards.",
+      "s": 30
+    },
+    {
+      "q": "How does a distributed trace id help in a microservices system?",
+      "o": [
+        "It links logs and spans of one request across every service",
+        "It authenticates the user inside each service",
+        "It compresses all request bodies",
+        "It balances load between instances"
+      ],
+      "w": "Propagated in headers (W3C `traceparent`), it lets you follow one request end to end in Zipkin, Tempo or Jaeger.",
+      "s": 30
+    },
+    {
+      "q": "Why is client-side load balancing common with service discovery?",
+      "o": [
+        "The caller picks an instance from the registry, saving a hop",
+        "It removes the need for any service instances to exist",
+        "It encrypts every single call automatically for you",
+        "It stores the results of each call in a local cache"
+      ],
+      "w": "Spring Cloud LoadBalancer picks among registered instances. On Kubernetes the Service object does similar work server-side.",
+      "s": 30
+    }
+  ]
+}

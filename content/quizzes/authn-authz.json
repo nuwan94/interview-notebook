@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What is the difference between authentication and authorization?",
+      "o": [
+        "Authentication proves who you are; authorization decides what you may do",
+        "Authentication decides what you may do; authorization proves who you are",
+        "They are two names for the same login step",
+        "Authentication is for services while authorization is for people"
+      ],
+      "w": "Authenticate first (identity), then authorize (permissions). Mixing them up is a classic interview slip.",
+      "s": 25
+    },
+    {
+      "q": "A logged-in user changes the id in `/accounts/1001` to `/accounts/1002` and sees someone else's account. Which flaw is this?",
+      "o": [
+        "Broken object-level authorization (IDOR)",
+        "A weak password policy on the login form",
+        "Missing HTTPS on the account page",
+        "SQL injection in the account lookup query"
+      ],
+      "w": "The user was authenticated but the server never checked that account 1002 belongs to them. Check ownership on every object access.",
+      "s": 30
+    },
+    {
+      "q": "Which HTTP status means \"I don't know who you are\"?",
+      "o": [
+        "401 Unauthorized",
+        "403 Forbidden",
+        "404 Not Found",
+        "409 Conflict"
+      ],
+      "w": "401 means not authenticated (or bad credentials). 403 means authenticated but not allowed.",
+      "s": 25
+    },
+    {
+      "q": "Why are passwords stored with a slow, salted hash such as bcrypt or Argon2 rather than plain SHA-256?",
+      "o": [
+        "A slow salted hash makes guessing expensive and hides repeated passwords",
+        "SHA-256 cannot be computed on an application server",
+        "Hashes can be decrypted later if the user forgets the password",
+        "A slow hash shortens the value stored in the database"
+      ],
+      "w": "Fast hashes let attackers test billions of guesses per second. A per-user salt defeats rainbow tables and a tunable work factor keeps cracking expensive.",
+      "s": 35
+    },
+    {
+      "q": "In RBAC, how are permissions granted?",
+      "o": [
+        "Permissions are attached to roles and users are assigned roles",
+        "Each user is given individual permissions and nothing else",
+        "Permissions depend only on the IP address of the request",
+        "Roles are checked once at login and never again"
+      ],
+      "w": "RBAC groups permissions into roles such as TELLER or AUDITOR. ABAC goes further and decides using attributes such as amount, time or department.",
+      "s": 25
+    },
+    {
+      "q": "What does multi-factor authentication add?",
+      "o": [
+        "Proof from two or more categories: know, have, are",
+        "Two different passwords instead of one password",
+        "A longer session timeout after the first login",
+        "Encryption applied to the login page itself"
+      ],
+      "w": "Two passwords are still one factor. Combine knowledge (password), possession (phone or token) and inherence (biometric).",
+      "s": 25
+    },
+    {
+      "q": "Where should authorization checks for an API be enforced?",
+      "o": [
+        "On the server for every request, whatever the UI hides",
+        "Only in the front end, by hiding the buttons",
+        "Only once at login time, when the token is issued",
+        "Only in the gateway's routing table at deploy time"
+      ],
+      "w": "Anyone can call the API directly. Hiding a button is UX, not security. Enforce on the server, ideally close to the data.",
+      "s": 30
+    },
+    {
+      "q": "A session cookie should be marked `HttpOnly`, `Secure` and `SameSite`. What does `HttpOnly` prevent?",
+      "o": [
+        "JavaScript cannot read the cookie, limiting theft through XSS",
+        "The cookie is never sent over plain HTTP connections",
+        "Other sites cannot attach the cookie to cross-site requests",
+        "The browser deletes the cookie when the tab is closed"
+      ],
+      "w": "`Secure` limits it to HTTPS and `SameSite` reduces CSRF. `HttpOnly` hides it from `document.cookie`.",
+      "s": 30
+    }
+  ]
+}

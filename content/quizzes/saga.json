@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "Why can't a transfer spanning two microservices use a single database transaction?",
+      "o": [
+        "Each service owns its database, so no local transaction covers both",
+        "Databases refuse to commit more than one table",
+        "Microservices are not able to connect to databases",
+        "Transactions only work inside the browser"
+      ],
+      "w": "Distributed two-phase commit is possible but blocks and scales poorly. Sagas coordinate a sequence of local transactions instead.",
+      "s": 25
+    },
+    {
+      "q": "What is a saga?",
+      "o": [
+        "Local transactions in sequence, each with a compensating action",
+        "One big distributed lock across all services",
+        "A cache that survives restarts of the service",
+        "A retry loop that keeps no state at all"
+      ],
+      "w": "If step N fails, previously completed steps are undone by compensations, giving eventual consistency rather than atomicity.",
+      "s": 30
+    },
+    {
+      "q": "A saga debited the source account, then crediting the destination failed. What does the saga do?",
+      "o": [
+        "A compensating action credits the source account back",
+        "The first service's database transaction is rolled back",
+        "The failure is ignored and retried for ever",
+        "The debit record is deleted from the log"
+      ],
+      "w": "The first step already committed, so it cannot be rolled back. A new business action (the compensation) reverses its effect.",
+      "s": 30
+    },
+    {
+      "q": "What is the difference between choreography and orchestration?",
+      "o": [
+        "Choreography: services react to events. Orchestration: a coordinator steers",
+        "Choreography relies on a database, orchestration relies on a queue",
+        "Orchestration has no way of handling failures in a step",
+        "They differ only in which programming language is used"
+      ],
+      "w": "Choreography is decentralised but hard to follow as it grows. Orchestration gives one place to see and change the flow, at the cost of a coordinator.",
+      "s": 35
+    },
+    {
+      "q": "Why must saga steps and compensations be idempotent?",
+      "o": [
+        "Messages can arrive twice, and a repeat must not repeat the effect",
+        "Compensations are guaranteed to run only a single time",
+        "Idempotent steps are simply quicker to execute than others",
+        "The database itself refuses writes that are not idempotent"
+      ],
+      "w": "At-least-once messaging plus retries means duplicates are normal. Track a saga id and step state so a repeat is ignored.",
+      "s": 30
+    },
+    {
+      "q": "Which saga steps cannot simply be compensated, such as sending an email to a customer?",
+      "o": [
+        "Steps with outside effects, so place them last or correct them afterwards",
+        "Steps that only read data and never change anything",
+        "Steps that write rows into a database of their own",
+        "Steps that stay entirely inside the boundary of one service"
+      ],
+      "w": "Order steps so that hard-to-undo actions run after the risky ones. Where undo is impossible, send a correcting follow-up instead.",
+      "s": 35
+    },
+    {
+      "q": "Which isolation problem do sagas introduce that a single ACID transaction avoids?",
+      "o": [
+        "Others can see intermediate results before the saga completes",
+        "Writes become noticeably slower than reads in every service",
+        "Rows stay locked for the whole duration of the saga",
+        "Data ends up being encrypted twice on its way through"
+      ],
+      "w": "Countermeasures include semantic locks (a PENDING state), commutative updates and re-reading values before acting.",
+      "s": 35
+    },
+    {
+      "q": "How does the transactional outbox help a saga participant?",
+      "o": [
+        "It stores the outgoing event in the same local transaction",
+        "It removes the need for compensating steps",
+        "It makes the network itself reliable",
+        "It runs the whole saga on a single database"
+      ],
+      "w": "Without it the service could update its database and crash before publishing the event, leaving the saga stuck.",
+      "s": 30
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "How does the JVM decide an object can be garbage collected?",
+      "o": [
+        "It is no longer reachable from any GC root",
+        "Its reference count has dropped to zero",
+        "It is older than a fixed number of seconds",
+        "Its `finalize()` method has been called"
+      ],
+      "w": "Java uses reachability tracing from roots (thread stacks, static fields, JNI). Cycles are collected fine because they are unreachable.",
+      "s": 25
+    },
+    {
+      "q": "Why is the heap split into young and old generations?",
+      "o": [
+        "Most objects die young, so frequent cheap young collections pay off",
+        "The operating system requires two separate memory regions",
+        "Strings must be kept apart from numbers in memory",
+        "Class definitions need their own generation"
+      ],
+      "w": "The weak generational hypothesis: collect the young generation often and cheaply, promote survivors to old, collect old rarely.",
+      "s": 30
+    },
+    {
+      "q": "What is a \"stop-the-world\" pause?",
+      "o": [
+        "All application threads pause while the collector works",
+        "The JVM exits and restarts itself after a fatal error",
+        "A thread dump is written to disk for later analysis",
+        "A network call to another service times out"
+      ],
+      "w": "Modern collectors (G1, ZGC, Shenandoah) aim to keep pauses short by doing most of the work concurrently.",
+      "s": 25
+    },
+    {
+      "q": "Which collector is the default in modern JDKs (9+) for server workloads?",
+      "o": [
+        "G1",
+        "Serial",
+        "CMS",
+        "Epsilon"
+      ],
+      "w": "G1 splits the heap into regions and targets a pause-time goal. ZGC suits very large heaps with sub-millisecond pauses.",
+      "s": 25
+    },
+    {
+      "q": "A service's heap usage keeps climbing and it ends with `OutOfMemoryError`, although it has no obvious bug. Which is the most likely cause?",
+      "o": [
+        "A leak: objects stay reachable, e.g. in a static map or cache",
+        "The garbage collector has been switched off by a flag",
+        "The application has been given too few request threads",
+        "The disk has filled up with old log files and dumps"
+      ],
+      "w": "Java leaks are reachable objects that are no longer needed. Take a heap dump and look at the dominator tree.",
+      "s": 35
+    },
+    {
+      "q": "Which tool or flag helps you capture evidence when an `OutOfMemoryError` occurs?",
+      "o": [
+        "`-XX:+HeapDumpOnOutOfMemoryError`, then inspect it in Eclipse MAT",
+        "`-Xmx0` to stop the heap from growing any further",
+        "Calling `System.gc()` repeatedly in a tight loop",
+        "Restarting the whole server once every single hour"
+      ],
+      "w": "The dump shows which objects dominate memory and what holds references to them.",
+      "s": 30
+    },
+    {
+      "q": "What does calling `System.gc()` do?",
+      "o": [
+        "It only suggests a collection and may be ignored",
+        "It forces an immediate full collection every time",
+        "It frees native memory outside the heap",
+        "It resets the heap size to its default"
+      ],
+      "w": "Explicit GC calls can cause long pauses. Fix allocation patterns and tune the collector instead.",
+      "s": 25
+    },
+    {
+      "q": "A service has frequent long pauses caused by many large, short-lived allocations. What is a sensible first step?",
+      "o": [
+        "Measure with GC logs, then cut allocation or tune settings",
+        "Sprinkle `System.gc()` calls through the code",
+        "Raise the number of request threads",
+        "Move the logs to a faster disk"
+      ],
+      "w": "Turn on GC logging (`-Xlog:gc*`), look at pause time and frequency, then change one thing at a time.",
+      "s": 35
+    }
+  ]
+}

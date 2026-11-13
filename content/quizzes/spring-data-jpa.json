@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "You load 100 `Customer` rows and then access each customer's lazy `accounts` collection in a loop. What is this problem called?",
+      "o": [
+        "The N+1 select problem",
+        "A deadlock",
+        "A phantom read",
+        "A cache stampede"
+      ],
+      "w": "One query for customers plus one query per customer. Fix with `JOIN FETCH`, an `@EntityGraph`, batch fetching or a DTO projection.",
+      "s": 30
+    },
+    {
+      "q": "What does `FetchType.LAZY` do?",
+      "o": [
+        "Loads the association only when it is first accessed",
+        "Loads every association at application startup",
+        "Skips loading the association entirely",
+        "Caches the association for ever"
+      ],
+      "w": "Accessing a lazy association after the session closes causes `LazyInitializationException`. Load what you need inside the transaction.",
+      "s": 25
+    },
+    {
+      "q": "Why is `spring.jpa.open-in-view=true` often switched off in production?",
+      "o": [
+        "It holds a connection for the whole request and hides lazy loading in views",
+        "It switches lazy loading off completely for every entity",
+        "It only makes the application slower to start up",
+        "It forces every query in the request to be read-only"
+      ],
+      "w": "Fetch what the response needs inside the service layer, then map to DTOs.",
+      "s": 30
+    },
+    {
+      "q": "A repository declares `List<Customer> findByLastNameAndStatus(String lastName, String status)`. How does it work?",
+      "o": [
+        "Spring Data derives the query from the method name",
+        "The SQL must be written in an XML file",
+        "Every row is loaded and filtered in memory",
+        "The method does not compile"
+      ],
+      "w": "For complex queries use `@Query` (JPQL or native) or the Criteria API/Specifications.",
+      "s": 25
+    },
+    {
+      "q": "What does an entity in the managed state mean for `EntityManager`?",
+      "o": [
+        "Changes are detected and flushed to the database at commit",
+        "The entity can no longer be modified",
+        "The entity lives only in a separate cache",
+        "The entity has already been deleted"
+      ],
+      "w": "This is dirty checking. You do not need to call `save()` again for an entity loaded in the same transaction.",
+      "s": 30
+    },
+    {
+      "q": "How does `@Version` help with concurrent updates?",
+      "o": [
+        "Optimistic locking: the update fails if the version changed meanwhile",
+        "It locks the row until the transaction commits",
+        "It numbers the published versions of the REST API",
+        "It keeps a backup copy of the old row in another table"
+      ],
+      "w": "Hibernate adds `WHERE version = ?` to the update and throws `OptimisticLockException` when no row matches. Retry or tell the user.",
+      "s": 30
+    },
+    {
+      "q": "Why prefer a DTO projection over returning entities from a REST endpoint?",
+      "o": [
+        "It selects only needed columns and avoids exposing internals",
+        "Entities can never be serialised to JSON by any library",
+        "DTOs are quicker for developers to type than entities",
+        "Entities never contain any data when they are loaded"
+      ],
+      "w": "Entities have lazy proxies and bidirectional links that cause recursion or leaks. DTOs give a stable API shape.",
+      "s": 30
+    },
+    {
+      "q": "What does `@Transactional(readOnly = true)` on a query method help with?",
+      "o": [
+        "Hibernate can skip dirty checking, and reads may go to a replica",
+        "It forbids every read operation inside the method",
+        "It blocks all other transactions until it finishes",
+        "It turns on the second-level cache for the whole entity"
+      ],
+      "w": "It is a hint, not a guarantee. It is commonly used on service methods that only read.",
+      "s": 25
+    }
+  ]
+}

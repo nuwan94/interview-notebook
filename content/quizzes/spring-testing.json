@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "Which test style should make up most of a healthy test suite?",
+      "o": [
+        "Fast unit tests of plain classes",
+        "Full-stack end-to-end tests only",
+        "Manual exploratory tests only",
+        "Tests that need a production database"
+      ],
+      "w": "The test pyramid: many fast unit tests, fewer slice and integration tests, and very few end-to-end tests.",
+      "s": 25
+    },
+    {
+      "q": "What does `@WebMvcTest` load?",
+      "o": [
+        "Only the web layer, with services mocked",
+        "The entire application context",
+        "Only the database layer",
+        "Nothing, it is just a marker annotation"
+      ],
+      "w": "It is a slice test. Provide collaborators with `@MockBean` (or `@MockitoBean` in newer Spring). Use `MockMvc` to call endpoints.",
+      "s": 30
+    },
+    {
+      "q": "What does `@DataJpaTest` set up by default?",
+      "o": [
+        "Repositories and an in-memory database, rolled back after each test",
+        "The whole web stack, including filters and all of the controllers",
+        "A real production database that holds the live customer data",
+        "A Kafka broker that runs in a container for the test"
+      ],
+      "w": "For realistic behaviour against PostgreSQL or MySQL use Testcontainers instead of H2.",
+      "s": 30
+    },
+    {
+      "q": "Why use Testcontainers for integration tests?",
+      "o": [
+        "They run real dependencies such as a database in Docker",
+        "They let the tests run without needing Docker at all",
+        "They replace the unit tests so you no longer write any",
+        "They mock the database with a fake in-memory implementation"
+      ],
+      "w": "In-memory substitutes behave differently from production in SQL dialect, locking and types. Containers remove that gap.",
+      "s": 30
+    },
+    {
+      "q": "What is the difference between `@Mock` and `@Spy` in Mockito?",
+      "o": [
+        "A mock replaces the object, a spy wraps a real one",
+        "A mock is for static methods, a spy for instance methods",
+        "A spy always throws exceptions",
+        "They are identical"
+      ],
+      "w": "Prefer plain mocks. Use a spy only when you need to keep most real behaviour while stubbing one method.",
+      "s": 30
+    },
+    {
+      "q": "What does `@SpringBootTest` do by default?",
+      "o": [
+        "It starts the full application context, so it is slower",
+        "It starts only the controller layer of the application",
+        "It runs all the tests in parallel automatically for you",
+        "It replaces the main class with a test configuration"
+      ],
+      "w": "Use it for a few end-to-end integration tests. Context caching reuses the same context between tests with the same configuration.",
+      "s": 25
+    },
+    {
+      "q": "A test passes alone but fails when run with others. What is a likely cause?",
+      "o": [
+        "Shared state such as static data, a shared database or time",
+        "The JVM that runs the tests is simply too fast for them",
+        "The name of the failing test is too long to be stored",
+        "The assertion library that the project happens to use"
+      ],
+      "w": "Tests should be independent and repeatable. Reset state, use unique data and control clocks.",
+      "s": 30
+    },
+    {
+      "q": "How should you test a method that depends on the current time?",
+      "o": [
+        "Inject a `Clock` and use a fixed clock in the test",
+        "Call `Thread.sleep` until the time matches",
+        "Skip testing that method",
+        "Change the system clock before the test"
+      ],
+      "w": "Injecting `java.time.Clock` makes time deterministic and avoids flaky tests around midnight or month ends.",
+      "s": 25
+    }
+  ]
+}

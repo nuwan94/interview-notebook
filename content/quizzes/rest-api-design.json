@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "Which URL follows common REST naming for fetching one account's transactions?",
+      "o": [
+        "`GET /accounts/42/transactions`",
+        "`GET /getTransactionsForAccount?id=42`",
+        "`POST /accounts/42/fetchTransactions`",
+        "`GET /account/transactionList/42`"
+      ],
+      "w": "Use plural nouns for resources and let the HTTP method express the action. Avoid verbs in paths.",
+      "s": 25
+    },
+    {
+      "q": "Which HTTP methods are idempotent by definition?",
+      "o": [
+        "`GET`, `PUT` and `DELETE`",
+        "`POST` and `PATCH`",
+        "`POST` and `DELETE`",
+        "`GET` and `POST`"
+      ],
+      "w": "Repeating them leaves the server in the same state. `POST` usually creates a new resource each time, so protect it with an idempotency key.",
+      "s": 25
+    },
+    {
+      "q": "A client creates a payment successfully. Which response is the best fit?",
+      "o": [
+        "`201 Created` with a `Location` header for the new resource",
+        "`200 OK` with an empty response body",
+        "`204 No Content` with a `Location` header",
+        "`202 Accepted` with the final balance in the body"
+      ],
+      "w": "`201` signals a new resource. Use `202 Accepted` when processing continues asynchronously.",
+      "s": 25
+    },
+    {
+      "q": "A request body is well-formed JSON but breaks a business rule, such as an overdraft. Which status is the best fit?",
+      "o": [
+        "`422 Unprocessable Entity` (or `400`) with a clear error body",
+        "`500 Internal Server Error` with a stack trace",
+        "`404 Not Found` because the rule failed",
+        "`401 Unauthorized` because the request is invalid"
+      ],
+      "w": "`4xx` means the client can fix the request. `5xx` means the server failed. Return a consistent error body, for example RFC 7807 problem details.",
+      "s": 30
+    },
+    {
+      "q": "How do you prevent two clients from overwriting each other's updates to the same resource?",
+      "o": [
+        "An `ETag` with `If-Match` for optimistic concurrency",
+        "Always use `POST` for every update",
+        "Lock the resource for an hour per client",
+        "Return `200` for every update request"
+      ],
+      "w": "The server returns `412 Precondition Failed` when the version no longer matches, and the client re-reads before retrying.",
+      "s": 30
+    },
+    {
+      "q": "Why prefer cursor-based pagination over offset for large, changing data sets?",
+      "o": [
+        "Results stay stable under inserts and deep pages stay fast",
+        "Clients can jump straight to page 500",
+        "Every row is returned in a single response",
+        "Sorting is no longer needed on the query"
+      ],
+      "w": "`OFFSET 100000` scans and discards rows, and inserts shift pages so items repeat or vanish. A cursor continues after the last seen key.",
+      "s": 30
+    },
+    {
+      "q": "What is a safe way to change an API without breaking existing clients?",
+      "o": [
+        "Add optional fields and endpoints, and version before breaking changes",
+        "Rename fields in place and tell clients to update",
+        "Remove old fields in the next deployment",
+        "Change status codes without telling anyone"
+      ],
+      "w": "Clients should ignore unknown fields (tolerant reader). Breaking changes go in a new version such as `/v2` or a header.",
+      "s": 30
+    },
+    {
+      "q": "What does a `429 Too Many Requests` response with `Retry-After` tell the client?",
+      "o": [
+        "The rate limit was exceeded, so wait before sending more",
+        "The server is permanently down for good",
+        "The URL in the request is wrong",
+        "The request body is too large"
+      ],
+      "w": "Rate limiting protects the service. Well-behaved clients back off and honour `Retry-After`.",
+      "s": 25
+    }
+  ]
+}

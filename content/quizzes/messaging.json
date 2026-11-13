@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What is the main benefit of putting a message broker between two services?",
+      "o": [
+        "The producer does not wait for the consumer to be running",
+        "Every call becomes synchronous and ordered",
+        "Retries are no longer needed anywhere",
+        "Messages are guaranteed never to repeat"
+      ],
+      "w": "Producers and consumers can scale and fail independently, and the broker buffers bursts.",
+      "s": 25
+    },
+    {
+      "q": "What is the difference between a queue and a topic (publish/subscribe)?",
+      "o": [
+        "A queue delivers each message to one consumer, a topic to every subscriber",
+        "A queue carries text while a topic carries binary data",
+        "A topic keeps messages forever while a queue keeps none",
+        "The two are the same thing under different names"
+      ],
+      "w": "Queues share work between competing consumers. Topics broadcast events to independent subscribers, each with its own position or queue.",
+      "s": 30
+    },
+    {
+      "q": "Which delivery guarantee is the realistic default for most brokers?",
+      "o": [
+        "At-least-once, so consumers must tolerate duplicates",
+        "Exactly-once end to end with no extra work",
+        "At-most-once with guaranteed delivery",
+        "Exactly-once for free between any two systems"
+      ],
+      "w": "Acknowledge after processing and a crash causes redelivery. Make consumers idempotent, for example by tracking message ids.",
+      "s": 30
+    },
+    {
+      "q": "A consumer keeps failing on one malformed message. What stops it blocking the queue?",
+      "o": [
+        "Retry a few times, then park it in a dead-letter queue",
+        "Retry for ever without waiting between the attempts",
+        "Delete the message silently so nobody ever sees it",
+        "Restart the broker every few minutes until it works"
+      ],
+      "w": "A dead-letter queue parks poison messages for inspection and replay. Retries should use backoff.",
+      "s": 30
+    },
+    {
+      "q": "Why does Kafka guarantee ordering only within a partition?",
+      "o": [
+        "Each partition is an ordered log read by one consumer in a group",
+        "Kafka sorts all messages by their timestamp",
+        "Every topic is limited to a single broker",
+        "The producer's clock enforces the ordering"
+      ],
+      "w": "Use a key (for example the account id) so all related events go to the same partition and stay in order.",
+      "s": 30
+    },
+    {
+      "q": "What is backpressure in messaging?",
+      "o": [
+        "Slowing or limiting producers when consumers fall behind",
+        "Encrypting messages when the system is under load",
+        "Deleting the oldest messages first",
+        "Raising the replica count of the topic"
+      ],
+      "w": "Without it queues grow without bound. Options include bounded queues, rate limits, pull-based consumption and scaling consumers.",
+      "s": 30
+    },
+    {
+      "q": "A service updates its database and then publishes an event. It crashes between the two steps. Which pattern solves this?",
+      "o": [
+        "Transactional outbox: save the event in the same database transaction",
+        "Publish first and update the database a little afterwards",
+        "Use a much longer timeout on the publish call itself",
+        "Send the same event twice just to be on the safe side"
+      ],
+      "w": "The two systems cannot share one transaction. The outbox makes the event part of the local commit and a relay publishes it, with at-least-once delivery.",
+      "s": 35
+    },
+    {
+      "q": "What is a consumer group in Kafka?",
+      "o": [
+        "Consumers sharing a group id divide the topic's partitions",
+        "A set of brokers that hold replicas of a topic",
+        "A group of producers that write in order",
+        "A list of topic names a client may use"
+      ],
+      "w": "Different groups each receive the full stream. Within one group each partition is read by only one member at a time.",
+      "s": 30
+    }
+  ]
+}

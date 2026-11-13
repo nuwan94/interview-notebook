@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "Which workload clearly favours a relational (SQL) database?",
+      "o": [
+        "Money transfers needing multi-row transactions and strict constraints",
+        "Storing billions of independent sensor readings",
+        "Caching session tokens with automatic expiry",
+        "Storing large video files for streaming"
+      ],
+      "w": "SQL offers ACID transactions, joins and constraints, which suits ledgers. Other stores suit other shapes of data.",
+      "s": 25
+    },
+    {
+      "q": "What best describes a document database such as MongoDB?",
+      "o": [
+        "Self-contained JSON-like documents with a flexible schema",
+        "Fixed-width rows that are always held in rigid tables",
+        "Relationships stored as nodes and edges with properties",
+        "Plain key and value strings that are held only in memory"
+      ],
+      "w": "Documents suit data that is read and written as a whole, such as a product or user profile with nested fields.",
+      "s": 25
+    },
+    {
+      "q": "Which store fits a very fast lookup of a value by key, such as a session or a rate-limit counter?",
+      "o": [
+        "A key-value store such as Redis",
+        "A graph database",
+        "A column-family warehouse",
+        "A relational data mart"
+      ],
+      "w": "Key-value stores give very low latency for simple access patterns but limited querying beyond the key.",
+      "s": 25
+    },
+    {
+      "q": "Which store fits finding friends-of-friends or detecting fraud rings?",
+      "o": [
+        "A graph database such as Neo4j",
+        "A key-value store such as Redis",
+        "A document store such as MongoDB",
+        "A time-series database such as InfluxDB"
+      ],
+      "w": "Traversing relationships is the core strength of graphs. In SQL such queries need many self-joins.",
+      "s": 25
+    },
+    {
+      "q": "Why do many NoSQL stores scale writes horizontally more easily?",
+      "o": [
+        "They shard by key and give up cross-shard joins and transactions",
+        "They store far less data on each of the nodes in a cluster",
+        "They ignore durability entirely to gain more write speed",
+        "They keep only a single copy of the data to save disk space"
+      ],
+      "w": "Partitioning by key spreads load across nodes. Queries must fit the partition key, so design the data model around access patterns.",
+      "s": 30
+    },
+    {
+      "q": "What is the main modelling difference between SQL and NoSQL?",
+      "o": [
+        "SQL models data first, NoSQL often models around queries",
+        "SQL has no schema at all, while NoSQL always has a strict one",
+        "NoSQL is not able to store any relationships between records",
+        "NoSQL always enforces foreign keys between its collections"
+      ],
+      "w": "In document and wide-column stores you often duplicate data to serve each read pattern efficiently, trading storage and update complexity.",
+      "s": 30
+    },
+    {
+      "q": "A team picks MongoDB just because it is \"schema-less\". What is the usual consequence?",
+      "o": [
+        "The schema moves into application code, and messy data can build up",
+        "No schema ever needs to exist anywhere in the system again",
+        "The data becomes consistent automatically as time passes",
+        "Every query becomes faster without any extra design work"
+      ],
+      "w": "Flexibility is helpful, but readers of the data still depend on its shape. Validate with schema rules and migrations.",
+      "s": 30
+    },
+    {
+      "q": "What does \"polyglot persistence\" mean?",
+      "o": [
+        "Using different data stores for different needs in one system",
+        "Writing SQL in several languages",
+        "Replicating one database across many regions",
+        "Storing the same data in every database"
+      ],
+      "w": "For example PostgreSQL for the ledger, Redis for sessions, Elasticsearch for search. The cost is more systems to operate and sync.",
+      "s": 25
+    }
+  ]
+}

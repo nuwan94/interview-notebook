@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "Which are the four pillars of object-oriented programming?",
+      "o": [
+        "Encapsulation, abstraction, inheritance and polymorphism",
+        "Compilation, linking, loading and execution",
+        "Class, object, method and variable",
+        "Public, private, protected and static"
+      ],
+      "w": "Most interviews expect a short definition plus a quick example for each of the four.",
+      "s": 25
+    },
+    {
+      "q": "What does encapsulation mean in practice?",
+      "o": [
+        "Keep state private and expose behaviour through an interface",
+        "Make every field public for easy access",
+        "Put every class together in a single file",
+        "Copy objects instead of ever sharing them"
+      ],
+      "w": "Callers cannot put the object in an invalid state, and the internals can change without breaking them.",
+      "s": 25
+    },
+    {
+      "q": "What is polymorphism?",
+      "o": [
+        "One call behaves differently depending on the actual object type",
+        "A class that has been declared with a great many fields",
+        "Methods that are able to return several values at once",
+        "A class that gets compiled several times in a build"
+      ],
+      "w": "Runtime (overriding) polymorphism lets code depend on an interface such as `PaymentMethod` while each implementation behaves its own way.",
+      "s": 25
+    },
+    {
+      "q": "What is the difference between overloading and overriding?",
+      "o": [
+        "Overloading: same name, new parameters. Overriding: a subclass replaces a method",
+        "Overloading is decided at run time, overriding at compile time",
+        "Overloading means changing only the return type of a method",
+        "They are simply two different names for the same mechanism"
+      ],
+      "w": "Overloads are chosen at compile time from the argument types. Overrides are chosen at run time from the object's real class.",
+      "s": 30
+    },
+    {
+      "q": "When should you prefer composition over inheritance?",
+      "o": [
+        "You reuse behaviour without a rigid is-a hierarchy",
+        "Only when the class has no methods at all",
+        "Whenever a class needs to hold fields",
+        "Never, because inheritance is always better"
+      ],
+      "w": "Inheritance couples subclass to superclass internals. Composition allows swapping parts at runtime and is easier to test.",
+      "s": 30
+    },
+    {
+      "q": "What is the difference between an abstract class and an interface in Java?",
+      "o": [
+        "A class can implement many interfaces but extend one abstract class that may hold state",
+        "Interfaces can hold instance fields, while abstract classes cannot hold any",
+        "Abstract classes are not allowed to contain implemented methods",
+        "Interfaces can be instantiated directly with the `new` keyword"
+      ],
+      "w": "Since Java 8 interfaces can have default methods, but still no instance state. Use an abstract class to share state and code.",
+      "s": 30
+    },
+    {
+      "q": "A `Square` extends `Rectangle` but breaks code that sets width and height separately. Which principle is violated?",
+      "o": [
+        "Liskov substitution: a subtype must work wherever its base type does",
+        "Open-closed: classes should be closed to extension",
+        "Single responsibility: one reason to change",
+        "Interface segregation: keep interfaces small"
+      ],
+      "w": "If substituting the subtype changes expected behaviour, the inheritance hierarchy is wrong.",
+      "s": 30
+    },
+    {
+      "q": "What is abstraction?",
+      "o": [
+        "Exposing what an object does while hiding how it does it",
+        "Splitting a single class across many different source files",
+        "Declaring every method of a class as static for speed",
+        "Removing code from the project once it is no longer used"
+      ],
+      "w": "Callers use `Repository.save(x)` without knowing whether it writes to SQL, a file or memory.",
+      "s": 25
+    }
+  ]
+}

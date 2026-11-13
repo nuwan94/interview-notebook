@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "What does `@KafkaListener` do?",
+      "o": [
+        "It registers a method as a consumer run by a listener container",
+        "It sends a message to Kafka when the method returns",
+        "It creates the Kafka topic automatically in production",
+        "It turns a REST endpoint into a message handler"
+      ],
+      "w": "The container polls the broker, deserialises records and calls the method. Concurrency, error handling and offset commits are configured on the container.",
+      "s": 25
+    },
+    {
+      "q": "Two instances of a service use the same Kafka consumer group id. How are messages delivered?",
+      "o": [
+        "Each partition is read by only one instance at a time",
+        "Both instances receive every message",
+        "Only the first instance receives any messages",
+        "Messages are split between instances by size"
+      ],
+      "w": "More consumers than partitions leaves some idle. Use a different group id to give another service its own copy of the stream.",
+      "s": 30
+    },
+    {
+      "q": "A consumer processes a message and crashes before committing the offset. What happens on restart?",
+      "o": [
+        "The message is delivered again, so processing must be idempotent",
+        "The message is lost for good and nobody notices",
+        "Kafka deletes the whole topic that held the message",
+        "The message arrives exactly once with no extra work needed"
+      ],
+      "w": "This is at-least-once delivery. Record processed ids or use naturally idempotent operations.",
+      "s": 30
+    },
+    {
+      "q": "A poison message keeps failing. Which Spring Kafka setup avoids blocking the partition?",
+      "o": [
+        "A `DefaultErrorHandler` with limited retries and a dead-letter topic",
+        "Retry for ever inside the very same listener thread",
+        "Ignore every exception that the listener might throw",
+        "Commit the offsets before the message is processed"
+      ],
+      "w": "After the retries the record goes to `<topic>.DLT` so the consumer moves on and the failure can be inspected and replayed.",
+      "s": 30
+    },
+    {
+      "q": "Why does a Kafka consumer's `max.poll.interval.ms` matter for slow processing?",
+      "o": [
+        "If handling takes longer, the broker assumes the consumer died and rebalances",
+        "It sets the maximum size of any single message on the topic",
+        "It controls how many records a producer sends in a batch",
+        "It encrypts the connection between the consumer and the broker"
+      ],
+      "w": "A rebalance moves its partitions to another consumer, which can cause duplicates. Process fast, or hand work to other threads carefully.",
+      "s": 35
+    },
+    {
+      "q": "What is a safe way to publish an event after saving to the database?",
+      "o": [
+        "The transactional outbox, saving the event in the same transaction",
+        "Publish first and save the data in the database afterwards",
+        "Publish inside a loop until the broker finally answers",
+        "Skip the database entirely and only publish the event"
+      ],
+      "w": "Publishing directly can leave the database and broker disagreeing after a crash. The outbox relay publishes committed events.",
+      "s": 30
+    },
+    {
+      "q": "What is Spring Cloud Stream for?",
+      "o": [
+        "Broker-agnostic producers and consumers written as functional beans",
+        "Streaming live video from a server to many browsers",
+        "Generating typed REST clients from OpenAPI specs",
+        "Compiling Kotlin code into a native executable"
+      ],
+      "w": "You write `Consumer<T>`, `Function<T,R>` or `Supplier<T>` beans. Binders connect them to Kafka or RabbitMQ.",
+      "s": 25
+    },
+    {
+      "q": "What does consumer lag tell you?",
+      "o": [
+        "How far behind the latest offset the consumer group is",
+        "How many consumers currently exist in the group",
+        "How large the messages in the partition are",
+        "How many topics the broker is currently serving"
+      ],
+      "w": "Rising lag means consumers cannot keep up. It is a key alert metric. Scale consumers (up to the partition count) or speed up processing.",
+      "s": 25
+    }
+  ]
+}

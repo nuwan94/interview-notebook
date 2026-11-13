@@ -1,0 +1,92 @@
+{
+  "questions": [
+    {
+      "q": "Which component receives every request in Spring MVC and delegates it?",
+      "o": [
+        "`DispatcherServlet`",
+        "`RequestMapping`",
+        "`ViewResolver`",
+        "`BeanFactory`"
+      ],
+      "w": "It is the front controller. It uses handler mappings to find the controller and adapters to call it.",
+      "s": 20
+    },
+    {
+      "q": "What is the difference between `@Controller` and `@RestController`?",
+      "o": [
+        "`@RestController` adds `@ResponseBody`, so results are written as the body",
+        "`@RestController` is able to return only plain strings",
+        "`@Controller` is not able to map any URLs at all",
+        "The two annotations are completely identical in behaviour"
+      ],
+      "w": "With `@Controller` a returned String is treated as a view name. With `@RestController` it is serialised, usually as JSON.",
+      "s": 25
+    },
+    {
+      "q": "How do you read a value from the URL path `/accounts/42`?",
+      "o": [
+        "`@PathVariable`, with `@GetMapping(\"/accounts/{id}\")`",
+        "`@RequestParam` with the id after a comma",
+        "`@RequestBody` on a string parameter",
+        "`@ModelAttribute` with no mapping"
+      ],
+      "w": "`@RequestParam` reads query strings (`?id=42`). `@RequestBody` reads and deserialises the request body.",
+      "s": 25
+    },
+    {
+      "q": "What does `@Valid` on a `@RequestBody` parameter trigger?",
+      "o": [
+        "Bean Validation, and an exception when a constraint fails",
+        "Encryption of the whole request body before it is read",
+        "A uniqueness check against the database for each field",
+        "Caching of the response so repeat calls are quicker"
+      ],
+      "w": "Handle the exception globally and return a `400` with field errors. Use annotations such as `@NotBlank` and `@Positive` on the DTO.",
+      "s": 30
+    },
+    {
+      "q": "What is the best place to translate exceptions into consistent HTTP error responses?",
+      "o": [
+        "A `@RestControllerAdvice` with `@ExceptionHandler` methods",
+        "A `try/catch` block inside every controller method",
+        "The database access layer, next to the repositories",
+        "The front-end code, after the response has been received"
+      ],
+      "w": "Central handling keeps controllers clean and error bodies uniform, for example using `ProblemDetail`.",
+      "s": 25
+    },
+    {
+      "q": "What is the role of a `HandlerInterceptor`?",
+      "o": [
+        "Runs code before and after a controller, for concerns like logging",
+        "Parses the JSON request body into a Java object",
+        "Creates the database connections for each request",
+        "Defines the scopes that beans in the context may have"
+      ],
+      "w": "Servlet filters run earlier and see raw requests. Interceptors know the matched handler and run inside the DispatcherServlet.",
+      "s": 30
+    },
+    {
+      "q": "Which library usually converts Java objects to JSON in Spring MVC?",
+      "o": [
+        "Jackson, through `HttpMessageConverter`s",
+        "Hibernate, through its entity mappings",
+        "Thymeleaf, through its template engine",
+        "Tomcat, through its connector threads"
+      ],
+      "w": "Content negotiation uses the `Accept` header to choose a converter. Customise Jackson with `ObjectMapper` settings or annotations.",
+      "s": 25
+    },
+    {
+      "q": "Why should controllers stay thin?",
+      "o": [
+        "Business rules belong in services, which can be tested without HTTP",
+        "Controllers are not allowed to call services",
+        "Thin controllers run faster in Tomcat",
+        "Spring forbids any logic in controllers"
+      ],
+      "w": "A controller should translate HTTP to a service call and the result back to HTTP, nothing more.",
+      "s": 25
+    }
+  ]
+}
