@@ -14,6 +14,7 @@ import { SAGA_SCENES } from './sagaScenes.js';
 import { SCHEDULER_SCENES } from './schedulerScenes.js';
 import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
+import { ACID_SCENES } from './acidScenes.js';
 
 const TONE = {
   ok: { border: '2px solid var(--color-ok)', background: 'var(--color-ok-soft)', badge: 'var(--color-ok)' },
@@ -36,6 +37,8 @@ const ICONS = [
   [/lock table|lease/i, '🔐'],
   [/task table|task database|coordination store/i, '🗄️'],
   [/worker|instance|consumer|producer|publisher|subscriber|replica|node|coordinator/i, '🖥️'],
+  [/transaction/i, '🧾'],
+  [/write-ahead log/i, '📒'],
   [/policy/i, '📋'],
   [/orchestrator/i, '🎼'],
   [/registry|discovery/i, '📇'],
@@ -220,3 +223,4 @@ export const SagaWalk = () => <Walk scenes={SAGA_SCENES} icons ariaLabel="Saga p
 export const SchedulerWalk = () => <Walk scenes={SCHEDULER_SCENES} icons ariaLabel="Distributed scheduler walk-through" />;
 export const MessagingWalk = () => <Walk scenes={MESSAGING_SCENES} icons ariaLabel="Messaging walk-through" />;
 export const DistributedWalk = () => <Walk scenes={DISTRIBUTED_SCENES} icons ariaLabel="Distributed systems walk-through" />;
+export const AcidWalk = () => <Walk scenes={ACID_SCENES} icons ariaLabel="ACID and BASE walk-through" />;
