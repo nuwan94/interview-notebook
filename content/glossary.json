@@ -548,5 +548,19 @@
   {"term":"materialized view","aliases":["materialised view"],"short":"A stored query result refreshed on demand or schedule: fast reads, possibly stale."},
   {"term":"star schema","short":"Analytics design: a central fact table of measurements joined to dimension tables."},
   {"term":"OLTP","short":"Online transaction processing: many small concurrent reads and writes; favours normalised schemas."},
-  {"term":"OLAP","short":"Online analytical processing: large read-heavy aggregations; favours denormalised, column-oriented stores."}
+  {"term":"OLAP","short":"Online analytical processing: large read-heavy aggregations; favours denormalised, column-oriented stores."},
+  {"term":"bean","aliases":["Spring bean"],"short":"An object instantiated, assembled and managed by the Spring container."},
+  {"term":"ApplicationContext","short":"Spring's main container: a BeanFactory plus events, i18n, resource loading, profiles and AOP integration; creates singletons eagerly."},
+  {"term":"BeanFactory","short":"The basic Spring container interface that creates and wires beans lazily."},
+  {"term":"component scanning","aliases":["@ComponentScan"],"short":"Spring finds classes annotated with @Component and its stereotypes under a base package and registers them as beans."},
+  {"term":"bean definition","short":"Metadata describing a bean: its class, scope, dependencies and init and destroy methods."},
+  {"term":"bean scope","aliases":["scope"],"short":"How many instances of a bean exist and for how long: singleton (default), prototype, request, session."},
+  {"term":"BeanPostProcessor","short":"A hook that can modify every bean before and after initialization; AOP proxies are created in the after step."},
+  {"term":"@Qualifier","short":"Selects a specific bean by name when several beans match the injection type."},
+  {"term":"@Primary","short":"Marks the default bean to inject when several candidates of the same type exist."},
+  {"term":"@PostConstruct","short":"Method called once after dependencies are injected, for initialization."},
+  {"term":"@PreDestroy","short":"Method called before a singleton bean is destroyed on shutdown, for cleanup."},
+  {"term":"ObjectProvider","short":"A lazy handle to a bean; getObject() returns a fresh prototype or scoped instance on each call."},
+  {"term":"circular dependency","short":"Two beans that need each other; constructor injection cannot build them, and Spring Boot 2.6+ rejects cycles by default."},
+  {"term":"stereotype annotation","short":"@Component, @Service, @Repository and @Controller: mark a class as a Spring-managed bean."}
 ]
