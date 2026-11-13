@@ -677,5 +677,12 @@
   {"term":"partition","short":"An ordered log shard of a Kafka topic; ordering is guaranteed only within a partition."},
   {"term":"offset","short":"A message position in a partition; consumers commit offsets to record progress."},
   {"term":"Spring Cloud Stream","short":"Broker-agnostic messaging with functional Consumer, Function and Supplier beans bound to destinations by binders."},
-  {"term":"rebalance","short":"Reassignment of partitions when consumers join or leave a group; redelivers from the last committed offset."}
+  {"term":"rebalance","short":"Reassignment of partitions when consumers join or leave a group; redelivers from the last committed offset."},
+  {"term":"WebFlux","aliases":["Spring WebFlux"],"short":"Spring reactive, non-blocking web stack on Netty using an event loop."},
+  {"term":"Project Reactor","aliases":["Reactor"],"short":"The reactive library behind Spring WebFlux, providing Mono and Flux."},
+  {"term":"Mono","short":"A Reactor publisher of zero or one item; lazy until subscribed."},
+  {"term":"Flux","short":"A Reactor publisher of zero to many items; lazy until subscribed."},
+  {"term":"event loop","short":"A small set of threads handling many connections via callbacks; must never be blocked."},
+  {"term":"R2DBC","short":"Reactive Relational Database Connectivity: a non-blocking SQL driver API for reactive applications."},
+  {"term":"BlockHound","short":"Tool that detects blocking calls on non-blocking threads, used in reactive tests."}
 ]
