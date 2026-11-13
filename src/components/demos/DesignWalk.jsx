@@ -16,6 +16,7 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { SPRING_ASYNC_SCENES } from './springAsyncScenes.js';
 import { REST_API_SCENES } from './restApiScenes.js';
 import { SPRING_TESTING_SCENES } from './springTestingScenes.js';
 import { SPRING_CLOUD_SCENES } from './springCloudScenes.js';
@@ -64,6 +65,9 @@ const ICONS = [
   [/config|properties/i, '🗂️'],
   [/gateway/i, '🚪'],
   [/\btest/i, '🧪'],
+  [/executor|thread/i, '🧵'],
+  [/scheduler|timer/i, '⏰'],
+  [/cache/i, '⚡'],
   [/policy/i, '📋'],
   [/orchestrator/i, '🎼'],
   [/registry|discovery/i, '📇'],
@@ -259,3 +263,4 @@ export const SpringTxWalk = () => <Walk scenes={SPRING_TX_SCENES} icons ariaLabe
 export const SpringCloudWalk = () => <Walk scenes={SPRING_CLOUD_SCENES} icons ariaLabel="Spring Cloud walk-through" />;
 export const SpringTestingWalk = () => <Walk scenes={SPRING_TESTING_SCENES} icons ariaLabel="Spring testing walk-through" />;
 export const RestApiWalk = () => <Walk scenes={REST_API_SCENES} icons ariaLabel="REST API design walk-through" />;
+export const SpringAsyncWalk = () => <Walk scenes={SPRING_ASYNC_SCENES} icons ariaLabel="Caching and async walk-through" />;
