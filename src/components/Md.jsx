@@ -1,4 +1,5 @@
 import { Children, isValidElement, memo, useState } from 'react';
+import { LuLink, LuPlay } from 'react-icons/lu';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -94,7 +95,7 @@ function Heading({ level, children }) {
           title="Copy link to this heading"
           onClick={async () => outlet?.toast?.((await copyText(lessonUrl(slug, id))) ? 'Link copied to clipboard' : 'Could not copy the link')}
         >
-          🔗
+          <LuLink aria-hidden="true" />
         </button>
       )}
       {reader?.supported && (
@@ -106,7 +107,7 @@ function Heading({ level, children }) {
           title="Read aloud from here"
           onClick={(e) => reader.playFrom(e.currentTarget.parentElement)}
         >
-          ▶ read from here
+          <LuPlay aria-hidden="true" className="btn-icon" /> read from here
         </button>
       )}
     </Tag>

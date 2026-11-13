@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { LuLink } from 'react-icons/lu';
 import { lessons, topicTree } from '../lib/content.js';
 import { glossary } from '../lib/glossary.js';
 import { Holes } from '../components/Holes.jsx';
@@ -71,7 +72,7 @@ export function Home() {
           <b>Read aloud</b> highlights each word and scrolls along. <b>A− / A+</b> in the header resize all text.
         </li>
         <li>
-          <b>Share</b> any lesson, section or single question with its 🔗 link.
+          <b>Share</b> any lesson, section or single question with its <LuLink aria-hidden="true" className="inline-icon" /> link.
         </li>
       </ul>
     </div>

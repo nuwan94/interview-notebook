@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { LuSearch } from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
 import { search } from '../lib/search.js';
 
@@ -48,7 +49,7 @@ export function SearchPalette({ open, onClose }) {
       >
         <div className="p-3 border-b border-rule">
           <div className="palette-field flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3">
-            <span aria-hidden="true">🔎</span>
+            <LuSearch aria-hidden="true" />
             <input
               ref={input}
               value={q}

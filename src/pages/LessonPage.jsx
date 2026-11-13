@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { LuLink, LuSquare, LuVolume2 } from 'react-icons/lu';
 import { Link, useLocation, useOutletContext, useParams } from 'react-router-dom';
 import { getLesson } from '../lib/content.js';
 import { copyText, lessonUrl } from '../lib/share.js';
@@ -49,7 +50,7 @@ function ShareButton({ slug, anchor, label, toast, className = 'btn' }) {
         toast((await copyText(url)) ? 'Link copied to clipboard' : 'Could not copy — copy the address bar instead');
       }}
     >
-      🔗 {label}
+      <LuLink aria-hidden="true" className="btn-icon" /> {label}
     </button>
   );
 }
@@ -89,7 +90,15 @@ function LessonView({ lesson, anchor }) {
           <div className="flex flex-wrap gap-2 mb-[var(--lh)]" data-noread>
             {reader.supported && (
               <button type="button" className="btn primary" onClick={reader.status === 'idle' ? reader.play : reader.stop}>
-                {reader.status === 'idle' ? '🔊 Read aloud' : '⏹ Stop reading'}
+                {reader.status === 'idle' ? (
+                  <>
+                    <LuVolume2 aria-hidden="true" className="btn-icon" /> Read aloud
+                  </>
+                ) : (
+                  <>
+                    <LuSquare aria-hidden="true" className="btn-icon" /> Stop reading
+                  </>
+                )}
               </button>
             )}
             <QuizButton slug={lesson.slug} />
@@ -126,7 +135,7 @@ function LessonView({ lesson, anchor }) {
           </section>
         ))}
         <aside data-noread className="quiz-cta">
-          <QuizButton slug={lesson.slug} label="📝 Check what you learned: take the quiz" />
+          <QuizButton slug={lesson.slug} label="Check what you learned: take the quiz" />
         </aside>
       </article>
       <ReaderBar reader={reader} />

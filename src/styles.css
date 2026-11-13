@@ -1310,3 +1310,18 @@ mark.reading-word {
   margin-top: calc(var(--lh) * 2);
   min-height: calc(var(--lh) * 2);
 }
+
+.quiz-icon {
+  display: inline-block;
+  vertical-align: -0.15em;
+  margin-right: 0.2em;
+}
+
+.btn-icon {
+  display: inline-block;
+  vertical-align: -0.15em;
+}
+.inline-icon {
+  display: inline-block;
+  vertical-align: -0.15em;
+}

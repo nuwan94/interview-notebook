@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { LuCheck, LuClipboardCheck, LuTimer, LuX } from 'react-icons/lu';
 import { buildAttempt, bestScore, grade, hasQuiz, loadQuiz, saveScore } from '../lib/quiz.js';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -21,7 +22,7 @@ const fmt = (ms) => {
 };
 
 /** Button for the lesson header (renders nothing when the lesson has no quiz). */
-export function QuizButton({ slug, className = 'btn primary', label = '📝 Take the quiz' }) {
+export function QuizButton({ slug, className = 'btn primary', label = 'Take the quiz' }) {
   const [open, setOpen] = useState(false);
   const [, bump] = useState(0);
   const opener = useRef(null);
@@ -30,7 +31,7 @@ export function QuizButton({ slug, className = 'btn primary', label = '📝 Take
   return (
     <>
       <button ref={opener} type="button" className={className} onClick={() => setOpen(true)} aria-haspopup="dialog">
-        {label}
+        <LuClipboardCheck aria-hidden="true" className="quiz-icon" /> {label}
         {best && <span className="quiz-best">best {best.correct}/{best.total}</span>}
       </button>
       {open && (
@@ -195,7 +196,7 @@ function QuizOverlay({ slug, onClose }) {
             {phase === 'results' ? 'Quiz results' : 'Quick quiz'}
           </h2>
           <button type="button" className="btn !min-h-8 !px-2" aria-label="Close quiz" onClick={() => (phase === 'question' ? setConfirmQuit(true) : onClose())}>
-            ✕
+            <LuX aria-hidden="true" />
           </button>
         </header>
 
@@ -256,7 +257,7 @@ function QuizOverlay({ slug, onClose }) {
                 Question <b>{i + 1}</b> of {total}
               </span>
               <span className={`quiz-time quiz-${tone}`} role="timer" aria-live="off">
-                ⏱ {Math.ceil(left / 1000)} s
+                <LuTimer aria-hidden="true" className="quiz-icon" /> {Math.ceil(left / 1000)} s
               </span>
             </div>
             <div
@@ -293,8 +294,8 @@ function QuizOverlay({ slug, onClose }) {
                       {answered && o.ok && <span className="sr-only"> (correct answer)</span>}
                       {answered && picked === idx && !o.ok && <span className="sr-only"> (your answer, incorrect)</span>}
                     </span>
-                    {answered && o.ok && <span aria-hidden="true">✓</span>}
-                    {answered && picked === idx && !o.ok && <span aria-hidden="true">✗</span>}
+                    {answered && o.ok && <LuCheck aria-hidden="true" />}
+                    {answered && picked === idx && !o.ok && <LuX aria-hidden="true" />}
                   </button>
                 );
               })}
@@ -339,7 +340,7 @@ function QuizOverlay({ slug, onClose }) {
                 return (
                   <li key={n} className={a?.ok ? 'quiz-ok' : 'quiz-bad'}>
                     <div>
-                      <b>{a?.ok ? '✓' : '✗'}</b> <Inline text={qq.q} />
+                      <b>{a?.ok ? <LuCheck aria-label="correct" /> : <LuX aria-label="wrong" />}</b> <Inline text={qq.q} />
                     </div>
                     {!a?.ok && (
                       <div className="quiz-ans">

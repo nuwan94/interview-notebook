@@ -1,4 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
+import { LuRotateCcw } from 'react-icons/lu';
+import { PlayLabel } from '../PlayLabel.jsx';
 import { Link } from 'react-router-dom';
 import { useReducedMotion } from '../../lib/prefs.jsx';
 import { Glossed } from '../Term.jsx';
@@ -42,10 +44,10 @@ export function JavaTimeline() {
 
       <div className="flex flex-wrap items-center gap-2 mb-2">
         <button type="button" className="btn primary" onClick={() => (p.playing ? p.pause() : p.play())}>
-          {p.playing ? '⏸ Pause' : p.index >= p.last ? '▶ Play again' : '▶ Play'}
+          <PlayLabel p={p} />
         </button>
         <button type="button" className="btn" onClick={p.replay}>
-          ↺ Replay
+          <LuRotateCcw aria-hidden="true" className="btn-icon" /> Replay
         </button>
         <button type="button" className="btn" onClick={() => p.step(-1)} disabled={p.index === 0} aria-label="Previous release">
           ◀

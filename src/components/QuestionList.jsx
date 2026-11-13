@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { LuLink } from 'react-icons/lu';
 import { LEVELS, plainText } from '../lib/content.js';
 import { copyText, lessonUrl } from '../lib/share.js';
 import { Md } from './Md.jsx';
@@ -125,7 +126,7 @@ export function QuestionList({ slug, questions, focusId, navKey, onToast }) {
                   onToast((await copyText(lessonUrl(slug, q.id))) ? 'Link to question copied' : 'Could not copy — copy the address bar instead');
                 }}
               >
-                🔗
+                <LuLink aria-hidden="true" />
               </button>
             </summary>
             <div className="answer prose-nb">

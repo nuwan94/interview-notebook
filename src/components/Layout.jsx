@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { LuMenu, LuSearch } from 'react-icons/lu';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { SCALES, usePrefs } from '../lib/prefs.jsx';
 import { getLesson } from '../lib/content.js';
@@ -61,9 +62,7 @@ export function Layout() {
             aria-controls="sidebar"
             aria-label="Interview Notebook: open the contents menu"
           >
-            <span aria-hidden="true" className="font-sans text-base">
-              ☰
-            </span>
+            <LuMenu aria-hidden="true" size="1.2em" />
             <img src="./favicon.svg" alt="" width="24" height="24" />
             Interview Notebook
           </button>
@@ -77,7 +76,7 @@ export function Layout() {
             className="flex-1 min-w-[10rem] max-w-md text-left bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-soft hover:border-pen flex items-center gap-2"
             aria-label="Search notes (shortcut: slash or Control K)"
           >
-            <span aria-hidden="true">🔎</span>
+            <LuSearch aria-hidden="true" />
             <span className="flex-1 truncate">Search notes, questions, terms…</span>
             <span className="kbd hidden sm:inline">/</span>
           </button>

@@ -1,4 +1,5 @@
 import { useVoices } from '../lib/reader.jsx';
+import { LuPause, LuPlay, LuSkipBack, LuSkipForward, LuSquare } from 'react-icons/lu';
 import { usePrefs } from '../lib/prefs.jsx';
 
 const RATES = [0.75, 1, 1.25, 1.5, 2];
@@ -16,16 +17,16 @@ export function ReaderBar({ reader }) {
       className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 w-[min(52rem,calc(100vw-1rem))] bg-ink text-white rounded-xl shadow-2xl px-3 py-2 flex flex-wrap items-center gap-2"
     >
       <button type="button" className="btn !bg-white" onClick={reader.prev} aria-label="Previous paragraph">
-        ⏮
+        <LuSkipBack aria-hidden="true" />
       </button>
       <button type="button" className="btn !bg-hi !border-hi !text-ink" onClick={playing ? reader.pause : reader.resume} aria-label={playing ? 'Pause reading' : 'Resume reading'}>
-        {playing ? '⏸ Pause' : '▶ Resume'}
+        {playing ? <><LuPause aria-hidden="true" className="btn-icon" /> Pause</> : <><LuPlay aria-hidden="true" className="btn-icon" /> Resume</>}
       </button>
       <button type="button" className="btn !bg-white" onClick={reader.next} aria-label="Next paragraph">
-        ⏭
+        <LuSkipForward aria-hidden="true" />
       </button>
       <button type="button" className="btn !bg-white" onClick={reader.stop}>
-        ⏹ Stop
+        <LuSquare aria-hidden="true" className="btn-icon" /> Stop
       </button>
       <span className="text-xs text-slate-300 tabular-nums" aria-live="off">
         {reader.block + 1} / {reader.total}
