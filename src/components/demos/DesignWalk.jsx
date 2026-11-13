@@ -16,6 +16,7 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { REST_API_SCENES } from './restApiScenes.js';
 import { SPRING_TESTING_SCENES } from './springTestingScenes.js';
 import { SPRING_CLOUD_SCENES } from './springCloudScenes.js';
 import { SPRING_TX_SCENES } from './springTxScenes.js';
@@ -257,3 +258,4 @@ export const SpringMvcWalk = () => <Walk scenes={SPRING_MVC_SCENES} icons ariaLa
 export const SpringTxWalk = () => <Walk scenes={SPRING_TX_SCENES} icons ariaLabel="Spring transactions walk-through" />;
 export const SpringCloudWalk = () => <Walk scenes={SPRING_CLOUD_SCENES} icons ariaLabel="Spring Cloud walk-through" />;
 export const SpringTestingWalk = () => <Walk scenes={SPRING_TESTING_SCENES} icons ariaLabel="Spring testing walk-through" />;
+export const RestApiWalk = () => <Walk scenes={REST_API_SCENES} icons ariaLabel="REST API design walk-through" />;
