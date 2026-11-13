@@ -660,5 +660,17 @@
   {"term":"Redis","short":"In-memory data store used for shared caches, sessions, rate limits and locks."},
   {"term":"@Async","short":"Runs a method on a separate executor thread so the caller returns immediately; needs a bounded pool and a call through the proxy."},
   {"term":"@Scheduled","short":"Runs a method on a schedule (fixedRate, fixedDelay, cron); runs on every instance unless locked."},
-  {"term":"TaskExecutor","aliases":["ThreadPoolTaskExecutor"],"short":"Spring thread-pool abstraction for async work: core size, max size, queue capacity, rejection policy."}
+  {"term":"TaskExecutor","aliases":["ThreadPoolTaskExecutor"],"short":"Spring thread-pool abstraction for async work: core size, max size, queue capacity, rejection policy."},
+  {"term":"observability","short":"Understanding a system internal state from its outputs: metrics, traces and logs correlated by ids."},
+  {"term":"Micrometer","short":"Vendor-neutral metrics facade for the JVM with registries for Prometheus, Datadog and others; also Micrometer Tracing."},
+  {"term":"Prometheus","short":"Pull-based metrics system that scrapes /actuator/prometheus and stores time series for dashboards and alerts."},
+  {"term":"OpenTelemetry","aliases":["OTel","OTLP"],"short":"Vendor-neutral standard and SDKs for traces, metrics and logs, exported with the OTLP protocol."},
+  {"term":"distributed trace","aliases":["trace"],"short":"The journey of one request across services: a tree of spans sharing a trace id."},
+  {"term":"span","short":"One timed operation inside a trace, with a span id, parent and tags."},
+  {"term":"MDC","aliases":["Mapped Diagnostic Context"],"short":"Thread-bound key-value context in logging (correlation id, trace id) added to every log line."},
+  {"term":"liveness probe","aliases":["liveness"],"short":"Health check saying the process is alive; failure makes the platform restart it."},
+  {"term":"readiness probe","aliases":["readiness"],"short":"Health check saying the instance can take traffic; failure removes it from rotation without restarting."},
+  {"term":"SLO","aliases":["service level objective"],"short":"A reliability target such as 99.9 percent of requests under 500 ms over 30 days; the remainder is the error budget."},
+  {"term":"golden signals","short":"Latency, traffic, errors and saturation: the four core service health measurements."},
+  {"term":"cardinality","short":"Number of distinct values of a metric tag; high cardinality (user ids) explodes time series."}
 ]
