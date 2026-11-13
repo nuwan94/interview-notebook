@@ -620,5 +620,17 @@
   {"term":"PlatformTransactionManager","aliases":["transaction manager"],"short":"Spring's strategy interface for beginning, committing and rolling back transactions (JPA, JDBC or JTA implementations)."},
   {"term":"TransactionTemplate","short":"Programmatic transactions: run a callback in a transaction with chosen propagation, avoiding proxy limitations."},
   {"term":"@TransactionalEventListener","short":"An event listener that runs at a transaction phase, usually AFTER_COMMIT, so work happens only if the transaction committed."},
-  {"term":"rollbackFor","short":"@Transactional attribute listing exception types that must trigger rollback, such as Exception.class to include checked exceptions."}
+  {"term":"rollbackFor","short":"@Transactional attribute listing exception types that must trigger rollback, such as Exception.class to include checked exceptions."},
+  {"term":"Spring Cloud","short":"Projects that give Spring implementations of distributed-system patterns: Gateway, LoadBalancer, Config, Circuit Breaker, Stream, Contract."},
+  {"term":"Spring Cloud Gateway","short":"A reactive API gateway configured with routes (predicates, filters, uri) for routing, auth, rate limiting and retries."},
+  {"term":"Eureka","short":"Netflix-originated service registry: services register and heartbeat, clients query for healthy instances."},
+  {"term":"Spring Cloud LoadBalancer","short":"Client-side load balancer that resolves a logical service name through discovery and picks an instance (replaced Ribbon)."},
+  {"term":"Spring Cloud Config","aliases":["Config Server"],"short":"Serves externalised configuration from Git or Vault to services by application name and profile."},
+  {"term":"@RefreshScope","short":"Beans in this scope are rebuilt on refresh so changed configuration applies without a restart."},
+  {"term":"Resilience4j","short":"Lightweight fault-tolerance library: circuit breaker, retry, bulkhead, rate limiter and time limiter."},
+  {"term":"RestClient","short":"Spring 6.1 synchronous fluent HTTP client; the modern replacement for RestTemplate."},
+  {"term":"OpenFeign","aliases":["Feign"],"short":"Declarative HTTP client: annotate an interface and Spring Cloud generates the implementation."},
+  {"term":"@HttpExchange","short":"Spring 6 declarative HTTP interface client annotation (with @GetExchange and similar)."},
+  {"term":"release train","short":"The Spring Cloud versioning scheme (for example 2023.0.x): a set of project versions compatible with one Spring Boot line."},
+  {"term":"retry storm","short":"Many clients retrying a failing service at once, multiplying load and preventing recovery; mitigate with backoff, jitter and a circuit breaker."}
 ]
