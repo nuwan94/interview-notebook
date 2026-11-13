@@ -644,5 +644,12 @@
   {"term":"Mockito","short":"Java mocking framework: @Mock, given/when stubbing, verify and argument captors."},
   {"term":"AssertJ","short":"Fluent assertion library for Java tests: assertThat(x).isEqualTo(y)."},
   {"term":"Awaitility","short":"Test library to poll until a condition is true within a timeout, instead of Thread.sleep."},
-  {"term":"WireMock","short":"Stubs external HTTP services in tests, returning chosen responses, errors and delays."}
+  {"term":"WireMock","short":"Stubs external HTTP services in tests, returning chosen responses, errors and delays."},
+  {"term":"REST","aliases":["RESTful"],"short":"Architectural style: resources identified by URIs, manipulated with HTTP methods, stateless requests, standard status codes."},
+  {"term":"ETag","short":"HTTP validator identifying a resource version; used with If-Match for optimistic concurrency and If-None-Match for 304 caching."},
+  {"term":"If-Match","short":"Conditional request header: apply the update only if the resource ETag still matches; otherwise 412 Precondition Failed."},
+  {"term":"cursor pagination","short":"Paging by an opaque cursor for the last seen item instead of an offset; stable under inserts and fast for deep pages."},
+  {"term":"HATEOAS","short":"Hypermedia as the engine of application state: responses carry links to next actions (Richardson maturity level 3)."},
+  {"term":"429 Too Many Requests","aliases":["rate limiting"],"short":"Status returned when a client exceeds a rate limit, with Retry-After telling when to try again."},
+  {"term":"202 Accepted","short":"The request was accepted for asynchronous processing; the Location header points at a status resource to poll."}
 ]
