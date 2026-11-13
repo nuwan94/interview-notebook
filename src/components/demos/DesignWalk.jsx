@@ -16,6 +16,7 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { SPRING_REACTIVE_SCENES } from './springReactiveScenes.js';
 import { SPRING_MSG_SCENES } from './springMsgScenes.js';
 import { SPRING_OBS_SCENES } from './springObsScenes.js';
 import { SPRING_ASYNC_SCENES } from './springAsyncScenes.js';
@@ -71,6 +72,7 @@ const ICONS = [
   [/scheduler|timer/i, '⏰'],
   [/metric|prometheus|dashboard|alert/i, '📈'],
   [/trace|span|\blogs?\b/i, '🔎'],
+  [/event loop/i, '🔁'],
   [/kubernetes|probe/i, '☸️'],
   [/cache/i, '⚡'],
   [/policy/i, '📋'],
@@ -271,3 +273,4 @@ export const RestApiWalk = () => <Walk scenes={REST_API_SCENES} icons ariaLabel=
 export const SpringAsyncWalk = () => <Walk scenes={SPRING_ASYNC_SCENES} icons ariaLabel="Caching and async walk-through" />;
 export const SpringObsWalk = () => <Walk scenes={SPRING_OBS_SCENES} icons ariaLabel="Observability walk-through" />;
 export const SpringMsgWalk = () => <Walk scenes={SPRING_MSG_SCENES} icons ariaLabel="Spring messaging walk-through" />;
+export const SpringReactiveWalk = () => <Walk scenes={SPRING_REACTIVE_SCENES} icons ariaLabel="Reactive and virtual threads walk-through" />;
