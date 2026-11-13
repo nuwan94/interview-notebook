@@ -4,7 +4,7 @@ nav: Spring Cloud and resilience
 slug: spring-cloud
 summary: How the Spring Cloud projects implement microservice patterns (Gateway, service discovery and load balancing, centralised config, declarative HTTP clients, Resilience4j circuit breaker, retry, bulkhead and rate limiter), what Kubernetes replaces, and how to combine them safely, with Java examples and interview questions.
 tags: [Spring Cloud, Microservices, Gateway, Resilience4j, Circuit Breaker, Service Discovery, Config]
-order: 29
+order: 39
 topic: Spring / Microservices
 updated: 2026-11-13
 subnav: true

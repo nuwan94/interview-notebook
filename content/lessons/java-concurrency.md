@@ -4,7 +4,7 @@ nav: Concurrency
 slug: java-concurrency
 summary: How threads share data safely: race conditions, deadlocks, synchronized and locks, atomics, thread pools, CompletableFuture, concurrent collections and virtual threads, with animations and interview questions.
 tags: [Java, Concurrency, Threads]
-order: 5
+order: 11
 topic: Java / Concurrency
 updated: 2026-11-12
 subnav: true
@@ -263,6 +263,8 @@ Key points:
 - `get()` throws checked exceptions; `join()` throws an unchecked `CompletionException`.
 
 ## Concurrent collections and utilities {#collections}
+
+This is a summary. The full lesson on [concurrent collections](lesson:java-concurrent-collections) covers `ConcurrentHashMap` internals, `CopyOnWriteArrayList`, `BlockingQueue` and skip lists in depth, with animations and interview questions.
 
 ### ConcurrentHashMap {#chm}
 

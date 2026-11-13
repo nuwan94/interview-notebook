@@ -4,7 +4,7 @@ nav: Garbage collectors
 slug: garbage-collector
 summary: What a garbage collector does, generations, the main collectors (Serial, Parallel, G1, ZGC, Shenandoah, Epsilon and the retired CMS), how to choose one, how to read a GC log, and what causes pauses and leaks.
 tags: [Java, JVM, GC, Performance]
-order: 4
+order: 10
 topic: Java / JVM
 updated: 2026-11-12
 subnav: true

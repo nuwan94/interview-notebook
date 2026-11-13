@@ -4,7 +4,7 @@ nav: AuthN vs AuthZ
 slug: authn-authz
 summary: Authentication vs authorization, 401 vs 403, and a comparison of the main methods (sessions, tokens, API keys, Basic, mTLS, OAuth 2.0, OIDC, SAML), plus MFA, RBAC vs ABAC and the common attacks. The overview that the separate OAuth, OIDC and JWT lessons hang from.
 tags: [Security, Authentication, Authorization, OAuth, OIDC, JWT]
-order: 10
+order: 17
 topic: Security / Authentication
 updated: 2026-11-13
 subnav: true

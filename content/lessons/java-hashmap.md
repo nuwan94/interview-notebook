@@ -4,7 +4,7 @@ nav: HashMap
 slug: java-hashmap
 summary: Buckets, hash codes, collisions, treeification, resizing and the hashCode()/equals() contract — with animations you can replay and interview questions with sample answers.
 tags: [Java, Collections, Data structures]
-order: 1
+order: 8
 topic: Java / Collections
 updated: 2026-11-12
 ---
@@ -291,7 +291,7 @@ Yes: **one** `null` key (its hash is 0, so it sits in bucket 0) and any number o
 
 ### [basic] Is HashMap thread-safe? What do you use instead? {#thread-safe}
 
-No. Two threads calling `put` at the same time can lose updates, and a `get` racing with a resize can miss entries. In [Java 7](lesson:java-version-history#java-7) concurrent resizes could even create a cycle in a chain and hang a thread. Options: `ConcurrentHashMap` (the default choice), `Collections.synchronizedMap` (one lock around everything), or confining the map to one thread. See the "make it thread-safe" question for trade-offs.
+No. Two threads calling `put` at the same time can lose updates, and a `get` racing with a resize can miss entries. In [Java 7](lesson:java-version-history#java-7) concurrent resizes could even create a cycle in a chain and hang a thread. Options: `ConcurrentHashMap` (the default choice), `Collections.synchronizedMap` (one lock around everything), or confining the map to one thread. See the "make it thread-safe" question for trade-offs, and the [concurrent collections lesson](lesson:java-concurrent-collections) for how the thread-safe collections work.
 
 ### [basic] What happens when you put() a key that already exists? {#duplicate-key}
 

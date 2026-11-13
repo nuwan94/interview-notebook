@@ -4,7 +4,7 @@ nav: SQL vs NoSQL
 slug: sql-vs-nosql
 summary: Relational databases versus the NoSQL families (key-value, document, wide-column, graph), how modelling, scaling, indexing and consistency differ, how to choose, and how it looks in Spring (JPA, Spring Data MongoDB, Redis), with interview questions.
 tags: [Database, SQL, NoSQL, Modelling, Scaling, Spring]
-order: 21
+order: 13
 topic: Databases / Fundamentals
 updated: 2026-11-13
 subnav: true
