@@ -500,5 +500,21 @@
   {"term":"hybrid logical clock","aliases":["HLC"],"short":"Physical time plus a logical counter: timestamps close to real time yet monotonic and causally consistent."},
   {"term":"gossip protocol","short":"Nodes periodically exchange state with random peers, spreading membership and metadata without a central point."},
   {"term":"Byzantine fault","short":"A node behaves arbitrarily or maliciously. Tolerating f of them needs 3f+1 nodes."},
-  {"term":"sharding","aliases":["partitioning"],"short":"Splitting data across nodes (by key range, hash or directory) to scale beyond one machine. Brings rebalancing, hot spots and cross-shard queries."}
+  {"term":"sharding","aliases":["partitioning"],"short":"Splitting data across nodes (by key range, hash or directory) to scale beyond one machine. Brings rebalancing, hot spots and cross-shard queries."},
+  {"term":"ACID","short":"Atomicity, Consistency, Isolation, Durability: the guarantees of a database transaction. All or nothing, rules preserved, no interference, survives crashes."},
+  {"term":"BASE","short":"Basically Available, Soft state, Eventually consistent: the relaxed alternative to ACID used by many distributed and NoSQL systems."},
+  {"term":"durability","short":"Once a transaction commits, its changes survive crashes and power loss, via a flushed write-ahead log or replication."},
+  {"term":"isolation level","aliases":["transaction isolation"],"short":"How much concurrent transactions can see of each other: read uncommitted, read committed, repeatable read, serializable. Higher is safer but blocks or aborts more."},
+  {"term":"dirty read","short":"Reading the uncommitted change, which may later roll back."},
+  {"term":"non-repeatable read","short":"Reading the same row twice in a transaction and getting different values because another transaction committed in between."},
+  {"term":"phantom read","aliases":["phantom"],"short":"Re-running a query and getting a different set of rows because another transaction inserted or deleted matching rows."},
+  {"term":"write skew","short":"Two transactions read overlapping data and update different rows, together breaking an invariant. Snapshot isolation allows it; serializable prevents it."},
+  {"term":"MVCC","aliases":["multi-version concurrency control"],"short":"Keeps several versions of each row so readers use a consistent snapshot and do not block writers."},
+  {"term":"write-ahead log","aliases":["WAL"],"short":"Changes are appended to a sequential log and flushed before commit is acknowledged; used for crash recovery, giving atomicity and durability."},
+  {"term":"snapshot isolation","short":"Each transaction reads a consistent snapshot of committed data from its start; write-write conflicts on the same row abort one transaction, but write skew is possible."},
+  {"term":"optimistic locking","aliases":["optimistic lock"],"short":"No lock while reading; the update checks a version column (WHERE version = ?) and fails if someone else changed the row, so you retry. Good for low contention."},
+  {"term":"pessimistic locking","aliases":["pessimistic lock"],"short":"Lock the row when reading (SELECT FOR UPDATE) so others wait. Avoids retries; costs blocking and deadlock risk."},
+  {"term":"two-phase locking","aliases":["2PL"],"short":"Acquire all locks before releasing any, holding them until commit; gives serializability at the cost of blocking."},
+  {"term":"savepoint","short":"A named point inside a transaction you can roll back to without aborting the whole transaction (used by NESTED propagation)."},
+  {"term":"read-your-writes","short":"A session guarantee: after you write, your own later reads see that write, even on a replicated store."}
 ]
