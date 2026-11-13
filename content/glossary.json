@@ -574,5 +574,13 @@
   {"term":"embedded server","short":"A web server (Tomcat, Jetty, Undertow) packaged inside the application jar and started by it."},
   {"term":"fat jar","aliases":["executable jar","uber jar"],"short":"A single jar containing the application and all its dependencies, run with java -jar."},
   {"term":"Actuator","aliases":["Spring Boot Actuator"],"short":"Production endpoints for health, metrics, info, environment and more under /actuator; expose and secure deliberately."},
-  {"term":"Boot BOM","aliases":["spring-boot-dependencies"],"short":"A bill of materials that manages tested versions of Spring and third-party libraries so you omit version numbers."}
+  {"term":"Boot BOM","aliases":["spring-boot-dependencies"],"short":"A bill of materials that manages tested versions of Spring and third-party libraries so you omit version numbers."},
+  {"term":"aspect","short":"A module of cross-cutting behaviour, a class annotated @Aspect in Spring."},
+  {"term":"advice","short":"The code an aspect runs at a join point: before, after returning, after throwing, after or around."},
+  {"term":"pointcut","short":"An expression that selects which join points (methods) advice applies to, such as execution(* com.bank.service..*(..))."},
+  {"term":"join point","short":"A point in program execution where advice can apply; in Spring AOP always a method execution."},
+  {"term":"weaving","short":"Linking aspects to target code: at runtime through proxies in Spring AOP, or at compile or load time in AspectJ."},
+  {"term":"self-invocation","short":"A method calling another method on this skips the proxy, so annotations like @Transactional on the inner method are ignored."},
+  {"term":"AspectJ","short":"A full AOP implementation that weaves bytecode at compile or load time; can advise any method, constructor or internal call."},
+  {"term":"@Around","short":"Advice that wraps the method call and decides whether and how to call proceed(); the basis of @Transactional and @Cacheable."}
 ]
