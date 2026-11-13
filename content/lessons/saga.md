@@ -4,7 +4,7 @@ nav: Saga pattern
 slug: saga
 summary: How a saga keeps data consistent across microservices without distributed transactions: local transactions with compensating actions, orchestration vs choreography, designing compensations, isolation anomalies and countermeasures, reliability (outbox, idempotency, retries), frameworks, and interview questions with Java examples.
 tags: [Microservices, Saga, Transactions, Consistency, Orchestration, Choreography]
-order: 23
+order: 26
 topic: Microservices / Data consistency
 updated: 2026-11-13
 subnav: true

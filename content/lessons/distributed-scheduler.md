@@ -4,7 +4,7 @@ nav: Distributed scheduler
 slug: distributed-scheduler
 summary: How to run scheduled jobs correctly when a service has many instances: why @Scheduled duplicates work, distributed locks (ShedLock), leader election and fencing, Quartz clustering, database task queues with SKIP LOCKED, Kubernetes CronJobs, workflow engines, and the reliability rules (idempotency, misfires, leases), with Java examples and interview questions.
 tags: [Scheduling, Distributed systems, Quartz, ShedLock, Spring, Kubernetes]
-order: 25
+order: 28
 topic: Microservices / Scheduling
 updated: 2026-11-13
 subnav: true

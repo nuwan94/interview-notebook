@@ -4,7 +4,7 @@ nav: Streams
 slug: java-streams
 summary: How stream pipelines work (lazy, one element at a time), the operations and collectors you need, flatMap, reduce, primitive streams, parallel streams and their pitfalls, with animations and interview questions and coding tasks.
 tags: [Java, Streams, Functional]
-order: 6
+order: 8
 topic: Java / Functional programming
 updated: 2026-11-13
 subnav: true

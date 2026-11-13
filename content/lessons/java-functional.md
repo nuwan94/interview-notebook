@@ -4,7 +4,7 @@ nav: Lambdas and Optional
 slug: java-functional
 summary: Lambda syntax, method references, the core functional interfaces (Predicate, Function, Consumer, Supplier), effectively final variables and Optional, the foundation for streams, with animations and interview questions.
 tags: [Java, Lambdas, Functional]
-order: 5
+order: 7
 topic: Java / Functional programming
 updated: 2026-11-13
 subnav: true

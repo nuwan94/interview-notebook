@@ -4,7 +4,7 @@ nav: OpenID Connect
 slug: oidc
 summary: How OpenID Connect adds identity to OAuth 2.0: the ID token, claims and scopes, the login flow and its validation steps, userinfo, discovery, single sign-on and logout, how it differs from OAuth and SAML, and Spring Security configuration with interview questions.
 tags: [Security, OIDC, OpenID Connect, SSO, Authentication, JWT]
-order: 19
+order: 22
 topic: Security / Authentication
 updated: 2026-11-13
 subnav: true

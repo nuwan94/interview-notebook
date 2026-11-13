@@ -4,7 +4,7 @@ nav: Distributed systems
 slug: distributed-systems
 summary: The theory behind microservices and databases that interviewers probe: failure models, CAP and PACELC, consistency models, replication and quorums, partitioning and consistent hashing, consensus with Raft, and clocks and ordering, with Java examples and interview questions.
 tags: [Distributed systems, CAP, Consistency, Replication, Raft, Consensus]
-order: 21
+order: 24
 topic: Microservices / Fundamentals
 updated: 2026-11-13
 subnav: true

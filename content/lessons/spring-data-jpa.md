@@ -4,7 +4,7 @@ nav: Spring Data JPA
 slug: spring-data-jpa
 summary: How Spring Data repositories, JPA and Hibernate fit together, entity mapping and relationships, the persistence context and entity states, lazy loading, the N+1 problem, queries, projections, pagination and locking, with Java examples and interview questions.
 tags: [Spring, JPA, Hibernate, Spring Data, ORM, Database]
-order: 35
+order: 38
 topic: Spring / Data
 updated: 2026-11-13
 subnav: true

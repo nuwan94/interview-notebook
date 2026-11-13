@@ -4,7 +4,7 @@ nav: Testing Spring apps
 slug: spring-testing
 summary: The testing pyramid for Spring Boot, plain unit tests with JUnit 5 and Mockito, test slices (@WebMvcTest, @DataJpaTest), @SpringBootTest, MockMvc, Testcontainers, test configuration and context caching, security and transaction testing, and contract tests, with Java examples and interview questions.
 tags: [Spring, Testing, JUnit, Mockito, MockMvc, Testcontainers]
-order: 38
+order: 41
 topic: Spring / Testing
 updated: 2026-11-13
 subnav: true

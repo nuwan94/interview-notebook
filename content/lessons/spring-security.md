@@ -4,7 +4,7 @@ nav: Spring Security
 slug: spring-security
 summary: How Spring Security works inside (filter chain, SecurityContext, AuthenticationManager), how to configure form login, JWT resource servers and OAuth 2.0 login with the lambda DSL, method security, password encoding, CSRF and CORS, testing, and the questions interviewers ask, with Java examples.
 tags: [Security, Spring, Spring Boot, Authentication, Authorization]
-order: 37
+order: 40
 topic: Spring / Security
 updated: 2026-11-13
 subnav: true
