@@ -16,6 +16,7 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { SPRING_CORE_SCENES } from './springCoreScenes.js';
 
 const TONE = {
   ok: { border: '2px solid var(--color-ok)', background: 'var(--color-ok-soft)', badge: 'var(--color-ok)' },
@@ -40,6 +41,17 @@ const ICONS = [
   [/worker|instance|consumer|producer|publisher|subscriber|replica|node|coordinator/i, '🖥️'],
   [/transaction/i, '🧾'],
   [/write-ahead log/i, '📒'],
+  [/persistence context|repository|entity manager/i, '🗃️'],
+  [/application context|container|bean factory/i, '📦'],
+  [/bean/i, '🫘'],
+  [/proxy/i, '🎭'],
+  [/aspect|advice/i, '🎯'],
+  [/dispatcher|servlet/i, '🚦'],
+  [/controller/i, '🎛️'],
+  [/filter|interceptor/i, '🧰'],
+  [/auto-?configuration/i, '🪄'],
+  [/config|properties/i, '🗂️'],
+  [/gateway/i, '🚪'],
   [/policy/i, '📋'],
   [/orchestrator/i, '🎼'],
   [/registry|discovery/i, '📇'],
@@ -226,3 +238,4 @@ export const MessagingWalk = () => <Walk scenes={MESSAGING_SCENES} icons ariaLab
 export const DistributedWalk = () => <Walk scenes={DISTRIBUTED_SCENES} icons ariaLabel="Distributed systems walk-through" />;
 export const AcidWalk = () => <Walk scenes={ACID_SCENES} icons ariaLabel="ACID and BASE walk-through" />;
 export const SqlNosqlWalk = () => <Walk scenes={SQLNOSQL_SCENES} icons ariaLabel="SQL vs NoSQL walk-through" />;
+export const SpringCoreWalk = () => <Walk scenes={SPRING_CORE_SCENES} icons ariaLabel="Spring core walk-through" />;
