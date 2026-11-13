@@ -684,5 +684,10 @@
   {"term":"Flux","short":"A Reactor publisher of zero to many items; lazy until subscribed."},
   {"term":"event loop","short":"A small set of threads handling many connections via callbacks; must never be blocked."},
   {"term":"R2DBC","short":"Reactive Relational Database Connectivity: a non-blocking SQL driver API for reactive applications."},
-  {"term":"BlockHound","short":"Tool that detects blocking calls on non-blocking threads, used in reactive tests."}
+  {"term":"BlockHound","short":"Tool that detects blocking calls on non-blocking threads, used in reactive tests."},
+  {"term":"Spring AOT","aliases":["ahead-of-time processing"],"short":"Build-time processing that generates bean definition code and reflection hints for fast startup and native images."},
+  {"term":"GraalVM native image","aliases":["native image"],"short":"Ahead-of-time compiled native executable: very fast start and low memory, with a closed-world restriction on reflection."},
+  {"term":"Observation API","short":"Micrometer abstraction (Spring 6) that instruments code once to produce metrics, traces and log context."},
+  {"term":"OpenRewrite","short":"Automated refactoring tool with recipes for Spring Boot 3 migration (package renames, property changes)."},
+  {"term":"JdbcClient","short":"Spring 6.1 fluent API over JdbcTemplate for SQL queries and updates."}
 ]
