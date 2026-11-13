@@ -562,5 +562,17 @@
   {"term":"@PreDestroy","short":"Method called before a singleton bean is destroyed on shutdown, for cleanup."},
   {"term":"ObjectProvider","short":"A lazy handle to a bean; getObject() returns a fresh prototype or scoped instance on each call."},
   {"term":"circular dependency","short":"Two beans that need each other; constructor injection cannot build them, and Spring Boot 2.6+ rejects cycles by default."},
-  {"term":"stereotype annotation","short":"@Component, @Service, @Repository and @Controller: mark a class as a Spring-managed bean."}
+  {"term":"stereotype annotation","short":"@Component, @Service, @Repository and @Controller: mark a class as a Spring-managed bean."},
+  {"term":"Spring Boot","short":"Spring plus opinionated defaults: starters, auto-configuration, an embedded server and Actuator, so you run a plain jar."},
+  {"term":"starter","aliases":["Spring Boot starter"],"short":"A dependency bundle for a feature (web, data-jpa, security) with managed versions; adding it triggers the matching auto-configuration."},
+  {"term":"auto-configuration","aliases":["autoconfiguration"],"short":"Boot registers default beans from conditional @Configuration classes based on the classpath and properties, backing off where you define your own."},
+  {"term":"@SpringBootApplication","short":"@SpringBootConfiguration + @EnableAutoConfiguration + @ComponentScan on the main class."},
+  {"term":"@ConditionalOnMissingBean","short":"Creates a bean only if none of that type exists; the mechanism by which auto-configuration backs off."},
+  {"term":"@ConfigurationProperties","short":"Binds a group of properties with a common prefix to a typed, validated object; preferred over many @Value."},
+  {"term":"relaxed binding","short":"Boot maps fee-rate, feeRate, fee_rate and FEE_RATE to the same property."},
+  {"term":"Spring profile","aliases":["profile"],"short":"A named environment (dev, test, prod) that selects extra property files and @Profile beans."},
+  {"term":"embedded server","short":"A web server (Tomcat, Jetty, Undertow) packaged inside the application jar and started by it."},
+  {"term":"fat jar","aliases":["executable jar","uber jar"],"short":"A single jar containing the application and all its dependencies, run with java -jar."},
+  {"term":"Actuator","aliases":["Spring Boot Actuator"],"short":"Production endpoints for health, metrics, info, environment and more under /actuator; expose and secure deliberately."},
+  {"term":"Boot BOM","aliases":["spring-boot-dependencies"],"short":"A bill of materials that manages tested versions of Spring and third-party libraries so you omit version numbers."}
 ]
