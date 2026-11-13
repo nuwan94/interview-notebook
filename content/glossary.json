@@ -632,5 +632,17 @@
   {"term":"OpenFeign","aliases":["Feign"],"short":"Declarative HTTP client: annotate an interface and Spring Cloud generates the implementation."},
   {"term":"@HttpExchange","short":"Spring 6 declarative HTTP interface client annotation (with @GetExchange and similar)."},
   {"term":"release train","short":"The Spring Cloud versioning scheme (for example 2023.0.x): a set of project versions compatible with one Spring Boot line."},
-  {"term":"retry storm","short":"Many clients retrying a failing service at once, multiplying load and preventing recovery; mitigate with backoff, jitter and a circuit breaker."}
+  {"term":"retry storm","short":"Many clients retrying a failing service at once, multiplying load and preventing recovery; mitigate with backoff, jitter and a circuit breaker."},
+  {"term":"test pyramid","short":"Many fast unit tests, fewer slice and integration tests, very few end-to-end tests."},
+  {"term":"test slice","aliases":["slice test"],"short":"A Spring test annotation (@WebMvcTest, @DataJpaTest) that loads only one layer's beans for fast, focused tests."},
+  {"term":"@WebMvcTest","short":"Slice test loading only the web layer (controllers, advice, converters); services are mocked and MockMvc sends requests."},
+  {"term":"@DataJpaTest","short":"Slice test loading entities and repositories with a transactional rollback per test."},
+  {"term":"@SpringBootTest","short":"Loads the full application context for an integration test, optionally with a real server on a random port."},
+  {"term":"@MockitoBean","aliases":["@MockBean"],"short":"Registers a Mockito mock in the Spring context, replacing the real bean of that type (@MockBean before Boot 3.4)."},
+  {"term":"Testcontainers","short":"Library that starts real databases and brokers in Docker for tests, avoiding differences from emulators such as H2."},
+  {"term":"@ServiceConnection","short":"Spring Boot 3.1+ annotation that wires a Testcontainers container's address into the application's properties automatically."},
+  {"term":"Mockito","short":"Java mocking framework: @Mock, given/when stubbing, verify and argument captors."},
+  {"term":"AssertJ","short":"Fluent assertion library for Java tests: assertThat(x).isEqualTo(y)."},
+  {"term":"Awaitility","short":"Test library to poll until a condition is true within a timeout, instead of Thread.sleep."},
+  {"term":"WireMock","short":"Stubs external HTTP services in tests, returning chosen responses, errors and delays."}
 ]
