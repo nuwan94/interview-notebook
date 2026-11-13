@@ -599,5 +599,17 @@
   {"term":"projection","aliases":["DTO projection"],"short":"Selecting only needed columns into an interface or record instead of loading full entities."},
   {"term":"keyset pagination","aliases":["seek pagination"],"short":"Paging by 'rows after the last seen key' instead of OFFSET; constant cost for deep pages."},
   {"term":"Flyway","aliases":["Liquibase"],"short":"Database migration tools that apply versioned schema scripts; use with ddl-auto=validate in production."},
-  {"term":"open-in-view","aliases":["OpenEntityManagerInView"],"short":"Keeps the persistence context open through the web layer so lazy loading works in views; holds a connection longer and hides queries."}
+  {"term":"open-in-view","aliases":["OpenEntityManagerInView"],"short":"Keeps the persistence context open through the web layer so lazy loading works in views; holds a connection longer and hides queries."},
+  {"term":"Spring MVC","short":"Spring's servlet-based web framework: a DispatcherServlet routes requests to controller methods."},
+  {"term":"DispatcherServlet","short":"The front controller of Spring MVC: receives every request, finds the handler, invokes it and converts the result into a response."},
+  {"term":"@RestController","short":"@Controller plus @ResponseBody: return values are written to the response body (JSON) by message converters."},
+  {"term":"HandlerMapping","short":"Maps an incoming request (method and path) to the controller method that handles it."},
+  {"term":"HttpMessageConverter","aliases":["message converter"],"short":"Reads request bodies into objects and writes objects to responses for a media type; Jackson handles JSON."},
+  {"term":"@RestControllerAdvice","aliases":["@ControllerAdvice"],"short":"A class with @ExceptionHandler methods applied to all controllers for global error handling."},
+  {"term":"ProblemDetail","aliases":["RFC 9457","problem+json"],"short":"Spring 6 model of the standard JSON error format: type, title, status, detail, instance plus custom members."},
+  {"term":"Bean Validation","aliases":["Jakarta Validation","@Valid"],"short":"Declarative constraints (@NotBlank, @Positive, @Email) on fields; @Valid triggers them on a request body."},
+  {"term":"servlet filter","aliases":["filter"],"short":"A servlet-container component that runs before and after the whole request cycle, seeing raw requests and responses; Spring Security is one."},
+  {"term":"HandlerInterceptor","aliases":["interceptor"],"short":"A Spring MVC hook around handler execution (preHandle, postHandle, afterCompletion) that knows the chosen controller method."},
+  {"term":"content negotiation","short":"Choosing the response format from the Accept header and the mapping's produces constraint."},
+  {"term":"MockMvc","short":"Test utility to exercise Spring MVC controllers without a running server, used with @WebMvcTest."}
 ]
