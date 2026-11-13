@@ -1,0 +1,52 @@
+{
+  "questions": [
+    {
+      "q": "`String a = \"ACC\"; String b = new String(\"ACC\");` What do `a == b` and `a.equals(b)` return?",
+      "o": ["`false` and `true`", "`true` and `true`", "`false` and `false`", "`true` and `false`"],
+      "w": "`==` compares references, and `new String` creates a separate heap object. `equals` compares the characters.",
+      "s": 25
+    },
+    {
+      "q": "A method receives `String input` that may be `null`. Which comparison is safe?",
+      "o": ["`\"ACC-1\".equals(input)`", "`input.equals(\"ACC-1\")`", "`input == \"ACC-1\"` for the pooled literal", "`input.compareTo(\"ACC-1\") == 0`"],
+      "w": "Call `equals` on the known non-null literal, or use `Objects.equals`. The other forms throw or compare references.",
+      "s": 25
+    },
+    {
+      "q": "Why is building a 10,000-line report with `s = s + line` in a loop slow?",
+      "o": ["Each pass creates a new String and copies everything built so far", "Strings are stored on disk until the loop completes", "The `+` operator locks the string pool on every pass", "Java converts each line to bytes before appending it"],
+      "w": "That is O(n²) copying plus garbage. A `StringBuilder` appends in place and creates one String at the end.",
+      "s": 30
+    },
+    {
+      "q": "Which is NOT a reason why `String` is immutable?",
+      "o": ["It makes string concatenation faster than with a builder", "It lets literals be shared safely in the string pool", "It allows the hash code to be cached for map keys", "It makes strings safe to share between threads"],
+      "w": "Immutability actually makes repeated modification more expensive, which is why `StringBuilder` exists.",
+      "s": 30
+    },
+    {
+      "q": "`\"a\" + \"b\" == \"ab\"` evaluates to what, and why?",
+      "o": ["`true`: the compiler folds constants into the pooled literal", "`false`: concatenation always creates a new object", "`true`: `==` compares the characters of strings", "It does not compile because `+` needs a variable"],
+      "w": "Constant expressions are evaluated at compile time. With a non-final variable the concatenation happens at run time and gives a new object.",
+      "s": 30
+    },
+    {
+      "q": "`\"a.b\".split(\".\")` returns an empty array. What is the cause?",
+      "o": ["The argument is a regex where `.` matches any character", "`split` only accepts single characters, not strings", "The string has no whitespace to split on", "`split` drops every part that has a punctuation mark"],
+      "w": "Escape it: `split(\"\\\\.\")`. `replace` takes literal text, while `replaceAll` and `split` take regular expressions.",
+      "s": 30
+    },
+    {
+      "q": "Which design step is required to make this class truly immutable? `class Statement { private final List<Entry> entries; Statement(List<Entry> e) { entries = e; } }`",
+      "o": ["Copy the list in the constructor, e.g. `List.copyOf(e)`", "Declare the list field as `volatile` instead of final", "Add a synchronized getter for the list field", "Store the list in a static field of the class"],
+      "w": "`final` only fixes the reference. A caller who keeps the original list can still change it, so make a defensive immutable copy.",
+      "s": 35
+    },
+    {
+      "q": "`new BigDecimal(\"2.0\").equals(new BigDecimal(\"2.00\"))` returns what?",
+      "o": ["`false`, because `equals` also compares the scale", "`true`, because the values are numerically equal", "`true`, because trailing zeros are always dropped", "It throws an `ArithmeticException` for different scales"],
+      "w": "Use `compareTo` for numeric equality. This also affects `HashSet` and `HashMap`, which rely on `equals`.",
+      "s": 30
+    }
+  ]
+}

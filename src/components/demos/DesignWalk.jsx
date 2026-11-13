@@ -19,6 +19,9 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { REDIS_SCENES } from './redisScenes.js';
+import { JAVA_GENERICS_SCENES } from './javaGenericsScenes.js';
+import { JAVA_STRINGS_SCENES } from './javaStringsScenes.js';
 import { KUBERNETES_SCENES } from './kubernetesScenes.js';
 import { DOCKER_SCENES } from './dockerScenes.js';
 import { JAVA_CONCURRENT_COLLECTIONS_SCENES } from './javaConcurrentCollectionsScenes.js';
@@ -240,3 +243,6 @@ export const JavaStreamsWalk = () => <Walk scenes={JAVA_STREAMS_SCENES} icons ar
 export const JavaConcurrentCollectionsWalk = () => <Walk scenes={JAVA_CONCURRENT_COLLECTIONS_SCENES} icons ariaLabel="Concurrent collections walk-through" />;
 export const DockerWalk = () => <Walk scenes={DOCKER_SCENES} icons ariaLabel="Docker walk-through" />;
 export const KubernetesWalk = () => <Walk scenes={KUBERNETES_SCENES} icons ariaLabel="Kubernetes walk-through" />;
+export const JavaStringsWalk = () => <Walk scenes={JAVA_STRINGS_SCENES} icons ariaLabel="Strings walk-through" />;
+export const JavaGenericsWalk = () => <Walk scenes={JAVA_GENERICS_SCENES} icons ariaLabel="Generics walk-through" />;
+export const RedisWalk = () => <Walk scenes={REDIS_SCENES} icons ariaLabel="Redis caching walk-through" />;

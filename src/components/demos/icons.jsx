@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuFileBadge,
+  LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -62,6 +62,14 @@ const ICONS = [
   [/hashset|treeset|processed account|^set$/i, LuBraces],
   [/arraylist|linkedlist|backing array|array v\d|old array|new array|copyonwrite|^list$|statements by date/i, LuList],
 
+  // --- Java strings and generics ---
+  [/^"|string pool|^string |stringbuilder|stringbuffer|text block|string\.join|tolowercase|getbytes|intern\(|\.equals|\.formatted/i, LuQuote],
+  [/^record |defensive copy|mutable date/i, LuSnowflake],
+  [/^compiler|^source$|^bytecode/i, LuFileCode],
+  [/security check/i, LuShieldCheck],
+  [/\.(add|get|cast|compareto|tostring|touppercase)\(|^copy\(|^o\[0\]|^object\[\]|^for [\d,]+ /i, LuCode],
+  [/<t>|<t,|class result|result<|<\? |list<|class<t>|type token|typereference|erasure|wildcard|extends comparable|extends t|super t|pecs|max\(/i, LuShapes],
+
   // --- Docker and Kubernetes ---
   [/^internet user/i, LuGlobe],
   [/sigterm|sigkill/i, LuOctagonX],
@@ -71,6 +79,15 @@ const ICONS = [
   [/\bpods?\b|replicaset|^deployment|^hpa$|poddisruption|startup probe|liveness|readiness/i, SiKubernetes],
   [/^secret|secret in yaml/i, LuLockKeyhole],
   [/^ingress/i, LuDoorOpen],
+
+  // --- Redis caching ---
+  [/^application$/i, LuLaptop],
+  [/expiry|^ttl|expires/i, LuAlarmClock],
+  [/hit ratio|used_memory|evicted_keys/i, LuChartLine],
+  [/^primary( [a-c])?$|sentinel/i, LuServer],
+  [/^(reader|writer) [a-z]$/i, LuUser],
+  [/single-flight|bloom filter|null marker/i, LuShieldCheck],
+  [/^(allkeys|volatile|noeviction)/i, LuTrash2],
 
   // --- general actors, components and concepts ---
   [/attacker|mallory|eve\b|thief|malicious/i, LuVenetianMask],
