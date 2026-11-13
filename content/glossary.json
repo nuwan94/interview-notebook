@@ -582,5 +582,22 @@
   {"term":"weaving","short":"Linking aspects to target code: at runtime through proxies in Spring AOP, or at compile or load time in AspectJ."},
   {"term":"self-invocation","short":"A method calling another method on this skips the proxy, so annotations like @Transactional on the inner method are ignored."},
   {"term":"AspectJ","short":"A full AOP implementation that weaves bytecode at compile or load time; can advise any method, constructor or internal call."},
-  {"term":"@Around","short":"Advice that wraps the method call and decides whether and how to call proceed(); the basis of @Transactional and @Cacheable."}
+  {"term":"@Around","short":"Advice that wraps the method call and decides whether and how to call proceed(); the basis of @Transactional and @Cacheable."},
+  {"term":"JPA","aliases":["Jakarta Persistence"],"short":"The Java persistence specification: @Entity annotations, EntityManager and JPQL. Hibernate is the common implementation."},
+  {"term":"Hibernate","short":"The most widely used JPA implementation (an ORM); also offers its own Session API, batching and caching."},
+  {"term":"Spring Data JPA","short":"Generates repository implementations from interfaces, with derived queries, paging, auditing and specifications on top of JPA."},
+  {"term":"ORM","aliases":["object-relational mapping"],"short":"Maps classes to tables and rows to objects, saving boilerplate at the cost of hidden SQL and an impedance mismatch."},
+  {"term":"persistence context","aliases":["first-level cache"],"short":"The set of managed entities for one EntityManager (usually one transaction); tracks changes and returns one instance per id."},
+  {"term":"EntityManager","short":"The JPA API for persisting, finding and removing entities within a persistence context."},
+  {"term":"dirty checking","short":"At flush Hibernate compares managed entities with their loaded snapshots and issues UPDATEs for changes, so save() is not needed inside a transaction."},
+  {"term":"flush","short":"Writing pending persistence-context changes to the database as SQL; happens at commit, before affected queries, or on demand."},
+  {"term":"LazyInitializationException","short":"Thrown when a lazy association is accessed after the persistence context closed; fetch inside the transaction or use DTOs."},
+  {"term":"fetch join","aliases":["join fetch"],"short":"A JPQL join that loads an association in the same query, avoiding N+1."},
+  {"term":"entity graph","aliases":["@EntityGraph"],"short":"Declares which associations to load with a query, without writing a fetch join."},
+  {"term":"owning side","short":"The side of a bidirectional relationship that holds the foreign key; only it is persisted. The other side uses mappedBy."},
+  {"term":"cascade","aliases":["cascade type"],"short":"Propagates persist, merge or remove from a parent entity to its children; use only for true composition."},
+  {"term":"projection","aliases":["DTO projection"],"short":"Selecting only needed columns into an interface or record instead of loading full entities."},
+  {"term":"keyset pagination","aliases":["seek pagination"],"short":"Paging by 'rows after the last seen key' instead of OFFSET; constant cost for deep pages."},
+  {"term":"Flyway","aliases":["Liquibase"],"short":"Database migration tools that apply versioned schema scripts; use with ddl-auto=validate in production."},
+  {"term":"open-in-view","aliases":["OpenEntityManagerInView"],"short":"Keeps the persistence context open through the web layer so lazy loading works in views; holds a connection longer and hides queries."}
 ]
