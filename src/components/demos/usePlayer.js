@@ -15,8 +15,10 @@ export function usePlayer(frames, { speed: initialSpeed = 1 } = {}) {
       setPlaying(false);
       return;
     }
-    const dwell = frames[index]?.dwell ?? 1;
-    const t = setTimeout(() => setIndex((i) => Math.min(i + 1, last)), (BASE_MS * dwell) / speed);
+    const fr = frames[index];
+    // frames with a written note stay long enough to read it; others use the short base time
+    const ms = typeof fr?.note === 'string' ? Math.min(10000, Math.max(4000, 2000 + fr.note.length * 38)) : BASE_MS * (fr?.dwell ?? 1);
+    const t = setTimeout(() => setIndex((i) => Math.min(i + 1, last)), ms / speed);
     return () => clearTimeout(t);
   }, [playing, index, speed, last, frames]);
 

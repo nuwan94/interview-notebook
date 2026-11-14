@@ -161,11 +161,15 @@ const ICONS = [
   [/message|request/i, LuMail],
 ];
 
-/** React element for the icon that best matches a box or actor name, or null when none does. */
-export function iconFor(name = '') {
+/** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */
+export function iconComponent(name = '') {
   const rule = ICONS.find(([re]) => re.test(name));
-  if (!rule) return null;
-  const Icon = rule[1];
-  return <Icon size="1em" aria-hidden="true" focusable="false" />;
+  return rule ? rule[1] : null;
 }
 
+/** React element for the icon that best matches a box or actor name, or null when none does. */
+export function iconFor(name = '') {
+  const Icon = iconComponent(name);
+  if (!Icon) return null;
+  return <Icon size="1em" aria-hidden="true" focusable="false" />;
+}

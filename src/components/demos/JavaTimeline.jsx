@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { LuRotateCcw } from 'react-icons/lu';
-import { PlayLabel } from '../PlayLabel.jsx';
+import { DemoControls, DemoHeader } from './DemoShell.jsx';
 import { Link } from 'react-router-dom';
 import { useReducedMotion } from '../../lib/prefs.jsx';
 import { Glossed } from '../Term.jsx';
@@ -37,35 +36,7 @@ export function JavaTimeline() {
 
   return (
     <figure ref={rootRef} className="demo" data-noread aria-label="Java releases timeline">
-      <figcaption className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
-        <span className="font-hand font-bold text-xl text-pen leading-tight">Java releases, 1996 to today</span>
-        <span className="text-xs font-bold uppercase tracking-wide text-ok bg-ok-soft rounded-full px-2">replayable animation</span>
-      </figcaption>
-
-      <div className="flex flex-wrap items-center gap-2 mb-2">
-        <button type="button" className="btn primary" onClick={() => (p.playing ? p.pause() : p.play())}>
-          <PlayLabel p={p} />
-        </button>
-        <button type="button" className="btn" onClick={p.replay}>
-          <LuRotateCcw aria-hidden="true" className="btn-icon" /> Replay
-        </button>
-        <button type="button" className="btn" onClick={() => p.step(-1)} disabled={p.index === 0} aria-label="Previous release">
-          ◀
-        </button>
-        <button type="button" className="btn" onClick={() => p.step(1)} disabled={p.index >= p.last} aria-label="Next release">
-          ▶
-        </button>
-        <label className="text-xs font-bold text-soft flex items-center gap-1 ml-auto">
-          Speed
-          <select className="border border-slate-300 rounded px-1 py-0.5 bg-white text-sm" value={p.speed} onChange={(e) => p.setSpeed(Number(e.target.value))}>
-            {[0.5, 1, 2, 4].map((s) => (
-              <option key={s} value={s}>
-                {s}×
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <DemoHeader title="Java releases, 1996 to today" />
 
       <div role="group" aria-label="Highlight releases by theme" className="flex flex-wrap gap-1.5 mb-3">
         <button type="button" className="chip" aria-pressed={tag === 'all'} onClick={() => setTag('all')}>
@@ -123,6 +94,7 @@ export function JavaTimeline() {
           Details for Java {cur.v} →
         </Link>
       </div>
+      <DemoControls p={p} unit="release" speeds />
     </figure>
   );
 }

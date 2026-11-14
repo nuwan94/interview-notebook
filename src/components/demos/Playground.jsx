@@ -1,14 +1,11 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { LuRotateCcw } from 'react-icons/lu';
-import { PlayLabel } from '../PlayLabel.jsx';
+import { DemoControls, DemoHeader } from './DemoShell.jsx';
 import { defaultKeyFns, opLabel, runScenario, stringHash } from '../../sim/hashmap.js';
 import { useReducedMotion } from '../../lib/prefs.jsx';
 import { Glossed } from '../Term.jsx';
 import { BucketTable } from './BucketTable.jsx';
 import { CalcPanel } from './CalcPanel.jsx';
 import { useOnceVisible, usePlayer } from './usePlayer.js';
-
-const SPEEDS = [0.5, 1, 2, 4];
 
 /**
  * A replayable HashMap animation. `variants` lets one figure host several scenarios (tabs).
@@ -84,10 +81,7 @@ export function Playground({ title, variants }) {
 
   return (
     <figure ref={rootRef} className="demo" data-noread aria-label={title}>
-      <figcaption className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
-        <span className="font-hand font-bold text-xl text-pen leading-tight">{title}</span>
-        <span className="text-xs font-bold uppercase tracking-wide text-ok bg-ok-soft rounded-full px-2">replayable animation</span>
-      </figcaption>
+      <DemoHeader title={title} />
 
       {variants.length > 1 && (
         <div role="group" aria-label="Scenarios" className="flex flex-wrap gap-1.5 mb-2">
@@ -109,50 +103,6 @@ export function Playground({ title, variants }) {
           <Glossed text={v.blurb} />
         </p>
       )}
-
-      {/* transport controls */}
-      <div className="flex flex-wrap items-center gap-2 mb-2">
-        <button type="button" className="btn primary" onClick={() => (p.playing ? p.pause() : p.play())}>
-          <PlayLabel p={p} />
-        </button>
-        <button type="button" className="btn" onClick={p.replay} title="Start over from the beginning">
-          <LuRotateCcw aria-hidden="true" className="btn-icon" /> Replay
-        </button>
-        <button type="button" className="btn" onClick={() => p.step(-1)} disabled={p.index === 0} aria-label="Previous step">
-          ◀
-        </button>
-        <button type="button" className="btn" onClick={() => p.step(1)} disabled={p.index >= p.last} aria-label="Next step">
-          ▶
-        </button>
-        <label className="text-xs font-bold text-soft flex items-center gap-1 ml-auto">
-          Speed
-          <select
-            className="border border-slate-300 rounded px-1 py-0.5 bg-white text-sm"
-            value={p.speed}
-            onChange={(e) => p.setSpeed(Number(e.target.value))}
-          >
-            {SPEEDS.map((s) => (
-              <option key={s} value={s}>
-                {s}×
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <div className="flex items-center gap-2 mb-3">
-        <input
-          type="range"
-          min={0}
-          max={p.last}
-          value={p.index}
-          onChange={(e) => p.seek(Number(e.target.value))}
-          className="w-full accent-[var(--color-pen)]"
-          aria-label="Animation progress"
-        />
-        <span className="text-xs font-mono text-soft whitespace-nowrap tabular-nums">
-          {p.index + 1}/{frames.length}
-        </span>
-      </div>
 
       {/* what is happening now */}
       <div
@@ -245,6 +195,7 @@ export function Playground({ title, variants }) {
           </span>
         </form>
       )}
+      <DemoControls p={p} unit="operation" speeds />
     </figure>
   );
 }

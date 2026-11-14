@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { LuRotateCcw } from 'react-icons/lu';
-import { PlayLabel } from '../PlayLabel.jsx';
+import { DemoControls, DemoHeader } from './DemoShell.jsx';
 import { iconFor } from './icons.jsx';
+import { GraphStage } from './GraphStage.jsx';
 import { useReducedMotion } from '../../lib/prefs.jsx';
 import { Glossed } from '../Term.jsx';
 import { usePlayer, useOnceVisible } from './usePlayer.js';
@@ -73,7 +73,7 @@ function Avatar({ name, tone = 'none', size = 'md' }) {
   );
 }
 
-export function Walk({ scenes, ariaLabel, icons = false }) {
+export function Walk({ scenes, ariaLabel, icons = false, graph = false }) {
   const reduced = useReducedMotion();
   const rootRef = useRef(null);
   const [sceneId, setSceneId] = useState(scenes[0].id);
@@ -105,37 +105,12 @@ export function Walk({ scenes, ariaLabel, icons = false }) {
 
   return (
     <figure ref={rootRef} className="demo" data-noread aria-label={ariaLabel}>
-      <figcaption className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
-        <span className="font-hand font-bold text-xl text-pen leading-tight">{scene.title}</span>
-        <span className="text-xs font-bold uppercase tracking-wide text-ok bg-ok-soft rounded-full px-2">replayable animation</span>
-      </figcaption>
+      <DemoHeader title={scene.title} scenes={scenes} sceneId={sceneId} onPick={pick} />
 
-      <div role="group" aria-label="Choose an example" className="flex flex-wrap gap-1.5 mb-2">
-        {scenes.map((x) => (
-          <button key={x.id} type="button" className="chip" aria-pressed={x.id === sceneId} onClick={() => pick(x.id)}>
-            {x.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 mb-2">
-        <button type="button" className="btn primary" onClick={() => (p.playing ? p.pause() : p.play())}>
-          <PlayLabel p={p} />
-        </button>
-        <button type="button" className="btn" onClick={p.replay}>
-          <LuRotateCcw aria-hidden="true" className="btn-icon" /> Replay
-        </button>
-        <button type="button" className="btn" onClick={() => p.step(-1)} disabled={p.index === 0} aria-label="Previous step">
-          ◀
-        </button>
-        <button type="button" className="btn" onClick={() => p.step(1)} disabled={p.index >= p.last} aria-label="Next step">
-          ▶
-        </button>
-        <span className="text-xs text-soft">
-          Step {p.index + 1} of {p.last + 1}
-        </span>
-      </div>
-
+      {graph ? (
+        <GraphStage key={scene.id} frames={scene.frames} index={p.index} reduced={reduced} label={ariaLabel} />
+      ) : (
+        <>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {f.boxes.map((bx) => {
           const t = TONE[bx.tone || 'none'];
@@ -206,55 +181,58 @@ export function Walk({ scenes, ariaLabel, icons = false }) {
           ),
         )}
       </div>
+        </>
+      )}
 
       <div className="mt-2 rounded-md border border-pen/30 bg-pen-soft/60 px-3 py-2 min-h-[5rem] text-[0.95rem] leading-snug" role="status" aria-live="polite">
         <Glossed text={f.note} />
       </div>
+      <DemoControls p={p} speeds />
     </figure>
   );
 }
 
-export const SolidWalk = () => <Walk scenes={SOLID_SCENES} ariaLabel="SOLID principles walk-through" />;
-export const PatternsWalk = () => <Walk scenes={PATTERN_SCENES} ariaLabel="Design patterns walk-through" />;
-export const CryptoWalk = () => <Walk scenes={CRYPTO_SCENES} icons ariaLabel="Encryption walk-through" />;
-export const AuthWalk = () => <Walk scenes={AUTH_SCENES} icons ariaLabel="Authentication walk-through" />;
-export const OauthWalk = () => <Walk scenes={OAUTH_SCENES} icons ariaLabel="OAuth 2.0 walk-through" />;
-export const OidcWalk = () => <Walk scenes={OIDC_SCENES} icons ariaLabel="OpenID Connect walk-through" />;
-export const JwtWalk = () => <Walk scenes={JWT_SCENES} icons ariaLabel="JWT walk-through" />;
-export const SecurityWalk = () => <Walk scenes={SECURITY_SCENES} ariaLabel="Spring Security filter chain walk-through" />;
-export const MicroserviceWalk = () => <Walk scenes={MICROSERVICE_SCENES} icons ariaLabel="Microservice patterns walk-through" />;
-export const SagaWalk = () => <Walk scenes={SAGA_SCENES} icons ariaLabel="Saga pattern walk-through" />;
-export const SchedulerWalk = () => <Walk scenes={SCHEDULER_SCENES} icons ariaLabel="Distributed scheduler walk-through" />;
-export const MessagingWalk = () => <Walk scenes={MESSAGING_SCENES} icons ariaLabel="Messaging walk-through" />;
-export const DistributedWalk = () => <Walk scenes={DISTRIBUTED_SCENES} icons ariaLabel="Distributed systems walk-through" />;
-export const AcidWalk = () => <Walk scenes={ACID_SCENES} icons ariaLabel="ACID and BASE walk-through" />;
-export const SqlNosqlWalk = () => <Walk scenes={SQLNOSQL_SCENES} icons ariaLabel="SQL vs NoSQL walk-through" />;
-export const SpringCoreWalk = () => <Walk scenes={SPRING_CORE_SCENES} icons ariaLabel="Spring core walk-through" />;
-export const SpringBootWalk = () => <Walk scenes={SPRING_BOOT_SCENES} icons ariaLabel="Spring Boot walk-through" />;
-export const SpringAopWalk = () => <Walk scenes={SPRING_AOP_SCENES} icons ariaLabel="Spring AOP walk-through" />;
-export const SpringJpaWalk = () => <Walk scenes={SPRING_JPA_SCENES} icons ariaLabel="Spring Data JPA walk-through" />;
-export const SpringMvcWalk = () => <Walk scenes={SPRING_MVC_SCENES} icons ariaLabel="Spring MVC walk-through" />;
-export const SpringTxWalk = () => <Walk scenes={SPRING_TX_SCENES} icons ariaLabel="Spring transactions walk-through" />;
-export const SpringCloudWalk = () => <Walk scenes={SPRING_CLOUD_SCENES} icons ariaLabel="Spring Cloud walk-through" />;
-export const SpringTestingWalk = () => <Walk scenes={SPRING_TESTING_SCENES} icons ariaLabel="Spring testing walk-through" />;
-export const RestApiWalk = () => <Walk scenes={REST_API_SCENES} icons ariaLabel="REST API design walk-through" />;
-export const SpringAsyncWalk = () => <Walk scenes={SPRING_ASYNC_SCENES} icons ariaLabel="Caching and async walk-through" />;
-export const SpringObsWalk = () => <Walk scenes={SPRING_OBS_SCENES} icons ariaLabel="Observability walk-through" />;
-export const SpringMsgWalk = () => <Walk scenes={SPRING_MSG_SCENES} icons ariaLabel="Spring messaging walk-through" />;
-export const SpringReactiveWalk = () => <Walk scenes={SPRING_REACTIVE_SCENES} icons ariaLabel="Reactive and virtual threads walk-through" />;
-export const SpringBoot3Walk = () => <Walk scenes={SPRING_BOOT3_SCENES} icons ariaLabel="Spring Boot 3 walk-through" />;
-export const JavaCollectionsWalk = () => <Walk scenes={JAVA_COLLECTIONS_SCENES} icons ariaLabel="Java collections walk-through" />;
-export const JavaFunctionalWalk = () => <Walk scenes={JAVA_FUNCTIONAL_SCENES} icons ariaLabel="Lambdas and Optional walk-through" />;
-export const JavaStreamsWalk = () => <Walk scenes={JAVA_STREAMS_SCENES} icons ariaLabel="Java streams walk-through" />;
-export const JavaConcurrentCollectionsWalk = () => <Walk scenes={JAVA_CONCURRENT_COLLECTIONS_SCENES} icons ariaLabel="Concurrent collections walk-through" />;
-export const DockerWalk = () => <Walk scenes={DOCKER_SCENES} icons ariaLabel="Docker walk-through" />;
-export const KubernetesWalk = () => <Walk scenes={KUBERNETES_SCENES} icons ariaLabel="Kubernetes walk-through" />;
-export const JavaStringsWalk = () => <Walk scenes={JAVA_STRINGS_SCENES} icons ariaLabel="Strings walk-through" />;
-export const JavaGenericsWalk = () => <Walk scenes={JAVA_GENERICS_SCENES} icons ariaLabel="Generics walk-through" />;
-export const RedisWalk = () => <Walk scenes={REDIS_SCENES} icons ariaLabel="Redis caching walk-through" />;
-export const SpringMapWalk = () => <Walk scenes={SPRING_MAP_SCENES} icons ariaLabel="Spring at a glance walk-through" />;
-export const OpenShiftWalk = () => <Walk scenes={OPENSHIFT_SCENES} icons ariaLabel="OpenShift walk-through" />;
-export const ComposeWalk = () => <Walk scenes={COMPOSE_SCENES} icons ariaLabel="Docker Compose walk-through" />;
-export const KindWalk = () => <Walk scenes={KIND_SCENES} icons ariaLabel="kind walk-through" />;
-export const MinikubeWalk = () => <Walk scenes={MINIKUBE_SCENES} icons ariaLabel="minikube walk-through" />;
-export const DevContainerWalk = () => <Walk scenes={DEVCONTAINER_SCENES} icons ariaLabel="Dev Containers walk-through" />;
+export const SolidWalk = () => <Walk scenes={SOLID_SCENES} icons graph ariaLabel="SOLID principles walk-through" />;
+export const PatternsWalk = () => <Walk scenes={PATTERN_SCENES} icons graph ariaLabel="Design patterns walk-through" />;
+export const CryptoWalk = () => <Walk scenes={CRYPTO_SCENES} icons graph ariaLabel="Encryption walk-through" />;
+export const AuthWalk = () => <Walk scenes={AUTH_SCENES} icons graph ariaLabel="Authentication walk-through" />;
+export const OauthWalk = () => <Walk scenes={OAUTH_SCENES} icons graph ariaLabel="OAuth 2.0 walk-through" />;
+export const OidcWalk = () => <Walk scenes={OIDC_SCENES} icons graph ariaLabel="OpenID Connect walk-through" />;
+export const JwtWalk = () => <Walk scenes={JWT_SCENES} icons graph ariaLabel="JWT walk-through" />;
+export const SecurityWalk = () => <Walk scenes={SECURITY_SCENES} icons graph ariaLabel="Spring Security filter chain walk-through" />;
+export const MicroserviceWalk = () => <Walk scenes={MICROSERVICE_SCENES} icons graph ariaLabel="Microservice patterns walk-through" />;
+export const SagaWalk = () => <Walk scenes={SAGA_SCENES} icons graph ariaLabel="Saga pattern walk-through" />;
+export const SchedulerWalk = () => <Walk scenes={SCHEDULER_SCENES} icons graph ariaLabel="Distributed scheduler walk-through" />;
+export const MessagingWalk = () => <Walk scenes={MESSAGING_SCENES} icons graph ariaLabel="Messaging walk-through" />;
+export const DistributedWalk = () => <Walk scenes={DISTRIBUTED_SCENES} icons graph ariaLabel="Distributed systems walk-through" />;
+export const AcidWalk = () => <Walk scenes={ACID_SCENES} icons graph ariaLabel="ACID and BASE walk-through" />;
+export const SqlNosqlWalk = () => <Walk scenes={SQLNOSQL_SCENES} icons graph ariaLabel="SQL vs NoSQL walk-through" />;
+export const SpringCoreWalk = () => <Walk scenes={SPRING_CORE_SCENES} icons graph ariaLabel="Spring core walk-through" />;
+export const SpringBootWalk = () => <Walk scenes={SPRING_BOOT_SCENES} icons graph ariaLabel="Spring Boot walk-through" />;
+export const SpringAopWalk = () => <Walk scenes={SPRING_AOP_SCENES} icons graph ariaLabel="Spring AOP walk-through" />;
+export const SpringJpaWalk = () => <Walk scenes={SPRING_JPA_SCENES} icons graph ariaLabel="Spring Data JPA walk-through" />;
+export const SpringMvcWalk = () => <Walk scenes={SPRING_MVC_SCENES} icons graph ariaLabel="Spring MVC walk-through" />;
+export const SpringTxWalk = () => <Walk scenes={SPRING_TX_SCENES} icons graph ariaLabel="Spring transactions walk-through" />;
+export const SpringCloudWalk = () => <Walk scenes={SPRING_CLOUD_SCENES} icons graph ariaLabel="Spring Cloud walk-through" />;
+export const SpringTestingWalk = () => <Walk scenes={SPRING_TESTING_SCENES} icons graph ariaLabel="Spring testing walk-through" />;
+export const RestApiWalk = () => <Walk scenes={REST_API_SCENES} icons graph ariaLabel="REST API design walk-through" />;
+export const SpringAsyncWalk = () => <Walk scenes={SPRING_ASYNC_SCENES} icons graph ariaLabel="Caching and async walk-through" />;
+export const SpringObsWalk = () => <Walk scenes={SPRING_OBS_SCENES} icons graph ariaLabel="Observability walk-through" />;
+export const SpringMsgWalk = () => <Walk scenes={SPRING_MSG_SCENES} icons graph ariaLabel="Spring messaging walk-through" />;
+export const SpringReactiveWalk = () => <Walk scenes={SPRING_REACTIVE_SCENES} icons graph ariaLabel="Reactive and virtual threads walk-through" />;
+export const SpringBoot3Walk = () => <Walk scenes={SPRING_BOOT3_SCENES} icons graph ariaLabel="Spring Boot 3 walk-through" />;
+export const JavaCollectionsWalk = () => <Walk scenes={JAVA_COLLECTIONS_SCENES} icons graph ariaLabel="Java collections walk-through" />;
+export const JavaFunctionalWalk = () => <Walk scenes={JAVA_FUNCTIONAL_SCENES} icons graph ariaLabel="Lambdas and Optional walk-through" />;
+export const JavaStreamsWalk = () => <Walk scenes={JAVA_STREAMS_SCENES} icons graph ariaLabel="Java streams walk-through" />;
+export const JavaConcurrentCollectionsWalk = () => <Walk scenes={JAVA_CONCURRENT_COLLECTIONS_SCENES} icons graph ariaLabel="Concurrent collections walk-through" />;
+export const DockerWalk = () => <Walk scenes={DOCKER_SCENES} icons graph ariaLabel="Docker walk-through" />;
+export const KubernetesWalk = () => <Walk scenes={KUBERNETES_SCENES} icons graph ariaLabel="Kubernetes walk-through" />;
+export const JavaStringsWalk = () => <Walk scenes={JAVA_STRINGS_SCENES} icons graph ariaLabel="Strings walk-through" />;
+export const JavaGenericsWalk = () => <Walk scenes={JAVA_GENERICS_SCENES} icons graph ariaLabel="Generics walk-through" />;
+export const RedisWalk = () => <Walk scenes={REDIS_SCENES} icons graph ariaLabel="Redis caching walk-through" />;
+export const SpringMapWalk = () => <Walk scenes={SPRING_MAP_SCENES} icons graph ariaLabel="Spring at a glance walk-through" />;
+export const OpenShiftWalk = () => <Walk scenes={OPENSHIFT_SCENES} icons graph ariaLabel="OpenShift walk-through" />;
+export const ComposeWalk = () => <Walk scenes={COMPOSE_SCENES} icons graph ariaLabel="Docker Compose walk-through" />;
+export const KindWalk = () => <Walk scenes={KIND_SCENES} icons graph ariaLabel="kind walk-through" />;
+export const MinikubeWalk = () => <Walk scenes={MINIKUBE_SCENES} icons graph ariaLabel="minikube walk-through" />;
+export const DevContainerWalk = () => <Walk scenes={DEVCONTAINER_SCENES} icons graph ariaLabel="Dev Containers walk-through" />;

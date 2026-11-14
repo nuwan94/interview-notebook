@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { LuRotateCcw } from 'react-icons/lu';
-import { PlayLabel } from '../PlayLabel.jsx';
+import { DemoControls, DemoHeader } from './DemoShell.jsx';
 import { useReducedMotion } from '../../lib/prefs.jsx';
 import { Glossed } from '../Term.jsx';
 import { usePlayer, useOnceVisible } from './usePlayer.js';
@@ -53,36 +52,7 @@ export function ConcurrencyWalk() {
 
   return (
     <figure ref={rootRef} className="demo" data-noread aria-label="Concurrency walk-through">
-      <figcaption className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
-        <span className="font-hand font-bold text-xl text-pen leading-tight">{scene.title}</span>
-        <span className="text-xs font-bold uppercase tracking-wide text-ok bg-ok-soft rounded-full px-2">replayable animation</span>
-      </figcaption>
-
-      <div role="group" aria-label="Choose an example" className="flex flex-wrap gap-1.5 mb-2">
-        {CONCURRENCY_SCENES.map((x) => (
-          <button key={x.id} type="button" className="chip" aria-pressed={x.id === sceneId} onClick={() => pick(x.id)}>
-            {x.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 mb-2">
-        <button type="button" className="btn primary" onClick={() => (p.playing ? p.pause() : p.play())}>
-          <PlayLabel p={p} />
-        </button>
-        <button type="button" className="btn" onClick={p.replay}>
-          <LuRotateCcw aria-hidden="true" className="btn-icon" /> Replay
-        </button>
-        <button type="button" className="btn" onClick={() => p.step(-1)} disabled={p.index === 0} aria-label="Previous step">
-          ◀
-        </button>
-        <button type="button" className="btn" onClick={() => p.step(1)} disabled={p.index >= p.last} aria-label="Next step">
-          ▶
-        </button>
-        <span className="text-xs text-soft">
-          Step {p.index + 1} of {p.last + 1}
-        </span>
-      </div>
+      <DemoHeader title={scene.title} scenes={CONCURRENCY_SCENES} sceneId={sceneId} onPick={pick} />
 
       <div className="grid gap-2 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="flex flex-col gap-1.5">
@@ -122,6 +92,7 @@ export function ConcurrencyWalk() {
       <div className="mt-2 rounded-md border border-pen/30 bg-pen-soft/60 px-3 py-2 min-h-[5rem] text-[0.95rem] leading-snug" role="status" aria-live="polite">
         <Glossed text={f.note} />
       </div>
+      <DemoControls p={p} />
     </figure>
   );
 }
