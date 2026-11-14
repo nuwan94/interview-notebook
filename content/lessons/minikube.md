@@ -4,7 +4,7 @@ nav: minikube
 slug: minikube
 summary: What minikube is and how it runs a local Kubernetes cluster: drivers, profiles and multi-node, reaching services (NodePort, tunnel, ingress), getting images in, addons, mounting files, resource tuning, troubleshooting, and how it compares with kind and Docker Desktop, with commands, YAML and interview questions.
 tags: [minikube, Kubernetes, Local development, Addons, Ingress, Drivers]
-order: 33
+order: 34
 topic: Containers / Local Kubernetes
 updated: 2026-11-14
 subnav: true

@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer,
+  LuTable, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -159,6 +159,17 @@ const ICONS = [
   [/certificate/i, LuFileBadge],
   [/key/i, LuKey],
   [/message|request/i, LuMail],
+  // --- state management ---
+  [/^customer$/i, LuUser],
+  [/table/i, LuTable],
+  [/ledger/i, LuBookOpen],
+  [/^command$/i, LuZap],
+  [/aggregate/i, LuBoxes],
+  [/snapshot/i, LuCamera],
+  [/read model/i, LuLayoutList],
+  [/projector/i, LuWorkflow],
+  [/persistent volume|volume claim/i, LuHardDrive],
+  [/^statefulset$/i, SiKubernetes],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */

@@ -4,7 +4,7 @@ nav: Docker Compose
 slug: docker-compose
 summary: How Docker Compose defines and runs a multi-container application: services, networks, volumes, healthchecks and depends_on, environment and secrets, profiles and override files, watch mode, Spring Boot integration and Testcontainers, and when to move to Kubernetes, with YAML examples and interview questions.
 tags: [Docker, Compose, Containers, Local development, Spring Boot, Testcontainers]
-order: 30
+order: 31
 topic: Containers / Docker
 updated: 2026-11-14
 subnav: true

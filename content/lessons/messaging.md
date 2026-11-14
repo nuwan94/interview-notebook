@@ -4,7 +4,7 @@ nav: Messaging
 slug: messaging
 summary: Broker-independent messaging concepts for microservices: queues vs publish/subscribe, commands vs events, acknowledgements and delivery guarantees, idempotent consumers, ordering, retries and dead-letter queues, backpressure, message design and schema evolution, with Spring examples and interview questions.
 tags: [Messaging, Microservices, Events, Queues, Reliability]
-order: 27
+order: 28
 topic: Microservices / Messaging
 updated: 2026-11-13
 subnav: true

@@ -858,5 +858,10 @@
   {"term":"GitHub Codespaces","aliases":["Codespaces"],"short":"GitHub's cloud development environments, which run dev containers on managed virtual machines."},
   {"term":"Docker-in-Docker","short":"Running a separate Docker daemon inside a container; isolated from the host's containers but needs privileged mode."},
   {"term":"Docker-outside-of-Docker","short":"Mounting the host's Docker socket into a container so it uses the host daemon; simple, but equivalent to root access on the host."},
-  {"term":"prebuild","aliases":["prebuilds","dev container prebuild"],"short":"Building a dev container image in CI ahead of time and publishing it, so developers open the project in seconds."}
+  {"term":"prebuild","aliases":["prebuilds","dev container prebuild"],"short":"Building a dev container image in CI ahead of time and publishing it, so developers open the project in seconds."},
+  {"term":"stateless service","aliases":["stateless"],"short":"A service that keeps nothing between requests in its own memory or disk, so any instance can handle any request and instances can be added or replaced freely."},
+  {"term":"stateful service","aliases":["stateful"],"short":"A service that holds data of its own between requests, such as a database or broker, so it needs stable identity, replication and careful recovery."},
+  {"term":"sticky session","aliases":["sticky sessions","session affinity"],"short":"Load balancer setting that sends a client to the same instance every time so it can keep a session in memory; fragile, because the session is lost when that instance goes away."},
+  {"term":"read model","short":"A table or view shaped for a particular screen or query, built by projecting events or changes from the write side; eventually consistent."},
+  {"term":"upcaster","short":"Code that converts an old version of a stored event into the current shape when it is read, so event structures can change without rewriting history."}
 ]

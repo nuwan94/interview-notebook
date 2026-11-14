@@ -4,7 +4,7 @@ nav: Messaging with Spring
 slug: spring-messaging
 summary: How Spring implements message-driven services (Spring Kafka, Spring AMQP and Spring Cloud Stream), listener containers and acknowledgement modes, error handling with retry and dead-letter topics, idempotent consumers, partitions and consumer groups, producers and the transactional outbox, with Java examples and interview questions.
 tags: [Spring, Messaging, Kafka, RabbitMQ, Outbox, Idempotency, Dead Letter]
-order: 51
+order: 52
 topic: Spring / Microservices
 updated: 2026-11-13
 subnav: true
