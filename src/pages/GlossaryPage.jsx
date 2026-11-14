@@ -29,7 +29,7 @@ export function GlossaryPage() {
         Glossary
       </h1>
       <p>Every dotted-underline word in the lessons, in one place.</p>
-      <p>
+      <div style={{ height: 'calc(var(--lh) * 2)' }}>
         <label htmlFor="g-filter" className="sr-only">
           Filter terms
         </label>
@@ -39,19 +39,20 @@ export function GlossaryPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={`Filter ${glossary.length} terms…`}
-          className="w-full max-w-md border border-slate-300 rounded px-2 py-1.5 bg-white"
+          style={{ height: 'calc(var(--lh) * 1.5)' }}
+          className="w-full max-w-md border border-slate-300 rounded px-2 bg-white"
         />
-      </p>
+      </div>
       <dl className="m-0">
         {shown.map((g) => (
           <div key={g.id} id={`term-${g.id}`} className="mb-[var(--lh)] scroll-mt-24 rounded">
-            <dt className="font-hand font-bold text-xl text-pen">
+            <dt className="font-hand font-bold text-xl text-pen" style={{ lineHeight: 'var(--lh)' }}>
               {g.term}
               {g.aliases?.length > 0 && <span className="ml-2 text-sm font-body font-normal text-soft">also: {g.aliases.join(', ')}</span>}
             </dt>
             <dd className="m-0">
               {g.short}
-              {g.more && <span className="block text-soft text-[0.95rem]">{g.more}</span>}
+              {g.more && <span className="block text-soft text-[0.95rem]" style={{ lineHeight: 'var(--lh)' }}>{g.more}</span>}
             </dd>
           </div>
         ))}
