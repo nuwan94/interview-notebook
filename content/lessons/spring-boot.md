@@ -4,7 +4,7 @@ nav: Spring Boot essentials
 slug: spring-boot
 summary: What Spring Boot adds on top of Spring, how starters and auto-configuration work, externalized configuration and property precedence, profiles, the embedded server, packaging and Actuator basics, with Java examples and interview questions.
 tags: [Spring Boot, Auto-configuration, Configuration, Profiles, Starters]
-order: 32
+order: 38
 topic: Spring / Fundamentals
 updated: 2026-11-13
 subnav: true

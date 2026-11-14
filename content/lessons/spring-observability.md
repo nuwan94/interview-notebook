@@ -4,7 +4,7 @@ nav: Observability and Actuator
 slug: spring-observability
 summary: The three pillars of observability in a Spring Boot service, Actuator endpoints and health probes, Micrometer metrics and custom meters, distributed tracing with OpenTelemetry, structured logging and correlation ids, SLOs and alerting, with Java examples and interview questions.
 tags: [Spring, Observability, Actuator, Micrometer, Tracing, Logging, Metrics]
-order: 43
+order: 49
 topic: Spring / Production
 updated: 2026-11-13
 subnav: true
