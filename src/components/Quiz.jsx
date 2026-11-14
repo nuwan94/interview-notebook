@@ -1,7 +1,9 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { LuCheck, LuClipboardCheck, LuTimer, LuX } from 'react-icons/lu';
-import { buildAttempt, bestScore, grade, hasQuiz, loadQuiz, saveScore } from '../lib/quiz.js';
+import { Link } from 'react-router-dom';
+import { buildAttempt, bestScore, grade, hasQuiz, loadMany, loadQuiz, saveScore } from '../lib/quiz.js';
+import { getLesson } from '../lib/content.js';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
@@ -21,13 +23,18 @@ const fmt = (ms) => {
   return s >= 60 ? `${Math.floor(s / 60)} min ${s % 60} s` : `${s} s`;
 };
 
-/** Button for the lesson header (renders nothing when the lesson has no quiz). */
-export function QuizButton({ slug, className = 'btn primary', label = 'Take the quiz' }) {
+/**
+ * Button that opens a quiz. `slug` = one lesson's quiz. `slugs` = a topic or mixed quiz drawn from several lessons;
+ * `scoreKey` names where its best score is kept and `title` what the quiz is about. Renders nothing without quizzes.
+ */
+export function QuizButton({ slug, slugs, title, scoreKey, className = 'btn primary', label = 'Take the quiz', onClosed }) {
   const [open, setOpen] = useState(false);
   const [, bump] = useState(0);
   const opener = useRef(null);
-  if (!hasQuiz(slug)) return null;
-  const best = bestScore(slug);
+  const ids = slugs || [slug];
+  if (!ids.some(hasQuiz)) return null;
+  const key = scoreKey || slug;
+  const best = bestScore(key);
   return (
     <>
       <button ref={opener} type="button" className={className} onClick={() => setOpen(true)} aria-haspopup="dialog">
@@ -36,10 +43,13 @@ export function QuizButton({ slug, className = 'btn primary', label = 'Take the 
       </button>
       {open && (
         <QuizOverlay
-          slug={slug}
+          ids={ids.filter(hasQuiz)}
+          title={title}
+          scoreKey={key}
           onClose={() => {
             setOpen(false);
             bump((n) => n + 1);
+            onClosed?.();
             setTimeout(() => opener.current?.focus(), 0);
           }}
         />
@@ -48,7 +58,11 @@ export function QuizButton({ slug, className = 'btn primary', label = 'Take the 
   );
 }
 
-function QuizOverlay({ slug, onClose }) {
+const SIZES = [10, 20, 30];
+
+export function QuizOverlay({ ids, title, scoreKey, onClose }) {
+  const many = ids.length > 1;
+  const [size, setSize] = useState(10); // questions per attempt for topic and mixed quizzes (0 = all)
   const [quiz, setQuiz] = useState(null);
   const [error, setError] = useState(false);
   const [phase, setPhase] = useState('intro'); // intro | question | results
@@ -66,13 +80,14 @@ function QuizOverlay({ slug, onClose }) {
 
   useEffect(() => {
     let live = true;
-    loadQuiz(slug)
+    (many ? loadMany(ids) : loadQuiz(ids[0]))
       .then((d) => live && setQuiz(d))
       .catch(() => live && setError(true));
     return () => {
       live = false;
     };
-  }, [slug]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids.join(',')]);
 
   // modal behaviour: lock page scroll, move focus in
   useEffect(() => {
@@ -85,7 +100,7 @@ function QuizOverlay({ slug, onClose }) {
   }, []);
 
   const start = () => {
-    setAttempt(buildAttempt(quiz));
+    setAttempt(buildAttempt(quiz, many ? size : 0));
     setAnswers([]);
     setI(0);
     setPicked(null);
@@ -134,7 +149,7 @@ function QuizOverlay({ slug, onClose }) {
       setI(i + 1);
     } else {
       const correct = answers.filter((a) => a.ok).length;
-      setNewBest(saveScore(slug, correct, total));
+      setNewBest(saveScore(scoreKey, correct, total));
       setPhase('results');
     }
   };
@@ -193,7 +208,7 @@ function QuizOverlay({ slug, onClose }) {
       >
         <header className="quiz-head">
           <h2 id="quiz-title" className="quiz-title">
-            {phase === 'results' ? 'Quiz results' : 'Quick quiz'}
+            {phase === 'results' ? 'Quiz results' : title || 'Quick quiz'}
           </h2>
           <button type="button" className="btn !min-h-8 !px-2" aria-label="Close quiz" onClick={() => (phase === 'question' ? setConfirmQuit(true) : onClose())}>
             <LuX aria-hidden="true" />
@@ -220,11 +235,26 @@ function QuizOverlay({ slug, onClose }) {
         {quiz && phase === 'intro' && (
           <div className="quiz-body">
             <p className="quiz-lead">
-              {quiz.questions.length} multiple-choice questions on the most important points of this lesson.
+              {many
+                ? `A random selection from ${quiz.questions.length} multiple-choice questions across ${ids.length} lessons.`
+                : `${quiz.questions.length} multiple-choice questions on the most important points of this lesson.`}
             </p>
+            {many && (
+              <div className="flex flex-wrap items-center gap-1.5 mb-3" role="group" aria-label="Number of questions">
+                <span className="text-sm font-bold">Questions:</span>
+                {SIZES.filter((n) => n < quiz.questions.length).map((n) => (
+                  <button key={n} type="button" className="chip" aria-pressed={size === n} onClick={() => setSize(n)}>
+                    {n}
+                  </button>
+                ))}
+                <button type="button" className="chip" aria-pressed={size === 0 || size >= quiz.questions.length} onClick={() => setSize(0)}>
+                  all {quiz.questions.length}
+                </button>
+              </div>
+            )}
             <ul className="quiz-rules">
               <li>
-                <b>Timed:</b> about {Math.round(quiz.questions.reduce((s, x) => s + (x.s || 30), 0) / 60)} minutes in total; every question has its own countdown, and an unanswered question counts as wrong.
+                <b>Timed:</b> about {Math.max(1, Math.round(((many && size ? Math.min(size, quiz.questions.length) : quiz.questions.length) * 30) / 60))} minutes in total; every question has its own countdown, and an unanswered question counts as wrong.
               </li>
               <li>
                 <b>One answer</b> per question. Click it, or press <span className="kbd">1</span>–<span className="kbd">4</span> or <span className="kbd">A</span>–<span className="kbd">D</span>.
@@ -234,9 +264,9 @@ function QuizOverlay({ slug, onClose }) {
               </li>
               <li>The score appears at the end; options are shuffled on every attempt.</li>
             </ul>
-            {bestScore(slug) && (
+            {bestScore(scoreKey) && (
               <p className="quiz-note">
-                Your best so far: <b>{bestScore(slug).correct}/{bestScore(slug).total}</b>
+                Your best so far: <b>{bestScore(scoreKey).correct}/{bestScore(scoreKey).total}</b>
               </p>
             )}
             <div className="quiz-actions">
@@ -342,6 +372,14 @@ function QuizOverlay({ slug, onClose }) {
                     <div>
                       <b>{a?.ok ? <LuCheck aria-label="correct" /> : <LuX aria-label="wrong" />}</b> <Inline text={qq.q} />
                     </div>
+                    {qq.from && getLesson(qq.from) && (
+                      <div className="quiz-ans">
+                        From{' '}
+                        <Link to={`/lessons/${qq.from}`} onClick={onClose}>
+                          {getLesson(qq.from).nav}
+                        </Link>
+                      </div>
+                    )}
                     {!a?.ok && (
                       <div className="quiz-ans">
                         {a?.choice === -1 || a?.choice == null ? 'No answer (time ran out).' : <>Your answer: <Inline text={qq.options[a.choice].t} /></>}
@@ -364,7 +402,7 @@ function QuizOverlay({ slug, onClose }) {
                 Try again
               </button>
               <button type="button" className="btn" onClick={onClose}>
-                Back to the lesson
+                {many ? 'Close' : 'Back to the lesson'}
               </button>
             </div>
           </div>

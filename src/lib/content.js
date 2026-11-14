@@ -111,13 +111,13 @@ export const getLesson = (slug) => lessons.find((l) => l.slug === slug);
  * Node: { name, path, children: Node[], lessons: Lesson[] }. Lessons without a topic sit at the root.
  */
 function buildTopicTree(list) {
-  const root = { name: '', path: '', children: [], lessons: [] };
+  const root = { name: '', path: '', slug: '', children: [], lessons: [] };
   for (const l of list) {
     let node = root;
     for (const name of l.topic) {
       const path = node.path ? `${node.path}/${name}` : name;
       let child = node.children.find((c) => c.name === name);
-      if (!child) node.children.push((child = { name, path, children: [], lessons: [] }));
+      if (!child) node.children.push((child = { name, path, slug: node.slug ? `${node.slug}/${slugify(name)}` : slugify(name), children: [], lessons: [] }));
       node = child;
     }
     node.lessons.push(l);
@@ -125,6 +125,20 @@ function buildTopicTree(list) {
   return root;
 }
 export const topicTree = buildTopicTree(lessons);
+
+/** The topic with this URL path ("java/collections"), or undefined. */
+export const findTopic = (slugPath) => {
+  let node = topicTree;
+  for (const part of String(slugPath || '').split('/').filter(Boolean)) {
+    node = node.children.find((c) => c.slug.split('/').pop() === part);
+    if (!node) return undefined;
+  }
+  return node;
+};
+/** Every lesson in a topic, including its sub-topics. */
+export const topicLessons = (node) => [...node.lessons, ...node.children.flatMap(topicLessons)];
+export const topicQuestionCount = (node) => topicLessons(node).reduce((n, l) => n + l.questions.length, 0);
+export const topicPath = (node) => `/topics/${node.slug}`;
 
 export const topicLessonCount = (node) => node.lessons.length + node.children.reduce((n, c) => n + topicLessonCount(c), 0);
 export const topicContains = (node, slug) => node.lessons.some((l) => l.slug === slug) || node.children.some((c) => topicContains(c, slug));

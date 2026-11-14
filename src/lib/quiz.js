@@ -11,6 +11,12 @@ export const DEFAULT_SECONDS = 30;
 export const hasQuiz = (slug) => path(slug) in loaders;
 export const loadQuiz = (slug) => loaders[path(slug)]();
 
+/** Questions of several lessons in one list (each remembers its lesson in `from`), for topic and mixed quizzes. */
+export async function loadMany(slugs) {
+  const parts = await Promise.all(slugs.filter(hasQuiz).map(async (slug) => ({ slug, quiz: await loadQuiz(slug) })));
+  return { questions: parts.flatMap(({ slug, quiz }) => quiz.questions.map((q) => ({ ...q, from: slug }))) };
+}
+
 const KEY = 'interview-notebook:quiz:v1';
 
 function readAll() {
@@ -46,11 +52,12 @@ const shuffle = (arr) => {
   return a;
 };
 
-/** One attempt: options shuffled, so the answer position changes every time. */
-export const buildAttempt = (quiz) =>
-  quiz.questions.map((q) => ({
+/** One attempt: options shuffled, so the answer position changes every time. `count` draws a random sample of that size. */
+export const buildAttempt = (quiz, count) =>
+  (count && count < quiz.questions.length ? shuffle(quiz.questions).slice(0, count) : quiz.questions).map((q) => ({
     q: q.q,
     w: q.w,
+    from: q.from,
     seconds: q.s || DEFAULT_SECONDS,
     options: shuffle(q.o.map((t, i) => ({ t, ok: i === 0 }))),
   }));
