@@ -4,7 +4,7 @@ nav: Kubernetes
 slug: kubernetes
 summary: The Kubernetes architecture and core objects (Pod, Deployment, Service, Ingress, ConfigMap, Secret), rolling updates, probes and graceful shutdown, resource requests and limits, autoscaling, RBAC and troubleshooting, for Spring Boot services, with animations and interview questions.
 tags: [Kubernetes, Containers, DevOps]
-order: 37
+order: 40
 topic: Containers / Kubernetes
 updated: 2026-11-13
 subnav: true

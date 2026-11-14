@@ -4,7 +4,7 @@ nav: Version history
 slug: java-version-history
 summary: Every notable change from Java 1.0 to Java 27, grouped by era, with change trails that follow one feature across versions, an upgrade guide and interview questions.
 tags: [Java, History, Releases]
-order: 4
+order: 7
 topic: Java / Language
 updated: 2026-11-12
 subnav: true

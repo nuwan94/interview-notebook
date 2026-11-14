@@ -4,7 +4,7 @@ nav: Decomposition and migration
 slug: monolith-to-microservices
 summary: How to decide service boundaries and migrate safely: monolith vs microservices trade-offs, domain-driven design and bounded contexts, decomposing by business capability, the modular monolith, the strangler fig pattern, splitting the shared database, anti-corruption layers, the distributed monolith trap and team topology, with Java examples and interview questions.
 tags: [Microservices, DDD, Bounded context, Strangler fig, Modular monolith, Migration, Spring Modulith]
-order: 26
+order: 29
 topic: Microservices / Fundamentals
 updated: 2026-11-14
 subnav: true

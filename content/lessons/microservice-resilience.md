@@ -4,7 +4,7 @@ nav: Resilience
 slug: microservice-resilience
 summary: How to design services that survive failure: why failures cascade, timeouts and deadlines, retries with backoff, jitter and budgets, circuit breakers, bulkheads, rate limiting, load shedding and backpressure, graceful degradation, health checks and Kubernetes probes, chaos testing, and Resilience4j in Spring Boot, with Java examples and interview questions.
 tags: [Microservices, Resilience, Circuit breaker, Retry, Bulkhead, Timeout, Resilience4j, Load shedding]
-order: 28
+order: 31
 topic: Microservices / Communication
 updated: 2026-11-14
 subnav: true

@@ -4,7 +4,7 @@ nav: Generics
 slug: java-generics
 summary: Generic classes and methods, bounded types, type erasure and its limits, invariance versus array covariance, wildcards and the PECS rule, raw types and heap pollution, with animations and interview questions and coding tasks.
 tags: [Java, Generics, Types]
-order: 6
+order: 9
 topic: Java / Language
 updated: 2026-11-13
 subnav: true

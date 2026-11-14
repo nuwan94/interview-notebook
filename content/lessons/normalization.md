@@ -4,7 +4,7 @@ nav: Normalization
 slug: normalization
 summary: Why one wide table goes wrong (update, insert and delete anomalies), functional dependencies and keys, 1NF, 2NF, 3NF and BCNF with worked table examples, denormalization trade-offs, and how it maps to SQL and JPA, with interview questions.
 tags: [Database, SQL, Normalization, Schema Design, Modelling]
-order: 16
+order: 19
 topic: Databases / Fundamentals
 updated: 2026-11-13
 subnav: true

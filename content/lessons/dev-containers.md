@@ -4,7 +4,7 @@ nav: Dev Containers
 slug: dev-containers
 summary: What Dev Containers are and how devcontainer.json works: images, Features, lifecycle commands, Docker Compose services, prebuilds, Codespaces and the CLI, Docker-in-Docker vs the host socket, security and trust, and how they compare with Docker Compose, Testcontainers and local installs, with a Spring Boot setup and interview questions.
 tags: [Dev Containers, Docker, VS Code, Codespaces, Developer experience, Spring Boot]
-order: 36
+order: 39
 topic: Containers / Docker
 updated: 2026-11-14
 subnav: true

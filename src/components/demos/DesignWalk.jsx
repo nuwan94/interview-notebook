@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { DemoControls, DemoHeader } from './DemoShell.jsx';
 import { iconFor } from './icons.jsx';
 import { GraphStage } from './GraphStage.jsx';
+import { ArrayStage } from './ArrayStage.jsx';
 import { useReducedMotion } from '../../lib/prefs.jsx';
 import { Glossed } from '../Term.jsx';
 import { usePlayer, useOnceVisible } from './usePlayer.js';
@@ -19,6 +20,9 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { CODING_PATTERN_SCENES } from './codingPatternScenes.js';
+import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
+import { SORT_SEARCH_SCENES } from './sortSearchScenes.js';
 import { COMMUNICATION_SCENES } from './communicationScenes.js';
 import { RESILIENCE_SCENES } from './resilienceScenes.js';
 import { DECOMPOSITION_SCENES } from './decompositionScenes.js';
@@ -78,7 +82,7 @@ function Avatar({ name, tone = 'none', size = 'md' }) {
   );
 }
 
-export function Walk({ scenes, ariaLabel, icons = false, graph = false }) {
+export function Walk({ scenes, ariaLabel, icons = false, graph = false, arrays = false }) {
   const reduced = useReducedMotion();
   const rootRef = useRef(null);
   const [sceneId, setSceneId] = useState(scenes[0].id);
@@ -112,7 +116,9 @@ export function Walk({ scenes, ariaLabel, icons = false, graph = false }) {
     <figure ref={rootRef} className="demo" data-noread aria-label={ariaLabel}>
       <DemoHeader title={scene.title} scenes={scenes} sceneId={sceneId} onPick={pick} />
 
-      {graph ? (
+      {arrays ? (
+        <ArrayStage key={scene.id} frames={scene.frames} index={p.index} label={ariaLabel} />
+      ) : graph ? (
         <GraphStage key={scene.id} frames={scene.frames} index={p.index} reduced={reduced} label={ariaLabel} />
       ) : (
         <>
@@ -246,3 +252,6 @@ export const EventSourcingWalk = () => <Walk scenes={EVENT_SOURCING_SCENES} icon
 export const DecompositionWalk = () => <Walk scenes={DECOMPOSITION_SCENES} icons graph ariaLabel="Decomposition and migration walk-through" />;
 export const ResilienceWalk = () => <Walk scenes={RESILIENCE_SCENES} icons graph ariaLabel="Resilience walk-through" />;
 export const CommunicationWalk = () => <Walk scenes={COMMUNICATION_SCENES} icons graph ariaLabel="Service communication walk-through" />;
+export const SortSearchWalk = () => <Walk scenes={SORT_SEARCH_SCENES} arrays ariaLabel="Sorting and searching walk-through" />;
+export const DataStructureWalk = () => <Walk scenes={DATA_STRUCTURE_SCENES} icons graph ariaLabel="Data structures walk-through" />;
+export const CodingPatternWalk = () => <Walk scenes={CODING_PATTERN_SCENES} arrays ariaLabel="Coding interview patterns walk-through" />;

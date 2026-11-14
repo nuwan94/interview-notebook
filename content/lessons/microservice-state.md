@@ -4,7 +4,7 @@ nav: State management
 slug: microservice-state
 summary: Where state lives in a microservice system and how to manage it: stateless vs stateful services, sticky sessions, externalised sessions and tokens, data ownership, idempotency keys and safe retries, optimistic locking, event sourcing and CQRS, and stateful workloads in Kubernetes, with Java examples and interview questions.
 tags: [Microservices, State, Stateless, Sessions, Idempotency, Event sourcing, CQRS, Kubernetes]
-order: 30
+order: 33
 topic: Microservices / State and coordination
 updated: 2026-11-14
 subnav: true

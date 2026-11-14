@@ -4,7 +4,7 @@ nav: OAuth 2.0
 slug: oauth2
 summary: What OAuth 2.0 is and is not, its four roles, the authorization code flow with PKCE, client credentials, refresh tokens, scopes, token validation and the security pitfalls, with Spring Boot configuration and interview questions.
 tags: [Security, OAuth, Authorization, Tokens, PKCE]
-order: 21
+order: 24
 topic: Security / OAuth and tokens
 updated: 2026-11-13
 subnav: true

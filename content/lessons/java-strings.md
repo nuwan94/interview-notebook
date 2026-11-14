@@ -4,7 +4,7 @@ nav: Strings and immutability
 slug: java-strings
 summary: Why String is immutable, the string pool and == versus equals, concatenation and StringBuilder, hashing, Unicode and charsets, and how to design your own immutable classes and records, with animations and interview questions.
 tags: [Java, Strings, Immutability]
-order: 5
+order: 8
 topic: Java / Language
 updated: 2026-11-13
 subnav: true

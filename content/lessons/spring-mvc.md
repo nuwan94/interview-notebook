@@ -4,7 +4,7 @@ nav: Spring MVC and REST
 slug: spring-mvc
 summary: How a request flows through Spring MVC (filter, DispatcherServlet, handler mapping, converters), controller annotations and REST conventions, validation, global exception handling with ProblemDetail, filters versus interceptors, and common design points, with Java examples and interview questions.
 tags: [Spring, Spring MVC, REST, Controller, Validation, Exception Handling]
-order: 46
+order: 49
 topic: Spring / Web and security
 updated: 2026-11-13
 subnav: true

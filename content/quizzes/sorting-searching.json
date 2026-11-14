@@ -1,0 +1,92 @@
+{
+ "questions": [
+  {
+   "q": "What must be true of the data before you can use binary search?",
+   "o": [
+    "It must be sorted and allow random access",
+    "It must contain no duplicate values",
+    "It must be stored in a linked list",
+    "It must contain fewer than a thousand items"
+   ],
+   "w": "Halving the range relies on the order, and jumping to the middle in O(1) needs an array or ArrayList.",
+   "s": "Binary search"
+  },
+  {
+   "q": "Why write mid as lo + (hi - lo) / 2 instead of (lo + hi) / 2?",
+   "o": [
+    "The sum lo + hi can overflow an int on very large arrays",
+    "It makes the loop run twice as fast",
+    "It avoids sorting the array first",
+    "It is required for the array to have even length"
+   ],
+   "w": "For indexes near Integer.MAX_VALUE the sum wraps to a negative number. The subtraction form cannot overflow.",
+   "s": "Overflow"
+  },
+  {
+   "q": "What does Arrays.binarySearch return when the key is missing?",
+   "o": [
+    "-(insertion point) - 1, which is negative",
+    "0, meaning the first position",
+    "null",
+    "The index of the largest smaller element"
+   ],
+   "w": "Any negative result means not found, and -result - 1 is the position where the key would be inserted to keep the array sorted.",
+   "s": "Library search"
+  },
+  {
+   "q": "What does it mean for a sorting algorithm to be stable?",
+   "o": [
+    "Equal elements keep their original relative order",
+    "It always runs in the same amount of time",
+    "It uses no extra memory",
+    "It never throws an exception"
+   ],
+   "w": "Stability matters when sorting records by several keys in turn. Merge sort and TimSort are stable; quicksort and heap sort usually are not.",
+   "s": "Stability"
+  },
+  {
+   "q": "Why is merge sort O(n log n) in every case?",
+   "o": [
+    "There are about log n levels of splitting and each level does O(n) merge work",
+    "It sorts each element with a single comparison",
+    "It only compares neighbouring elements once",
+    "It never needs to merge two sorted halves"
+   ],
+   "w": "The splits do not depend on the data, so the best, average and worst cases are the same.",
+   "s": "Merge sort"
+  },
+  {
+   "q": "When does quicksort degrade to O(n²)?",
+   "o": [
+    "When the pivot is repeatedly the smallest or largest element",
+    "When the array contains only distinct values",
+    "When the array has an even number of elements",
+    "When it is called recursively on both halves"
+   ],
+   "w": "Extreme pivots create very unbalanced splits, for example always taking the first element of already sorted data. Random or median-of-three pivots avoid it.",
+   "s": "Quicksort"
+  },
+  {
+   "q": "Which sort does Java use for List.sort and Arrays.sort on objects?",
+   "o": [
+    "TimSort, a stable merge and insertion hybrid",
+    "Bubble sort",
+    "A dual-pivot quicksort that is not stable at all",
+    "Selection sort"
+   ],
+   "w": "Primitive arrays use a dual-pivot quicksort; object sorts must be stable, so they use TimSort.",
+   "s": "Java sorting"
+  },
+  {
+   "q": "You need the 10 largest values from a stream of millions. What is the better approach?",
+   "o": [
+    "Keep a min-heap of size 10 and drop the smallest when it grows",
+    "Sort the whole stream and take the last 10",
+    "Store everything in a HashSet and scan it ten times",
+    "Use binary search on the unsorted stream"
+   ],
+   "w": "A heap of size k costs O(n log k) time and O(k) memory, and works on data that does not fit in memory.",
+   "s": "Top k"
+  }
+ ]
+}

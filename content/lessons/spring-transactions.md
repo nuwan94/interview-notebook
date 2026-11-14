@@ -4,7 +4,7 @@ nav: Spring transactions
 slug: spring-transactions
 summary: How declarative transactions work in Spring (proxy and transaction manager), every @Transactional attribute, the seven propagation types, rollback rules and rollback-only, programmatic transactions, transactional events and the outbox, and the common production pitfalls, with Java examples and interview questions.
 tags: [Spring, Transactions, Transactional, Propagation, Rollback]
-order: 51
+order: 54
 topic: Spring / Data
 updated: 2026-11-13
 subnav: true

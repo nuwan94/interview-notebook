@@ -1,0 +1,92 @@
+{
+ "questions": [
+  {
+   "q": "An ArrayList is full and add is called. Why is add still called O(1) amortised?",
+   "o": [
+    "The array is copied only occasionally, and capacity grows geometrically",
+    "It copies the whole array on every single add",
+    "It inserts the new element at the front each time",
+    "It never needs to resize because lists are unbounded"
+   ],
+   "w": "Most adds are a single write; the O(n) copy happens rarely, so the cost averaged over many adds is constant.",
+   "s": "Amortised cost"
+  },
+  {
+   "q": "Why is ArrayList usually faster than LinkedList for traversal in practice?",
+   "o": [
+    "Its elements sit contiguously in memory, so the CPU cache is used well",
+    "Every ArrayList operation is O(1)",
+    "LinkedList cannot store more than a few elements",
+    "ArrayList nodes hold pointers to the next element"
+   ],
+   "w": "Contiguous elements mean fewer cache misses and less memory per element. LinkedList nodes are scattered objects with extra pointers.",
+   "s": "ArrayList vs LinkedList"
+  },
+  {
+   "q": "A HashMap key's hashCode changes after it was stored. What happens on lookup?",
+   "o": [
+    "The entry may not be found, because the lookup goes to a different bucket",
+    "The map automatically moves the entry to the right bucket",
+    "The lookup always throws an exception",
+    "Nothing changes, because equals decides the bucket"
+   ],
+   "w": "The bucket was chosen from the old hash code. Keys should be immutable, or at least their hash must not change while stored.",
+   "s": "hashCode and equals"
+  },
+  {
+   "q": "What does a plain binary search tree degrade into when keys are inserted in sorted order?",
+   "o": [
+    "A chain like a linked list, with O(n) operations",
+    "A perfectly balanced tree with O(log n) operations",
+    "A hash table with O(1) operations",
+    "A heap with the smallest value on top"
+   ],
+   "w": "Each new key goes to the right, so the height equals the number of nodes. Red-black trees such as TreeMap rotate to prevent this.",
+   "s": "BST balance"
+  },
+  {
+   "q": "Which structure always gives you the smallest element next, in O(log n) per removal?",
+   "o": [
+    "A min-heap, as in PriorityQueue",
+    "A HashMap",
+    "An ArrayList kept in insertion order",
+    "A queue"
+   ],
+   "w": "A heap guarantees only the top element, which makes it ideal for top-k and scheduling, but it is not fully sorted.",
+   "s": "Heap"
+  },
+  {
+   "q": "Which traversal finds the shortest path in an unweighted graph?",
+   "o": [
+    "Breadth-first search with a queue",
+    "Depth-first search with a stack",
+    "In-order traversal of a tree",
+    "Binary search on the node ids"
+   ],
+   "w": "BFS visits nodes in order of distance, so the first time it reaches a node is by the fewest edges. DFS does not guarantee this.",
+   "s": "BFS"
+  },
+  {
+   "q": "Which Java class is the best choice for both a stack and a queue?",
+   "o": [
+    "ArrayDeque",
+    "Stack",
+    "Vector",
+    "LinkedList"
+   ],
+   "w": "ArrayDeque has O(1) operations at both ends and no synchronisation overhead; Stack and Vector are legacy synchronised classes.",
+   "s": "Stacks and queues"
+  },
+  {
+   "q": "How can you build an LRU cache with O(1) get and put?",
+   "o": [
+    "A hash map combined with a doubly linked list ordered by recent use",
+    "A sorted array searched with binary search",
+    "A single ArrayList that is scanned on every get",
+    "A TreeMap keyed by the value stored"
+   ],
+   "w": "The map gives O(1) lookup and the list moves an entry to the front and evicts from the tail in O(1). LinkedHashMap with access order does this.",
+   "s": "LRU cache"
+  }
+ ]
+}

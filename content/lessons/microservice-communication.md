@@ -4,7 +4,7 @@ nav: Communication and API gateway
 slug: microservice-communication
 summary: How microservices talk to each other and to clients: synchronous vs asynchronous, REST vs gRPC vs GraphQL vs events, API gateway and backend for frontend, API composition, contracts, backward compatibility and versioning, consumer-driven contract tests, error models, service discovery, and communication anti-patterns, with Java examples and interview questions.
 tags: [Microservices, REST, gRPC, API gateway, BFF, Versioning, Contracts, Service discovery, Spring Cloud Gateway]
-order: 27
+order: 30
 topic: Microservices / Communication
 updated: 2026-11-14
 subnav: true

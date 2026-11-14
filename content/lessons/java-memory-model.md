@@ -4,7 +4,7 @@ nav: Memory model
 slug: java-memory-model
 summary: Where variables and objects live (stack, heap, Metaspace), how the string pool works, what the Java Memory Model promises between threads, and the memory errors you will be asked about.
 tags: [Java, JVM, Memory, Strings, Concurrency]
-order: 11
+order: 14
 topic: Java / JVM
 updated: 2026-11-12
 subnav: true

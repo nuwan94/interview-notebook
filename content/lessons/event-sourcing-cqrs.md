@@ -4,7 +4,7 @@ nav: Event sourcing and CQRS
 slug: event-sourcing-cqrs
 summary: How event sourcing and CQRS work and when to use them: commands, events and aggregates, the event store with optimistic concurrency and snapshots, projections and read models, eventual consistency, event versioning and upcasting, corrections and privacy, publishing events, testing and Axon, with Java examples and interview questions.
 tags: [Microservices, Event sourcing, CQRS, Events, Projections, Axon, Consistency]
-order: 32
+order: 35
 topic: Microservices / State and coordination
 updated: 2026-11-14
 subnav: true

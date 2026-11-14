@@ -1,0 +1,92 @@
+{
+ "questions": [
+  {
+   "q": "Which clue in a problem most strongly suggests the sliding window pattern?",
+   "o": [
+    "The longest contiguous substring or subarray that satisfies a condition",
+    "Count the number of ways to climb a staircase",
+    "Find the shortest path in a weighted graph",
+    "Generate every permutation of the input"
+   ],
+   "w": "A window over contiguous elements is updated incrementally as it slides, so one pass is enough.",
+   "s": "Sliding window"
+  },
+  {
+   "q": "How does a hash map reduce two sum from O(n²) to O(n)?",
+   "o": [
+    "It remembers values already seen, so each complement lookup takes O(1)",
+    "It sorts the array first and then compares the ends",
+    "It tries every pair but stops at the first match",
+    "It stores the array in reverse order"
+   ],
+   "w": "For each number you look up target minus the number in the map. It costs O(n) extra memory.",
+   "s": "Hash map"
+  },
+  {
+   "q": "Which condition makes the two-pointers technique work on a pair-sum problem?",
+   "o": [
+    "The array is sorted, so each sum shows which way to move",
+    "The array contains only positive integers and no zeros",
+    "The array length is a power of two or one less",
+    "The target value appears at least twice in the array"
+   ],
+   "w": "If the sum is too big the right pointer moves left, and if too small the left pointer moves right, discarding values that cannot work.",
+   "s": "Two pointers"
+  },
+  {
+   "q": "What do prefix sums let you do after one pass over the array?",
+   "o": [
+    "Answer any range-sum query in O(1)",
+    "Sort the array in O(1)",
+    "Find the median without reading the data",
+    "Remove duplicates in place"
+   ],
+   "w": "The sum of positions i to j is prefix[j+1] - prefix[i], a difference of two precomputed values.",
+   "s": "Prefix sums"
+  },
+  {
+   "q": "Which two properties usually signal a dynamic programming problem?",
+   "o": [
+    "Overlapping subproblems and optimal substructure",
+    "Sorted input and unique keys",
+    "A graph with no cycles and positive weights",
+    "A fixed window size and a string input"
+   ],
+   "w": "The same smaller problems repeat, and the best answer is built from best answers of smaller problems, so each can be computed once and reused.",
+   "s": "Dynamic programming"
+  },
+  {
+   "q": "In backtracking, why do you remove the last choice after the recursive call returns?",
+   "o": [
+    "To undo the choice so the next option starts from the same state",
+    "To free memory held by the recursion stack",
+    "To mark the choice as visited for ever",
+    "To sort the remaining choices"
+   ],
+   "w": "Choose, explore, undo is the core of backtracking. Without the undo, choices would leak into later branches.",
+   "s": "Backtracking"
+  },
+  {
+   "q": "Why does greedy coin change fail for coins 1, 3 and 4 and amount 6?",
+   "o": [
+    "Taking the largest coin first gives 4+1+1 (3 coins) but 3+3 needs only 2",
+    "The amount 6 can never be made from those coins",
+    "Greedy always fails when the coins include 1",
+    "Dynamic programming also gives 3 coins"
+   ],
+   "w": "A locally best choice is not always globally best. Dynamic programming tries all coins for each amount and finds 2.",
+   "s": "Greedy limits"
+  },
+  {
+   "q": "What should you do first when given a coding problem in an interview?",
+   "o": [
+    "Clarify the requirements and constraints and work a small example",
+    "Start writing the optimised solution at once",
+    "Memorise the closest known problem and recite its answer",
+    "Ask to skip to the next question"
+   ],
+   "w": "Clarifying inputs, size limits and edge cases avoids solving the wrong problem and often reveals the pattern.",
+   "s": "Approach"
+  }
+ ]
+}
