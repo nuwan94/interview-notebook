@@ -4,7 +4,7 @@ nav: Spring MVC and REST
 slug: spring-mvc
 summary: How a request flows through Spring MVC (filter, DispatcherServlet, handler mapping, converters), controller annotations and REST conventions, validation, global exception handling with ProblemDetail, filters versus interceptors, and common design points, with Java examples and interview questions.
 tags: [Spring, Spring MVC, REST, Controller, Validation, Exception Handling]
-order: 35
+order: 41
 topic: Spring / Web
 updated: 2026-11-13
 subnav: true
@@ -19,6 +19,8 @@ name: spring-mvc-walk
 > **One sentence to remember:** *every request enters through one front controller, the `DispatcherServlet`, which finds the handler method, converts the body, calls your controller, converts the result back, and routes any exception to a single global handler.*
 
 ## Request flow {#flow}
+
+![Spring MVC context hierarchy](images/spring-mvc-context-hierarchy.svg "The DispatcherServlet has its own WebApplicationContext, a child of the root context that holds services and repositories. | Spring Framework documentation, Apache-2.0 | https://github.com/spring-projects/spring-framework")
 
 ```mermaid
 sequenceDiagram

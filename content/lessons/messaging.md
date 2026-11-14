@@ -20,6 +20,8 @@ name: messaging-walk
 
 ## Why messaging {#why}
 
+![Kafka as a central platform](images/kafka-apis.png "Producers, consumers, connectors and stream processors all talk to the Kafka cluster. | Apache Kafka documentation, Apache-2.0 | https://kafka.apache.org/documentation/")
+
 ### What it buys and what it costs {#tradeoffs}
 
 A **message broker** sits between a **producer** (sender) and one or more **consumers** (receivers) and stores messages until they are handled. Compared with calling a service directly:
@@ -57,6 +59,8 @@ Events decouple best: the publisher announces a fact and does not care who react
 A message has a **payload** (the body, often JSON or Avro) and **headers/metadata**: a unique **message id** (for deduplication), a **correlation id** (to tie a reply or a whole flow together), a type and schema version, a timestamp, a routing key or **partition key**, and optional reply-to and expiry. The id and correlation id are what make idempotency and tracing possible.
 
 ## Models and brokers {#models}
+
+![Anatomy of a Kafka topic](images/kafka-log-anatomy.png "A topic is split into partitions; each partition is an ordered log that producers append to. | Apache Kafka documentation, Apache-2.0 | https://kafka.apache.org/documentation/")
 
 ### Queue and publish/subscribe {#queue-pubsub}
 

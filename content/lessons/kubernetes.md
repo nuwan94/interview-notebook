@@ -4,7 +4,7 @@ nav: Kubernetes
 slug: kubernetes
 summary: The Kubernetes architecture and core objects (Pod, Deployment, Service, Ingress, ConfigMap, Secret), rolling updates, probes and graceful shutdown, resource requests and limits, autoscaling, RBAC and troubleshooting, for Spring Boot services, with animations and interview questions.
 tags: [Kubernetes, Containers, DevOps]
-order: 30
+order: 32
 topic: Containers / Kubernetes
 updated: 2026-11-13
 subnav: true
@@ -19,6 +19,10 @@ name: kubernetes-walk
 > **One sentence to remember:** *you declare the desired state in YAML (Deployment, Service, ConfigMap); controllers continuously compare it with reality and fix the difference, so pods are replaced, scaled and updated automatically, provided you give the app readiness and liveness probes, resource requests and limits, and graceful shutdown.*
 
 ## Architecture {#architecture}
+
+![Kubernetes cluster architecture](images/k8s-cluster-architecture.svg "A control plane (API server, scheduler, controller manager, etcd) manages worker nodes running kubelet and pods. | Kubernetes documentation, CC BY 4.0 | https://github.com/kubernetes/website")
+
+![Components of a Kubernetes cluster](images/k8s-components.svg "The same components in detail, including the cloud controller manager and kube-proxy. | Kubernetes documentation, CC BY 4.0 | https://github.com/kubernetes/website")
 
 | Component | Where | Role |
 | --- | --- | --- |
@@ -104,6 +108,8 @@ spec:
 ```
 
 ## Services and networking {#services}
+
+![Ingress sending all traffic to one Service](images/k8s-ingress.svg "An Ingress routes external HTTP traffic to Services inside the cluster. | Kubernetes documentation, CC BY 4.0 | https://github.com/kubernetes/website")
 
 | Service type | Reachable from | Use |
 | --- | --- | --- |

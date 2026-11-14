@@ -4,7 +4,7 @@ nav: Messaging with Spring
 slug: spring-messaging
 summary: How Spring implements message-driven services (Spring Kafka, Spring AMQP and Spring Cloud Stream), listener containers and acknowledgement modes, error handling with retry and dead-letter topics, idempotent consumers, partitions and consumer groups, producers and the transactional outbox, with Java examples and interview questions.
 tags: [Spring, Messaging, Kafka, RabbitMQ, Outbox, Idempotency, Dead Letter]
-order: 45
+order: 51
 topic: Spring / Microservices
 updated: 2026-11-13
 subnav: true
@@ -99,6 +99,8 @@ void on(TransferCompleted e) {
 Or make the operation naturally idempotent (set a state, upsert by key, compare versions). The message needs a stable **id** (event id or business key). Combine with the outbox on the producer side for effectively-once processing.
 
 ## Partitions, groups and ordering {#partitions}
+
+![Kafka consumer groups](images/kafka-consumer-groups.png "Each partition is read by one consumer in a group, so groups scale reading and each group gets every message. | Apache Kafka documentation, Apache-2.0 | https://kafka.apache.org/documentation/")
 
 - A Kafka **topic** has partitions; a **consumer group** shares them so each partition is read by exactly one consumer of the group. Parallelism is capped by the partition count, and adding consumers beyond it leaves them idle.
 - **Ordering is guaranteed only within a partition.** Use the entity id (account id) as the **message key** so all events of one account land in one partition, in order. Different keys may be processed in any relative order.

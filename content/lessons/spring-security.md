@@ -4,7 +4,7 @@ nav: Spring Security
 slug: spring-security
 summary: How Spring Security works inside (filter chain, SecurityContext, AuthenticationManager), how to configure form login, JWT resource servers and OAuth 2.0 login with the lambda DSL, method security, password encoding, CSRF and CORS, testing, and the questions interviewers ask, with Java examples.
 tags: [Security, Spring, Spring Boot, Authentication, Authorization]
-order: 40
+order: 46
 topic: Spring / Security
 updated: 2026-11-13
 subnav: true
@@ -19,6 +19,8 @@ name: security-walk
 > **One sentence to remember:** *Spring Security is a chain of servlet filters in front of your controllers: authentication filters put an `Authentication` into the `SecurityContext`, the `AuthorizationFilter` checks rules against it, and `ExceptionTranslationFilter` turns failures into 401 or 403.*
 
 ## How it works inside {#architecture}
+
+![Spring Security filter chain](images/spring-security-filterchain.png "A DelegatingFilterProxy hands each request to the FilterChainProxy, which picks one SecurityFilterChain of security filters. | Spring Security documentation, Apache-2.0 | https://github.com/spring-projects/spring-security")
 
 ### The filter chain {#filter-chain}
 
@@ -116,6 +118,8 @@ Never store plain-text passwords. `DelegatingPasswordEncoder` (the default facto
 A **role** is just an authority with the **`ROLE_` prefix**: `hasRole("ADMIN")` checks the authority `ROLE_ADMIN`, while `hasAuthority("ADMIN")` checks the literal string. `User.roles("ADMIN")` adds the prefix for you; `authorities("reports:delete")` does not. Use roles for coarse groups and authorities (or OAuth scopes) for fine-grained permissions. A common bug is storing `ADMIN` and checking `hasRole("ADMIN")`, which needs `ROLE_ADMIN`.
 
 ## Securing a REST API {#rest}
+
+![JWT authentication in a resource server](images/spring-security-jwt-provider.png "BearerTokenAuthenticationFilter passes the token to a JwtAuthenticationProvider, which uses a JwtDecoder and a converter. | Spring Security documentation, Apache-2.0 | https://github.com/spring-projects/spring-security")
 
 ### JWT resource server {#jwt-rs}
 

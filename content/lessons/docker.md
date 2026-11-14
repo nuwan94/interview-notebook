@@ -87,6 +87,8 @@ Use a first stage with the full JDK and Maven to build, and a second, small stag
 
 ## Running containers {#running}
 
+![Docker architecture: client, daemon, registry](images/docker-architecture.png "The client sends commands to the Docker daemon, which builds, runs and pulls images and containers, and talks to a registry. | Docker architecture by dc, CC BY-SA 4.0, via Wikimedia Commons | https://commons.wikimedia.org/wiki/File:Docker-architecture.png")
+
 ```bash
 docker build -t payments:1.4 .
 docker run -d --name payments -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod --memory 1g payments:1.4

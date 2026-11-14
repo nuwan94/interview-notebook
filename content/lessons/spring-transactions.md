@@ -4,7 +4,7 @@ nav: Spring transactions
 slug: spring-transactions
 summary: How declarative transactions work in Spring (proxy and transaction manager), every @Transactional attribute, the seven propagation types, rollback rules and rollback-only, programmatic transactions, transactional events and the outbox, and the common production pitfalls, with Java examples and interview questions.
 tags: [Spring, Transactions, Transactional, Propagation, Rollback]
-order: 39
+order: 45
 topic: Spring / Data
 updated: 2026-11-13
 subnav: true
@@ -66,6 +66,10 @@ Boot auto-configures the transaction manager and enables `@Transactional` proces
 `isolation` is passed to the database for **new** transactions only (see [isolation levels](lesson:acid-base#levels)); a joined transaction keeps its own. `timeout` also applies only when a transaction is started. `readOnly` is a hint: Hibernate skips dirty checking and sets flush mode to manual, and drivers may route to a replica.
 
 ## Propagation {#propagation}
+
+![REQUIRED propagation](images/spring-tx-required.png "With REQUIRED, the second method joins the existing transaction. | Spring Framework documentation, Apache-2.0 | https://github.com/spring-projects/spring-framework")
+
+![REQUIRES_NEW propagation](images/spring-tx-requires-new.png "With REQUIRES_NEW, the second method runs in a new transaction and the outer one is suspended. | Spring Framework documentation, Apache-2.0 | https://github.com/spring-projects/spring-framework")
 
 What happens when a transactional method is called while a transaction already exists:
 

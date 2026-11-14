@@ -4,7 +4,7 @@ nav: AOP and proxies
 slug: spring-aop
 summary: Cross-cutting concerns and aspect-oriented programming in Spring, JDK dynamic proxies versus CGLIB, writing aspects with pointcuts and advice, how @Transactional, @Async and @Cacheable work through proxies, and the pitfalls (self-invocation, private and final methods), with Java examples and interview questions.
 tags: [Spring, AOP, Proxy, Aspect, Transactional]
-order: 33
+order: 39
 topic: Spring / Fundamentals
 updated: 2026-11-13
 subnav: true
@@ -37,6 +37,8 @@ Some behaviour applies to many classes but is not business logic: transactions, 
 | **Weaving** | linking aspects to targets: at runtime by proxy (Spring) or at compile or load time (AspectJ) |
 
 ## How Spring AOP works {#how}
+
+![A call through a Spring AOP proxy](images/spring-aop-proxy-call.png "The caller invokes the proxy, which runs the advice and then calls the plain object. | Spring Framework documentation, Apache-2.0 | https://github.com/spring-projects/spring-framework")
 
 ### Proxies {#proxies}
 

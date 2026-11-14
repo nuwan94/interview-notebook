@@ -12,6 +12,7 @@ import { resolveLessonLink, slugify } from '../lib/content.js';
 import { Term } from './Term.jsx';
 import { DemoFrame } from './demos/index.jsx';
 import { MermaidDiagram } from './Mermaid.jsx';
+import { LessonImage } from './LessonImage.jsx';
 import { useReaderCtx } from '../lib/reader.jsx';
 import { copyText, lessonUrl } from '../lib/share.js';
 
@@ -124,6 +125,10 @@ const components = {
       <span {...props}>{children}</span>
     ),
   pre: CodeBlock,
+  img: ({ src, alt, title }) => <LessonImage src={src} alt={alt} title={title} />,
+  // a paragraph that holds only an image becomes a figure, which cannot sit inside <p>
+  p: ({ node, children, ...props }) =>
+    node?.children?.length === 1 && node.children[0].tagName === 'img' ? <>{children}</> : <p {...props}>{children}</p>,
   h3: (p) => <Heading level={3} {...p} />,
   h4: (p) => <Heading level={4} {...p} />,
   a: ({ href, children }) =>

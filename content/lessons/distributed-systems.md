@@ -42,6 +42,8 @@ Most business systems assume crash-recovery plus an unreliable network, not Byza
 
 ## CAP and consistency {#cap}
 
+![CAP theorem Euler diagram](images/cap-theorem.png "Consistency, availability and partition tolerance: in a network partition you must give up one of the first two. | JamieMcCarthy, CC BY-SA 4.0, via Wikimedia Commons | https://commons.wikimedia.org/wiki/File:CAP_Theorem_Euler_Diagram.png")
+
 ### The CAP theorem {#cap-theorem}
 
 For a data store that is **replicated**, the CAP theorem (Brewer, proved by Gilbert and Lynch) says that during a **network partition (P)** you must choose between:
