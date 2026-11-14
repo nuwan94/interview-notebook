@@ -60,7 +60,7 @@ function useTween(target, reduced) {
   return cur;
 }
 
-/** Arrow between two node centres, trimmed to the icon circles; bends to the side to avoid other nodes or a reverse arrow. */
+/** Arrow between two node centres, trimmed to the icon circles. It bends to the side that keeps it clear of other nodes (icon and label text) and of a reverse arrow. */
 function edgeGeometry(a, b, others, reverseExists, fromFirst) {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
@@ -69,31 +69,50 @@ function edgeGeometry(a, b, others, reverseExists, fromFirst) {
   const uy = dy / len;
   const nx = -uy;
   const ny = ux;
-  let bend = reverseExists ? (fromFirst ? 30 : -30) : 0;
-  if (!bend) {
-    for (const o of others) {
-      const t = Math.max(0, Math.min(1, ((o.x - a.x) * ux + (o.y - a.y) * uy) / len));
-      const px = a.x + ux * t * len;
-      const py = a.y + uy * t * len;
-      const dist = Math.hypot(o.x - px, o.y - py);
-      if (dist < R + 22 && t > 0.05 && t < 0.95) {
-        const side = (o.x - px) * nx + (o.y - py) * ny > 0 ? -1 : 1;
-        bend = side * Math.min(len * 0.35, R + 50);
-        break;
-      }
-    }
-  }
   const sx = a.x + ux * (R + 4);
   const sy = a.y + uy * (R + 4);
   const ex = b.x - ux * (R + 10);
   const ey = b.y - uy * (R + 10);
+  const point = (bend, t) => {
+    const cx = (sx + ex) / 2 + nx * bend;
+    const cy = (sy + ey) / 2 + ny * bend;
+    const m = 1 - t;
+    return { x: m * m * sx + 2 * m * t * cx + t * t * ex, y: m * m * sy + 2 * m * t * cy + t * t * ey };
+  };
+  // each other node blocks its icon (radius R + margin) and the label text below it
+  const blockers = others.flatMap((o) => [
+    { x: o.x, y: o.y, r: R + 14 },
+    { x: o.x, y: o.y + 50, r: 34 },
+  ]);
+  const clearance = (bend) => {
+    let worst = Infinity;
+    for (let i = 1; i < 12; i++) {
+      const p = point(bend, i / 12);
+      for (const k of blockers) worst = Math.min(worst, Math.hypot(p.x - k.x, p.y - k.y) - k.r);
+    }
+    return worst;
+  };
+  const base = reverseExists ? (fromFirst ? 30 : -30) : 0;
+  const tries = [base, base + 45, base - 45, base + 90, base - 90, base + 140, base - 140];
+  let bend = base;
+  let best = -Infinity;
+  for (const t of tries) {
+    const c = blockers.length ? clearance(t) : Infinity;
+    if (c >= 0) {
+      bend = t;
+      best = c;
+      break;
+    }
+    if (c > best) {
+      best = c;
+      bend = t;
+    }
+  }
   const cx = (sx + ex) / 2 + nx * bend;
   const cy = (sy + ey) / 2 + ny * bend;
-  // label at the middle of the curve, nudged to the upper side of the line
-  const mx = 0.25 * sx + 0.5 * cx + 0.25 * ex;
-  const my = 0.25 * sy + 0.5 * cy + 0.25 * ey;
+  const mid = point(bend, 0.5);
   const up = ny > 0 ? -1 : 1;
-  return { d: `M${sx.toFixed(1)} ${sy.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`, lx: mx + nx * up * 11, ly: my + ny * up * 11 };
+  return { d: `M${sx.toFixed(1)} ${sy.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`, lx: mid.x + nx * up * 11, ly: mid.y + ny * up * 11 };
 }
 
 function Node({ box, p, visible, isNew }) {
