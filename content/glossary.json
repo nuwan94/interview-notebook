@@ -871,5 +871,21 @@
   {"term":"integration event","short":"A stable, deliberately designed event published for other services, kept separate from the detailed internal events of one aggregate."},
   {"term":"crypto-shredding","short":"Making personal data in an immutable log unreadable by deleting the encryption key that was used for that customer's data."},
   {"term":"Axon Framework","aliases":["Axon"],"short":"Java framework for event sourcing and CQRS with annotations for aggregates, command, event and query handlers, plus an event store (Axon Server) and Spring Boot support."},
-  {"term":"projector","aliases":["projection handler"],"short":"Event listener that turns events into a read model and records the last processed position so duplicates and restarts are safe."}
+  {"term":"projector","aliases":["projection handler"],"short":"Event listener that turns events into a read model and records the last processed position so duplicates and restarts are safe."},
+  {"term":"ubiquitous language","short":"The shared vocabulary that business experts and developers use, in conversation and in the code, within one bounded context."},
+  {"term":"context map","short":"A diagram of how bounded contexts relate: customer-supplier APIs, shared events, conformist, or an anti-corruption layer."},
+  {"term":"anti-corruption layer","aliases":["ACL"],"short":"A translation layer that converts another system's model into your own, so its quirks and changes do not leak into your domain."},
+  {"term":"event storming","short":"Workshop technique where domain experts and developers place business events on a wall to discover processes and bounded contexts."},
+  {"term":"distributed monolith","short":"A system split into services that are still tightly coupled (shared database, joint deploys, long sync chains), with the cost of microservices and none of the benefits."},
+  {"term":"branch by abstraction","short":"Technique for replacing a component gradually: put an interface in front of it, then swap the implementation (for example for a remote call) behind that interface."},
+  {"term":"Conway's law","short":"Observation that systems tend to mirror the communication structure of the organisation that builds them."},
+  {"term":"change data capture","aliases":["CDC"],"short":"Reading a database's change log to publish every insert, update and delete as events, so other systems can stay in step without changing the application."},
+  {"term":"load shedding","short":"Refusing some requests early when a service is overloaded, ideally the least important, so the accepted ones stay fast."},
+  {"term":"graceful degradation","short":"Returning a reduced but useful result when a dependency fails, for example leaving out optional data or using a cached value."},
+  {"term":"hedged request","short":"Sending a second request to another instance when the first is slow and using whichever answers first, to cut tail latency; for idempotent reads only."},
+  {"term":"timeout budget","aliases":["deadline propagation"],"short":"Planning timeouts so each inner call is shorter than the outer one and the whole chain fits in the time the user will wait."},
+  {"term":"gRPC","short":"RPC framework using Protobuf contracts over HTTP/2, with generated typed clients and servers, streaming and deadlines; common for internal service calls."},
+  {"term":"Protobuf","aliases":["Protocol Buffers"],"short":"Compact binary serialisation format defined by .proto files, used by gRPC; field numbers must never be reused."},
+  {"term":"API composition","short":"A gateway or BFF calling several services in parallel and merging the results into one response for the client."},
+  {"term":"Problem Details","aliases":["application/problem+json"],"short":"Standard JSON format for HTTP API errors with type, title, status, detail and extra fields; supported in Spring as ProblemDetail."}
 ]

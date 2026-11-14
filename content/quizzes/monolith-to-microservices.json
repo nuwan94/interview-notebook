@@ -1,0 +1,92 @@
+{
+ "questions": [
+  {
+   "q": "A bank wants to split its monolith. What is the best basis for the service boundaries?",
+   "o": [
+    "Business capabilities and bounded contexts, such as accounts and payments",
+    "Technical layers, with one service each for web, logic and data",
+    "One service for every database table",
+    "The size of the Java packages in the monolith"
+   ],
+   "w": "Services should be vertical slices of a business capability. Splitting by layer or by table forces every feature to cross many services.",
+   "s": "Boundaries"
+  },
+  {
+   "q": "What does a bounded context mean in domain-driven design?",
+   "o": [
+    "The area where a term has one precise meaning and model",
+    "A limit on how many requests a service accepts",
+    "A transaction that spans several services",
+    "The set of classes that share one database table"
+   ],
+   "w": "The word Customer can mean a verified identity in Accounts and a cardholder in Cards. Each context keeps its own model.",
+   "s": "Bounded context"
+  },
+  {
+   "q": "What is the first step of the strangler fig migration?",
+   "o": [
+    "Put a facade such as a gateway in front of the monolith",
+    "Rewrite the whole monolith in a new codebase",
+    "Split the shared database into one per service",
+    "Turn off the monolith for a weekend and switch over"
+   ],
+   "w": "The facade first forwards everything, so nothing changes for users. Slices are then moved behind it one at a time and each step can be rolled back.",
+   "s": "Strangler fig"
+  },
+  {
+   "q": "Which sign best shows a distributed monolith?",
+   "o": [
+    "Services share one database and have to be deployed together",
+    "Every service has its own team and its own database",
+    "Services communicate mainly through published events",
+    "Each service can be released without the others"
+   ],
+   "w": "It has the operational cost of microservices without independent deployment. The test is whether a service can be changed and released alone.",
+   "s": "Distributed monolith"
+  },
+  {
+   "q": "Why consider a modular monolith before microservices?",
+   "o": [
+    "It gives enforced boundaries without network calls",
+    "It removes the need to test the module boundaries",
+    "It is always faster than any other architecture style",
+    "It lets every module write to any table"
+   ],
+   "w": "Boundaries inside one deployable are cheap to fix. If a module later needs to scale or deploy alone, extraction is mostly mechanical.",
+   "s": "Modular monolith"
+  },
+  {
+   "q": "In what order should the database be split when extracting a service?",
+   "o": [
+    "Stop direct table access, replicate data through events, then split the schema",
+    "Split the database first, then change the code",
+    "Copy every table into every service permanently",
+    "Keep one shared schema and add cross-service foreign keys"
+   ],
+   "w": "Do the database last and in reversible steps. Consumers first use an API, then a local copy fed by events or change data capture, then the schema is separated.",
+   "s": "Splitting the database"
+  },
+  {
+   "q": "What does an anti-corruption layer do?",
+   "o": [
+    "Translates another system's model into your own so it does not leak in",
+    "Encrypts all traffic between two services",
+    "Retries failed calls with exponential backoff",
+    "Stores a copy of every event in an archive"
+   ],
+   "w": "All translation of codes and formats lives in one adapter, so a change in the other system affects only that layer.",
+   "s": "Anti-corruption layer"
+  },
+  {
+   "q": "Which capability is usually the best first candidate to extract as a service?",
+   "o": [
+    "A low-risk edge capability with clear boundaries, such as notifications",
+    "The core ledger that every other part depends on",
+    "The part of the code nobody understands",
+    "The shared utility library used by all modules"
+   ],
+   "w": "Start where risk is low so the team can build and learn the platform. The most entangled core domain goes last, if it ever needs to move.",
+   "s": "Migration order"
+  }
+ ]
+}

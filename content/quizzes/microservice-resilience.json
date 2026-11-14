@@ -1,0 +1,92 @@
+{
+ "questions": [
+  {
+   "q": "A downstream service becomes slow but does not fail. Why is this worse than it being down?",
+   "o": [
+    "Callers wait and hold threads, so the slowness cascades up the chain",
+    "Slow services always return wrong data",
+    "A slow service cannot be retried or monitored",
+    "Slowness only affects the first caller"
+   ],
+   "w": "A failing service fails fast. A slow one ties up threads and connections in every caller, which become slow in turn.",
+   "s": "Cascading failure"
+  },
+  {
+   "q": "Three layers each retry a failing call three times. How many calls can one request create?",
+   "o": [
+    "Up to 27 calls, a retry storm",
+    "Exactly 3 calls",
+    "9 calls, because retries are not multiplied",
+    "Only 1 call, because retries are merged"
+   ],
+   "w": "Retries multiply across layers. Retry at one layer, cap attempts, add backoff and jitter and a retry budget.",
+   "s": "Retry storm"
+  },
+  {
+   "q": "Which requests are safe to retry automatically?",
+   "o": [
+    "Idempotent calls that failed with a transient error such as a timeout or 503",
+    "Every call that returned a 400 or 404 error",
+    "Payment POST requests without an idempotency key",
+    "Only calls that succeeded on the first attempt"
+   ],
+   "w": "Retrying a non-idempotent call can charge twice, and client errors will simply fail again.",
+   "s": "Safe retries"
+  },
+  {
+   "q": "What happens in the open state of a circuit breaker?",
+   "o": [
+    "Calls fail immediately or use a fallback for a wait time",
+    "All calls pass through while failures are counted",
+    "A few trial calls are sent to test recovery",
+    "The dependency is restarted by the breaker"
+   ],
+   "w": "Open protects the caller and gives the sick service quiet to recover. After the wait the breaker becomes half-open and probes.",
+   "s": "Circuit breaker"
+  },
+  {
+   "q": "What problem does a bulkhead solve?",
+   "o": [
+    "One slow dependency using all threads and starving other calls",
+    "Duplicate messages delivered by a broker",
+    "Expired tokens at the gateway",
+    "Stale entries in a service registry"
+   ],
+   "w": "Each dependency gets its own limited pool or concurrency cap, so excess calls are rejected quickly and other work continues.",
+   "s": "Bulkhead"
+  },
+  {
+   "q": "What is the main purpose of jitter in a retry policy?",
+   "o": [
+    "Spread retries out so clients do not all retry at the same moment",
+    "Make each retry wait exactly the same time",
+    "Increase the number of retry attempts",
+    "Hide the failure from the circuit breaker"
+   ],
+   "w": "Random variation added to the backoff prevents waves of simultaneous retries, a thundering herd, against a recovering service.",
+   "s": "Jitter"
+  },
+  {
+   "q": "A service is overloaded by a traffic spike. What is the better response?",
+   "o": [
+    "Reject excess low-priority requests early with 429 or 503",
+    "Queue every request with no limit so none are lost",
+    "Increase client timeouts so requests can wait longer",
+    "Retry every rejected request immediately"
+   ],
+   "w": "Unbounded queues hide overload until every request is too old to matter. Shedding keeps accepted requests fast.",
+   "s": "Load shedding"
+  },
+  {
+   "q": "Why should a liveness probe not check the database?",
+   "o": [
+    "A database outage would restart every healthy instance and make things worse",
+    "Databases cannot answer health queries",
+    "Liveness probes run only once at startup",
+    "It would hide the failure from the readiness probe"
+   ],
+   "w": "Liveness is about whether this process is stuck. Dependencies belong in readiness, which only removes the pod from traffic.",
+   "s": "Probes"
+  }
+ ]
+}

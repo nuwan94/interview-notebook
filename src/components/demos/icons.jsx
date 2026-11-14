@@ -176,6 +176,22 @@ const ICONS = [
   [/event v\d|correction event/i, LuFileClock],
   [/upcaster/i, LuRefreshCw],
   [/event handler/i, LuZap],
+  // --- decomposition, resilience, communication ---
+  [/monolith/i, LuPackage],
+  [/context$/i, LuShapes],
+  [/change events/i, LuWaves],
+  [/code$/i, LuCode],
+  [/module$/i, LuPuzzle],
+  [/^closed$/i, LuCircleCheck],
+  [/^open$/i, LuOctagonX],
+  [/^half-open$/i, LuTriangleAlert],
+  [/pool$/i, LuLayers],
+  [/shedder/i, LuFilter],
+  [/export/i, LuFileText],
+  [/autoscaler/i, LuSlidersHorizontal],
+  [/\bbff\b/i, LuGlobe],
+  [/pact file/i, LuFileText],
+  [/provider build|consumer test/i, LuPackage],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */

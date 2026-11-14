@@ -1,0 +1,92 @@
+{
+ "questions": [
+  {
+   "q": "When is a synchronous call a better choice than publishing an event?",
+   "o": [
+    "When the caller needs the answer right now, such as a balance query",
+    "When many services must react to a change later",
+    "When the receiver may be offline for hours",
+    "When the sender should never wait"
+   ],
+   "w": "Events suit work that can happen later and reactions by several parties. A query needing an immediate result is a synchronous call, protected by timeouts.",
+   "s": "Sync vs async"
+  },
+  {
+   "q": "What does an API gateway typically do?",
+   "o": [
+    "Routes requests and handles authentication and rate limiting",
+    "Stores all business data for the services",
+    "Replaces every service-to-service call with events",
+    "Runs the business rules of each service"
+   ],
+   "w": "It keeps services private and simpler. Business logic does not belong in the gateway, or it becomes a bottleneck and a new monolith.",
+   "s": "API gateway"
+  },
+  {
+   "q": "Why use a backend for frontend instead of one generic API?",
+   "o": [
+    "Each client type gets responses shaped for it, owned by its own team",
+    "It removes the need for authentication",
+    "It makes all clients use the same payloads",
+    "It replaces the services behind it"
+   ],
+   "w": "A mobile BFF can return small combined responses while a web BFF returns richer data, without bending the shared services.",
+   "s": "BFF"
+  },
+  {
+   "q": "Which change to a JSON API is backward compatible?",
+   "o": [
+    "Adding an optional field to a response",
+    "Renaming an existing field",
+    "Changing a number field to a string",
+    "Making an optional request field required"
+   ],
+   "w": "Old callers ignore fields they do not know, provided they are tolerant readers. Removals, renames and type changes break callers.",
+   "s": "Compatibility"
+  },
+  {
+   "q": "What does a consumer-driven contract test (Pact) give you?",
+   "o": [
+    "The provider's build fails if a change would break what a consumer relies on",
+    "A full end-to-end test of all services at once",
+    "Automatic generation of the provider's business logic",
+    "A replacement for versioning and deprecation"
+   ],
+   "w": "Consumers record their expectations and the provider verifies them in CI, catching breaking changes before release.",
+   "s": "Contract tests"
+  },
+  {
+   "q": "When would you pick gRPC over REST?",
+   "o": [
+    "For fast internal calls that need a strict typed contract and streaming",
+    "For public APIs that browsers call directly",
+    "When responses must be easy to cache by HTTP caches",
+    "When clients must read payloads in a text editor"
+   ],
+   "w": "gRPC generates typed code from a .proto file and uses compact Protobuf over HTTP/2. REST suits public APIs and browsers.",
+   "s": "gRPC"
+  },
+  {
+   "q": "What is the standard format for returning HTTP API errors in Spring?",
+   "o": [
+    "Problem Details (RFC 9457) with a type and status",
+    "A plain text message that includes the stack trace",
+    "An HTML error page shown to every client",
+    "A custom XML body that differs for each endpoint"
+   ],
+   "w": "Spring supports it as ProblemDetail. Add a machine-readable code and correlation id, and keep stack traces in the log.",
+   "s": "Errors"
+  },
+  {
+   "q": "How does a caller find instances of a service on Kubernetes?",
+   "o": [
+    "Through a Service with a stable DNS name",
+    "By hard-coding the current IP address of each pod",
+    "By asking the API gateway for pod addresses",
+    "By reading the node filesystem for addresses"
+   ],
+   "w": "The platform tracks ready pods behind the Service, so a separate registry is rarely needed.",
+   "s": "Discovery"
+  }
+ ]
+}

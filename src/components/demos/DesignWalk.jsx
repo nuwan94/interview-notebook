@@ -19,6 +19,9 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { COMMUNICATION_SCENES } from './communicationScenes.js';
+import { RESILIENCE_SCENES } from './resilienceScenes.js';
+import { DECOMPOSITION_SCENES } from './decompositionScenes.js';
 import { EVENT_SOURCING_SCENES } from './eventSourcingScenes.js';
 import { MICROSERVICE_STATE_SCENES } from './microserviceStateScenes.js';
 import { DEVCONTAINER_SCENES } from './devcontainerScenes.js';
@@ -240,3 +243,6 @@ export const MinikubeWalk = () => <Walk scenes={MINIKUBE_SCENES} icons graph ari
 export const DevContainerWalk = () => <Walk scenes={DEVCONTAINER_SCENES} icons graph ariaLabel="Dev Containers walk-through" />;
 export const MicroserviceStateWalk = () => <Walk scenes={MICROSERVICE_STATE_SCENES} icons graph ariaLabel="State management in microservices walk-through" />;
 export const EventSourcingWalk = () => <Walk scenes={EVENT_SOURCING_SCENES} icons graph ariaLabel="Event sourcing and CQRS walk-through" />;
+export const DecompositionWalk = () => <Walk scenes={DECOMPOSITION_SCENES} icons graph ariaLabel="Decomposition and migration walk-through" />;
+export const ResilienceWalk = () => <Walk scenes={RESILIENCE_SCENES} icons graph ariaLabel="Resilience walk-through" />;
+export const CommunicationWalk = () => <Walk scenes={COMMUNICATION_SCENES} icons graph ariaLabel="Service communication walk-through" />;
