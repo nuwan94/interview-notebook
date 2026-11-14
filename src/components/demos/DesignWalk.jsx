@@ -19,6 +19,7 @@ import { MESSAGING_SCENES } from './messagingScenes.js';
 import { DISTRIBUTED_SCENES } from './distributedScenes.js';
 import { ACID_SCENES } from './acidScenes.js';
 import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
+import { EVENT_SOURCING_SCENES } from './eventSourcingScenes.js';
 import { MICROSERVICE_STATE_SCENES } from './microserviceStateScenes.js';
 import { DEVCONTAINER_SCENES } from './devcontainerScenes.js';
 import { MINIKUBE_SCENES } from './minikubeScenes.js';
@@ -238,3 +239,4 @@ export const KindWalk = () => <Walk scenes={KIND_SCENES} icons graph ariaLabel="
 export const MinikubeWalk = () => <Walk scenes={MINIKUBE_SCENES} icons graph ariaLabel="minikube walk-through" />;
 export const DevContainerWalk = () => <Walk scenes={DEVCONTAINER_SCENES} icons graph ariaLabel="Dev Containers walk-through" />;
 export const MicroserviceStateWalk = () => <Walk scenes={MICROSERVICE_STATE_SCENES} icons graph ariaLabel="State management in microservices walk-through" />;
+export const EventSourcingWalk = () => <Walk scenes={EVENT_SOURCING_SCENES} icons graph ariaLabel="Event sourcing and CQRS walk-through" />;

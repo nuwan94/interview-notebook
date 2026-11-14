@@ -863,5 +863,13 @@
   {"term":"stateful service","aliases":["stateful"],"short":"A service that holds data of its own between requests, such as a database or broker, so it needs stable identity, replication and careful recovery."},
   {"term":"sticky session","aliases":["sticky sessions","session affinity"],"short":"Load balancer setting that sends a client to the same instance every time so it can keep a session in memory; fragile, because the session is lost when that instance goes away."},
   {"term":"read model","short":"A table or view shaped for a particular screen or query, built by projecting events or changes from the write side; eventually consistent."},
-  {"term":"upcaster","short":"Code that converts an old version of a stored event into the current shape when it is read, so event structures can change without rewriting history."}
+  {"term":"upcaster","short":"Code that converts an old version of a stored event into the current shape when it is read, so event structures can change without rewriting history."},
+  {"term":"domain event","short":"An immutable fact about something that happened in the business, named in the past tense, such as MoneyWithdrawn."},
+  {"term":"event store","short":"Append-only storage that keeps one ordered stream of events per aggregate and rejects concurrent appends with the same version."},
+  {"term":"expected version","short":"The stream version a writer believes is current when it appends events; the store rejects the append if another writer got there first (optimistic concurrency)."},
+  {"term":"compensating event","short":"A new event that corrects an earlier mistake, such as a reversal, because stored events are never edited or deleted."},
+  {"term":"integration event","short":"A stable, deliberately designed event published for other services, kept separate from the detailed internal events of one aggregate."},
+  {"term":"crypto-shredding","short":"Making personal data in an immutable log unreadable by deleting the encryption key that was used for that customer's data."},
+  {"term":"Axon Framework","aliases":["Axon"],"short":"Java framework for event sourcing and CQRS with annotations for aggregates, command, event and query handlers, plus an event store (Axon Server) and Spring Boot support."},
+  {"term":"projector","aliases":["projection handler"],"short":"Event listener that turns events into a read model and records the last processed position so duplicates and restarts are safe."}
 ]

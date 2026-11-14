@@ -4,7 +4,7 @@ nav: Boot 3 and Spring 6 changes
 slug: spring-boot-3
 summary: The changes in Spring Boot 3 and Spring Framework 6 that interviews and migrations hit (Java 17 baseline, Jakarta EE namespace, Security 6, ProblemDetail, RestClient and HTTP interfaces, the Observation API, virtual threads, AOT and native images), plus a migration checklist, with Java examples and interview questions.
 tags: [Spring Boot 3, Spring 6, Jakarta EE, Migration, Native Image, Observability]
-order: 41
+order: 42
 topic: Spring / Fundamentals
 updated: 2026-11-13
 subnav: true

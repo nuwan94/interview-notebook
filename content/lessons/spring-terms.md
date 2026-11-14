@@ -4,7 +4,7 @@ nav: Spring terms at a glance
 slug: spring-terms
 summary: Short notes on every major Spring term (IoC, beans, AOP, MVC, WebFlux, Data, JPA, Hibernate, Security, Boot, Cloud, Batch, Integration, Actuator and more): what it means in Spring and how it contributes to the framework, with a one-request walk-through and interview questions.
 tags: [Spring, Overview, Glossary, Spring Boot, Spring Data, Spring MVC, JPA]
-order: 37
+order: 38
 topic: Spring / Fundamentals
 updated: 2026-11-14
 subnav: true

@@ -1,0 +1,92 @@
+{
+ "questions": [
+  {
+   "q": "What is the difference between a command and an event?",
+   "o": [
+    "A command is a request that can be refused; an event is a fact that already happened",
+    "A command is stored forever; an event is deleted after it is handled",
+    "A command is published to many listeners; an event has exactly one handler",
+    "A command is named in the past tense; an event is named as an order"
+   ],
+   "w": "Commands are imperative requests (WithdrawMoney) with one handler and can be rejected. Events are past-tense facts (MoneyWithdrawn), stored forever, with any number of listeners.",
+   "s": "Commands and events"
+  },
+  {
+   "q": "Two requests load an account at version 3 and both try to append version 4. How does the event store protect the stream?",
+   "o": [
+    "A unique key on (stream, version) lets only one append succeed and the other retries",
+    "It locks the whole table until the first request commits",
+    "It merges the two events into one and appends it",
+    "It overwrites the older event with the newer one"
+   ],
+   "w": "Optimistic concurrency: the loser gets a conflict, reloads the stream, runs the rules again and tries version 5. No locks are held while deciding.",
+   "s": "Event store"
+  },
+  {
+   "q": "What is a snapshot in event sourcing?",
+   "o": [
+    "A saved copy of the state at some version that speeds up loading",
+    "A backup of the event store taken every night",
+    "The only copy of the state once old events are deleted",
+    "A read model that is queried by the user interface"
+   ],
+   "w": "A snapshot is an optimisation: load it and replay only later events. It can be deleted and rebuilt from the events, which stay the source of truth.",
+   "s": "Snapshots"
+  },
+  {
+   "q": "Why must a projection be idempotent?",
+   "o": [
+    "Events are delivered at least once, so the same event can arrive twice",
+    "Events are always delivered exactly once, but out of order",
+    "Read models are never rebuilt after a failure",
+    "Projections run inside the command transaction"
+   ],
+   "w": "Duplicates and restarts are normal. Store a checkpoint with the update in one transaction and skip positions already applied.",
+   "s": "Projections"
+  },
+  {
+   "q": "A projection has a bug and the balance view is wrong. What is the cleanest fix?",
+   "o": [
+    "Fix the code, reset the checkpoint and replay all events into a fresh read model",
+    "Edit the wrong events in the event store",
+    "Delete the aggregate and ask customers to reopen accounts",
+    "Switch off the read model and read from the old snapshots"
+   ],
+   "w": "Events are the source of truth and read models are derived, so a derived view can be dropped and rebuilt by replaying the events.",
+   "s": "Rebuilding read models"
+  },
+  {
+   "q": "A customer deposits money and the screen still shows the old balance for a moment. What explains this?",
+   "o": [
+    "The read model is updated after the event is stored, so it is eventually consistent",
+    "The event store lost the deposit and will retry it",
+    "The aggregate rejected the command silently",
+    "Snapshots are always one version behind the stream"
+   ],
+   "w": "The write side stores the event at once and the projector updates the view slightly later. Use the returned version, an optimistic UI or the aggregate for exact decisions.",
+   "s": "Eventual consistency"
+  },
+  {
+   "q": "An event recorded a withdrawal of 200 instead of 20. What should you do?",
+   "o": [
+    "Append a compensating event that reverses it and records the correct amount",
+    "Update the stored event to say 20",
+    "Delete the event and replay the stream",
+    "Ignore it, because events are only a log for debugging"
+   ],
+   "w": "Stored events are immutable because others may have used them. A new event corrects the history and shows both the mistake and the fix to auditors.",
+   "s": "Corrections"
+  },
+  {
+   "q": "An old event type gained a new required field. How do you let handlers keep seeing only the newest shape?",
+   "o": [
+    "Add an upcaster that converts old versions when events are read",
+    "Rewrite every stored event in place during the next release",
+    "Reject any event that does not have the new field",
+    "Delete the old events and start the stream again"
+   ],
+   "w": "Events stay in the store in their original shape. An upcaster converts them to the current version on the way out, so handlers need only one version.",
+   "s": "Event versioning"
+  }
+ ]
+}

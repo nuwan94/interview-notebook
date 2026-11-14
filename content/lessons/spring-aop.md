@@ -4,7 +4,7 @@ nav: AOP and proxies
 slug: spring-aop
 summary: Cross-cutting concerns and aspect-oriented programming in Spring, JDK dynamic proxies versus CGLIB, writing aspects with pointcuts and advice, how @Transactional, @Async and @Cacheable work through proxies, and the pitfalls (self-invocation, private and final methods), with Java examples and interview questions.
 tags: [Spring, AOP, Proxy, Aspect, Transactional]
-order: 40
+order: 41
 topic: Spring / Fundamentals
 updated: 2026-11-13
 subnav: true

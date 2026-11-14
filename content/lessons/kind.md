@@ -4,7 +4,7 @@ nav: kind (Kubernetes in Docker)
 slug: kind
 summary: What kind is and how it runs Kubernetes nodes as Docker containers: creating single and multi-node clusters, config files, loading images, ingress and port mappings, a local registry, using it in CI, limits, and how it compares with minikube, k3d and Docker Desktop, with YAML examples and interview questions.
 tags: [kind, Kubernetes, Docker, Local development, CI, Testing]
-order: 35
+order: 36
 topic: Containers / Local Kubernetes
 updated: 2026-11-14
 subnav: true
