@@ -5,7 +5,7 @@ slug: cryptography
 summary: How encryption works and when to use which kind: symmetric and asymmetric ciphers, hybrid encryption and TLS, hashing and password storage, MACs and digital signatures, certificates, key management and the mistakes interviewers ask about, with Java examples.
 tags: [Security, Cryptography, Encryption, TLS]
 order: 19
-topic: Security / Cryptography
+topic: Security / Foundations
 updated: 2026-11-12
 subnav: true
 ---

@@ -5,7 +5,7 @@ slug: acid-base
 summary: What ACID guarantees and how databases implement it (write-ahead log, locks, MVCC), isolation levels and the anomalies they allow, optimistic and pessimistic locking, Spring @Transactional, and what BASE trades away for availability, with Java examples and interview questions.
 tags: [Database, Transactions, ACID, BASE, Isolation, Spring]
 order: 17
-topic: Databases / Transactions
+topic: Databases / Consistency and caching
 updated: 2026-11-13
 subnav: true
 ---

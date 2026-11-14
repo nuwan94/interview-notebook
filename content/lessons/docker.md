@@ -4,7 +4,7 @@ nav: Docker
 slug: docker
 summary: What a container really is, image layers and caching, writing a good Dockerfile (multi-stage, non-root, exec form), volumes, networking, Docker Compose, running the JVM in a container and image security, with animations and interview questions.
 tags: [Docker, Containers, DevOps]
-order: 31
+order: 34
 topic: Containers / Docker
 updated: 2026-11-13
 subnav: true

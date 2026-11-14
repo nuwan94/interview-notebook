@@ -5,7 +5,7 @@ slug: solid-principles
 summary: The five SOLID principles with a violation and a fix for each, plus DRY, KISS, YAGNI, the Law of Demeter, coupling and cohesion, the code smells that point to them, and when not to apply them, with interview questions.
 tags: [OOP, Design, SOLID, Principles]
 order: 2
-topic: Fundamentals / OOP
+topic: Fundamentals / Object-oriented design
 updated: 2026-11-12
 subnav: true
 ---

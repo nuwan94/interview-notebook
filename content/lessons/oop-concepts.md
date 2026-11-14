@@ -5,7 +5,7 @@ slug: oop-concepts
 summary: Classes and objects, encapsulation, abstraction, inheritance and polymorphism, interfaces vs abstract classes, composition, enums, records and sealed types, with warehouse and e-commerce examples in Java, animations and interview questions.
 tags: [OOP, Design, Java]
 order: 1
-topic: Fundamentals / OOP
+topic: Fundamentals / Object-oriented design
 updated: 2026-11-12
 subnav: true
 ---

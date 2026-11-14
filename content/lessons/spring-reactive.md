@@ -4,8 +4,8 @@ nav: WebFlux and virtual threads
 slug: spring-reactive
 summary: The thread-per-request model and its limits, reactive programming with Project Reactor (Mono, Flux, backpressure) and Spring WebFlux, the rule never to block the event loop, Java 21 virtual threads in Spring Boot 3.2+, and how to choose between them, with Java examples and interview questions.
 tags: [Spring, WebFlux, Reactor, Reactive, Virtual Threads, Concurrency]
-order: 45
-topic: Spring / Web
+order: 48
+topic: Spring / Web and security
 updated: 2026-11-13
 subnav: true
 ---

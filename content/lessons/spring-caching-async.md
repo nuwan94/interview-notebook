@@ -4,8 +4,8 @@ nav: Caching, async, scheduling
 slug: spring-caching-async
 summary: Spring's cache abstraction with Caffeine and Redis (cache-aside, TTL, eviction, stampedes), @Async and executors, @Scheduled and running jobs safely in a cluster with ShedLock, and application events, with Java examples and interview questions.
 tags: [Spring, Caching, Redis, Async, Scheduling, Executor]
-order: 50
-topic: Spring / Production
+order: 53
+topic: Spring / Production and quality
 updated: 2026-11-13
 subnav: true
 ---

@@ -7,7 +7,7 @@ const TOPICS = {
   Java: { icon: LuCoffee, blurb: 'The language and platform: strings, generics, collections, streams, the JVM and garbage collection, concurrency.' },
   Databases: { icon: LuDatabase, blurb: 'SQL and NoSQL, normalisation, ACID and BASE, transactions and caching with Redis.' },
   Security: { icon: LuShieldCheck, blurb: 'Cryptography, authentication and authorisation, OAuth 2.0, OpenID Connect and JWT.' },
-  Microservices: { icon: LuNetwork, blurb: 'Distributed systems, patterns, sagas, messaging and scheduled work across services.' },
+  Microservices: { icon: LuNetwork, blurb: 'Distributed systems, decomposition and migration, communication, resilience, state, sagas, event sourcing and messaging.' },
   Containers: { icon: LuContainer, blurb: 'Docker, Compose, Dev Containers, Kubernetes, local clusters (minikube, kind) and OpenShift.' },
   Spring: { icon: LuLeaf, blurb: 'Spring Core, Boot, MVC, Data, Security, testing, caching, observability, Cloud and messaging.' },
 };

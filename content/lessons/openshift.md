@@ -4,8 +4,8 @@ nav: OpenShift
 slug: openshift
 summary: What OpenShift adds to Kubernetes (projects, routes, Source-to-Image builds, ImageStreams, Security Context Constraints, Operators, pipelines and GitOps), how it differs from plain Kubernetes, and how to run a Spring Boot service on it, with diagrams, YAML examples and interview questions.
 tags: [OpenShift, Kubernetes, Containers, Routes, SCC, Operators, S2I, GitOps]
-order: 37
-topic: Containers / OpenShift
+order: 40
+topic: Containers / Kubernetes
 updated: 2026-11-14
 subnav: true
 ---

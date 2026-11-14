@@ -5,7 +5,7 @@ slug: microservice-patterns
 summary: The core microservice patterns interviewers ask about: when to use microservices, decomposition, database per service, API gateway and discovery, sync vs async communication, circuit breaker and other resilience patterns, outbox, CQRS, event sourcing, observability and Spring Cloud, with examples and Java code.
 tags: [Microservices, Architecture, Resilience, Spring Cloud, Patterns]
 order: 25
-topic: Microservices / Patterns
+topic: Microservices / Fundamentals
 updated: 2026-11-13
 subnav: true
 ---

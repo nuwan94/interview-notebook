@@ -5,7 +5,7 @@ slug: redis-caching
 summary: Why and how to cache with Redis: cache-aside, read-through, write-through and write-behind, Redis data structures and use cases, TTL and eviction policies, invalidation and staleness, stampede, avalanche and penetration, single-thread model, persistence, replication, Sentinel and Cluster, Spring integration, with Java examples and interview questions.
 tags: [Redis, Caching, Eviction, TTL, Cache-aside, Cluster, Spring]
 order: 18
-topic: Databases / Caching
+topic: Databases / Consistency and caching
 updated: 2026-11-13
 subnav: true
 ---

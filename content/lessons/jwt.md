@@ -5,7 +5,7 @@ slug: jwt
 summary: What a JSON Web Token is, its three parts and claims, signed (JWS) vs encrypted (JWE) tokens, HS256 vs RS256 and the other algorithms, the validation steps, the classic attacks (alg none, algorithm confusion), storage and revocation, with Java and Spring examples and interview questions.
 tags: [Security, JWT, Tokens, Signatures, Authentication]
 order: 23
-topic: Security / Authentication
+topic: Security / OAuth and tokens
 updated: 2026-11-13
 subnav: true
 ---
