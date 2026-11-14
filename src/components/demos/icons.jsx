@@ -7,13 +7,13 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2,
+  LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
   SiJenkins, SiJsonwebtokens, SiJunit5, SiKeycloak, SiKubernetes, SiMongodb, SiMysql, SiNeo4J, SiNginx, SiOpenjdk,
   SiOpentelemetry, SiPostgresql, SiPrometheus, SiRabbitmq, SiRedis, SiSpring, SiSpringboot, SiSpringsecurity, SiVault,
-  SiApachecassandra,
+  SiApachecassandra, SiGithub, SiRedhatopenshift, SiTekton, SiArgo, SiIstio,
 } from 'react-icons/si';
 
 const ICONS = [
@@ -48,6 +48,10 @@ const ICONS = [
   [/jenkins/i, SiJenkins],
   [/\bjwt\b/i, SiJsonwebtokens],
   [/openjdk|\bjvm\b|\bjdk\b/i, SiOpenjdk],
+  [/openshift/i, SiRedhatopenshift],
+  [/tekton/i, SiTekton],
+  [/argo cd/i, SiArgo],
+  [/service mesh|istio/i, SiIstio],
 
   // --- Java collections, lambdas, streams ---
   [/comparable|comparator|^by(amount|merchant)|list\.sort|combined comparator|integer\.compare|a\.amount - b\.amount/i, LuArrowUpDown],
@@ -75,6 +79,12 @@ const ICONS = [
   [/sigterm|sigkill/i, LuOctagonX],
   [/kubectl/i, LuTerminal],
   [/^volume|bind mount|mounted file/i, LuHardDrive],
+  [/codespaces/i, SiGithub],
+  [/dev container|devcontainer|^features$|^customizations/i, LuPackage],
+  [/lifecycle|initializecommand|oncreatecommand|postcreatecommand|poststartcommand|postattachcommand/i, LuRefreshCw],
+  [/docker-in-docker|docker-outside/i, SiDocker],
+  [/minikube|kind create|kind cluster|kind node|kind load|kind delete|node container kind|^node kind-|^profile /i, SiKubernetes],
+  [/local image|^image bank|compose watch/i, LuLayers],
   [/dockerfile|^image|final image|^layer|stage \d|single-stage|buildpacks|^jib|layered jar|\.dockerignore|build context|compose\.yaml|^(copy|run|cmd|from) /i, LuLayers],
   [/\bpods?\b|replicaset|^deployment|^hpa$|poddisruption|startup probe|liveness|readiness/i, SiKubernetes],
   [/^secret|secret in yaml/i, LuLockKeyhole],
@@ -88,6 +98,16 @@ const ICONS = [
   [/^(reader|writer) [a-z]$/i, LuUser],
   [/single-flight|bloom filter|null marker/i, LuShieldCheck],
   [/^(allkeys|volatile|noeviction)/i, LuTrash2],
+
+  // --- OpenShift ---
+  [/security context constraints|restricted-v2|grant scc/i, LuShieldCheck],
+  [/^route|router|ingress controller/i, LuSignpost],
+  [/buildconfig|build pod|source-to-image|^build$/i, LuHammer],
+  [/imagestream|application image|compliant image|image runs|builder image|image directories/i, LuLayers],
+  [/^operator|operator hub|operatorhub|custom resource|operator lifecycle|cluster version/i, LuCog],
+  [/pipeline/i, LuWorkflow],
+  [/git commit|git repository|manifest repository/i, SiGit],
+  [/load balancer/i, LuWaves],
 
   // --- general actors, components and concepts ---
   [/attacker|mallory|eve\b|thief|malicious/i, LuVenetianMask],
