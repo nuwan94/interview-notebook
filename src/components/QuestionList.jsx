@@ -17,6 +17,7 @@ export function QuestionList({ slug, questions, focusId, navKey, onToast }) {
   const [level, setLevel] = useState('all');
   const [text, setText] = useState('');
   const box = useRef(null);
+  const bar = useRef(null);
   const reader = useReaderCtx();
 
   const counts = useMemo(() => Object.fromEntries(LEVELS.map((l) => [l, questions.filter((q) => q.level === l).length])), [questions]);
@@ -54,11 +55,24 @@ export function QuestionList({ slug, questions, focusId, navKey, onToast }) {
     el.classList.add('flash');
   }, [shown, focusId, navKey]);
 
-  const setAll = (open) => box.current?.querySelectorAll('details.q-item').forEach((d) => (d.open = open));
+  // Expand/collapse every answer without losing the reader's place: remember which question sits just under
+  // the sticky filter bar, and after the layout changes scroll so that same question is at the same height.
+  const setAll = (open) => {
+    const items = [...(box.current?.querySelectorAll('details.q-item') ?? [])];
+    if (!items.length) return;
+    const barBottom = bar.current?.getBoundingClientRect().bottom ?? 0;
+    const rects = items.map((d) => d.getBoundingClientRect());
+    // the list is still below the screen: nothing above it changes, so there is nothing to compensate
+    const anchorIndex = rects[0].top > window.innerHeight ? -1 : rects.findIndex((r) => r.bottom > barBottom);
+    const anchor = anchorIndex >= 0 ? items[anchorIndex] : null;
+    const before = anchor ? rects[anchorIndex].top : 0;
+    items.forEach((d) => (d.open = open));
+    if (anchor) window.scrollBy({ top: anchor.getBoundingClientRect().top - before, behavior: 'instant' });
+  };
 
   return (
     <div id="question-list">
-      <div className="bg-white border border-slate-300 rounded-md p-3 mb-4 sticky top-0 md:top-[4.25rem] z-10 shadow-sm" data-noread>
+      <div ref={bar} className="bg-white border border-slate-300 rounded-md p-3 mb-4 sticky top-0 md:top-[4.25rem] z-10 shadow-sm" data-noread>
         <div className="flex flex-wrap items-center gap-2">
           <label className="sr-only" htmlFor="q-filter">
             Filter questions
@@ -106,7 +120,7 @@ export function QuestionList({ slug, questions, focusId, navKey, onToast }) {
         </div>
       </div>
 
-      <div ref={box}>
+      <div ref={box} style={{ overflowAnchor: 'none' }}>
         {shown.map((q) => (
           <details key={q.id} id={q.id} className={`q-item level-${q.level}`}>
             <summary>
