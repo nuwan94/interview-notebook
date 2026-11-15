@@ -173,7 +173,9 @@ export function GraphStage({ frames, index, reduced, label }) {
   const lr = useMemo(() => layoutScene(frames, 'LR'), [frames]);
   const tb = useMemo(() => layoutScene(frames, 'TB'), [frames]);
   // left to right while the text stays readable; top to bottom when the picture would shrink too much
-  const vertical = width > 0 && width / lr.width < 0.66;
+  // (the svg is also capped at 34rem tall, so compare the real scale of both layouts)
+  const fit = (l) => Math.min(width / l.width, 544 / l.height);
+  const vertical = width > 0 && fit(lr) < 0.66 && fit(tb) > fit(lr);
   const lay = vertical ? tb : lr;
 
   // every node of the scene, so nodes that leave can fade out where they stood
