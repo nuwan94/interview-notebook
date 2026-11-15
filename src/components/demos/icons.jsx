@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -197,6 +197,26 @@ const ICONS = [
   [/^head$/i, LuFlag],
   [/hash function/i, LuHash],
   [/^entry /i, LuTag],
+  // --- build tools ---
+  [/^(compile|compilejava)$/i, LuHammer],
+  [/^(package|jar)$/i, LuPackage],
+  [/^verify$/i, LuCircleCheck],
+  [/^install$/i, LuDownload],
+  [/^deploy$/i, LuUpload],
+  [/pom\.xml|^parent pom|\.gradle|build file|\.toml/i, LuFileCode],
+  [/^your application$|^app module$/i, LuRocket],
+  [/transitive jars|^library [a-c]$/i, LuBoxes],
+  [/^jackson/i, LuBraces],
+  [/(local|remote) repository|build cache|configuration cache/i, LuArchive],
+  [/modules$/i, LuPuzzle],
+  [/^project :/i, LuFolderCog],
+  [/^processresources$|class files|^classes$/i, LuBoxes],
+  [/source files/i, LuFileCode],
+  [/^execution$/i, LuZap],
+  [/daemon/i, LuCog],
+  [/classpath$/i, LuList],
+  [/^lombok$/i, LuWandSparkles],
+  [/^ci server$/i, LuServer],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */
