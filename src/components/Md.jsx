@@ -1,4 +1,4 @@
-import { Children, isValidElement, memo, useState } from 'react';
+import { Children, isValidElement, memo, useMemo, useState } from 'react';
 import { LuLink, LuPlay } from 'react-icons/lu';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
@@ -149,12 +149,9 @@ const components = {
   ),
 };
 
-const rehypePlugins = [
-  [
-    rehypeHighlight,
-    { languages: { java, javascript, bash }, aliases: { javascript: ['js'] }, detect: false, plainText: ['demo', 'mermaid', 'text', 'txt', 'console'] },
-  ],
-  rehypeGlossary,
+const highlightPlugin = [
+  rehypeHighlight,
+  { languages: { java, javascript, bash }, aliases: { javascript: ['js'] }, detect: false, plainText: ['demo', 'mermaid', 'text', 'txt', 'console'] },
 ];
 const remarkPlugins = [remarkGfm];
 // react-markdown drops unknown URL schemes; let our lesson: links through
@@ -162,6 +159,9 @@ const urlTransform = (url) => (url.startsWith('lesson:') ? url : defaultUrlTrans
 
 /** Renders lesson markdown: GFM, syntax highlighting, glossary tooltips, ```demo fences. */
 export const Md = memo(function Md({ children }) {
+  const { slug } = useParams();
+  // glossary terms are scoped per lesson, so the tooltip matches the sense of the word in that lesson
+  const rehypePlugins = useMemo(() => [highlightPlugin, [rehypeGlossary, { lesson: slug }]], [slug]);
   return (
     <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins} components={components} urlTransform={urlTransform}>
       {children}
