@@ -96,12 +96,38 @@ export function layoutFrame(boxes, deps, dir, gaps) {
       rows[r].forEach((t, i) => index.set(t, i));
     }
     // 3. coordinates
-    rows.forEach((row, r) =>
-      row.forEach((t, i) => {
-        const across = (i - (row.length - 1) / 2) * g.across;
-        pos.set(t, dir === 'LR' ? { x: r * g.along, y: across } : { x: (i - (row.length - 1) / 2) * g.across, y: r * g.along });
-      }),
-    );
+    const chain = rows.length >= 5 && rows.every((row) => row.length === 1);
+    if (chain) {
+      // a long single chain would be a thin strip that shrinks to nothing: fold it into two bands that read like text lines
+      // (the second band runs the other way, so the arrow between bands is a short straight drop)
+      const per = Math.ceil(rows.length / 2);
+      rows.forEach((row, r) => {
+        const band = Math.floor(r / per);
+        const c = r % per;
+        const col = band % 2 ? per - 1 - c : c;
+        const bandGap = g.across + 50;
+        pos.set(row[0], dir === 'LR' ? { x: col * g.along, y: band * bandGap } : { x: band * bandGap, y: col * g.along });
+      });
+    } else if (dir === 'TB') {
+      // top to bottom is the narrow-screen layout: a wide rank (4 or more nodes) folds into two lines so the picture stays narrow
+      let y = 0;
+      rows.forEach((row) => {
+        const per = row.length > 3 ? Math.ceil(row.length / 2) : row.length;
+        row.forEach((t, i) => {
+          const line = Math.floor(i / per);
+          const inLine = Math.min(per, row.length - line * per);
+          pos.set(t, { x: ((i % per) - (inLine - 1) / 2) * g.across, y: y + line * g.along });
+        });
+        y += Math.ceil(row.length / per) * g.along;
+      });
+    } else {
+      rows.forEach((row, r) =>
+        row.forEach((t, i) => {
+          const across = (i - (row.length - 1) / 2) * g.across;
+          pos.set(t, { x: r * g.along, y: across });
+        }),
+      );
+    }
   }
 
   if (!pos.size) pos.set("", { x: 0, y: 0 });
