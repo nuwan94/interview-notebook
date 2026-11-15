@@ -127,7 +127,7 @@ export function QuestionList({ slug, questions, focusId, navKey, onToast }) {
               <span className="badge" data-noread>
                 {q.level}
               </span>
-              <span className="flex-1">{q.title}</span>
+              <span className="flex-1 min-w-0 [overflow-wrap:anywhere]">{q.title}</span>
               <button
                 type="button"
                 data-noread
