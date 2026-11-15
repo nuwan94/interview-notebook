@@ -1,6 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { byId, splitByGlossary } from '../lib/glossary.js';
+import { useParams } from 'react-router-dom';
 import { usePrefs } from '../lib/prefs.jsx';
 
 function Tooltip({ id, anchor, entry }) {
@@ -66,6 +67,7 @@ export function Term({ termId, tabStop = false, children }) {
 
 /** Plain string with glossary tooltips (used for captions inside the animated demos). */
 export function Glossed({ text }) {
+  const { slug } = useParams();
   const parts = text.split('`');
   return parts.map((seg, i) =>
     i % 2 === 1 ? (
@@ -73,7 +75,7 @@ export function Glossed({ text }) {
         {seg}
       </code>
     ) : (
-      splitByGlossary(seg).map((p, j) =>
+      splitByGlossary(seg, slug).map((p, j) =>
         p.entry ? (
           <Term key={`${i}-${j}`} termId={p.entry.id}>
             {p.text}
