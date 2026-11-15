@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LuMenu, LuSearch } from 'react-icons/lu';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { SCALES, usePrefs } from '../lib/prefs.jsx';
+import { usePrefs } from '../lib/prefs.jsx';
+import { AccessMenu } from './AccessMenu.jsx';
 import { getLesson } from '../lib/content.js';
 import { ErrorBoundary } from './ErrorBoundary.jsx';
 import { SearchPalette } from './SearchPalette.jsx';
 import { Sidebar } from './Sidebar.jsx';
 
 export function Layout() {
-  const { prefs, set, zoom } = usePrefs();
+  const { zoom } = usePrefs();
   const loc = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -45,14 +46,13 @@ export function Layout() {
     if (!/^\/lessons\/[^/]+\/./.test(loc.pathname)) window.scrollTo({ top: 0, behavior: 'auto' });
   }, [loc.pathname]);
 
-  const scaleBtn = 'btn !min-h-9 !px-2.5';
   return (
     <>
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <header className="md:sticky top-0 z-30 bg-desk/95 backdrop-blur border-b border-slate-300">
-        <div className="max-w-[88rem] mx-auto flex flex-wrap items-center gap-2 px-3 py-2">
+      <header className="sticky top-0 z-30 bg-desk/95 backdrop-blur border-b border-slate-300">
+        <div className="max-w-[88rem] mx-auto flex items-center gap-2 px-3 py-2">
           {/* narrow screens: the title is the menu button (the sidebar has a Home link); wide screens: the title is the home link */}
           <button
             type="button"
@@ -64,7 +64,7 @@ export function Layout() {
           >
             <LuMenu aria-hidden="true" size="1.2em" />
             <img src="./favicon.svg" alt="" width="24" height="24" />
-            Interview Notebook
+            <span className="hidden sm:inline">Interview Notebook</span>
           </button>
           <Link to="/" className="hidden lg:flex font-hand font-bold text-xl text-pen no-underline mr-2 items-center gap-2">
             <img src="./favicon.svg" alt="" width="24" height="24" />
@@ -73,46 +73,15 @@ export function Layout() {
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
-            className="flex-1 min-w-[10rem] max-w-md text-left bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-soft hover:border-pen flex items-center gap-2"
+            className="flex-1 min-w-0 max-w-md text-left bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-soft hover:border-pen flex items-center gap-2"
             aria-label="Search notes (shortcut: slash or Control K)"
           >
             <LuSearch aria-hidden="true" />
             <span className="flex-1 truncate">Search notes, questions, terms…</span>
             <span className="kbd hidden sm:inline">/</span>
           </button>
-          <div className="flex items-center gap-1.5 ml-auto" role="group" aria-label="Reading settings">
-            <button
-              type="button"
-              className={scaleBtn}
-              onClick={() => set({ scaleIdx: Math.max(0, prefs.scaleIdx - 1) })}
-              disabled={prefs.scaleIdx === 0}
-              aria-label="Smaller text (minus key)"
-              title="Smaller text: press -"
-            >
-              <span className="text-sm">A−</span>
-            </button>
-            <span className="text-xs font-bold text-soft w-10 text-center tabular-nums" aria-live="polite">
-              {SCALES[prefs.scaleIdx]}%
-            </span>
-            <button
-              type="button"
-              className={scaleBtn}
-              onClick={() => set({ scaleIdx: Math.min(SCALES.length - 1, prefs.scaleIdx + 1) })}
-              disabled={prefs.scaleIdx === SCALES.length - 1}
-              aria-label="Larger text (plus key)"
-              title="Larger text: press + (0 resets)"
-            >
-              <span className="text-lg leading-none">A+</span>
-            </button>
-            <button
-              type="button"
-              className={scaleBtn}
-              aria-pressed={prefs.tooltips}
-              onClick={() => set({ tooltips: !prefs.tooltips })}
-              title="Turn the dotted-underline term explanations on or off"
-            >
-              Term tips: {prefs.tooltips ? 'on' : 'off'}
-            </button>
+          <div className="ml-auto">
+            <AccessMenu />
           </div>
         </div>
       </header>
