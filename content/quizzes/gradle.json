@@ -1,0 +1,92 @@
+{
+ "questions": [
+  {
+   "q": "What are the three phases of a Gradle build, in order?",
+   "o": [
+    "Initialization, configuration, execution",
+    "Configuration, initialization, execution",
+    "Compilation, testing, packaging",
+    "Resolution, execution, publication"
+   ],
+   "w": "Initialization picks the projects, configuration builds the task graph without running tasks, and execution runs the requested tasks.",
+   "s": "Phases"
+  },
+  {
+   "q": "A task shows UP-TO-DATE in the output. What does that mean?",
+   "o": [
+    "Its inputs and outputs match the last run, so Gradle skipped the work",
+    "It was loaded from a remote cache on a shared server",
+    "It could not run because it has no source files",
+    "It finished successfully and has just been executed"
+   ],
+   "w": "Gradle compares fingerprints of inputs and outputs. FROM-CACHE means restored from the cache, and NO-SOURCE means there was nothing to process.",
+   "s": "Up-to-date"
+  },
+  {
+   "q": "Which dependency configuration should you use for a library whose types appear in your module's public method signatures?",
+   "o": [
+    "api",
+    "implementation",
+    "runtimeOnly",
+    "compileOnly"
+   ],
+   "w": "api exposes the dependency to modules that compile against yours. With implementation, consumers cannot see its types and fail to compile.",
+   "s": "api"
+  },
+  {
+   "q": "What is the main benefit of using implementation instead of api?",
+   "o": [
+    "A change in the library does not force dependent modules to recompile",
+    "The library is excluded from the runtime classpath of the application",
+    "The library is downloaded only when a test needs it",
+    "The dependency version is chosen by the highest version rule"
+   ],
+   "w": "implementation keeps the dependency off consumers' compile classpath, so fewer modules are recompiled, and the classpath stays small.",
+   "s": "implementation"
+  },
+  {
+   "q": "Two libraries need different versions of Jackson. Which does Gradle choose by default?",
+   "o": [
+    "The highest version requested anywhere in the graph",
+    "The version nearest to the root project",
+    "The version declared first in the build file",
+    "None, and the build fails until you choose one"
+   ],
+   "w": "Gradle picks the highest version, unlike Maven's nearest definition. dependencyInsight shows why a version was selected.",
+   "s": "Conflicts"
+  },
+  {
+   "q": "Why should a build script avoid doing real work directly at the top level?",
+   "o": [
+    "Top-level code runs in the configuration phase on every build",
+    "Top-level code is ignored unless a task is run explicitly",
+    "Top-level code runs only after all tasks have finished",
+    "Top-level code cannot read files from the project directory"
+   ],
+   "w": "Configuration runs on every invocation, so slow code there delays all builds and breaks the configuration cache. Do work in task actions.",
+   "s": "Configuration"
+  },
+  {
+   "q": "How does the build cache differ from the up-to-date check?",
+   "o": [
+    "It reuses outputs from any earlier run, including other machines or CI",
+    "It only works while the Gradle daemon is running in memory",
+    "It compares the new build with the previous run of the same task only",
+    "It stores downloaded dependency jars outside the project"
+   ],
+   "w": "The build cache is keyed by an input hash and can be shared remotely. The up-to-date check only looks at the last run in the same workspace.",
+   "s": "Build cache"
+  },
+  {
+   "q": "How should shared build logic be organised in a large multi-project build?",
+   "o": [
+    "In convention plugins that each project applies",
+    "In allprojects blocks copied into every build file",
+    "In a single build file that lists every task by hand",
+    "In environment variables read by each project"
+   ],
+   "w": "Convention plugins in build-logic or buildSrc keep configuration in one place, are easier to cache and read than allprojects and subprojects blocks.",
+   "s": "Multi-project"
+  }
+ ]
+}

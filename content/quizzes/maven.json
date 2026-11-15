@@ -1,0 +1,92 @@
+{
+ "questions": [
+  {
+   "q": "You run mvn package. Which phases does Maven execute?",
+   "o": [
+    "Every phase of the default lifecycle up to and including package",
+    "Only the package phase and nothing before it",
+    "Every phase up to package, then install and deploy as well",
+    "Only the phases whose plugins changed since the last build"
+   ],
+   "w": "Asking for a phase runs all earlier phases in order: compile, test, then package. install and deploy come after package and are not run.",
+   "s": "Lifecycle"
+  },
+  {
+   "q": "What is the difference between a Maven phase and a goal?",
+   "o": [
+    "A goal is a plugin task, and goals are bound to phases to do the work",
+    "A phase is a plugin task, and goals are the stages of the lifecycle",
+    "Phases run in parallel, whereas goals always run one after another",
+    "A goal is a phase that has been renamed in the parent pom"
+   ],
+   "w": "Phases are named steps with no behaviour. Plugin goals such as compiler:compile are attached to them, and a goal can also be run directly.",
+   "s": "Phase and goal"
+  },
+  {
+   "q": "Two libraries need different versions of Jackson. Which version does Maven use by default?",
+   "o": [
+    "The one nearest to your project in the dependency tree",
+    "The highest version number found anywhere in the tree",
+    "The lowest version number found anywhere in the tree",
+    "Neither, and the build fails with a version conflict"
+   ],
+   "w": "Maven uses nearest definition, and the first declared on a tie. It is not the newest, so an older version can win. Manage the version to be sure.",
+   "s": "Conflicts"
+  },
+  {
+   "q": "What does dependencyManagement do?",
+   "o": [
+    "Sets the version and scope to use when an artifact is needed, adding nothing itself",
+    "Adds every listed library to the classpath of the project",
+    "Removes the transitive dependencies of the listed libraries",
+    "Downloads the listed libraries ahead of the next build"
+   ],
+   "w": "It only declares versions. A dependency still has to be listed in dependencies, but it can then omit the version. A BOM is a pom made of this section.",
+   "s": "Version management"
+  },
+  {
+   "q": "Which scope suits a JDBC driver that the code never compiles against?",
+   "o": [
+    "runtime, because it is needed to run but not to compile",
+    "provided, because the application server always supplies it",
+    "test, because only the integration tests connect to it",
+    "compile, because every library must be on the compile classpath"
+   ],
+   "w": "runtime puts the driver on the runtime and test classpaths but not the compile classpath, and it is packaged with the application.",
+   "s": "Scopes"
+  },
+  {
+   "q": "In a multi-module build, what decides the order in which modules are built?",
+   "o": [
+    "The dependencies between the modules, worked out by the reactor",
+    "The order the modules are listed in the parent pom",
+    "The alphabetical order of the module directory names",
+    "The size of each module, with the smallest built first"
+   ],
+   "w": "The reactor sorts modules by their inter-module dependencies, whatever the list order. Circular dependencies cause an error.",
+   "s": "Reactor"
+  },
+  {
+   "q": "What does mvn install do that mvn package does not?",
+   "o": [
+    "Copies the artifact into the local repository in ~/.m2",
+    "Uploads the artifact to the company Nexus server",
+    "Runs the integration tests that package skips",
+    "Deletes the target directory before it builds"
+   ],
+   "w": "install is the phase after verify. It copies the jar into ~/.m2 so other local projects can use it. Uploading to a remote repository is deploy.",
+   "s": "install"
+  },
+  {
+   "q": "Why would you use the Maven Wrapper (mvnw)?",
+   "o": [
+    "Everyone and the CI server run the same Maven version without installing it",
+    "It makes the compiler faster by keeping the JVM running between builds",
+    "It lets a project be built without a pom.xml file",
+    "It replaces the local repository with a shared cache"
+   ],
+   "w": "The wrapper downloads the Maven version recorded in .mvn/wrapper, which removes differences between machines.",
+   "s": "Wrapper"
+  }
+ ]
+}
