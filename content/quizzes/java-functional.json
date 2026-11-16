@@ -1,52 +1,212 @@
 {
-  "questions": [
+ "questions": [
+  {
+   "t": "",
+   "v": [
     {
-      "q": "Which interface has exactly one abstract method and can therefore be the target of a lambda?",
-      "o": ["A functional interface such as `Comparator`", "Any interface with default methods only", "Any abstract class with one method", "Every interface in `java.util`"],
-      "w": "The rule is one abstract method. Default and static methods, and re-declared `Object` methods, do not count.",
-      "s": 25
+     "q": "Which interface has exactly one abstract method and can therefore be the target of a lambda?",
+     "o": [
+      "A functional interface such as `Comparator`",
+      "Any interface with default methods only",
+      "Any abstract class with one method",
+      "Every interface in `java.util`"
+     ],
+     "w": "The rule is one abstract method. Default and static methods, and re-declared `Object` methods, do not count.",
+     "s": 25
     },
     {
-      "q": "Which functional interface takes no argument and returns a value?",
-      "o": ["`Supplier<T>`", "`Consumer<T>`", "`Predicate<T>`", "`Function<T,R>`"],
-      "w": "Supplier: `() -> T`. Consumer: `T -> void`. Predicate: `T -> boolean`. Function: `T -> R`.",
-      "s": 20
-    },
-    {
-      "q": "What does this code do? `int count = 0; list.forEach(x -> count++);`",
-      "o": ["It does not compile: captured locals must be effectively final", "It counts the elements of the list correctly", "It counts correctly, but only on one thread", "It throws an exception when the lambda runs"],
-      "w": "A lambda captures a copy of the value, so the local cannot change. Use `list.size()`, `stream().count()` or an `AtomicInteger`.",
-      "s": 30
-    },
-    {
-      "q": "What does `this` refer to inside a lambda body?",
-      "o": ["The enclosing object, as in the surrounding method", "The lambda object itself", "The functional interface type", "The thread running the lambda"],
-      "w": "An anonymous inner class has its own `this`. A lambda does not introduce a new scope for `this`.",
-      "s": 25
-    },
-    {
-      "q": "What is the difference between `orElse(x)` and `orElseGet(supplier)` on an `Optional`?",
-      "o": ["`orElse` always evaluates `x`, `orElseGet` calls the supplier only when empty", "`orElse` throws when empty, `orElseGet` returns `null`", "`orElseGet` always evaluates its argument, `orElse` does not", "They are identical, only the names differ"],
-      "w": "With `orElse(createDefault())` the default is built even when a value is present. Prefer `orElseGet` for anything expensive.",
-      "s": 30
-    },
-    {
-      "q": "Where is `Optional` appropriate?",
-      "o": ["As the return type of a method that may find nothing", "As a field type in a JPA entity", "As a method parameter that callers may skip", "As the element type of a `List`"],
-      "w": "It was designed for return values. For fields and parameters use plain types, overloads or validation; for no results, return an empty collection.",
-      "s": 30
-    },
-    {
-      "q": "`find(id).map(this::findBranch)` where `findBranch` itself returns an `Optional<Branch>`. What type results, and what is the better call?",
-      "o": ["`Optional<Optional<Branch>>`; use `flatMap` instead", "`Optional<Branch>`; `map` already flattens it", "`Branch`; use `get` to unwrap it", "`List<Branch>`; use `collect`"],
-      "w": "`map` wraps the function's result. `flatMap` expects the function to return an `Optional` and does not wrap it again.",
-      "s": 35
-    },
-    {
-      "q": "How is `Predicate<Account> p = a -> a.isActive();` best combined with another predicate `q`?",
-      "o": ["`p.and(q)` or `p.or(q)`", "`p + q`", "`p.add(q)`", "`new Predicate(p, q)`"],
-      "w": "`Predicate` has `and`, `or` and `negate`. `Function` has `andThen` and `compose`. Compose small named pieces instead of one long lambda.",
-      "s": 25
+     "q": "Which interface can NOT be the target of a lambda?",
+     "o": [
+      "An interface with two abstract methods",
+      "Runnable",
+      "Comparator",
+      "A custom interface with one abstract method"
+     ],
+     "w": "A lambda needs exactly one abstract method. Default and static methods do not count."
     }
-  ]
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which functional interface takes no argument and returns a value?",
+     "o": [
+      "`Supplier<T>`",
+      "`Consumer<T>`",
+      "`Predicate<T>`",
+      "`Function<T,R>`"
+     ],
+     "w": "Supplier: `() -> T`. Consumer: `T -> void`. Predicate: `T -> boolean`. Function: `T -> R`.",
+     "s": 20
+    },
+    {
+     "q": "Which functional interface takes one argument and returns a boolean?",
+     "o": [
+      "Predicate<T>",
+      "Supplier<T>",
+      "Consumer<T>",
+      "Function<T,Void>"
+     ],
+     "w": "Predicate tests a value. Consumer returns nothing and Supplier takes no argument."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What does this code do? `int count = 0; list.forEach(x -> count++);`",
+     "o": [
+      "It does not compile: captured locals must be effectively final",
+      "It counts the elements of the list correctly",
+      "It counts correctly, but only on one thread",
+      "It throws an exception when the lambda runs"
+     ],
+     "w": "A lambda captures a copy of the value, so the local cannot change. Use `list.size()`, `stream().count()` or an `AtomicInteger`.",
+     "s": 30
+    },
+    {
+     "q": "Which rewrite counts list elements correctly?",
+     "o": [
+      "list.size()",
+      "A lambda that increments a local int",
+      "A lambda that increments a final int",
+      "A lambda that assigns a captured local"
+     ],
+     "w": "Captured locals must be effectively final. For a count, use size(), count() or an AtomicInteger."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What does `this` refer to inside a lambda body?",
+     "o": [
+      "The enclosing object, as in the surrounding method",
+      "The lambda object itself",
+      "The functional interface type",
+      "The thread running the lambda"
+     ],
+     "w": "An anonymous inner class has its own `this`. A lambda does not introduce a new scope for `this`.",
+     "s": 25
+    },
+    {
+     "q": "Which statement about this inside a lambda is NOT true?",
+     "o": [
+      "It refers to the lambda object",
+      "It refers to the enclosing object",
+      "It behaves like this in the surrounding method",
+      "It differs from an anonymous class"
+     ],
+     "w": "An anonymous class has its own this. A lambda does not."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is the difference between `orElse(x)` and `orElseGet(supplier)` on an `Optional`?",
+     "o": [
+      "`orElse` always evaluates `x`, `orElseGet` calls the supplier only when empty",
+      "`orElse` throws when empty, `orElseGet` returns `null`",
+      "`orElseGet` always evaluates its argument, `orElse` does not",
+      "They are identical, only the names differ"
+     ],
+     "w": "With `orElse(createDefault())` the default is built even when a value is present. Prefer `orElseGet` for anything expensive.",
+     "s": 30
+    },
+    {
+     "q": "Why is orElse(createDefault()) a risk when createDefault is expensive?",
+     "o": [
+      "It runs even when a value is present",
+      "It runs only when empty",
+      "It throws if the value exists",
+      "It cannot return a default"
+     ],
+     "w": "The argument is evaluated before the call. orElseGet takes a supplier that runs only when needed."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Where is `Optional` appropriate?",
+     "o": [
+      "As the return type of a method that may find nothing",
+      "As a field type in a JPA entity",
+      "As a method parameter that callers may skip",
+      "As the element type of a `List`"
+     ],
+     "w": "It was designed for return values. For fields and parameters use plain types, overloads or validation; for no results, return an empty collection.",
+     "s": 30
+    },
+    {
+     "q": "Which use of Optional is NOT recommended?",
+     "o": [
+      "A field of a JPA entity",
+      "The return type of a finder method",
+      "The result of Stream.findFirst",
+      "A return value that may be absent"
+     ],
+     "w": "Optional is meant for return values. As a field or parameter it adds noise and is not serializable."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "`find(id).map(this::findBranch)` where `findBranch` itself returns an `Optional<Branch>`. What type results, and what is the better call?",
+     "o": [
+      "`Optional<Optional<Branch>>`; use `flatMap` instead",
+      "`Optional<Branch>`; `map` already flattens it",
+      "`Branch`; use `get` to unwrap it",
+      "`List<Branch>`; use `collect`"
+     ],
+     "w": "`map` wraps the function's result. `flatMap` expects the function to return an `Optional` and does not wrap it again.",
+     "s": 35
+    },
+    {
+     "q": "What does flatMap do on an Optional whose function returns an Optional?",
+     "o": [
+      "Returns a single Optional without nesting",
+      "Returns Optional<Optional<T>>",
+      "Throws when the inner is empty",
+      "Returns a List"
+     ],
+     "w": "flatMap flattens, so the result is one Optional. map would nest them."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "How is `Predicate<Account> p = a -> a.isActive();` best combined with another predicate `q`?",
+     "o": [
+      "`p.and(q)` or `p.or(q)`",
+      "`p + q`",
+      "`p.add(q)`",
+      "`new Predicate(p, q)`"
+     ],
+     "w": "`Predicate` has `and`, `or` and `negate`. `Function` has `andThen` and `compose`. Compose small named pieces instead of one long lambda.",
+     "s": 25
+    },
+    {
+     "q": "Which method negates a Predicate?",
+     "o": [
+      "p.negate()",
+      "p.not()",
+      "p.invert()",
+      "!p"
+     ],
+     "w": "Predicate has and, or and negate. Predicate.not(p) is the static form."
+    }
+   ]
+  }
+ ]
 }

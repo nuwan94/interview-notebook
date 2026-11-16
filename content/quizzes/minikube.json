@@ -1,1 +1,204 @@
-{"questions":[{"q":"What is a minikube driver?","o":["The technology that hosts the node: a container such as Docker, or a VM","A plugin that adds ingress support to the cluster","A kubectl command that starts a Pod","The component that schedules Pods onto nodes"],"w":"Drivers include docker, podman, hyperv, kvm2, qemu, virtualbox and vmware. They decide start-up time, resources and isolation.","s":"Drivers"},{"q":"A LoadBalancer Service shows EXTERNAL-IP pending on minikube. What do you run?","o":["minikube tunnel in a separate terminal","minikube stop and start","kubectl delete svc and recreate it with a NodePort","minikube addons disable ingress"],"w":"There is no cloud provider. The tunnel assigns an external IP on your machine and forwards traffic while it runs.","s":"Access"},{"q":"Which command prints a URL for a NodePort Service in minikube?","o":["minikube service payments --url","minikube ip --service payments","kubectl get nodeport payments","minikube expose payments"],"w":"minikube service handles the driver differences, and may open a tunnel that must stay running.","s":"Access"},{"q":"How can you build an image directly inside the minikube cluster?","o":["minikube image build, or docker-env then docker build","kubectl build -t payments . run against the minikube context","minikube push payments followed by a registry login to the node","docker build --cluster minikube . using the Docker context flag"],"w":"The cluster has its own runtime. image load copies an image in; image build or docker-env builds it there.","s":"Images"},{"q":"What are minikube addons?","o":["Bundled optional components such as ingress, metrics-server and dashboard","Extra worker nodes that you add to a running cluster with one command","Plugins that change the Kubernetes API version used by the cluster","Container images that the kubelet downloads when the node first starts"],"w":"minikube addons enable <name> installs them with one command, a main convenience over a bare cluster.","s":"Addons"},{"q":"Why does a HorizontalPodAutoscaler show <unknown> for CPU in minikube?","o":["metrics-server is not enabled, or the Pods have no CPU requests","The cluster has only one node, and autoscaling needs at least two nodes","The Deployment uses a fixed image tag instead of the latest tag","minikube does not support autoscaling in any of its drivers"],"w":"Enable the metrics-server addon and set CPU requests; the HPA computes utilisation against requests.","s":"Addons"},{"q":"How can a Pod in minikube reach a database running on your laptop?","o":["Through host.minikube.internal, which resolves to the host","Through localhost, which maps to the laptop","Through the Service type ExternalName with no name","Pods cannot reach processes outside the cluster"],"w":"Inside the node, localhost is the node itself. host.minikube.internal resolves to your machine, which must listen on a reachable address.","s":"Networking"},{"q":"When is minikube a better choice than kind?","o":["For a friendly learning cluster with addons, dashboard and tunnel","For creating hundreds of disposable clusters per hour in CI","For running Kubernetes without Docker or any VM driver on Windows","For production workloads that need high availability"],"w":"Both are real Kubernetes. kind is lighter and suits CI; minikube gives more built-in conveniences for learning and development.","s":"Comparison"}]}
+{
+ "questions": [
+  {
+   "t": "Drivers",
+   "v": [
+    {
+     "q": "What is a minikube driver?",
+     "o": [
+      "The technology that hosts the node: a container such as Docker, or a VM",
+      "A plugin that adds ingress support to the cluster",
+      "A kubectl command that starts a Pod",
+      "The component that schedules Pods onto nodes"
+     ],
+     "w": "Drivers include docker, podman, hyperv, kvm2, qemu, virtualbox and vmware. They decide start-up time, resources and isolation."
+    },
+    {
+     "q": "Which is NOT a way minikube can host the node?",
+     "o": [
+      "A fork without containers",
+      "A Docker container",
+      "A virtual machine",
+      "A VM from a hypervisor driver"
+     ],
+     "w": "minikube runs real Kubernetes in a container or a VM, chosen by the driver."
+    }
+   ]
+  },
+  {
+   "t": "Access",
+   "v": [
+    {
+     "q": "A LoadBalancer Service shows EXTERNAL-IP pending on minikube. What do you run?",
+     "o": [
+      "minikube tunnel in a separate terminal",
+      "minikube stop and start",
+      "kubectl delete svc and recreate it with a NodePort",
+      "minikube addons disable ingress"
+     ],
+     "w": "There is no cloud provider. The tunnel assigns an external IP on your machine and forwards traffic while it runs."
+    },
+    {
+     "q": "What does minikube tunnel do?",
+     "o": [
+      "Gives Services an external IP",
+      "Starts a new node",
+      "Deletes unused images",
+      "Opens the dashboard"
+     ],
+     "w": "It creates a route to the cluster and assigns the EXTERNAL-IP, and it must stay running."
+    }
+   ]
+  },
+  {
+   "t": "Access",
+   "v": [
+    {
+     "q": "Which command prints a URL for a NodePort Service in minikube?",
+     "o": [
+      "minikube service payments --url",
+      "minikube ip --service payments",
+      "kubectl get nodeport payments",
+      "minikube expose payments"
+     ],
+     "w": "minikube service handles the driver differences, and may open a tunnel that must stay running."
+    },
+    {
+     "q": "Which command opens or prints the address of a Service in minikube?",
+     "o": [
+      "minikube service payments",
+      "minikube ip --service",
+      "kubectl open payments",
+      "minikube expose"
+     ],
+     "w": "The command works out the node address and port, and with --url prints it."
+    }
+   ]
+  },
+  {
+   "t": "Images",
+   "v": [
+    {
+     "q": "How can you build an image directly inside the minikube cluster?",
+     "o": [
+      "minikube image build, or docker-env then docker build",
+      "kubectl build -t payments . run against the minikube context",
+      "minikube push payments followed by a registry login to the node",
+      "docker build --cluster minikube . using the Docker context flag"
+     ],
+     "w": "The cluster has its own runtime. image load copies an image in; image build or docker-env builds it there."
+    },
+    {
+     "q": "Which way of using a local image in minikube is NOT correct?",
+     "o": [
+      "Build on the host and expect the node to find it",
+      "minikube image load payments:1.0",
+      "Build with eval $(minikube docker-env)",
+      "minikube image build"
+     ],
+     "w": "The node has its own image store, so a host image must be loaded or built inside it."
+    }
+   ]
+  },
+  {
+   "t": "Addons",
+   "v": [
+    {
+     "q": "What are minikube addons?",
+     "o": [
+      "Bundled optional components such as ingress, metrics-server and dashboard",
+      "Extra worker nodes that you add to a running cluster with one command",
+      "Plugins that change the Kubernetes API version used by the cluster",
+      "Container images that the kubelet downloads when the node first starts"
+     ],
+     "w": "minikube addons enable <name> installs them with one command, a main convenience over a bare cluster."
+    },
+    {
+     "q": "Which command turns on the ingress controller in minikube?",
+     "o": [
+      "minikube addons enable ingress",
+      "minikube start --ingress",
+      "kubectl install ingress",
+      "minikube tunnel ingress"
+     ],
+     "w": "Addons are bundled optional components that you enable by name."
+    }
+   ]
+  },
+  {
+   "t": "Addons",
+   "v": [
+    {
+     "q": "Why does a HorizontalPodAutoscaler show <unknown> for CPU in minikube?",
+     "o": [
+      "metrics-server is not enabled, or the Pods have no CPU requests",
+      "The cluster has only one node, and autoscaling needs at least two nodes",
+      "The Deployment uses a fixed image tag instead of the latest tag",
+      "minikube does not support autoscaling in any of its drivers"
+     ],
+     "w": "Enable the metrics-server addon and set CPU requests; the HPA computes utilisation against requests."
+    },
+    {
+     "q": "What do you check first when the HPA shows <unknown> for CPU?",
+     "o": [
+      "metrics-server",
+      "The number of nodes",
+      "The image tag",
+      "The driver name"
+     ],
+     "w": "The autoscaler needs metrics-server and a CPU request to compute a percentage."
+    }
+   ]
+  },
+  {
+   "t": "Networking",
+   "v": [
+    {
+     "q": "How can a Pod in minikube reach a database running on your laptop?",
+     "o": [
+      "Through host.minikube.internal, which resolves to the host",
+      "Through localhost, which maps to the laptop",
+      "Through the Service type ExternalName with no name",
+      "Pods cannot reach processes outside the cluster"
+     ],
+     "w": "Inside the node, localhost is the node itself. host.minikube.internal resolves to your machine, which must listen on a reachable address."
+    },
+    {
+     "q": "What is the host name a Pod can use for services on the laptop?",
+     "o": [
+      "host.minikube.internal",
+      "localhost.localdomain",
+      "minikube.local",
+      "cluster.local"
+     ],
+     "w": "localhost inside a Pod is the Pod itself, so use the name that resolves to the host."
+    }
+   ]
+  },
+  {
+   "t": "Comparison",
+   "v": [
+    {
+     "q": "When is minikube a better choice than kind?",
+     "o": [
+      "For a friendly learning cluster with addons, dashboard and tunnel",
+      "For creating hundreds of disposable clusters per hour in CI",
+      "For running Kubernetes without Docker or any VM driver on Windows",
+      "For production workloads that need high availability"
+     ],
+     "w": "Both are real Kubernetes. kind is lighter and suits CI; minikube gives more built-in conveniences for learning and development."
+    },
+    {
+     "q": "Which need favours kind over minikube?",
+     "o": [
+      "Many disposable clusters in CI",
+      "A dashboard and addons",
+      "A friendly learning setup",
+      "LoadBalancer tunnelling"
+     ],
+     "w": "kind starts quickly as containers and is built for tests and CI."
+    }
+   ]
+  }
+ ]
+}

@@ -1,92 +1,204 @@
 {
  "questions": [
   {
-   "q": "When is a synchronous call a better choice than publishing an event?",
-   "o": [
-    "When the caller needs the answer right now, such as a balance query",
-    "When many services must react to a change later",
-    "When the receiver may be offline for hours",
-    "When the sender should never wait"
-   ],
-   "w": "Events suit work that can happen later and reactions by several parties. A query needing an immediate result is a synchronous call, protected by timeouts.",
-   "s": "Sync vs async"
+   "t": "Sync vs async",
+   "v": [
+    {
+     "q": "When is a synchronous call a better choice than publishing an event?",
+     "o": [
+      "When the caller needs the answer right now, such as a balance query",
+      "When many services must react to a change later",
+      "When the receiver may be offline for hours",
+      "When the sender should never wait"
+     ],
+     "w": "Events suit work that can happen later and reactions by several parties. A query needing an immediate result is a synchronous call, protected by timeouts."
+    },
+    {
+     "q": "Which call is a good fit for events rather than a synchronous request?",
+     "o": [
+      "Notifying other services after an account is opened",
+      "Reading a balance for the screen",
+      "Validating a card during checkout",
+      "Checking login credentials"
+     ],
+     "w": "When several services react later and the caller does not wait, an event decouples them."
+    }
+   ]
   },
   {
-   "q": "What does an API gateway typically do?",
-   "o": [
-    "Routes requests and handles authentication and rate limiting",
-    "Stores all business data for the services",
-    "Replaces every service-to-service call with events",
-    "Runs the business rules of each service"
-   ],
-   "w": "It keeps services private and simpler. Business logic does not belong in the gateway, or it becomes a bottleneck and a new monolith.",
-   "s": "API gateway"
+   "t": "API gateway",
+   "v": [
+    {
+     "q": "What does an API gateway typically do?",
+     "o": [
+      "Routes requests and handles authentication and rate limiting",
+      "Stores all business data for the services",
+      "Replaces every service-to-service call with events",
+      "Runs the business rules of each service"
+     ],
+     "w": "It keeps services private and simpler. Business logic does not belong in the gateway, or it becomes a bottleneck and a new monolith."
+    },
+    {
+     "q": "Which job does an API gateway NOT do?",
+     "o": [
+      "Run the business rules",
+      "Route requests to services",
+      "Authenticate every caller",
+      "Apply rate limits per client"
+     ],
+     "w": "Business logic belongs in the services. The gateway handles edge concerns."
+    }
+   ]
   },
   {
-   "q": "Why use a backend for frontend instead of one generic API?",
-   "o": [
-    "Each client type gets responses shaped for it, owned by its own team",
-    "It removes the need for authentication",
-    "It makes all clients use the same payloads",
-    "It replaces the services behind it"
-   ],
-   "w": "A mobile BFF can return small combined responses while a web BFF returns richer data, without bending the shared services.",
-   "s": "BFF"
+   "t": "BFF",
+   "v": [
+    {
+     "q": "Why use a backend for frontend instead of one generic API?",
+     "o": [
+      "Each client type gets responses shaped for it, owned by its own team",
+      "It removes the need for authentication",
+      "It makes all clients use the same payloads",
+      "It replaces the services behind it"
+     ],
+     "w": "A mobile BFF can return small combined responses while a web BFF returns richer data, without bending the shared services."
+    },
+    {
+     "q": "Which statement about a BFF is NOT true?",
+     "o": [
+      "One BFF must serve every kind of client",
+      "A BFF is shaped for one client type",
+      "A mobile and a web BFF can differ",
+      "It reduces over-fetching"
+     ],
+     "w": "The idea is one backend per experience, such as web and mobile."
+    }
+   ]
   },
   {
-   "q": "Which change to a JSON API is backward compatible?",
-   "o": [
-    "Adding an optional field to a response",
-    "Renaming an existing field",
-    "Changing a number field to a string",
-    "Making an optional request field required"
-   ],
-   "w": "Old callers ignore fields they do not know, provided they are tolerant readers. Removals, renames and type changes break callers.",
-   "s": "Compatibility"
+   "t": "Compatibility",
+   "v": [
+    {
+     "q": "Which change to a JSON API is backward compatible?",
+     "o": [
+      "Adding an optional field to a response",
+      "Renaming an existing field",
+      "Changing a number field to a string",
+      "Making an optional request field required"
+     ],
+     "w": "Old callers ignore fields they do not know, provided they are tolerant readers. Removals, renames and type changes break callers."
+    },
+    {
+     "q": "Which change is NOT backward compatible for existing clients?",
+     "o": [
+      "Removing a field from a response",
+      "Adding an optional response field",
+      "Adding a new endpoint",
+      "Adding an optional request parameter"
+     ],
+     "w": "Clients may rely on a field, so removing it breaks them."
+    }
+   ]
   },
   {
-   "q": "What does a consumer-driven contract test (Pact) give you?",
-   "o": [
-    "The provider's build fails if a change would break what a consumer relies on",
-    "A full end-to-end test of all services at once",
-    "Automatic generation of the provider's business logic",
-    "A replacement for versioning and deprecation"
-   ],
-   "w": "Consumers record their expectations and the provider verifies them in CI, catching breaking changes before release.",
-   "s": "Contract tests"
+   "t": "Contract tests",
+   "v": [
+    {
+     "q": "What does a consumer-driven contract test (Pact) give you?",
+     "o": [
+      "The provider's build fails if a change would break what a consumer relies on",
+      "A full end-to-end test of all services at once",
+      "Automatic generation of the provider's business logic",
+      "A replacement for versioning and deprecation"
+     ],
+     "w": "Consumers record their expectations and the provider verifies them in CI, catching breaking changes before release."
+    },
+    {
+     "q": "Who writes the expectations in a consumer-driven contract test?",
+     "o": [
+      "The consumer",
+      "The provider",
+      "The gateway",
+      "The database team"
+     ],
+     "w": "The consumer records what it needs, and the provider build verifies it."
+    }
+   ]
   },
   {
-   "q": "When would you pick gRPC over REST?",
-   "o": [
-    "For fast internal calls that need a strict typed contract and streaming",
-    "For public APIs that browsers call directly",
-    "When responses must be easy to cache by HTTP caches",
-    "When clients must read payloads in a text editor"
-   ],
-   "w": "gRPC generates typed code from a .proto file and uses compact Protobuf over HTTP/2. REST suits public APIs and browsers.",
-   "s": "gRPC"
+   "t": "gRPC",
+   "v": [
+    {
+     "q": "When would you pick gRPC over REST?",
+     "o": [
+      "For fast internal calls that need a strict typed contract and streaming",
+      "For public APIs that browsers call directly",
+      "When responses must be easy to cache by HTTP caches",
+      "When clients must read payloads in a text editor"
+     ],
+     "w": "gRPC generates typed code from a .proto file and uses compact Protobuf over HTTP/2. REST suits public APIs and browsers."
+    },
+    {
+     "q": "Which feature is a reason to choose gRPC?",
+     "o": [
+      "Streaming with a typed contract",
+      "Direct browser calls",
+      "Easy HTTP caching",
+      "Human-readable payloads"
+     ],
+     "w": "gRPC uses Protocol Buffers over HTTP/2, which suits internal calls and streaming."
+    }
+   ]
   },
   {
-   "q": "What is the standard format for returning HTTP API errors in Spring?",
-   "o": [
-    "Problem Details (RFC 9457) with a type and status",
-    "A plain text message that includes the stack trace",
-    "An HTML error page shown to every client",
-    "A custom XML body that differs for each endpoint"
-   ],
-   "w": "Spring supports it as ProblemDetail. Add a machine-readable code and correlation id, and keep stack traces in the log.",
-   "s": "Errors"
+   "t": "Errors",
+   "v": [
+    {
+     "q": "What is the standard format for returning HTTP API errors in Spring?",
+     "o": [
+      "Problem Details (RFC 9457) with a type and status",
+      "A plain text message that includes the stack trace",
+      "An HTML error page shown to every client",
+      "A custom XML body that differs for each endpoint"
+     ],
+     "w": "Spring supports it as ProblemDetail. Add a machine-readable code and correlation id, and keep stack traces in the log."
+    },
+    {
+     "q": "Which header tells a client an error body uses Problem Details?",
+     "o": [
+      "Content-Type: application/problem+json",
+      "Content-Type: text/plain",
+      "Content-Type: text/html",
+      "Content-Type: application/xml"
+     ],
+     "w": "RFC 9457 defines the problem+json media type."
+    }
+   ]
   },
   {
-   "q": "How does a caller find instances of a service on Kubernetes?",
-   "o": [
-    "Through a Service with a stable DNS name",
-    "By hard-coding the current IP address of each pod",
-    "By asking the API gateway for pod addresses",
-    "By reading the node filesystem for addresses"
-   ],
-   "w": "The platform tracks ready pods behind the Service, so a separate registry is rarely needed.",
-   "s": "Discovery"
+   "t": "Discovery",
+   "v": [
+    {
+     "q": "How does a caller find instances of a service on Kubernetes?",
+     "o": [
+      "Through a Service with a stable DNS name",
+      "By hard-coding the current IP address of each pod",
+      "By asking the API gateway for pod addresses",
+      "By reading the node filesystem for addresses"
+     ],
+     "w": "The platform tracks ready pods behind the Service, so a separate registry is rarely needed."
+    },
+    {
+     "q": "Which Kubernetes object gives a stable name to a set of pods?",
+     "o": [
+      "Service",
+      "Pod",
+      "ConfigMap",
+      "Node"
+     ],
+     "w": "A Service has a stable DNS name and IP and routes to the matching ready pods."
+    }
+   ]
   }
  ]
 }

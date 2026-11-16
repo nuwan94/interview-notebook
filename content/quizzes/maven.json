@@ -1,92 +1,204 @@
 {
  "questions": [
   {
-   "q": "You run mvn package. Which phases does Maven execute?",
-   "o": [
-    "Every phase of the default lifecycle up to and including package",
-    "Only the package phase and nothing before it",
-    "Every phase up to package, then install and deploy as well",
-    "Only the phases whose plugins changed since the last build"
-   ],
-   "w": "Asking for a phase runs all earlier phases in order: compile, test, then package. install and deploy come after package and are not run.",
-   "s": "Lifecycle"
+   "t": "Lifecycle",
+   "v": [
+    {
+     "q": "You run mvn package. Which phases does Maven execute?",
+     "o": [
+      "Every phase of the default lifecycle up to and including package",
+      "Only the package phase and nothing before it",
+      "Every phase up to package, then install and deploy as well",
+      "Only the phases whose plugins changed since the last build"
+     ],
+     "w": "Asking for a phase runs all earlier phases in order: compile, test, then package. install and deploy come after package and are not run."
+    },
+    {
+     "q": "Which phase runs before package in the default lifecycle?",
+     "o": [
+      "test",
+      "install",
+      "deploy",
+      "clean"
+     ],
+     "w": "The default lifecycle runs validate, compile, test, package, verify, install and deploy in order. clean is a separate lifecycle."
+    }
+   ]
   },
   {
-   "q": "What is the difference between a Maven phase and a goal?",
-   "o": [
-    "A goal is a plugin task, and goals are bound to phases to do the work",
-    "A phase is a plugin task, and goals are the stages of the lifecycle",
-    "Phases run in parallel, whereas goals always run one after another",
-    "A goal is a phase that has been renamed in the parent pom"
-   ],
-   "w": "Phases are named steps with no behaviour. Plugin goals such as compiler:compile are attached to them, and a goal can also be run directly.",
-   "s": "Phase and goal"
+   "t": "Phase and goal",
+   "v": [
+    {
+     "q": "What is the difference between a Maven phase and a goal?",
+     "o": [
+      "A goal is a plugin task, and goals are bound to phases to do the work",
+      "A phase is a plugin task, and goals are the stages of the lifecycle",
+      "Phases run in parallel, whereas goals always run one after another",
+      "A goal is a phase that has been renamed in the parent pom"
+     ],
+     "w": "Phases are named steps with no behaviour. Plugin goals such as compiler:compile are attached to them, and a goal can also be run directly."
+    },
+    {
+     "q": "Which statement about Maven goals and phases is NOT true?",
+     "o": [
+      "A phase does the work and a goal only names it",
+      "Goals belong to plugins",
+      "Phases are bound to goals",
+      "You can run a goal directly with mvn plugin:goal"
+     ],
+     "w": "Goals are the tasks that do the work. A phase is a named stage that goals are bound to."
+    }
+   ]
   },
   {
-   "q": "Two libraries need different versions of Jackson. Which version does Maven use by default?",
-   "o": [
-    "The one nearest to your project in the dependency tree",
-    "The highest version number found anywhere in the tree",
-    "The lowest version number found anywhere in the tree",
-    "Neither, and the build fails with a version conflict"
-   ],
-   "w": "Maven uses nearest definition, and the first declared on a tie. It is not the newest, so an older version can win. Manage the version to be sure.",
-   "s": "Conflicts"
+   "t": "Conflicts",
+   "v": [
+    {
+     "q": "Two libraries need different versions of Jackson. Which version does Maven use by default?",
+     "o": [
+      "The one nearest to your project in the dependency tree",
+      "The highest version number found anywhere in the tree",
+      "The lowest version number found anywhere in the tree",
+      "Neither, and the build fails with a version conflict"
+     ],
+     "w": "Maven uses nearest definition, and the first declared on a tie. It is not the newest, so an older version can win. Manage the version to be sure."
+    },
+    {
+     "q": "Your pom declares jackson 2.15 directly, and a library needs 2.12. Which does Maven use?",
+     "o": [
+      "2.15, the nearest declaration",
+      "2.12, the lowest version",
+      "Both versions together",
+      "Neither, the build fails"
+     ],
+     "w": "Nearest wins, and a direct declaration is always the nearest."
+    }
+   ]
   },
   {
-   "q": "What does dependencyManagement do?",
-   "o": [
-    "Sets the version and scope to use when an artifact is needed, adding nothing itself",
-    "Adds every listed library to the classpath of the project",
-    "Removes the transitive dependencies of the listed libraries",
-    "Downloads the listed libraries ahead of the next build"
-   ],
-   "w": "It only declares versions. A dependency still has to be listed in dependencies, but it can then omit the version. A BOM is a pom made of this section.",
-   "s": "Version management"
+   "t": "Version management",
+   "v": [
+    {
+     "q": "What does dependencyManagement do?",
+     "o": [
+      "Sets the version and scope to use when an artifact is needed, adding nothing itself",
+      "Adds every listed library to the classpath of the project",
+      "Removes the transitive dependencies of the listed libraries",
+      "Downloads the listed libraries ahead of the next build"
+     ],
+     "w": "It only declares versions. A dependency still has to be listed in dependencies, but it can then omit the version. A BOM is a pom made of this section."
+    },
+    {
+     "q": "Which statement about dependencyManagement is NOT true?",
+     "o": [
+      "It adds the library to every module",
+      "It centralises versions",
+      "A child module still lists the dependency",
+      "It can import a BOM"
+     ],
+     "w": "It only sets versions and scopes. A module must still declare the dependency to use it."
+    }
+   ]
   },
   {
-   "q": "Which scope suits a JDBC driver that the code never compiles against?",
-   "o": [
-    "runtime, because it is needed to run but not to compile",
-    "provided, because the application server always supplies it",
-    "test, because only the integration tests connect to it",
-    "compile, because every library must be on the compile classpath"
-   ],
-   "w": "runtime puts the driver on the runtime and test classpaths but not the compile classpath, and it is packaged with the application.",
-   "s": "Scopes"
+   "t": "Scopes",
+   "v": [
+    {
+     "q": "Which scope suits a JDBC driver that the code never compiles against?",
+     "o": [
+      "runtime, because it is needed to run but not to compile",
+      "provided, because the application server always supplies it",
+      "test, because only the integration tests connect to it",
+      "compile, because every library must be on the compile classpath"
+     ],
+     "w": "runtime puts the driver on the runtime and test classpaths but not the compile classpath, and it is packaged with the application."
+    },
+    {
+     "q": "Which scope fits a servlet API that the application server provides?",
+     "o": [
+      "provided",
+      "runtime",
+      "test",
+      "compile"
+     ],
+     "w": "provided means needed to compile but supplied at run time by the container, so it is not packaged."
+    }
+   ]
   },
   {
-   "q": "In a multi-module build, what decides the order in which modules are built?",
-   "o": [
-    "The dependencies between the modules, worked out by the reactor",
-    "The order the modules are listed in the parent pom",
-    "The alphabetical order of the module directory names",
-    "The size of each module, with the smallest built first"
-   ],
-   "w": "The reactor sorts modules by their inter-module dependencies, whatever the list order. Circular dependencies cause an error.",
-   "s": "Reactor"
+   "t": "Reactor",
+   "v": [
+    {
+     "q": "In a multi-module build, what decides the order in which modules are built?",
+     "o": [
+      "The dependencies between the modules, worked out by the reactor",
+      "The order the modules are listed in the parent pom",
+      "The alphabetical order of the module directory names",
+      "The size of each module, with the smallest built first"
+     ],
+     "w": "The reactor sorts modules by their inter-module dependencies, whatever the list order. Circular dependencies cause an error."
+    },
+    {
+     "q": "Which option builds only the module app and the modules it depends on?",
+     "o": [
+      "mvn -pl app -am package",
+      "mvn -T 4 package",
+      "mvn -o package",
+      "mvn -q package"
+     ],
+     "w": "The -pl flag selects a module and -am adds the modules it needs."
+    }
+   ]
   },
   {
-   "q": "What does mvn install do that mvn package does not?",
-   "o": [
-    "Copies the artifact into the local repository in ~/.m2",
-    "Uploads the artifact to the company Nexus server",
-    "Runs the integration tests that package skips",
-    "Deletes the target directory before it builds"
-   ],
-   "w": "install is the phase after verify. It copies the jar into ~/.m2 so other local projects can use it. Uploading to a remote repository is deploy.",
-   "s": "install"
+   "t": "install",
+   "v": [
+    {
+     "q": "What does mvn install do that mvn package does not?",
+     "o": [
+      "Copies the artifact into the local repository in ~/.m2",
+      "Uploads the artifact to the company Nexus server",
+      "Runs the integration tests that package skips",
+      "Deletes the target directory before it builds"
+     ],
+     "w": "install is the phase after verify. It copies the jar into ~/.m2 so other local projects can use it. Uploading to a remote repository is deploy."
+    },
+    {
+     "q": "Which command copies the artifact to ~/.m2 so other local projects can use it?",
+     "o": [
+      "mvn install",
+      "mvn package",
+      "mvn compile",
+      "mvn verify"
+     ],
+     "w": "package stops in target. install also puts the artifact in the local repository."
+    }
+   ]
   },
   {
-   "q": "Why would you use the Maven Wrapper (mvnw)?",
-   "o": [
-    "Everyone and the CI server run the same Maven version without installing it",
-    "It makes the compiler faster by keeping the JVM running between builds",
-    "It lets a project be built without a pom.xml file",
-    "It replaces the local repository with a shared cache"
-   ],
-   "w": "The wrapper downloads the Maven version recorded in .mvn/wrapper, which removes differences between machines.",
-   "s": "Wrapper"
+   "t": "Wrapper",
+   "v": [
+    {
+     "q": "Why would you use the Maven Wrapper (mvnw)?",
+     "o": [
+      "Everyone and the CI server run the same Maven version without installing it",
+      "It makes the compiler faster by keeping the JVM running between builds",
+      "It lets a project be built without a pom.xml file",
+      "It replaces the local repository with a shared cache"
+     ],
+     "w": "The wrapper downloads the Maven version recorded in .mvn/wrapper, which removes differences between machines."
+    },
+    {
+     "q": "Which file records the Maven version that the wrapper downloads?",
+     "o": [
+      "maven-wrapper.properties",
+      "pom.xml in the root",
+      "settings.xml in ~/.m2",
+      "mvnw.cmd in the root"
+     ],
+     "w": "The properties file holds the distribution URL. Commit it so every machine uses the same version."
+    }
+   ]
   }
  ]
 }

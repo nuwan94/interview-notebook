@@ -1,52 +1,212 @@
 {
-  "questions": [
+ "questions": [
+  {
+   "t": "",
+   "v": [
     {
-      "q": "What is type erasure?",
-      "o": ["The compiler checks generic types and removes them, so they are absent at run time", "The JVM deletes unused generic classes from memory when needed", "Generic types are replaced by arrays after class loading", "A runtime check that rejects objects of the wrong generic type"],
-      "w": "At run time `List<String>` and `List<Integer>` are both `List`. Casts are inserted by the compiler where needed.",
-      "s": 25
+     "q": "What is type erasure?",
+     "o": [
+      "The compiler checks generic types and removes them, so they are absent at run time",
+      "The JVM deletes unused generic classes from memory when needed",
+      "Generic types are replaced by arrays after class loading",
+      "A runtime check that rejects objects of the wrong generic type"
+     ],
+     "w": "At run time `List<String>` and `List<Integer>` are both `List`. Casts are inserted by the compiler where needed.",
+     "s": 25
     },
     {
-      "q": "Why does `List<Number> nums = new ArrayList<Integer>();` not compile?",
-      "o": ["Generics are invariant: `List<Integer>` is not a `List<Number>`", "`Integer` is not a subclass of `Number` in Java", "`ArrayList` cannot hold boxed numbers at all", "The diamond operator is missing from the right side"],
-      "w": "Otherwise you could add a `Double` through the `List<Number>` view and corrupt the list of Integers.",
-      "s": 30
-    },
-    {
-      "q": "A method only reads numbers from a collection. Which parameter type is the most flexible?",
-      "o": ["`Collection<? extends Number>`", "`Collection<Number>`", "`Collection<? super Number>`", "`Collection<Object>`"],
-      "w": "PECS: Producer Extends. The collection produces values, so `extends` accepts `List<Integer>`, `List<Double>` and more.",
-      "s": 30
-    },
-    {
-      "q": "A method only adds `Integer` values into a collection passed by the caller. Which parameter type fits?",
-      "o": ["`Collection<? super Integer>`", "`Collection<? extends Integer>`", "`Collection<?>`", "`Collection<int>`"],
-      "w": "Consumer Super. A `List<Number>` or `List<Object>` can safely accept Integers, and primitives cannot be type arguments.",
-      "s": 30
-    },
-    {
-      "q": "Which statement does NOT compile because of erasure?",
-      "o": ["`T item = new T();`", "`List<String> names = new ArrayList<>();`", "`T item = clazz.cast(obj);`", "`static <T> T first(List<T> xs)`"],
-      "w": "`T` is unknown at run time. Pass a `Class<T>` or a `Supplier<T>` instead.",
-      "s": 25
-    },
-    {
-      "q": "What happens with `Object[] a = new String[1]; a[0] = 42;`?",
-      "o": ["It compiles and throws `ArrayStoreException` at run time", "It fails to compile because of a type mismatch", "It compiles and silently stores the number", "It compiles and converts 42 to the string \"42\""],
-      "w": "Arrays are covariant and reified. Generic collections are invariant and checked at compile time instead.",
-      "s": 30
-    },
-    {
-      "q": "Why is `<T extends Comparable<T>> T max(T a, T b)` needed instead of `<T> T max(T a, T b)`?",
-      "o": ["The bound lets the method call `compareTo` on `T`", "Unbounded type parameters cannot be used in methods", "The bound makes the method faster at run time", "Without the bound the method would not be generic"],
-      "w": "An unbounded `T` is only known to be an `Object`. A bound tells the compiler which methods are available.",
-      "s": 30
-    },
-    {
-      "q": "Why can't you write `new List<String>[10]`?",
-      "o": ["Arrays need run-time element types, which erasure removes for `List<String>`", "Arrays of lists are forbidden in all Java versions", "`List` is an interface and interfaces cannot be array elements", "The array size must be a constant known at compile time"],
-      "w": "Allowing it would let a `List<Integer>` into the array unchecked. Use `List<List<String>>` instead.",
-      "s": 35
+     "q": "Which statement about type erasure is NOT true?",
+     "o": [
+      "They are different run-time classes",
+      "The compiler checks generics",
+      "Type arguments are removed in the bytecode",
+      "The compiler inserts casts"
+     ],
+     "w": "After erasure both are just List, which is why instanceof List<String> is not allowed."
     }
-  ]
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Why does `List<Number> nums = new ArrayList<Integer>();` not compile?",
+     "o": [
+      "Generics are invariant: `List<Integer>` is not a `List<Number>`",
+      "`Integer` is not a subclass of `Number` in Java",
+      "`ArrayList` cannot hold boxed numbers at all",
+      "The diamond operator is missing from the right side"
+     ],
+     "w": "Otherwise you could add a `Double` through the `List<Number>` view and corrupt the list of Integers.",
+     "s": 30
+    },
+    {
+     "q": "Which assignment compiles?",
+     "o": [
+      "List<? extends Number> n = new ArrayList<Integer>();",
+      "List<Number> n = new ArrayList<Integer>();",
+      "List<Integer> n = new ArrayList<Number>();",
+      "List<Object> n = new ArrayList<String>();"
+     ],
+     "w": "Generics are invariant, but a wildcard with extends accepts any subtype."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A method only reads numbers from a collection. Which parameter type is the most flexible?",
+     "o": [
+      "`Collection<? extends Number>`",
+      "`Collection<Number>`",
+      "`Collection<? super Number>`",
+      "`Collection<Object>`"
+     ],
+     "w": "PECS: Producer Extends. The collection produces values, so `extends` accepts `List<Integer>`, `List<Double>` and more.",
+     "s": 30
+    },
+    {
+     "q": "A method only reads values out of a list. What does PECS tell you to use?",
+     "o": [
+      "? extends T",
+      "? super T",
+      "Object",
+      "Class<T>"
+     ],
+     "w": "Producer extends, consumer super. A source you read from is a producer."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A method only adds `Integer` values into a collection passed by the caller. Which parameter type fits?",
+     "o": [
+      "`Collection<? super Integer>`",
+      "`Collection<? extends Integer>`",
+      "`Collection<?>`",
+      "`Collection<int>`"
+     ],
+     "w": "Consumer Super. A `List<Number>` or `List<Object>` can safely accept Integers, and primitives cannot be type arguments.",
+     "s": 30
+    },
+    {
+     "q": "Which operation is NOT allowed on a List<? extends Number>?",
+     "o": [
+      "Adding an Integer",
+      "Reading a Number",
+      "Calling size()",
+      "Iterating"
+     ],
+     "w": "The compiler cannot know the exact element type, so only null can be added."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which statement does NOT compile because of erasure?",
+     "o": [
+      "`T item = new T();`",
+      "`List<String> names = new ArrayList<>();`",
+      "`T item = clazz.cast(obj);`",
+      "`static <T> T first(List<T> xs)`"
+     ],
+     "w": "`T` is unknown at run time. Pass a `Class<T>` or a `Supplier<T>` instead.",
+     "s": 25
+    },
+    {
+     "q": "Which statement is NOT possible because of erasure?",
+     "o": [
+      "if (obj instanceof List<String>)",
+      "if (obj instanceof List<?>)",
+      "if (obj instanceof List)",
+      "Class<?> c = obj.getClass()"
+     ],
+     "w": "The type argument does not exist at run time, so only the raw or wildcard form can be tested."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What happens with `Object[] a = new String[1]; a[0] = 42;`?",
+     "o": [
+      "It compiles and throws `ArrayStoreException` at run time",
+      "It fails to compile because of a type mismatch",
+      "It compiles and silently stores the number",
+      "It compiles and converts 42 to the string \"42\""
+     ],
+     "w": "Arrays are covariant and reified. Generic collections are invariant and checked at compile time instead.",
+     "s": 30
+    },
+    {
+     "q": "Which array use is NOT type-safe at compile time but fails at run time?",
+     "o": [
+      "Object[] a = new String[1]; a[0] = 42;",
+      "Number[] a = new Integer[1]; a[0] = 1;",
+      "String[] a = new String[1]; a[0] = \"x\";",
+      "int[] a = new int[1]; a[0] = 1;"
+     ],
+     "w": "Arrays are covariant, so the store compiles and throws ArrayStoreException. Generics avoid this."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Why is `<T extends Comparable<T>> T max(T a, T b)` needed instead of `<T> T max(T a, T b)`?",
+     "o": [
+      "The bound lets the method call `compareTo` on `T`",
+      "Unbounded type parameters cannot be used in methods",
+      "The bound makes the method faster at run time",
+      "Without the bound the method would not be generic"
+     ],
+     "w": "An unbounded `T` is only known to be an `Object`. A bound tells the compiler which methods are available.",
+     "s": 30
+    },
+    {
+     "q": "What does the bound in <T extends Comparable<T>> let you do?",
+     "o": [
+      "Call compareTo on T",
+      "Create instances of T",
+      "Use T with primitives",
+      "Avoid casts at run time"
+     ],
+     "w": "The bound gives the compiler the methods T has. Without it T is treated as Object."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Why can't you write `new List<String>[10]`?",
+     "o": [
+      "Arrays need run-time element types, which erasure removes for `List<String>`",
+      "Arrays of lists are forbidden in all Java versions",
+      "`List` is an interface and interfaces cannot be array elements",
+      "The array size must be a constant known at compile time"
+     ],
+     "w": "Allowing it would let a `List<Integer>` into the array unchecked. Use `List<List<String>>` instead.",
+     "s": 35
+    },
+    {
+     "q": "Which workaround creates an array of a generic type?",
+     "o": [
+      "Array.newInstance(clazz, size)",
+      "new T[size]",
+      "new List<String>[size]",
+      "T.class.getArray()"
+     ],
+     "w": "A Class token carries the type at run time. Otherwise create a List<T> instead of an array."
+    }
+   ]
+  }
+ ]
 }

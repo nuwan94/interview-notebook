@@ -1,52 +1,212 @@
 {
-  "questions": [
+ "questions": [
+  {
+   "t": "",
+   "v": [
     {
-      "q": "What does a Deployment give you that a bare Pod does not?",
-      "o": ["Replacement of failed pods, rolling updates and rollbacks", "A permanent IP address that never changes for the pod", "Direct access to the node's physical disks", "Automatic encryption of all traffic between pods"],
-      "w": "A Deployment manages ReplicaSets that keep the desired number of pods running. A bare pod is not recreated if its node fails.",
-      "s": 25
+     "q": "What does a Deployment give you that a bare Pod does not?",
+     "o": [
+      "Replacement of failed pods, rolling updates and rollbacks",
+      "A permanent IP address that never changes for the pod",
+      "Direct access to the node's physical disks",
+      "Automatic encryption of all traffic between pods"
+     ],
+     "w": "A Deployment manages ReplicaSets that keep the desired number of pods running. A bare pod is not recreated if its node fails.",
+     "s": 25
     },
     {
-      "q": "Why do clients call a Service instead of a pod IP?",
-      "o": ["Pod IPs change on replacement, while the Service has a stable name and IP", "Pods cannot receive requests directly from other pods", "A Service makes each pod run faster than before", "Pod IPs are only valid inside the same node"],
-      "w": "The Service load-balances across ready pods that match its label selector and has a DNS name such as `payments.bank.svc.cluster.local`.",
-      "s": 30
-    },
-    {
-      "q": "Which probe failure removes a pod from the Service without restarting it?",
-      "o": ["Readiness", "Liveness", "Startup", "Rollout"],
-      "w": "A failing liveness probe restarts the container. A failing readiness probe only stops traffic until it passes again.",
-      "s": 25
-    },
-    {
-      "q": "A database outage restarts every pod of a service. What is the probable mistake?",
-      "o": ["The liveness probe checks the database instead of only the app itself", "The readiness probe is missing from the pod specification", "The Service has too many replicas behind it", "The image tag was set to a fixed version number"],
-      "w": "Keep dependency checks in readiness. Liveness should answer only whether this process is stuck.",
-      "s": 35
-    },
-    {
-      "q": "A JVM takes 45 seconds to start and the liveness probe starts failing at 30 seconds, killing the pod repeatedly. What is the best fix?",
-      "o": ["Add a startup probe that allows enough time before liveness begins", "Remove all probes so Kubernetes stops checking the pod", "Lower the memory limit so the JVM starts quicker", "Give the pod more replicas so some can finish starting"],
-      "w": "A startup probe holds back liveness and readiness until it succeeds, protecting slow starts without loosening liveness.",
-      "s": 35
-    },
-    {
-      "q": "What happens when a container exceeds its memory limit and when it exceeds its CPU limit?",
-      "o": ["Memory: it is OOMKilled. CPU: it is throttled", "Memory: it is throttled. CPU: it is OOMKilled", "Both: the pod is moved to a larger node", "Both: the limit is ignored until the next deployment"],
-      "w": "CPU is compressible, so the container only gets slower. Memory is not, so the kernel kills the process (exit code 137).",
-      "s": 30
-    },
-    {
-      "q": "A rolling update has `maxUnavailable: 0` and `maxSurge: 1`. What does that mean?",
-      "o": ["A new pod starts first and must be ready before an old one is stopped", "Old pods are stopped first and new ones start afterwards", "All pods are replaced at the same instant for speed", "Only one pod is ever allowed to be running at a time"],
-      "w": "Capacity never drops, provided readiness probes are correct and the app shuts down gracefully.",
-      "s": 30
-    },
-    {
-      "q": "What is true about a Kubernetes Secret by default?",
-      "o": ["It is only base64-encoded, so access must be restricted with RBAC", "It is encrypted with a key that only the pod can read", "It is hashed so the original value can never be recovered", "It is stored outside the cluster in a separate vault"],
-      "w": "Enable encryption at rest for etcd, limit who can read Secrets, and prefer an external secret manager for sensitive credentials.",
-      "s": 30
+     "q": "Which feature does a bare Pod NOT give you?",
+     "o": [
+      "Replacement after failure",
+      "Running a container",
+      "Getting a pod IP",
+      "Mounting a volume"
+     ],
+     "w": "A bare Pod is not replaced if it dies. A Deployment (through a ReplicaSet) restores it."
     }
-  ]
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Why do clients call a Service instead of a pod IP?",
+     "o": [
+      "Pod IPs change on replacement, while the Service has a stable name and IP",
+      "Pods cannot receive requests directly from other pods",
+      "A Service makes each pod run faster than before",
+      "Pod IPs are only valid inside the same node"
+     ],
+     "w": "The Service load-balances across ready pods that match its label selector and has a DNS name such as `payments.bank.svc.cluster.local`.",
+     "s": 30
+    },
+    {
+     "q": "Why does a ClusterIP Service keep working when pods are replaced?",
+     "o": [
+      "It selects pods by label and has a stable IP",
+      "It stores every pod IP forever",
+      "It restarts the client",
+      "It copies the pod disk"
+     ],
+     "w": "The Service gives a stable address and routes to the current ready pods that match its selector."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which probe failure removes a pod from the Service without restarting it?",
+     "o": [
+      "Readiness",
+      "Liveness",
+      "Startup",
+      "Rollout"
+     ],
+     "w": "A failing liveness probe restarts the container. A failing readiness probe only stops traffic until it passes again.",
+     "s": 25
+    },
+    {
+     "q": "Which probe tells Kubernetes the pod may receive traffic?",
+     "o": [
+      "Readiness",
+      "Liveness",
+      "Startup",
+      "Rollout"
+     ],
+     "w": "Readiness controls membership in the Service endpoints. Liveness restarts the container."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A database outage restarts every pod of a service. What is the probable mistake?",
+     "o": [
+      "The liveness probe checks the database instead of only the app itself",
+      "The readiness probe is missing from the pod specification",
+      "The Service has too many replicas behind it",
+      "The image tag was set to a fixed version number"
+     ],
+     "w": "Keep dependency checks in readiness. Liveness should answer only whether this process is stuck.",
+     "s": 35
+    },
+    {
+     "q": "Which failure should a liveness probe NOT depend on?",
+     "o": [
+      "The database being reachable",
+      "The app event loop responding",
+      "A local health endpoint",
+      "The JVM being alive"
+     ],
+     "w": "A dependency outage would restart healthy pods. Keep liveness about the process itself."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A JVM takes 45 seconds to start and the liveness probe starts failing at 30 seconds, killing the pod repeatedly. What is the best fix?",
+     "o": [
+      "Add a startup probe that allows enough time before liveness begins",
+      "Remove all probes so Kubernetes stops checking the pod",
+      "Lower the memory limit so the JVM starts quicker",
+      "Give the pod more replicas so some can finish starting"
+     ],
+     "w": "A startup probe holds back liveness and readiness until it succeeds, protecting slow starts without loosening liveness.",
+     "s": 35
+    },
+    {
+     "q": "Which probe holds off liveness checks until a slow JVM has started?",
+     "o": [
+      "Startup probe",
+      "Readiness probe",
+      "Rollout probe",
+      "DNS probe"
+     ],
+     "w": "The startup probe disables liveness and readiness until it succeeds, so slow starters are not killed."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What happens when a container exceeds its memory limit and when it exceeds its CPU limit?",
+     "o": [
+      "Memory: it is OOMKilled. CPU: it is throttled",
+      "Memory: it is throttled. CPU: it is OOMKilled",
+      "Both: the pod is moved to a larger node",
+      "Both: the limit is ignored until the next deployment"
+     ],
+     "w": "CPU is compressible, so the container only gets slower. Memory is not, so the kernel kills the process (exit code 137).",
+     "s": 30
+    },
+    {
+     "q": "What does Kubernetes do when a container exceeds its CPU limit?",
+     "o": [
+      "Throttles it",
+      "OOMKills it",
+      "Moves it to another node",
+      "Deletes the pod"
+     ],
+     "w": "CPU is compressible, so the process is slowed. Memory is not, so exceeding it ends in an OOMKill."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A rolling update has `maxUnavailable: 0` and `maxSurge: 1`. What does that mean?",
+     "o": [
+      "A new pod starts first and must be ready before an old one is stopped",
+      "Old pods are stopped first and new ones start afterwards",
+      "All pods are replaced at the same instant for speed",
+      "Only one pod is ever allowed to be running at a time"
+     ],
+     "w": "Capacity never drops, provided readiness probes are correct and the app shuts down gracefully.",
+     "s": 30
+    },
+    {
+     "q": "Which rolling update setting never lowers the number of ready pods?",
+     "o": [
+      "maxUnavailable: 0",
+      "maxSurge: 0 and maxUnavailable: 1",
+      "Recreate strategy",
+      "replicas: 0"
+     ],
+     "w": "With maxUnavailable 0 the controller starts a new pod and waits for readiness before stopping an old one."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is true about a Kubernetes Secret by default?",
+     "o": [
+      "It is only base64-encoded, so access must be restricted with RBAC",
+      "It is encrypted with a key that only the pod can read",
+      "It is hashed so the original value can never be recovered",
+      "It is stored outside the cluster in a separate vault"
+     ],
+     "w": "Enable encryption at rest for etcd, limit who can read Secrets, and prefer an external secret manager for sensitive credentials.",
+     "s": 30
+    },
+    {
+     "q": "Which statement about Kubernetes Secrets is NOT true?",
+     "o": [
+      "They are encrypted by default in etcd",
+      "Values are base64-encoded",
+      "RBAC should restrict access",
+      "Encryption at rest must be enabled separately"
+     ],
+     "w": "By default a Secret is stored in etcd as base64, which is encoding and not encryption."
+    }
+   ]
+  }
+ ]
 }

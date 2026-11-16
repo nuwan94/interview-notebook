@@ -1,92 +1,204 @@
 {
  "questions": [
   {
-   "q": "A downstream service becomes slow but does not fail. Why is this worse than it being down?",
-   "o": [
-    "Callers wait and hold threads, so the slowness cascades up the chain",
-    "Slow services always return wrong data",
-    "A slow service cannot be retried or monitored",
-    "Slowness only affects the first caller"
-   ],
-   "w": "A failing service fails fast. A slow one ties up threads and connections in every caller, which become slow in turn.",
-   "s": "Cascading failure"
+   "t": "Cascading failure",
+   "v": [
+    {
+     "q": "A downstream service becomes slow but does not fail. Why is this worse than it being down?",
+     "o": [
+      "Callers wait and hold threads, so the slowness cascades up the chain",
+      "Slow services always return wrong data",
+      "A slow service cannot be retried or monitored",
+      "Slowness only affects the first caller"
+     ],
+     "w": "A failing service fails fast. A slow one ties up threads and connections in every caller, which become slow in turn."
+    },
+    {
+     "q": "Which situation is a cascading failure?",
+     "o": [
+      "A slow call ties up caller threads",
+      "A service restarts once",
+      "A log line is missing",
+      "One request returns 404"
+     ],
+     "w": "Waiting callers use up threads, so the slowness spreads up the chain of services."
+    }
+   ]
   },
   {
-   "q": "Three layers each retry a failing call three times. How many calls can one request create?",
-   "o": [
-    "Up to 27 calls, a retry storm",
-    "Exactly 3 calls",
-    "9 calls, because retries are not multiplied",
-    "Only 1 call, because retries are merged"
-   ],
-   "w": "Retries multiply across layers. Retry at one layer, cap attempts, add backoff and jitter and a retry budget.",
-   "s": "Retry storm"
+   "t": "Retry storm",
+   "v": [
+    {
+     "q": "Three layers each retry a failing call three times. How many calls can one request create?",
+     "o": [
+      "Up to 27 calls, a retry storm",
+      "Exactly 3 calls",
+      "9 calls, because retries are not multiplied",
+      "Only 1 call, because retries are merged"
+     ],
+     "w": "Retries multiply across layers. Retry at one layer, cap attempts, add backoff and jitter and a retry budget."
+    },
+    {
+     "q": "Two layers each retry a failing call twice. How many calls can one request become at the bottom?",
+     "o": [
+      "Up to 9",
+      "Exactly 2",
+      "Exactly 4",
+      "Only 1"
+     ],
+     "w": "Each of three attempts on the first layer triggers three on the next, so retries multiply instead of adding."
+    }
+   ]
   },
   {
-   "q": "Which requests are safe to retry automatically?",
-   "o": [
-    "Idempotent calls that failed with a transient error such as a timeout or 503",
-    "Every call that returned a 400 or 404 error",
-    "Payment POST requests without an idempotency key",
-    "Only calls that succeeded on the first attempt"
-   ],
-   "w": "Retrying a non-idempotent call can charge twice, and client errors will simply fail again.",
-   "s": "Safe retries"
+   "t": "Safe retries",
+   "v": [
+    {
+     "q": "Which requests are safe to retry automatically?",
+     "o": [
+      "Idempotent calls that failed with a transient error such as a timeout or 503",
+      "Every call that returned a 400 or 404 error",
+      "Payment POST requests without an idempotency key",
+      "Only calls that succeeded on the first attempt"
+     ],
+     "w": "Retrying a non-idempotent call can charge twice, and client errors will simply fail again."
+    },
+    {
+     "q": "Which request is NOT safe to retry automatically?",
+     "o": [
+      "A payment POST with no idempotency key",
+      "A GET that timed out",
+      "A PUT that returned 503",
+      "A DELETE that timed out"
+     ],
+     "w": "The first attempt may have worked, so a retry can charge twice unless the server can recognise it."
+    }
+   ]
   },
   {
-   "q": "What happens in the open state of a circuit breaker?",
-   "o": [
-    "Calls fail immediately or use a fallback for a wait time",
-    "All calls pass through while failures are counted",
-    "A few trial calls are sent to test recovery",
-    "The dependency is restarted by the breaker"
-   ],
-   "w": "Open protects the caller and gives the sick service quiet to recover. After the wait the breaker becomes half-open and probes.",
-   "s": "Circuit breaker"
+   "t": "Circuit breaker",
+   "v": [
+    {
+     "q": "What happens in the open state of a circuit breaker?",
+     "o": [
+      "Calls fail immediately or use a fallback for a wait time",
+      "All calls pass through while failures are counted",
+      "A few trial calls are sent to test recovery",
+      "The dependency is restarted by the breaker"
+     ],
+     "w": "Open protects the caller and gives the sick service quiet to recover. After the wait the breaker becomes half-open and probes."
+    },
+    {
+     "q": "Which circuit breaker state counts failures while letting calls through?",
+     "o": [
+      "Closed",
+      "Open",
+      "Half-open",
+      "Disabled"
+     ],
+     "w": "Closed is the normal state. It opens when the failure rate passes a threshold."
+    }
+   ]
   },
   {
-   "q": "What problem does a bulkhead solve?",
-   "o": [
-    "One slow dependency using all threads and starving other calls",
-    "Duplicate messages delivered by a broker",
-    "Expired tokens at the gateway",
-    "Stale entries in a service registry"
-   ],
-   "w": "Each dependency gets its own limited pool or concurrency cap, so excess calls are rejected quickly and other work continues.",
-   "s": "Bulkhead"
+   "t": "Bulkhead",
+   "v": [
+    {
+     "q": "What problem does a bulkhead solve?",
+     "o": [
+      "One slow dependency using all threads and starving other calls",
+      "Duplicate messages delivered by a broker",
+      "Expired tokens at the gateway",
+      "Stale entries in a service registry"
+     ],
+     "w": "Each dependency gets its own limited pool or concurrency cap, so excess calls are rejected quickly and other work continues."
+    },
+    {
+     "q": "Which pool design best isolates a slow dependency?",
+     "o": [
+      "A separate thread pool per dependency",
+      "One shared pool for every call",
+      "A bigger shared pool",
+      "No timeout on calls"
+     ],
+     "w": "A bulkhead gives each dependency its own limit, so one cannot take all the threads."
+    }
+   ]
   },
   {
-   "q": "What is the main purpose of jitter in a retry policy?",
-   "o": [
-    "Spread retries out so clients do not all retry at the same moment",
-    "Make each retry wait exactly the same time",
-    "Increase the number of retry attempts",
-    "Hide the failure from the circuit breaker"
-   ],
-   "w": "Random variation added to the backoff prevents waves of simultaneous retries, a thundering herd, against a recovering service.",
-   "s": "Jitter"
+   "t": "Jitter",
+   "v": [
+    {
+     "q": "What is the main purpose of jitter in a retry policy?",
+     "o": [
+      "Spread retries out so clients do not all retry at the same moment",
+      "Make each retry wait exactly the same time",
+      "Increase the number of retry attempts",
+      "Hide the failure from the circuit breaker"
+     ],
+     "w": "Random variation added to the backoff prevents waves of simultaneous retries, a thundering herd, against a recovering service."
+    },
+    {
+     "q": "Which retry delay pattern avoids clients retrying together?",
+     "o": [
+      "Backoff with jitter",
+      "A fixed delay",
+      "No delay",
+      "A delay equal to the timeout"
+     ],
+     "w": "Random spread stops thousands of clients from retrying at the same instant."
+    }
+   ]
   },
   {
-   "q": "A service is overloaded by a traffic spike. What is the better response?",
-   "o": [
-    "Reject excess low-priority requests early with 429 or 503",
-    "Queue every request with no limit so none are lost",
-    "Increase client timeouts so requests can wait longer",
-    "Retry every rejected request immediately"
-   ],
-   "w": "Unbounded queues hide overload until every request is too old to matter. Shedding keeps accepted requests fast.",
-   "s": "Load shedding"
+   "t": "Load shedding",
+   "v": [
+    {
+     "q": "A service is overloaded by a traffic spike. What is the better response?",
+     "o": [
+      "Reject excess low-priority requests early with 429 or 503",
+      "Queue every request with no limit so none are lost",
+      "Increase client timeouts so requests can wait longer",
+      "Retry every rejected request immediately"
+     ],
+     "w": "Unbounded queues hide overload until every request is too old to matter. Shedding keeps accepted requests fast."
+    },
+    {
+     "q": "Which response is NOT good load shedding?",
+     "o": [
+      "Accept and queue everything without limit",
+      "Reject low-priority work early",
+      "Return 429 with Retry-After",
+      "Protect critical requests first"
+     ],
+     "w": "An unbounded queue turns overload into long delays and memory exhaustion."
+    }
+   ]
   },
   {
-   "q": "Why should a liveness probe not check the database?",
-   "o": [
-    "A database outage would restart every healthy instance and make things worse",
-    "Databases cannot answer health queries",
-    "Liveness probes run only once at startup",
-    "It would hide the failure from the readiness probe"
-   ],
-   "w": "Liveness is about whether this process is stuck. Dependencies belong in readiness, which only removes the pod from traffic.",
-   "s": "Probes"
+   "t": "Probes",
+   "v": [
+    {
+     "q": "Why should a liveness probe not check the database?",
+     "o": [
+      "A database outage would restart every healthy instance and make things worse",
+      "Databases cannot answer health queries",
+      "Liveness probes run only once at startup",
+      "It would hide the failure from the readiness probe"
+     ],
+     "w": "Liveness is about whether this process is stuck. Dependencies belong in readiness, which only removes the pod from traffic."
+    },
+    {
+     "q": "Which check belongs in a readiness probe, not in a liveness probe?",
+     "o": [
+      "Can the service reach the database?",
+      "Is the process responding?",
+      "Is the JVM alive?",
+      "Is the event loop running?"
+     ],
+     "w": "An unready pod is only removed from traffic. A failing liveness probe restarts it, which would not fix a database outage."
+    }
+   ]
   }
  ]
 }

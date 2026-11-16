@@ -1,92 +1,212 @@
 {
-  "questions": [
+ "questions": [
+  {
+   "t": "",
+   "v": [
     {
-      "q": "How does Spring Security apply its protections to web requests?",
-      "o": [
-        "A chain of servlet filters that runs before the controller",
-        "Rewriting the bytecode of controllers",
-        "Editing the database schema at startup",
-        "Asking for a password on every single call"
-      ],
-      "w": "`DelegatingFilterProxy` hands each request to the `SecurityFilterChain`. Filters handle authentication, CSRF, headers and authorization.",
-      "s": 25
+     "q": "How does Spring Security apply its protections to web requests?",
+     "o": [
+      "A chain of servlet filters that runs before the controller",
+      "Rewriting the bytecode of controllers",
+      "Editing the database schema at startup",
+      "Asking for a password on every single call"
+     ],
+     "w": "`DelegatingFilterProxy` hands each request to the `SecurityFilterChain`. Filters handle authentication, CSRF, headers and authorization.",
+     "s": 25
     },
     {
-      "q": "Which interface turns a username into a user with a password hash and authorities?",
-      "o": [
-        "`UserDetailsService`",
-        "`PasswordEncoder`",
-        "`AuthenticationEntryPoint`",
-        "`SecurityContextHolder`"
-      ],
-      "w": "`PasswordEncoder` (use `BCryptPasswordEncoder` or `DelegatingPasswordEncoder`) verifies the supplied password against the stored hash.",
-      "s": 25
-    },
-    {
-      "q": "Where does Spring Security store the current authenticated user for a request?",
-      "o": [
-        "In the `SecurityContext`, via `SecurityContextHolder`",
-        "In a static field that is declared in the controller class",
-        "In the database only, and it is read again for every call",
-        "In the URL of the request, as a query parameter"
-      ],
-      "w": "By default it is held in a thread-local, and for sessions it is saved in the HTTP session between requests.",
-      "s": 25
-    },
-    {
-      "q": "A stateless REST API uses bearer tokens. What should you do with CSRF protection?",
-      "o": [
-        "Usually disable it, as there is no cookie session to forge",
-        "Keep it on and send the CSRF token inside a cookie",
-        "Replace it with a much longer password for each user",
-        "Switch on HTTP Basic authentication in its place"
-      ],
-      "w": "CSRF exploits browsers sending cookies automatically. With the token in an `Authorization` header it does not apply. Keep CSRF for cookie sessions.",
-      "s": 30
-    },
-    {
-      "q": "What does `@PreAuthorize(\"hasRole('ADMIN')\")` do?",
-      "o": [
-        "It checks authorization before the method runs, via a proxy",
-        "It logs the current user in as an administrator",
-        "It creates a new ADMIN role in the database at startup",
-        "It encrypts the value that the method returns"
-      ],
-      "w": "Enable with `@EnableMethodSecurity`. Like other proxy features it is bypassed by self-invocation.",
-      "s": 25
-    },
-    {
-      "q": "How does a Spring Boot resource server validate a JWT bearer token?",
-      "o": [
-        "It verifies the signature with the issuer's keys and checks `exp`, `iss` and `aud`",
-        "It sends the user's password to the issuer for each request",
-        "It trusts any token as long as the length looks right",
-        "It stores every token in a database before it accepts it"
-      ],
-      "w": "Configure `spring.security.oauth2.resourceserver.jwt.issuer-uri` and the keys are discovered from the JWKS endpoint.",
-      "s": 30
-    },
-    {
-      "q": "Which is the correct handling of a user who is logged in but calls an endpoint they have no right to?",
-      "o": [
-        "Return `403 Forbidden`",
-        "Return `401 Unauthorized`",
-        "Always return `404 Not Found`",
-        "Log the user out"
-      ],
-      "w": "`401` means unauthenticated. `403` means authenticated but not permitted. Sometimes `404` is used deliberately to hide existence.",
-      "s": 25
-    },
-    {
-      "q": "Why shouldn't you store passwords with a plain SHA-256 hash?",
-      "o": [
-        "It is fast, so attackers can test billions of guesses a second",
-        "SHA-256 is far too slow to be used at login time",
-        "The SHA-256 output is too long to be stored in a column",
-        "Spring Security cannot use SHA-256 for any purpose"
-      ],
-      "w": "Slow adaptive hashes make brute force expensive. `DelegatingPasswordEncoder` also lets you upgrade algorithms over time.",
-      "s": 30
+     "q": "Which statement about web protections in Spring Security is NOT true?",
+     "o": [
+      "They rewrite controller bytecode",
+      "They are servlet filters",
+      "They run before the controller",
+      "They form a chain"
+     ],
+     "w": "Spring Security works through a filter chain, not by changing classes."
     }
-  ]
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which interface turns a username into a user with a password hash and authorities?",
+     "o": [
+      "`UserDetailsService`",
+      "`PasswordEncoder`",
+      "`AuthenticationEntryPoint`",
+      "`SecurityContextHolder`"
+     ],
+     "w": "`PasswordEncoder` (use `BCryptPasswordEncoder` or `DelegatingPasswordEncoder`) verifies the supplied password against the stored hash.",
+     "s": 25
+    },
+    {
+     "q": "Which method of UserDetailsService loads a user?",
+     "o": [
+      "loadUserByUsername",
+      "findAllUsers",
+      "encodePassword",
+      "authenticateAll"
+     ],
+     "w": "It returns UserDetails with the password hash and authorities."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Where does Spring Security store the current authenticated user for a request?",
+     "o": [
+      "In the `SecurityContext`, via `SecurityContextHolder`",
+      "In a static field that is declared in the controller class",
+      "In the database only, and it is read again for every call",
+      "In the URL of the request, as a query parameter"
+     ],
+     "w": "By default it is held in a thread-local, and for sessions it is saved in the HTTP session between requests.",
+     "s": 25
+    },
+    {
+     "q": "Which object holds the current Authentication?",
+     "o": [
+      "SecurityContext",
+      "HttpSession only",
+      "The controller",
+      "The request URL"
+     ],
+     "w": "It is stored through SecurityContextHolder and, for sessions, in the HTTP session."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A stateless REST API uses bearer tokens. What should you do with CSRF protection?",
+     "o": [
+      "Usually disable it, as there is no cookie session to forge",
+      "Keep it on and send the CSRF token inside a cookie",
+      "Replace it with a much longer password for each user",
+      "Switch on HTTP Basic authentication in its place"
+     ],
+     "w": "CSRF exploits browsers sending cookies automatically. With the token in an `Authorization` header it does not apply. Keep CSRF for cookie sessions.",
+     "s": 30
+    },
+    {
+     "q": "Which API setup needs CSRF protection?",
+     "o": [
+      "A browser app using cookie sessions",
+      "A stateless API with bearer headers",
+      "A machine client with client credentials",
+      "A batch job"
+     ],
+     "w": "Cookies are sent automatically by the browser, so forged cross-site requests are possible."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What does `@PreAuthorize(\"hasRole('ADMIN')\")` do?",
+     "o": [
+      "It checks authorization before the method runs, via a proxy",
+      "It logs the current user in as an administrator",
+      "It creates a new ADMIN role in the database at startup",
+      "It encrypts the value that the method returns"
+     ],
+     "w": "Enable with `@EnableMethodSecurity`. Like other proxy features it is bypassed by self-invocation.",
+     "s": 25
+    },
+    {
+     "q": "Which annotation checks a role before the method runs?",
+     "o": [
+      "@PreAuthorize",
+      "@PostConstruct",
+      "@Transactional",
+      "@Scheduled"
+     ],
+     "w": "It uses expressions like hasRole and works through a proxy."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "How does a Spring Boot resource server validate a JWT bearer token?",
+     "o": [
+      "It verifies the signature with the issuer's keys and checks `exp`, `iss` and `aud`",
+      "It sends the user's password to the issuer for each request",
+      "It trusts any token as long as the length looks right",
+      "It stores every token in a database before it accepts it"
+     ],
+     "w": "Configure `spring.security.oauth2.resourceserver.jwt.issuer-uri` and the keys are discovered from the JWKS endpoint.",
+     "s": 30
+    },
+    {
+     "q": "Which check is NOT part of validating a JWT in a resource server?",
+     "o": [
+      "The user password",
+      "The signature",
+      "The expiry",
+      "The issuer"
+     ],
+     "w": "The server never sees a password. It trusts a valid signature and claims."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which is the correct handling of a user who is logged in but calls an endpoint they have no right to?",
+     "o": [
+      "Return `403 Forbidden`",
+      "Return `401 Unauthorized`",
+      "Always return `404 Not Found`",
+      "Log the user out"
+     ],
+     "w": "`401` means unauthenticated. `403` means authenticated but not permitted. Sometimes `404` is used deliberately to hide existence.",
+     "s": 25
+    },
+    {
+     "q": "A user without the ADMIN role calls an admin endpoint. Which status fits?",
+     "o": [
+      "403 Forbidden",
+      "401 Unauthorized",
+      "200 OK",
+      "500 Internal Server Error"
+     ],
+     "w": "401 means not authenticated. 403 means authenticated but not allowed."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Why shouldn't you store passwords with a plain SHA-256 hash?",
+     "o": [
+      "It is fast, so attackers can test billions of guesses a second",
+      "SHA-256 is far too slow to be used at login time",
+      "The SHA-256 output is too long to be stored in a column",
+      "Spring Security cannot use SHA-256 for any purpose"
+     ],
+     "w": "Slow adaptive hashes make brute force expensive. `DelegatingPasswordEncoder` also lets you upgrade algorithms over time.",
+     "s": 30
+    },
+    {
+     "q": "Which encoder is suitable for storing passwords?",
+     "o": [
+      "BCryptPasswordEncoder",
+      "A plain SHA-256 hash",
+      "An MD5 digest",
+      "Base64 encoding"
+     ],
+     "w": "bcrypt is slow and salted. The others are fast hashes or an encoding, not password storage."
+    }
+   ]
+  }
+ ]
 }

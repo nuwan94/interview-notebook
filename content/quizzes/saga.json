@@ -1,92 +1,212 @@
 {
-  "questions": [
+ "questions": [
+  {
+   "t": "",
+   "v": [
     {
-      "q": "Why can't a transfer spanning two microservices use a single database transaction?",
-      "o": [
-        "Each service owns its database, so no local transaction covers both",
-        "Databases refuse to commit more than one table",
-        "Microservices are not able to connect to databases",
-        "Transactions only work inside the browser"
-      ],
-      "w": "Distributed two-phase commit is possible but blocks and scales poorly. Sagas coordinate a sequence of local transactions instead.",
-      "s": 25
+     "q": "Why can't a transfer spanning two microservices use a single database transaction?",
+     "o": [
+      "Each service owns its database, so no local transaction covers both",
+      "Databases refuse to commit more than one table",
+      "Microservices are not able to connect to databases",
+      "Transactions only work inside the browser"
+     ],
+     "w": "Distributed two-phase commit is possible but blocks and scales poorly. Sagas coordinate a sequence of local transactions instead.",
+     "s": 25
     },
     {
-      "q": "What is a saga?",
-      "o": [
-        "Local transactions in sequence, each with a compensating action",
-        "One big distributed lock across all services",
-        "A cache that survives restarts of the service",
-        "A retry loop that keeps no state at all"
-      ],
-      "w": "If step N fails, previously completed steps are undone by compensations, giving eventual consistency rather than atomicity.",
-      "s": 30
-    },
-    {
-      "q": "A saga debited the source account, then crediting the destination failed. What does the saga do?",
-      "o": [
-        "A compensating action credits the source account back",
-        "The first service's database transaction is rolled back",
-        "The failure is ignored and retried for ever",
-        "The debit record is deleted from the log"
-      ],
-      "w": "The first step already committed, so it cannot be rolled back. A new business action (the compensation) reverses its effect.",
-      "s": 30
-    },
-    {
-      "q": "What is the difference between choreography and orchestration?",
-      "o": [
-        "Choreography: services react to events. Orchestration: a coordinator steers",
-        "Choreography relies on a database, orchestration relies on a queue",
-        "Orchestration has no way of handling failures in a step",
-        "They differ only in which programming language is used"
-      ],
-      "w": "Choreography is decentralised but hard to follow as it grows. Orchestration gives one place to see and change the flow, at the cost of a coordinator.",
-      "s": 35
-    },
-    {
-      "q": "Why must saga steps and compensations be idempotent?",
-      "o": [
-        "Messages can arrive twice, and a repeat must not repeat the effect",
-        "Compensations are guaranteed to run only a single time",
-        "Idempotent steps are simply quicker to execute than others",
-        "The database itself refuses writes that are not idempotent"
-      ],
-      "w": "At-least-once messaging plus retries means duplicates are normal. Track a saga id and step state so a repeat is ignored.",
-      "s": 30
-    },
-    {
-      "q": "Which saga steps cannot simply be compensated, such as sending an email to a customer?",
-      "o": [
-        "Steps with outside effects, so place them last or correct them afterwards",
-        "Steps that only read data and never change anything",
-        "Steps that write rows into a database of their own",
-        "Steps that stay entirely inside the boundary of one service"
-      ],
-      "w": "Order steps so that hard-to-undo actions run after the risky ones. Where undo is impossible, send a correcting follow-up instead.",
-      "s": 35
-    },
-    {
-      "q": "Which isolation problem do sagas introduce that a single ACID transaction avoids?",
-      "o": [
-        "Others can see intermediate results before the saga completes",
-        "Writes become noticeably slower than reads in every service",
-        "Rows stay locked for the whole duration of the saga",
-        "Data ends up being encrypted twice on its way through"
-      ],
-      "w": "Countermeasures include semantic locks (a PENDING state), commutative updates and re-reading values before acting.",
-      "s": 35
-    },
-    {
-      "q": "How does the transactional outbox help a saga participant?",
-      "o": [
-        "It stores the outgoing event in the same local transaction",
-        "It removes the need for compensating steps",
-        "It makes the network itself reliable",
-        "It runs the whole saga on a single database"
-      ],
-      "w": "Without it the service could update its database and crash before publishing the event, leaving the saga stuck.",
-      "s": 30
+     "q": "Which option is NOT a way to keep money consistent across two services?",
+     "o": [
+      "A single shared transaction",
+      "A saga with compensations",
+      "An orchestrator",
+      "Event-driven choreography"
+     ],
+     "w": "Each service owns its database, so no single local transaction covers both."
     }
-  ]
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is a saga?",
+     "o": [
+      "Local transactions in sequence, each with a compensating action",
+      "One big distributed lock across all services",
+      "A cache that survives restarts of the service",
+      "A retry loop that keeps no state at all"
+     ],
+     "w": "If step N fails, previously completed steps are undone by compensations, giving eventual consistency rather than atomicity.",
+     "s": 30
+    },
+    {
+     "q": "Which statement about a saga is NOT true?",
+     "o": [
+      "It gives full isolation like one ACID transaction",
+      "It is a sequence of local transactions",
+      "Steps have compensations",
+      "It is eventually consistent"
+     ],
+     "w": "Intermediate states are visible, so a saga needs countermeasures such as semantic locks."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A saga debited the source account, then crediting the destination failed. What does the saga do?",
+     "o": [
+      "A compensating action credits the source account back",
+      "The first service's database transaction is rolled back",
+      "The failure is ignored and retried for ever",
+      "The debit record is deleted from the log"
+     ],
+     "w": "The first step already committed, so it cannot be rolled back. A new business action (the compensation) reverses its effect.",
+     "s": 30
+    },
+    {
+     "q": "Which action undoes a completed credit step in a saga?",
+     "o": [
+      "A compensating debit",
+      "A database rollback",
+      "Deleting the log",
+      "Restarting the service"
+     ],
+     "w": "The step is already committed, so a new action reverses its effect."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is the difference between choreography and orchestration?",
+     "o": [
+      "Choreography: services react to events. Orchestration: a coordinator steers",
+      "Choreography relies on a database, orchestration relies on a queue",
+      "Orchestration has no way of handling failures in a step",
+      "They differ only in which programming language is used"
+     ],
+     "w": "Choreography is decentralised but hard to follow as it grows. Orchestration gives one place to see and change the flow, at the cost of a coordinator.",
+     "s": 35
+    },
+    {
+     "q": "Which style has a central component that tells each service what to do next?",
+     "o": [
+      "Orchestration",
+      "Choreography",
+      "Sharding",
+      "Caching"
+     ],
+     "w": "An orchestrator sends commands and tracks state. In choreography each service reacts to events."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Why must saga steps and compensations be idempotent?",
+     "o": [
+      "Messages can arrive twice, and a repeat must not repeat the effect",
+      "Compensations are guaranteed to run only a single time",
+      "Idempotent steps are simply quicker to execute than others",
+      "The database itself refuses writes that are not idempotent"
+     ],
+     "w": "At-least-once messaging plus retries means duplicates are normal. Track a saga id and step state so a repeat is ignored.",
+     "s": 30
+    },
+    {
+     "q": "Which statement about saga steps is NOT true?",
+     "o": [
+      "Running a step twice is harmless",
+      "Steps should be idempotent",
+      "Compensations should be idempotent",
+      "Messages may arrive more than once"
+     ],
+     "w": "Duplicates happen, so steps must handle a repeat without a second effect."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which saga steps cannot simply be compensated, such as sending an email to a customer?",
+     "o": [
+      "Steps with outside effects, so place them last or correct them afterwards",
+      "Steps that only read data and never change anything",
+      "Steps that write rows into a database of their own",
+      "Steps that stay entirely inside the boundary of one service"
+     ],
+     "w": "Order steps so that hard-to-undo actions run after the risky ones. Where undo is impossible, send a correcting follow-up instead.",
+     "s": 35
+    },
+    {
+     "q": "Which step is hard to compensate?",
+     "o": [
+      "Sending an email",
+      "Writing a database row",
+      "Reserving stock",
+      "Creating a pending order"
+     ],
+     "w": "An email cannot be taken back, so send it after the other steps succeed."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which isolation problem do sagas introduce that a single ACID transaction avoids?",
+     "o": [
+      "Others can see intermediate results before the saga completes",
+      "Writes become noticeably slower than reads in every service",
+      "Rows stay locked for the whole duration of the saga",
+      "Data ends up being encrypted twice on its way through"
+     ],
+     "w": "Countermeasures include semantic locks (a PENDING state), commutative updates and re-reading values before acting.",
+     "s": 35
+    },
+    {
+     "q": "Which countermeasure reduces the visibility of intermediate saga states?",
+     "o": [
+      "A PENDING status flag",
+      "A bigger database server",
+      "More retries on failure",
+      "A shorter network timeout"
+     ],
+     "w": "A semantic lock such as PENDING tells other flows that the record is still changing."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "How does the transactional outbox help a saga participant?",
+     "o": [
+      "It stores the outgoing event in the same local transaction",
+      "It removes the need for compensating steps",
+      "It makes the network itself reliable",
+      "It runs the whole saga on a single database"
+     ],
+     "w": "Without it the service could update its database and crash before publishing the event, leaving the saga stuck.",
+     "s": 30
+    },
+    {
+     "q": "Which claim about an outbox in a saga step is NOT true?",
+     "o": [
+      "It publishes the event before the commit",
+      "It writes the event with the data",
+      "A relay sends the event later",
+      "Consumers must handle duplicates"
+     ],
+     "w": "The event is saved in the same transaction and published after it, so no crash separates the two."
+    }
+   ]
+  }
+ ]
 }

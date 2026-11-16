@@ -1,92 +1,212 @@
 {
-  "questions": [
+ "questions": [
+  {
+   "t": "",
+   "v": [
     {
-      "q": "What does an API gateway typically do?",
-      "o": [
-        "One entry point that routes calls and handles auth and rate limits",
-        "A central store holding the data for every service",
-        "A replacement for service discovery inside the cluster",
-        "A place that runs the business logic of every service"
-      ],
-      "w": "It hides the internal topology from clients. Keep business logic out of it to avoid a distributed monolith.",
-      "s": 25
+     "q": "What does an API gateway typically do?",
+     "o": [
+      "One entry point that routes calls and handles auth and rate limits",
+      "A central store holding the data for every service",
+      "A replacement for service discovery inside the cluster",
+      "A place that runs the business logic of every service"
+     ],
+     "w": "It hides the internal topology from clients. Keep business logic out of it to avoid a distributed monolith.",
+     "s": 25
     },
     {
-      "q": "A downstream service is failing and slow. What does a circuit breaker do?",
-      "o": [
-        "Stops calling for a while and fails fast, then probes for recovery",
-        "Retries as fast as possible until a response arrives",
-        "Restarts the failing downstream service itself",
-        "Caches every response for ever after"
-      ],
-      "w": "States are closed, open and half-open. Failing fast frees threads and gives the failing service room to recover.",
-      "s": 30
-    },
-    {
-      "q": "Why is retrying a failed call with no delay dangerous?",
-      "o": [
-        "It can overload a struggling service; use backoff with jitter",
-        "Retries are not allowed over HTTP at all",
-        "Retries always create duplicate data",
-        "Retries automatically disable the circuit breaker"
-      ],
-      "w": "Synchronised retries create a retry storm. Backoff spreads load and jitter stops clients from retrying in lockstep. Retry only idempotent calls.",
-      "s": 30
-    },
-    {
-      "q": "What does the bulkhead pattern protect against?",
-      "o": [
-        "One slow dependency using all threads and sinking the service",
-        "Data being lost after a disk failure",
-        "Unauthorised users reaching internal services",
-        "Version mismatches between two deployed services"
-      ],
-      "w": "Isolating resources (separate pools per dependency) contains the failure, like watertight compartments in a ship.",
-      "s": 30
-    },
-    {
-      "q": "Which statement about the database-per-service pattern is correct?",
-      "o": [
-        "Each service owns its data; others use its API or events",
-        "All services share one schema for easy joins",
-        "Services read each other's tables directly for speed",
-        "Only a single service is allowed a database"
-      ],
-      "w": "It enables independent deployment and scaling, but cross-service queries and consistency need new patterns such as sagas and CQRS views.",
-      "s": 30
-    },
-    {
-      "q": "What is service discovery for?",
-      "o": [
-        "Services find the current network locations of other services",
-        "Services are scanned automatically for security flaws",
-        "Request latency is measured for every call",
-        "Service traffic is encrypted in transit"
-      ],
-      "w": "Instances come and go. A registry (Eureka, Consul) or the platform DNS (Kubernetes services) keeps track of healthy instances.",
-      "s": 25
-    },
-    {
-      "q": "What is the strangler fig pattern used for?",
-      "o": [
-        "Gradually replace a legacy system by routing slices to new services",
-        "Kill any request that takes too long to be answered",
-        "Compress the responses coming from the older services",
-        "Rewrite everything and release it in a single big bang"
-      ],
-      "w": "A facade routes some traffic to the new code while the rest still hits the old system, until the old one can be switched off.",
-      "s": 30
-    },
-    {
-      "q": "In CQRS, what is separated?",
-      "o": [
-        "The model that writes (commands) from the model that reads (queries)",
-        "The front end of an app from its back end",
-        "Test code from the production code that it checks",
-        "Public APIs from the private APIs of a service"
-      ],
-      "w": "Read models can be denormalised and scaled on their own, updated from events. It adds eventual consistency, so use it where reads and writes differ a lot.",
-      "s": 30
+     "q": "Which job should an API gateway NOT take on?",
+     "o": [
+      "Storing service data",
+      "Routing requests",
+      "Authenticating callers",
+      "Rate limiting"
+     ],
+     "w": "A gateway is an entry point. Data belongs to the services that own it."
     }
-  ]
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A downstream service is failing and slow. What does a circuit breaker do?",
+     "o": [
+      "Stops calling for a while and fails fast, then probes for recovery",
+      "Retries as fast as possible until a response arrives",
+      "Restarts the failing downstream service itself",
+      "Caches every response for ever after"
+     ],
+     "w": "States are closed, open and half-open. Failing fast frees threads and gives the failing service room to recover.",
+     "s": 30
+    },
+    {
+     "q": "Which state of a circuit breaker lets a few trial calls through?",
+     "o": [
+      "Half-open",
+      "Open",
+      "Closed",
+      "Tripped"
+     ],
+     "w": "After the wait time the breaker tries a few calls. If they succeed it closes, otherwise it opens again."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Why is retrying a failed call with no delay dangerous?",
+     "o": [
+      "It can overload a struggling service; use backoff with jitter",
+      "Retries are not allowed over HTTP at all",
+      "Retries always create duplicate data",
+      "Retries automatically disable the circuit breaker"
+     ],
+     "w": "Synchronised retries create a retry storm. Backoff spreads load and jitter stops clients from retrying in lockstep. Retry only idempotent calls.",
+     "s": 30
+    },
+    {
+     "q": "Which retry policy is NOT safe for an overloaded service?",
+     "o": [
+      "Retry at once with no delay",
+      "Exponential backoff",
+      "Backoff with jitter",
+      "A limit on retry attempts"
+     ],
+     "w": "Immediate retries multiply the load on a service that is already struggling."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What does the bulkhead pattern protect against?",
+     "o": [
+      "One slow dependency using all threads and sinking the service",
+      "Data being lost after a disk failure",
+      "Unauthorised users reaching internal services",
+      "Version mismatches between two deployed services"
+     ],
+     "w": "Isolating resources (separate pools per dependency) contains the failure, like watertight compartments in a ship.",
+     "s": 30
+    },
+    {
+     "q": "A slow reporting API uses all threads of a shared pool, and payments stop. Which pattern prevents it?",
+     "o": [
+      "Bulkhead",
+      "Strangler fig",
+      "Saga",
+      "Adapter"
+     ],
+     "w": "Separate pools keep one slow dependency from starving the others."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which statement about the database-per-service pattern is correct?",
+     "o": [
+      "Each service owns its data; others use its API or events",
+      "All services share one schema for easy joins",
+      "Services read each other's tables directly for speed",
+      "Only a single service is allowed a database"
+     ],
+     "w": "It enables independent deployment and scaling, but cross-service queries and consistency need new patterns such as sagas and CQRS views.",
+     "s": 30
+    },
+    {
+     "q": "Which practice breaks database-per-service?",
+     "o": [
+      "Joining another service tables directly",
+      "Calling the owner API",
+      "Subscribing to the owner events",
+      "Keeping a local copy built from events"
+     ],
+     "w": "Reading another service tables couples the two and removes its freedom to change its schema."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is service discovery for?",
+     "o": [
+      "Services find the current network locations of other services",
+      "Services are scanned automatically for security flaws",
+      "Request latency is measured for every call",
+      "Service traffic is encrypted in transit"
+     ],
+     "w": "Instances come and go. A registry (Eureka, Consul) or the platform DNS (Kubernetes services) keeps track of healthy instances.",
+     "s": 25
+    },
+    {
+     "q": "What does a service registry such as Eureka, or Kubernetes DNS, provide?",
+     "o": [
+      "Instance addresses",
+      "Business data",
+      "User passwords",
+      "Compiled code"
+     ],
+     "w": "Instances come and go, so callers look up where a service is running now."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is the strangler fig pattern used for?",
+     "o": [
+      "Gradually replace a legacy system by routing slices to new services",
+      "Kill any request that takes too long to be answered",
+      "Compress the responses coming from the older services",
+      "Rewrite everything and release it in a single big bang"
+     ],
+     "w": "A facade routes some traffic to the new code while the rest still hits the old system, until the old one can be switched off.",
+     "s": 30
+    },
+    {
+     "q": "Which statement about the strangler fig pattern is NOT true?",
+     "o": [
+      "It needs a single big-bang release",
+      "It migrates slice by slice",
+      "It routes some calls to new services",
+      "The old system shrinks over time"
+     ],
+     "w": "The strangler approach avoids big-bang releases by replacing pieces gradually."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "In CQRS, what is separated?",
+     "o": [
+      "The model that writes (commands) from the model that reads (queries)",
+      "The front end of an app from its back end",
+      "Test code from the production code that it checks",
+      "Public APIs from the private APIs of a service"
+     ],
+     "w": "Read models can be denormalised and scaled on their own, updated from events. It adds eventual consistency, so use it where reads and writes differ a lot.",
+     "s": 30
+    },
+    {
+     "q": "Which statement about CQRS is NOT true?",
+     "o": [
+      "Reads and writes must use the same model",
+      "It separates commands from queries",
+      "The read side can use its own store",
+      "It can add eventual consistency"
+     ],
+     "w": "CQRS exists to let the two sides use different models."
+    }
+   ]
+  }
+ ]
 }
