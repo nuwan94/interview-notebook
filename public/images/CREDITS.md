@@ -14,3 +14,5 @@ Diagrams in lessons are copied from openly licensed sources. Each figure shows i
 
 Unused files in this folder are safe to delete. To add an image, copy it here and reference it in a lesson as
 `![alt text](images/file.png "Caption | Author, licence | https://source-page")`.
+
+The topic illustrations in `topics/` on the home page are original drawings made for this site (no outside source).
