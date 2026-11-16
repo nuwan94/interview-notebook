@@ -4,7 +4,7 @@ nav: Reflection and proxies
 slug: java-reflection
 summary: How Java code inspects and uses types at run time: the Class object, fields, methods and constructors, setAccessible and the module system, annotations and their retention, writing and reading a custom annotation, compile-time annotation processing, JDK dynamic proxies and CGLIB, method handles, and how Spring, Jackson, Hibernate and Mockito use all of it, with examples and interview questions.
 tags: [Java, Reflection, Annotations, Proxies, Spring, Frameworks]
-order: 10
+order: 11
 topic: Java / Language
 updated: 2026-11-16
 subnav: true

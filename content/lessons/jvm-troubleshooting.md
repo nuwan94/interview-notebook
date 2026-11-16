@@ -4,7 +4,7 @@ nav: JVM troubleshooting
 slug: jvm-troubleshooting
 summary: How to diagnose a Java service that is slow, hung, out of memory or killed: choosing the tool from the symptom, thread dumps and deadlocks, finding the busy thread, heap dumps and leak analysis, the different OutOfMemoryErrors, native memory and container limits, Java Flight Recorder and flame graphs, class loading and the JIT, and doing it safely in Kubernetes and Spring Boot, with examples and interview questions.
 tags: [Java, JVM, Troubleshooting, Profiling, Production, Memory]
-order: 17
+order: 18
 topic: Java / JVM
 updated: 2026-11-16
 subnav: true

@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Deploy and release",
+   "v": [
+    {
+     "q": "What does separating deploy from release allow?",
+     "o": [
+      "Deploying code with a feature still off",
+      "Skipping the pipeline for small changes",
+      "Running tests only in production",
+      "Avoiding all rollbacks"
+     ],
+     "w": "The code goes live with the flag off. The release, switching it on, is a separate and reversible step."
+    },
+    {
+     "q": "Which statement about releasing is true?",
+     "o": [
+      "It exposes a feature to users",
+      "It copies files to servers",
+      "It builds the image",
+      "It runs the unit tests"
+     ],
+     "w": "Releasing is a business decision about who sees a feature. Deploying is the technical step of installing a version."
+    }
+   ]
+  },
+  {
+   "t": "Rolling update",
+   "v": [
+    {
+     "q": "What is the main limit of a rolling update?",
+     "o": [
+      "Two versions serve traffic at the same time",
+      "It always causes downtime",
+      "It needs a second environment",
+      "It cannot be rolled back"
+     ],
+     "w": "During the update old and new versions run together, so their APIs and the database schema must be compatible."
+    },
+    {
+     "q": "Which setting keeps full capacity during a Kubernetes rolling update?",
+     "o": [
+      "maxUnavailable: 0 with maxSurge: 1",
+      "maxSurge: 0 with maxUnavailable: 1",
+      "replicas: 0",
+      "minReadySeconds: 0"
+     ],
+     "w": "A surge pod starts first and no pod may go missing, so the ready count never drops below the desired one."
+    }
+   ]
+  },
+  {
+   "t": "Readiness and shutdown",
+   "v": [
+    {
+     "q": "What happens when a new pod never passes its readiness probe?",
+     "o": [
+      "It gets no traffic and the rollout stalls",
+      "It gets traffic anyway",
+      "The old pods are all removed",
+      "The Deployment is deleted"
+     ],
+     "w": "The controller keeps the old pods serving, so users are not affected, and the rollout fails after its deadline."
+    },
+    {
+     "q": "Why add a short preStop sleep?",
+     "o": [
+      "The load balancer stops sending traffic first",
+      "It speeds up the shutdown",
+      "It makes the image smaller",
+      "It disables the readiness probe"
+     ],
+     "w": "Endpoint updates take a moment, so the pod waits a few seconds before it starts to stop, and no request meets a closed server."
+    }
+   ]
+  },
+  {
+   "t": "Blue-green",
+   "v": [
+    {
+     "q": "What is the biggest benefit of blue-green deployment?",
+     "o": [
+      "A rollback takes seconds",
+      "It needs less infrastructure",
+      "It runs both versions for users",
+      "It avoids database changes"
+     ],
+     "w": "The old environment is untouched, so switching the router back restores the previous version at once."
+    },
+    {
+     "q": "Which is a cost of blue-green deployment?",
+     "o": [
+      "Two full environments during the release",
+      "Users see a mix of versions",
+      "No way to test before the switch",
+      "A slow rollback"
+     ],
+     "w": "Both environments run at the same time. They also usually share one database, which must suit both versions."
+    }
+   ]
+  },
+  {
+   "t": "Canary",
+   "v": [
+    {
+     "q": "What is the main benefit of a canary release?",
+     "o": [
+      "A small blast radius with real traffic",
+      "No monitoring is needed",
+      "Rollback is never required",
+      "Two environments are never needed"
+     ],
+     "w": "Only a few users meet a bad release, and the data comes from real production traffic."
+    },
+    {
+     "q": "Against what should a canary be compared?",
+     "o": [
+      "The stable version at the same time",
+      "The same metric from last year",
+      "The test environment",
+      "Its own average only"
+     ],
+     "w": "Both versions face the same traffic and conditions, so a difference points at the new version."
+    }
+   ]
+  },
+  {
+   "t": "Shadow and flags",
+   "v": [
+    {
+     "q": "What is the main risk of shadow traffic?",
+     "o": [
+      "Side effects such as charges or emails",
+      "Users see the new version",
+      "It needs no extra capacity",
+      "It changes the database schema"
+     ],
+     "w": "The shadow gets real requests, so it must be read-only or stubbed, or it may charge cards or send messages."
+    },
+    {
+     "q": "Which problem comes with feature flags?",
+     "o": [
+      "Leftover flags become clutter",
+      "Every change needs a redeployment",
+      "A rollback takes minutes",
+      "Users cannot be targeted"
+     ],
+     "w": "Each flag adds paths to test. Give every flag an owner and a removal date."
+    }
+   ]
+  },
+  {
+   "t": "Database changes",
+   "v": [
+    {
+     "q": "Which step comes last in expand and contract?",
+     "o": [
+      "Dropping the old column",
+      "Adding the new column",
+      "Writing to both columns",
+      "Backfilling the old rows"
+     ],
+     "w": "The old structure is removed in a later release, when no old version can return."
+    },
+    {
+     "q": "Why is a column rename dangerous in a rolling update?",
+     "o": [
+      "The old version breaks at once",
+      "The new version cannot start",
+      "Migrations are forbidden",
+      "The pipeline refuses it"
+     ],
+     "w": "The old pods are still running against the same database, so removing the name they use breaks them."
+    }
+   ]
+  },
+  {
+   "t": "Rollback and choice",
+   "v": [
+    {
+     "q": "When is recreate a reasonable choice?",
+     "o": [
+      "Two versions cannot run together",
+      "A high-traffic payment service",
+      "Any user-facing release",
+      "A change needing instant rollback"
+     ],
+     "w": "It causes a gap, so use it for batch jobs, test environments or incompatible changes in a maintenance window."
+    },
+    {
+     "q": "Why rehearse the rollback?",
+     "o": [
+      "An untested rollback often fails",
+      "It is required by Git",
+      "It speeds up the build",
+      "It removes the need for metrics"
+     ],
+     "w": "Rollbacks that were never run often break, especially after a database change."
+    }
+   ]
+  }
+ ]
+}

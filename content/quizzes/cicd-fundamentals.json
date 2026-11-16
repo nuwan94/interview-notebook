@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "CI, delivery, deployment",
+   "v": [
+    {
+     "q": "What separates continuous delivery from continuous deployment?",
+     "o": [
+      "A person decides when to release",
+      "Delivery has no automated tests",
+      "Deployment skips the build",
+      "Delivery deploys only to test"
+     ],
+     "w": "In delivery every change is ready to release and a person presses the button. In deployment every passing change goes live automatically."
+    },
+    {
+     "q": "Which practice is the core of continuous integration?",
+     "o": [
+      "Merging small changes into main often",
+      "Deploying to production every night",
+      "Keeping one long branch per feature",
+      "Running tests only before a release"
+     ],
+     "w": "CI is frequent integration, each merge built and tested automatically. A server alone does not make a team do CI."
+    }
+   ]
+  },
+  {
+   "t": "Pipeline stages",
+   "v": [
+    {
+     "q": "Which order of pipeline stages is best?",
+     "o": [
+      "Fast checks first, slow ones later",
+      "Slow end-to-end tests first",
+      "Deploy first, then test",
+      "Scans before compiling"
+     ],
+     "w": "Fail fast: cheap checks like compile and unit tests run first, so the author learns about a problem in minutes."
+    },
+    {
+     "q": "Which step does NOT belong before the artifact is published?",
+     "o": [
+      "Deploying to production",
+      "Compiling the code",
+      "Running unit tests",
+      "Scanning dependencies"
+     ],
+     "w": "Publishing stores the tested artifact. Production comes after it, using the same artifact."
+    }
+   ]
+  },
+  {
+   "t": "Build once",
+   "v": [
+    {
+     "q": "Why build the artifact once and promote it?",
+     "o": [
+      "Production runs exactly what was tested",
+      "Builds for each environment are faster",
+      "It avoids version numbers",
+      "It removes the need for a registry"
+     ],
+     "w": "Rebuilding per environment can pick up different dependencies, so production may run something never tested."
+    },
+    {
+     "q": "Which image tag is best for a production deployment?",
+     "o": [
+      "The commit hash or a version",
+      "The latest tag, always",
+      "A stable tag, moved weekly",
+      "A branch name such as main"
+     ],
+     "w": "An immutable tag shows what runs and what to roll back to. A moving tag like latest does not."
+    }
+   ]
+  },
+  {
+   "t": "Branching",
+   "v": [
+    {
+     "q": "What is the main problem with a long-lived feature branch?",
+     "o": [
+      "The final merge is large and risky",
+      "Git cannot store it",
+      "It cannot be reviewed at all",
+      "It blocks the pipeline server"
+     ],
+     "w": "The branch drifts from main, so conflicts pile up and the combination is untested until the end."
+    },
+    {
+     "q": "Which model suits continuous delivery best?",
+     "o": [
+      "Trunk-based development",
+      "Gitflow with long release branches",
+      "One branch per developer for months",
+      "Branches per environment"
+     ],
+     "w": "Trunk-based development keeps integration cheap and main releasable. Gitflow delays integration."
+    }
+   ]
+  },
+  {
+   "t": "Feature flags",
+   "v": [
+    {
+     "q": "What does a feature flag let a team do?",
+     "o": [
+      "Deploy code without releasing it",
+      "Skip the code review step",
+      "Avoid writing any tests",
+      "Deploy without a pipeline"
+     ],
+     "w": "The code is merged and deployed with the flag off, and the feature is released later by switching the flag on."
+    },
+    {
+     "q": "Which is a cost of feature flags?",
+     "o": [
+      "Extra code paths to test and remove",
+      "Branches live much longer",
+      "Every release needs a rebuild",
+      "Rollback needs a redeployment"
+     ],
+     "w": "Flags add paths to test and become clutter if they are not removed once the feature is fully released."
+    }
+   ]
+  },
+  {
+   "t": "Quality gates",
+   "v": [
+    {
+     "q": "When does a quality gate have value?",
+     "o": [
+      "A failure blocks the pipeline",
+      "It produces a report",
+      "It runs after the release",
+      "It is optional for urgent changes"
+     ],
+     "w": "A gate must stop the change. A report that nobody has to act on is just noise."
+    },
+    {
+     "q": "Which check is a dependency scan for?",
+     "o": [
+      "Known vulnerabilities in libraries",
+      "Slow database queries",
+      "Formatting of source files",
+      "Unused Spring beans"
+     ],
+     "w": "Software composition analysis, such as Dependency-Check, Snyk or Trivy, finds libraries with known CVEs."
+    }
+   ]
+  },
+  {
+   "t": "Rollback and config",
+   "v": [
+    {
+     "q": "Why can rolling back sometimes be impossible?",
+     "o": [
+      "An irreversible database migration ran",
+      "The old image was deleted by Git",
+      "Pipelines cannot redeploy",
+      "Rollback needs a new build"
+     ],
+     "w": "If data was already migrated, the old version may not work with it. Then you roll forward with a fix."
+    },
+    {
+     "q": "Where should environment-specific settings live?",
+     "o": [
+      "In the environment, outside the artifact",
+      "Inside the built image",
+      "In the source code constants",
+      "In the pipeline log"
+     ],
+     "w": "The same artifact runs everywhere and settings come from variables, a config server or Secrets."
+    }
+   ]
+  },
+  {
+   "t": "DORA and banks",
+   "v": [
+    {
+     "q": "Which is one of the four DORA metrics?",
+     "o": [
+      "Change failure rate",
+      "Lines of code per day",
+      "Number of branches",
+      "Test count"
+     ],
+     "w": "The four are deployment frequency, lead time for changes, change failure rate and time to restore."
+    },
+    {
+     "q": "How does a bank usually keep four-eyes control in a pipeline?",
+     "o": [
+      "Required reviewers and a gated approval",
+      "Developers deploy from their laptops",
+      "The author approves the change",
+      "No approval, just monitoring"
+     ],
+     "w": "Branch protection and an approval stage ensure that someone other than the author signs off, and the pipeline keeps the evidence."
+    }
+   ]
+  }
+ ]
+}

@@ -4,7 +4,7 @@ nav: Maven
 slug: maven
 summary: How Apache Maven builds a Java project: the pom.xml, coordinates, the lifecycle and plugin goals, dependency scopes, transitive dependencies and the nearest-wins rule, dependencyManagement and BOMs, repositories and settings.xml, multi-module reactor builds, profiles, the Spring Boot plugin and common troubleshooting, with examples and interview questions.
 tags: [Java, Maven, Build tools, Dependencies, Spring Boot]
-order: 20
+order: 21
 topic: Java / Build tools
 updated: 2026-11-15
 subnav: true

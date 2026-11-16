@@ -92,7 +92,7 @@ function parseLesson(path, src) {
     order: Number(meta.order || 99),
     updated: meta.updated || '',
     // "Java / Collections" -> ['Java', 'Collections']: where the lesson sits in the topic tree
-    topic: (meta.topic || '').split('/').map((s) => s.trim()).filter(Boolean),
+    topic: (meta.topic || '').split(/\s+\/\s+/).map((s) => s.trim()).filter(Boolean), // separator is " / " with spaces, so a name may contain a slash (CI/CD)
     subnav: meta.subnav === 'true', // list ### sub-sections under each section in the sidebar
     intro,
     sections,
@@ -115,7 +115,7 @@ function buildTopicTree(list) {
   for (const l of list) {
     let node = root;
     for (const name of l.topic) {
-      const path = node.path ? `${node.path}/${name}` : name;
+      const path = node.path ? `${node.path} / ${name}` : name;
       let child = node.children.find((c) => c.name === name);
       if (!child) node.children.push((child = { name, path, slug: node.slug ? `${node.slug}/${slugify(name)}` : slugify(name), children: [], lessons: [] }));
       node = child;
