@@ -60,7 +60,7 @@ export function JavaTimeline() {
               data-dim={hit(r) ? undefined : 'yes'}
               aria-current={i === p.index}
               onClick={() => p.seek(i)}
-              title={`Java ${r.v} · ${r.date}`}
+              data-tip={`Java ${r.v} · ${r.date}`}
             >
               <b>{r.v}</b>
               <small>{r.date.split(' ')[1]}</small>

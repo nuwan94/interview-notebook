@@ -79,13 +79,13 @@ export function DemoControls({ p, unit = 'step', speeds = false }) {
 
   return (
     <div ref={bar} className="demo-bar" role="group" aria-label="Animation controls" aria-keyshortcuts="Space ArrowLeft ArrowRight">
-      <button type="button" className="demo-icon-btn" onClick={() => p.step(-1)} disabled={p.index === 0} aria-label={`Previous ${unit}`} title={`Previous ${unit} (←)`}>
+      <button type="button" className="demo-icon-btn" onClick={() => p.step(-1)} disabled={p.index === 0} aria-label={`Previous ${unit}`} data-tip={`Previous ${unit} (←)`}>
         <LuSkipBack aria-hidden="true" />
       </button>
-      <button type="button" className="btn primary demo-play" title={`${label} (Space)`} onClick={() => (p.playing ? p.pause() : p.play())}>
+      <button type="button" className="btn primary demo-play" data-tip={`${label} (Space)`} onClick={() => (p.playing ? p.pause() : p.play())}>
         <PlayIcon aria-hidden="true" className="btn-icon" /> {label}
       </button>
-      <button type="button" className="demo-icon-btn" onClick={() => p.step(1)} disabled={atEnd} aria-label={`Next ${unit}`} title={`Next ${unit} (→)`}>
+      <button type="button" className="demo-icon-btn" onClick={() => p.step(1)} disabled={atEnd} aria-label={`Next ${unit}`} data-tip={`Next ${unit} (→)`}>
         <LuSkipForward aria-hidden="true" />
       </button>
 
@@ -98,7 +98,7 @@ export function DemoControls({ p, unit = 'step', speeds = false }) {
               className={`demo-seg ${i < p.index ? 'is-done' : ''}`}
               aria-current={i === p.index ? 'step' : undefined}
               aria-label={`${unit} ${i + 1} of ${total}`}
-              title={`${unit} ${i + 1}`}
+              data-tip={`${unit} ${i + 1}`}
               onClick={() => p.seek(i)}
             />
           ))}
@@ -118,13 +118,13 @@ export function DemoControls({ p, unit = 'step', speeds = false }) {
       <span className="demo-count" aria-live="off">
         {p.index + 1} / {total}
       </span>
-      <button type="button" className="demo-icon-btn demo-replay" onClick={p.replay} aria-label="Replay from the start" title="Replay from the start">
+      <button type="button" className="demo-icon-btn demo-replay" onClick={p.replay} aria-label="Replay from the start" data-tip="Replay from the start">
         <LuRotateCcw aria-hidden="true" />
       </button>
       {speeds && (
         <label className="demo-speed">
           <span className="sr-only">Speed</span>
-          <select value={p.speed} onChange={(e) => p.setSpeed(Number(e.target.value))} title="Playback speed">
+          <select value={p.speed} onChange={(e) => p.setSpeed(Number(e.target.value))} data-tip="Playback speed">
             {SPEEDS.map((s) => (
               <option key={s} value={s}>
                 {s}×

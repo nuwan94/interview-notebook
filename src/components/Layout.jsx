@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { LuMenu, LuSearch } from 'react-icons/lu';
+import { LuGithub, LuMenu, LuSearch } from 'react-icons/lu';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { usePrefs } from '../lib/prefs.jsx';
 import { AccessMenu } from './AccessMenu.jsx';
 import { getLesson } from '../lib/content.js';
 import { ErrorBoundary } from './ErrorBoundary.jsx';
 import { SearchPalette } from './SearchPalette.jsx';
+import { TipHost } from './Tip.jsx';
 import { Sidebar } from './Sidebar.jsx';
 
 export function Layout() {
@@ -73,14 +74,25 @@ export function Layout() {
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
-            className="flex-1 min-w-0 max-w-md text-left bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-soft hover:border-pen flex items-center gap-2"
+            className="flex-1 min-w-0 text-left bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-soft hover:border-pen flex items-center gap-2"
             aria-label="Search notes (shortcut: slash or Control K)"
           >
             <LuSearch aria-hidden="true" />
             <span className="flex-1 truncate">Search notes, questions, terms…</span>
             <span className="kbd hidden sm:inline">/</span>
           </button>
-          <div className="ml-auto">
+          <div className="flex items-center gap-2">
+            <a
+              href="https://github.com/nuwan94/interview-notebook"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn !min-h-10 !px-2.5 no-underline"
+              aria-label="Source code on GitHub (opens in a new tab)"
+              data-tip="Source code on GitHub"
+            >
+              <LuGithub aria-hidden="true" size="1.25em" />
+              <span className="hidden sm:inline">GitHub</span>
+            </a>
             <AccessMenu />
           </div>
         </div>
@@ -101,6 +113,7 @@ export function Layout() {
       </div>
 
       <SearchPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <TipHost />
       <div
         role="status"
         aria-live="polite"

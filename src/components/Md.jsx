@@ -62,7 +62,7 @@ function LessonLink({ spec, children }) {
   const r = resolveLessonLink(spec);
   if (r.pending) {
     return (
-      <span className="pending-link" title={`Linked lesson “${r.slug}” is not written yet`}>
+      <span className="pending-link" data-tip={`Linked lesson “${r.slug}” is not written yet`}>
         {children}
       </span>
     );
@@ -93,7 +93,7 @@ function Heading({ level, children }) {
           data-noread
           className="ml-2 align-middle text-sm text-soft opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-pen"
           aria-label="Copy link to this heading"
-          title="Copy link to this heading"
+          data-tip="Copy link to this heading"
           onClick={async () => outlet?.toast?.((await copyText(lessonUrl(slug, id))) ? 'Link copied to clipboard' : 'Could not copy the link')}
         >
           <LuLink aria-hidden="true" />
@@ -105,7 +105,7 @@ function Heading({ level, children }) {
           data-noread
           className="ml-2 align-middle text-sm text-soft opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-pen"
           aria-label="Read aloud from this heading"
-          title="Read aloud from here"
+          data-tip="Read aloud from here"
           onClick={(e) => reader.playFrom(e.currentTarget.parentElement)}
         >
           <LuPlay aria-hidden="true" className="btn-icon" /> read from here

@@ -142,7 +142,7 @@ export function Playground({ title, variants }) {
               className="chip mono"
               aria-current={opIdx === i}
               onClick={() => p.replayFrom(opStarts[i])}
-              title="Replay this operation"
+              data-tip="Replay this operation"
             >
               {opLabel(op, kf)}
             </button>

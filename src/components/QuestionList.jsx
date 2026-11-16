@@ -98,7 +98,7 @@ export function QuestionList({ slug, questions, focusId, navKey, onToast }) {
             All {questions.length}
           </button>
           {LEVELS.filter((l) => counts[l]).map((l) => (
-            <button key={l} type="button" className="chip" aria-pressed={level === l} onClick={() => setLevel(l)} title={LEVEL_HELP[l]}>
+            <button key={l} type="button" className="chip" aria-pressed={level === l} onClick={() => setLevel(l)} data-tip={LEVEL_HELP[l]}>
               {l} {counts[l]}
             </button>
           ))}
@@ -133,7 +133,7 @@ export function QuestionList({ slug, questions, focusId, navKey, onToast }) {
                 data-noread
                 className="text-xs font-bold text-soft hover:text-pen px-1"
                 aria-label={`Copy link to: ${q.title}`}
-                title="Copy link to this question"
+                data-tip="Copy link to this question"
                 onClick={async (e) => {
                   e.preventDefault();
                   e.stopPropagation();

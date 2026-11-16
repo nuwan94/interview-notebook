@@ -39,7 +39,7 @@ export function AccessMenu() {
         aria-controls={id}
         aria-haspopup="dialog"
         aria-label="Accessibility and reading settings"
-        title="Accessibility and reading settings"
+        data-tip="Accessibility and reading settings"
         onClick={() => setOpen((o) => !o)}
       >
         <LuAccessibility aria-hidden="true" size="1.25em" />
@@ -61,7 +61,7 @@ export function AccessMenu() {
               onClick={() => set({ scaleIdx: Math.max(0, prefs.scaleIdx - 1) })}
               disabled={prefs.scaleIdx === 0}
               aria-label="Smaller text"
-              title="Smaller text: press -"
+              data-tip="Smaller text: press -"
             >
               <span className="text-sm">A−</span>
             </button>
@@ -74,7 +74,7 @@ export function AccessMenu() {
               onClick={() => set({ scaleIdx: Math.min(SCALES.length - 1, prefs.scaleIdx + 1) })}
               disabled={prefs.scaleIdx === SCALES.length - 1}
               aria-label="Larger text"
-              title="Larger text: press +"
+              data-tip="Larger text: press +"
             >
               <span className="text-lg leading-none">A+</span>
             </button>
