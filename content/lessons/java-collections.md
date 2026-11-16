@@ -4,7 +4,7 @@ nav: Collections framework
 slug: java-collections
 summary: The whole collections hierarchy in one lesson: ArrayList and LinkedList, HashSet and TreeSet, Queue and Deque, Comparable and Comparator, fail-fast iterators, immutable collections and complexity, with animations and interview questions.
 tags: [Java, Collections, Data structures]
-order: 12
+order: 13
 topic: Java / Collections
 updated: 2026-11-13
 subnav: true
