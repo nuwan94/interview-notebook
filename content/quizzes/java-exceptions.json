@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Checked and unchecked",
+   "v": [
+    {
+     "q": "Which exception must be caught or declared with throws?",
+     "o": [
+      "SQLException",
+      "IllegalArgumentException",
+      "ArithmeticException",
+      "StackOverflowError"
+     ],
+     "w": "SQLException is checked: it is an Exception but not a RuntimeException. The other three are unchecked."
+    },
+    {
+     "q": "Which statement about unchecked exceptions is NOT true?",
+     "o": [
+      "The compiler forces callers to catch them",
+      "They extend RuntimeException",
+      "They often signal a bug",
+      "A method need not declare them"
+     ],
+     "w": "The compiler does not check them. Only checked exceptions force a catch or a throws clause."
+    }
+   ]
+  },
+  {
+   "t": "finally",
+   "v": [
+    {
+     "q": "A method has try { return 1; } finally { return 2; }. What does it return?",
+     "o": [
+      "2",
+      "1",
+      "Nothing, it does not compile",
+      "It throws an exception"
+     ],
+     "w": "The return in finally replaces the one from try. Never return or throw from finally."
+    },
+    {
+     "q": "In which case does a finally block NOT run?",
+     "o": [
+      "System.exit is called in the try block",
+      "The try block returns a value",
+      "The try block throws an exception",
+      "A catch block handles the exception"
+     ],
+     "w": "finally runs after return and after exceptions. It does not run when the JVM exits, crashes, or the try never finishes."
+    }
+   ]
+  },
+  {
+   "t": "try-with-resources",
+   "v": [
+    {
+     "q": "In what order does try-with-resources close its resources?",
+     "o": [
+      "Reverse order of opening",
+      "Same order as opening",
+      "Random order",
+      "Only the last one is closed"
+     ],
+     "w": "Resources are closed from the last opened to the first, so a statement is closed before its connection."
+    },
+    {
+     "q": "Which statement about try-with-resources is NOT true?",
+     "o": [
+      "It needs a finally block to close resources",
+      "Resources must implement AutoCloseable",
+      "Resources are closed even if the body throws",
+      "It can declare several resources"
+     ],
+     "w": "The closing is automatic. No finally block is needed."
+    }
+   ]
+  },
+  {
+   "t": "Suppressed exceptions",
+   "v": [
+    {
+     "q": "The try body throws A and close() throws B. What does the caller receive?",
+     "o": [
+      "A, with B attached as suppressed",
+      "B, and A is lost",
+      "Both, wrapped in a new exception",
+      "Neither, close errors are ignored"
+     ],
+     "w": "The body exception stays primary and the close failure is added as suppressed, so the real cause is not hidden."
+    },
+    {
+     "q": "Which method reads the exceptions thrown by close() in try-with-resources?",
+     "o": [
+      "getSuppressed()",
+      "getCause()",
+      "getStackTrace()",
+      "getMessage()"
+     ],
+     "w": "getSuppressed() returns the exceptions attached to the primary one. getCause() is for chaining."
+    }
+   ]
+  },
+  {
+   "t": "Exception chaining",
+   "v": [
+    {
+     "q": "Why pass the original exception as the cause when you wrap it?",
+     "o": [
+      "The root cause stays in the stack trace",
+      "The new exception runs faster",
+      "The caller can catch both types",
+      "The original is thrown again"
+     ],
+     "w": "The trace then shows Caused by: with the root cause, which is what you need to diagnose the failure."
+    },
+    {
+     "q": "Which line keeps the original exception as the cause?",
+     "o": [
+      "throw new StoreException(\"load\", e);",
+      "throw new StoreException(\"load\");",
+      "throw new StoreException(e.getMessage());",
+      "log.error(\"load\"); return null;"
+     ],
+     "w": "Pass the exception to the constructor. Copying only the message loses the trace and the type."
+    }
+   ]
+  },
+  {
+   "t": "What to catch",
+   "v": [
+    {
+     "q": "Where is catching Throwable acceptable?",
+     "o": [
+      "At the top of a thread, to log and stop",
+      "Inside every service method",
+      "Around every database call",
+      "In a constructor, to hide errors"
+     ],
+     "w": "Only at the very top, to log and shut down cleanly. Elsewhere it hides bugs and errors such as OutOfMemoryError."
+    },
+    {
+     "q": "Which catch order compiles?",
+     "o": [
+      "catch (IOException e), then catch (Exception e)",
+      "catch (Exception e), then catch (IOException e)",
+      "Both orders compile",
+      "Neither order compiles"
+     ],
+     "w": "Subclasses must come before superclasses. The reverse makes the second block unreachable."
+    }
+   ]
+  },
+  {
+   "t": "Spring transactions",
+   "v": [
+    {
+     "q": "By default, after which exception does @Transactional commit?",
+     "o": [
+      "A checked IOException",
+      "An IllegalStateException",
+      "An Error",
+      "A RuntimeException"
+     ],
+     "w": "Spring rolls back for unchecked exceptions and errors, and commits after a checked one unless rollbackFor says otherwise."
+    },
+    {
+     "q": "Which setting makes @Transactional roll back for checked exceptions too?",
+     "o": [
+      "rollbackFor = Exception.class",
+      "readOnly = true",
+      "propagation = REQUIRES_NEW",
+      "isolation = SERIALIZABLE"
+     ],
+     "w": "rollbackFor lists the exception types that must roll the transaction back."
+    }
+   ]
+  },
+  {
+   "t": "Errors in APIs and logs",
+   "v": [
+    {
+     "q": "How should a REST API report a business rule violation?",
+     "o": [
+      "A 4xx ProblemDetail without a stack trace",
+      "A 200 response with the stack trace",
+      "A 500 response with the SQL text",
+      "An HTML page with the class name"
+     ],
+     "w": "Use a 4xx status with a clear body. Keep the stack trace in the log and never send internals to the client."
+    },
+    {
+     "q": "Which logging habit is correct for an exception?",
+     "o": [
+      "Log once, with the exception as an argument",
+      "Log and rethrow in every layer",
+      "Call e.printStackTrace() instead",
+      "Log only the message string"
+     ],
+     "w": "Log where it is finally handled, with the exception object so the trace and cause chain are printed."
+    }
+   ]
+  }
+ ]
+}

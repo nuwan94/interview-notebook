@@ -983,5 +983,16 @@
   {"term":"Objenesis","short":"A small library that creates an object without calling its constructor. Spring uses it so a CGLIB proxy can be built for a class whose constructor needs arguments."},
   {"term":"InvocationTargetException","short":"The exception that Method.invoke uses to wrap an exception thrown by the called method. Call getCause() to get the real one."},
   {"term":"Jackson","cs":true,"short":"The most widely used Java JSON library. It reads and writes objects through reflection (getters, setters, fields, annotations such as @JsonProperty)."},
-  {"term":"JUnit","cs":true,"short":"The standard Java unit testing framework. JUnit 5 finds methods annotated @Test by reflection and runs them."}
+  {"term":"JUnit","cs":true,"short":"The standard Java unit testing framework. JUnit 5 finds methods annotated @Test by reflection and runs them."},
+  {"term":"checked exception","aliases":["checked exceptions"],"short":"An Exception that is not a RuntimeException (IOException, SQLException). The compiler forces the caller to catch it or declare it with throws."},
+  {"term":"unchecked exception","aliases":["unchecked exceptions"],"short":"A RuntimeException or an Error. The compiler does not force you to handle it. Usually a bug or a broken rule, such as a null or a bad argument."},
+  {"term":"suppressed exception","aliases":["suppressed exceptions","getSuppressed"],"short":"A second exception, thrown while cleaning up (for example by close()), attached to the primary one with addSuppressed instead of replacing it.","more":"try-with-resources does this automatically. Read them with getSuppressed()."},
+  {"term":"exception chaining","aliases":["exception chain"],"short":"Passing the original exception as the cause of a new one, so the stack trace shows \"Caused by:\" and the root cause is not lost.","in":["java-exceptions"]},
+  {"term":"exception translation","short":"Catching a low-level exception and throwing one that belongs to the current layer, with the original as the cause. Spring turns SQLException into DataAccessException this way."},
+  {"term":"stack trace","aliases":["stack traces"],"short":"The list of method calls active when an exception was created, innermost first. Read the top line and then the \"Caused by:\" lines.","in":["java-exceptions","jvm-troubleshooting"]},
+  {"term":"fillInStackTrace","short":"The Throwable method that records the call stack when an exception is created. It is the main cost of an exception and can be disabled with the 4-argument constructor."},
+  {"term":"AutoCloseable","short":"The interface (one method, close()) that a resource implements so it can be declared in a try-with-resources header and closed automatically."},
+  {"term":"multi-catch","short":"catch (A | B e): one block for several unrelated exception types. The variable is implicitly final."},
+  {"term":"UncheckedIOException","short":"A JDK RuntimeException that wraps an IOException, used to throw an I/O failure from a lambda or a stream where checked exceptions are not allowed."},
+  {"term":"Throwable","cs":true,"short":"The root class of everything that can be thrown. Its two subclasses are Error and Exception. It holds the message, the cause, the stack trace and the suppressed exceptions."}
 ]
