@@ -1,92 +1,204 @@
 {
  "questions": [
   {
-   "q": "A service has low CPU but every request hangs. What is the best first step?",
-   "o": [
-    "Take three thread dumps about ten seconds apart and compare them",
-    "Take a heap dump and open it in Eclipse MAT",
-    "Raise -Xmx and restart the service",
-    "Enable Native Memory Tracking on the next deploy"
-   ],
-   "w": "Low CPU with hung requests means threads are waiting. Dumps taken over time show what they wait for. A heap dump shows memory, not waiting.",
-   "s": "Hang"
+   "t": "Hang",
+   "v": [
+    {
+     "q": "A service has low CPU but every request hangs. What is the best first step?",
+     "o": [
+      "Take three thread dumps about ten seconds apart and compare them",
+      "Take a heap dump and open it in Eclipse MAT",
+      "Raise -Xmx and restart the service",
+      "Enable Native Memory Tracking on the next deploy"
+     ],
+     "w": "Low CPU with hung requests means threads are waiting. Dumps taken over time show what they wait for. A heap dump shows memory, not waiting."
+    },
+    {
+     "q": "Which symptom is NOT a sign that threads are waiting instead of working?",
+     "o": [
+      "One core stays at 100% CPU",
+      "CPU is low while requests hang",
+      "Threads sit in the same place in several dumps",
+      "A thread dump reports a Java-level deadlock"
+     ],
+     "w": "A busy core means a thread is running something hot, which is the high-CPU case. Waiting shows as low CPU and the same stack in every dump."
+    }
+   ]
   },
   {
-   "q": "In a thread dump, which value lets you match a thread to the id shown by top -H?",
-   "o": [
-    "nid, the operating-system thread id in hexadecimal",
-    "tid, the Java thread id in decimal",
-    "prio, the thread priority number",
-    "The name of the thread pool"
-   ],
-   "w": "top shows decimal ids, and the dump prints nid in hexadecimal, so convert with printf %x before searching.",
-   "s": "High CPU"
+   "t": "High CPU",
+   "v": [
+    {
+     "q": "In a thread dump, which value lets you match a thread to the id shown by top -H?",
+     "o": [
+      "nid, the operating-system thread id in hexadecimal",
+      "tid, the Java thread id in decimal",
+      "prio, the thread priority number",
+      "The name of the thread pool"
+     ],
+     "w": "top shows decimal ids, and the dump prints nid in hexadecimal, so convert with printf %x before searching."
+    },
+    {
+     "q": "Thread 4377 uses 97% CPU in top -H. Which value do you search for in the thread dump?",
+     "o": [
+      "nid=0x1119",
+      "tid=4377",
+      "prio=4377",
+      "pid=0x1119"
+     ],
+     "w": "The dump prints the native thread id in hexadecimal. 4377 in decimal is 0x1119, so search for nid=0x1119."
+    }
+   ]
   },
   {
-   "q": "After every full GC the heap is a little fuller than after the last one. What does this suggest?",
-   "o": [
-    "A memory leak, so take a heap dump and look at the dominator tree",
-    "The young generation is too small for the allocation rate",
-    "A deadlock between two threads holding locks",
-    "The JIT compiler has not finished warming up"
-   ],
-   "w": "A rising heap after full GC means objects are still reachable but unused. High peaks with a flat floor point at sizing or allocation instead.",
-   "s": "Leak"
+   "t": "Leak",
+   "v": [
+    {
+     "q": "After every full GC the heap is a little fuller than after the last one. What does this suggest?",
+     "o": [
+      "A memory leak, so take a heap dump and look at the dominator tree",
+      "The young generation is too small for the allocation rate",
+      "A deadlock between two threads holding locks",
+      "The JIT compiler has not finished warming up"
+     ],
+     "w": "A rising heap after full GC means objects are still reachable but unused. High peaks with a flat floor point at sizing or allocation instead."
+    },
+    {
+     "q": "Which observation does NOT point at a memory leak?",
+     "o": [
+      "The heap is high before a GC but falls back to the same floor",
+      "The heap after each full GC is higher than after the last one",
+      "Old generation stays full after full GC",
+      "Full GC runs often and frees almost nothing"
+     ],
+     "w": "A flat floor after GC means the garbage is collected. That is sizing or allocation, not a leak."
+    }
+   ]
   },
   {
-   "q": "What does retained heap tell you about an object in a heap dump?",
-   "o": [
-    "The memory that would be freed if that object were removed",
-    "The memory taken by the object's own fields only",
-    "The number of references that point to the object",
-    "The memory the object used before the last GC"
-   ],
-   "w": "Retained heap includes everything kept alive only by the object. Shallow heap is just the object itself. The dominator tree sorts by retained heap.",
-   "s": "Heap dump"
+   "t": "Heap dump",
+   "v": [
+    {
+     "q": "What does retained heap tell you about an object in a heap dump?",
+     "o": [
+      "The memory that would be freed if that object were removed",
+      "The memory taken by the object's own fields only",
+      "The number of references that point to the object",
+      "The memory the object used before the last GC"
+     ],
+     "w": "Retained heap includes everything kept alive only by the object. Shallow heap is just the object itself. The dominator tree sorts by retained heap."
+    },
+    {
+     "q": "In a heap dump, what is the shallow heap of an object?",
+     "o": [
+      "The memory of the object itself, without what it references",
+      "The memory freed if the object were removed",
+      "The memory of the object and every object it references",
+      "The memory the object had before the last GC"
+     ],
+     "w": "Shallow heap is only the object. Retained heap adds everything that would become unreachable without it."
+    }
+   ]
   },
   {
-   "q": "A container is OOMKilled with exit code 137, but the Java heap is only 60% full. What is the likely reason?",
-   "o": [
-    "Off-heap memory (threads, Metaspace, buffers) pushed the process over the limit",
-    "The garbage collector failed to run before the limit was reached",
-    "The JVM threw OutOfMemoryError and the heap dump was then lost",
-    "The heap dump flag was missing from the startup command line"
-   ],
-   "w": "The kernel limits the whole process, and kills it with SIGKILL, so there is no Java exception. Native Memory Tracking shows which area grew.",
-   "s": "Container"
+   "t": "Container",
+   "v": [
+    {
+     "q": "A container is OOMKilled with exit code 137, but the Java heap is only 60% full. What is the likely reason?",
+     "o": [
+      "Off-heap memory (threads, Metaspace, buffers) pushed the process over the limit",
+      "The garbage collector failed to run before the limit was reached",
+      "The JVM threw OutOfMemoryError and the heap dump was then lost",
+      "The heap dump flag was missing from the startup command line"
+     ],
+     "w": "The kernel limits the whole process, and kills it with SIGKILL, so there is no Java exception. Native Memory Tracking shows which area grew."
+    },
+    {
+     "q": "Which tool shows how much of a container's memory is used by Metaspace, thread stacks and buffers?",
+     "o": [
+      "Native Memory Tracking",
+      "A heap dump in Eclipse MAT",
+      "The GC log alone",
+      "A thread dump"
+     ],
+     "w": "A heap dump and the GC log describe only the heap. NMT breaks the whole process down by area."
+    }
+   ]
   },
   {
-   "q": "Which message means the JVM could not create another thread?",
-   "o": [
-    "OutOfMemoryError: unable to create native thread",
-    "OutOfMemoryError: Java heap space",
-    "OutOfMemoryError: Metaspace",
-    "OutOfMemoryError: Direct buffer memory"
-   ],
-   "w": "The text after the colon names the exhausted area. A thread request refused by the operating system gives the native thread message.",
-   "s": "OutOfMemoryError"
+   "t": "OutOfMemoryError",
+   "v": [
+    {
+     "q": "Which message means the JVM could not create another thread?",
+     "o": [
+      "OutOfMemoryError: unable to create native thread",
+      "OutOfMemoryError: Java heap space",
+      "OutOfMemoryError: Metaspace",
+      "OutOfMemoryError: Direct buffer memory"
+     ],
+     "w": "The text after the colon names the exhausted area. A thread request refused by the operating system gives the native thread message."
+    },
+    {
+     "q": "Which message means the JVM ran out of space for class metadata?",
+     "o": [
+      "OutOfMemoryError: Metaspace",
+      "OutOfMemoryError: Java heap space",
+      "OutOfMemoryError: unable to create native thread",
+      "OutOfMemoryError: GC overhead limit exceeded"
+     ],
+     "w": "The text after the colon names the exhausted area. Metaspace holds class metadata and fills up with class-loader leaks."
+    }
+   ]
   },
   {
-   "q": "Why is Java Flight Recorder considered safe to run in production?",
-   "o": [
-    "It samples data the JVM already has, so the overhead is about one to two percent",
-    "It only runs while the service is idle at night",
-    "It records every method call with full arguments",
-    "It stops all threads while it writes the recording"
-   ],
-   "w": "JFR records sampled events instead of instrumenting each call. It can run continuously or start on demand with jcmd JFR.start.",
-   "s": "JFR"
+   "t": "JFR",
+   "v": [
+    {
+     "q": "Why is Java Flight Recorder considered safe to run in production?",
+     "o": [
+      "It samples data the JVM already has, so the overhead is about one to two percent",
+      "It only runs while the service is idle at night",
+      "It records every method call with full arguments",
+      "It stops all threads while it writes the recording"
+     ],
+     "w": "JFR records sampled events instead of instrumenting each call. It can run continuously or start on demand with jcmd JFR.start."
+    },
+    {
+     "q": "Which statement about Java Flight Recorder is NOT true?",
+     "o": [
+      "It records every method call with its arguments",
+      "It can start on demand with jcmd JFR.start",
+      "Its overhead is typically one or two percent",
+      "It records sampled events"
+     ],
+     "w": "JFR samples events instead of instrumenting every call, which is why it is safe in production."
+    }
+   ]
   },
   {
-   "q": "In a flame graph, what does the width of a box mean?",
-   "o": [
-    "The share of samples in which that method was on the stack",
-    "The time order in which the method ran",
-    "The number of threads that called the method",
-    "The memory the method allocated"
-   ],
-   "w": "Wide boxes are where time goes. The horizontal order has no meaning, so read from a wide box down to its callers.",
-   "s": "Flame graph"
+   "t": "Flame graph",
+   "v": [
+    {
+     "q": "In a flame graph, what does the width of a box mean?",
+     "o": [
+      "The share of samples in which that method was on the stack",
+      "The time order in which the method ran",
+      "The number of threads that called the method",
+      "The memory the method allocated"
+     ],
+     "w": "Wide boxes are where time goes. The horizontal order has no meaning, so read from a wide box down to its callers."
+    },
+    {
+     "q": "In a flame graph, which box is the best place to start looking for slow code?",
+     "o": [
+      "The widest box near the top of a stack",
+      "The leftmost box",
+      "The tallest stack",
+      "The box with the shortest method name"
+     ],
+     "w": "Width is the share of samples, so wide boxes are where time goes. The left-to-right order carries no meaning."
+    }
+   ]
   }
  ]
 }

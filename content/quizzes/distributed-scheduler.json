@@ -1,92 +1,212 @@
 {
-  "questions": [
+ "questions": [
+  {
+   "t": "",
+   "v": [
     {
-      "q": "A `@Scheduled` job runs in a service deployed on three instances. What happens by default?",
-      "o": [
-        "It runs on all three instances at the same time",
-        "Spring elects one instance to run it each time",
-        "Only the first instance to start will ever run it",
-        "It does not run at all when deployed in a cluster"
-      ],
-      "w": "Each JVM has its own scheduler, so the job fires on every instance. You need a lock or a central scheduler to run it once.",
-      "s": 25
+     "q": "A `@Scheduled` job runs in a service deployed on three instances. What happens by default?",
+     "o": [
+      "It runs on all three instances at the same time",
+      "Spring elects one instance to run it each time",
+      "Only the first instance to start will ever run it",
+      "It does not run at all when deployed in a cluster"
+     ],
+     "w": "Each JVM has its own scheduler, so the job fires on every instance. You need a lock or a central scheduler to run it once.",
+     "s": 25
     },
     {
-      "q": "Which approach makes a scheduled job run on only one instance per tick?",
-      "o": [
-        "A distributed lock such as ShedLock, or Quartz clustering",
-        "A larger thread pool for the scheduler",
-        "Switching from `cron` to `fixedRate` timing",
-        "Marking the scheduled method `synchronized`"
-      ],
-      "w": "`synchronized` only works inside one JVM. A shared lock (database row, Redis key) coordinates across instances.",
-      "s": 30
-    },
-    {
-      "q": "A lock holder crashes without releasing the lock. How do distributed locks avoid blocking the job forever?",
-      "o": [
-        "The lock has a lease or TTL and expires on its own",
-        "Another instance forcibly kills the holder process",
-        "The lock is never held for longer than a millisecond",
-        "The database drops the lock table after a minute"
-      ],
-      "w": "Locks use `lockAtMostFor` (ShedLock) or a Redis TTL. Set it longer than the normal job duration but short enough to recover.",
-      "s": 30
-    },
-    {
-      "q": "A job holds a lock with a 30-second lease but occasionally runs 45 seconds. What is the risk?",
-      "o": [
-        "The lease expires and a second instance starts the same job",
-        "The database cancels the long-running job",
-        "The lock silently becomes permanent",
-        "Nothing, because the lock extends itself"
-      ],
-      "w": "Make the job idempotent and either extend the lease while running or use a fencing token so a stale holder cannot do damage.",
-      "s": 35
-    },
-    {
-      "q": "Why should scheduled jobs be idempotent?",
-      "o": [
-        "Jobs can run twice or be retried, and the result must stay correct",
-        "Idempotent jobs always execute faster than others",
-        "Cron expressions require idempotent code to parse",
-        "It avoids the need for a database altogether"
-      ],
-      "w": "At-least-once execution is the realistic guarantee. Use a unique business key or processed marker so a rerun does no extra harm.",
-      "s": 30
-    },
-    {
-      "q": "What is the difference between `fixedRate` and `fixedDelay` in Spring?",
-      "o": [
-        "`fixedRate` counts from each start, `fixedDelay` from the previous end",
-        "`fixedRate` is only valid when written as a cron-style string",
-        "`fixedDelay` runs several jobs in parallel threads by default",
-        "They behave identically in every situation that you meet"
-      ],
-      "w": "Use `fixedDelay` when runs must not overlap in time. `fixedRate` can queue up or overlap if a run is slow.",
-      "s": 30
-    },
-    {
-      "q": "A nightly batch has 10 million rows to process. What scales best across instances?",
-      "o": [
-        "Split the work into partitions that workers claim independently",
-        "Let one instance do everything while the others idle",
-        "Run the same full job on every instance at once",
-        "Process one row per minute to stay safe"
-      ],
-      "w": "Partitioning (by id range or hash) lets instances share the load. Claim rows with `SELECT ... FOR UPDATE SKIP LOCKED` or a status column.",
-      "s": 35
-    },
-    {
-      "q": "Which is a benefit of a dedicated scheduler service (for example Quartz cluster or a workflow engine) over per-service `@Scheduled`?",
-      "o": [
-        "Central persistence, misfire handling and a visible job history",
-        "No configuration is needed at all",
-        "Retries are no longer necessary",
-        "Jobs automatically run exactly once without any extra care"
-      ],
-      "w": "Persistent job stores let jobs survive restarts and let you inspect, pause and retrigger them. Exactly-once still needs idempotent job code.",
-      "s": 30
+     "q": "Which statement about @Scheduled on a service with three instances is NOT true?",
+     "o": [
+      "Spring elects one instance to run the job",
+      "Each JVM has its own scheduler",
+      "The job fires on every instance",
+      "A shared lock is needed to run it once"
+     ],
+     "w": "Spring has no leader election for @Scheduled. Every instance fires its own timer."
     }
-  ]
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which approach makes a scheduled job run on only one instance per tick?",
+     "o": [
+      "A distributed lock such as ShedLock, or Quartz clustering",
+      "A larger thread pool for the scheduler",
+      "Switching from `cron` to `fixedRate` timing",
+      "Marking the scheduled method `synchronized`"
+     ],
+     "w": "`synchronized` only works inside one JVM. A shared lock (database row, Redis key) coordinates across instances.",
+     "s": 30
+    },
+    {
+     "q": "Why does marking a scheduled method synchronized not stop a second instance from running it?",
+     "o": [
+      "synchronized locks only inside one JVM",
+      "Synchronized methods cannot be scheduled",
+      "The cron expression ignores locks",
+      "Spring removes the keyword at startup"
+     ],
+     "w": "A monitor is local to one process. A cross-instance lock needs a shared store such as a database row or Redis key."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A lock holder crashes without releasing the lock. How do distributed locks avoid blocking the job forever?",
+     "o": [
+      "The lock has a lease or TTL and expires on its own",
+      "Another instance forcibly kills the holder process",
+      "The lock is never held for longer than a millisecond",
+      "The database drops the lock table after a minute"
+     ],
+     "w": "Locks use `lockAtMostFor` (ShedLock) or a Redis TTL. Set it longer than the normal job duration but short enough to recover.",
+     "s": 30
+    },
+    {
+     "q": "Which setting stops a crashed lock holder from blocking a job forever?",
+     "o": [
+      "A lease or TTL such as lockAtMostFor",
+      "A larger thread pool",
+      "A shorter cron interval",
+      "The synchronized keyword"
+     ],
+     "w": "The lock expires on its own after the lease, so another instance can take over."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A job holds a lock with a 30-second lease but occasionally runs 45 seconds. What is the risk?",
+     "o": [
+      "The lease expires and a second instance starts the same job",
+      "The database cancels the long-running job",
+      "The lock silently becomes permanent",
+      "Nothing, because the lock extends itself"
+     ],
+     "w": "Make the job idempotent and either extend the lease while running or use a fencing token so a stale holder cannot do damage.",
+     "s": 35
+    },
+    {
+     "q": "A job with a 30-second lease sometimes needs 45 seconds. Which fix is NOT sensible?",
+     "o": [
+      "Make the lease 5 seconds",
+      "Extend the lease while the job runs",
+      "Use a fencing token",
+      "Make the job idempotent"
+     ],
+     "w": "A shorter lease makes overlap more likely. Fix the gap with a longer or renewed lease, a fencing token and idempotent work."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Why should scheduled jobs be idempotent?",
+     "o": [
+      "Jobs can run twice or be retried, and the result must stay correct",
+      "Idempotent jobs always execute faster than others",
+      "Cron expressions require idempotent code to parse",
+      "It avoids the need for a database altogether"
+     ],
+     "w": "At-least-once execution is the realistic guarantee. Use a unique business key or processed marker so a rerun does no extra harm.",
+     "s": 30
+    },
+    {
+     "q": "Which statement about idempotent scheduled jobs is NOT true?",
+     "o": [
+      "They make a rerun unnecessary because exactly-once is guaranteed",
+      "They stay correct when a run is repeated",
+      "A processed marker can make them idempotent",
+      "They help when a retry follows a crash"
+     ],
+     "w": "At-least-once is the realistic guarantee, which is why a rerun must be safe."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is the difference between `fixedRate` and `fixedDelay` in Spring?",
+     "o": [
+      "`fixedRate` counts from each start, `fixedDelay` from the previous end",
+      "`fixedRate` is only valid when written as a cron-style string",
+      "`fixedDelay` runs several jobs in parallel threads by default",
+      "They behave identically in every situation that you meet"
+     ],
+     "w": "Use `fixedDelay` when runs must not overlap in time. `fixedRate` can queue up or overlap if a run is slow.",
+     "s": 30
+    },
+    {
+     "q": "A report job must not start again until the previous run ends, even if one run is slow. Which setting fits?",
+     "o": [
+      "fixedDelay",
+      "fixedRate",
+      "A shorter cron expression",
+      "A larger thread pool"
+     ],
+     "w": "fixedDelay counts from the end of the last run. fixedRate counts from each start and can overlap."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A nightly batch has 10 million rows to process. What scales best across instances?",
+     "o": [
+      "Split the work into partitions that workers claim independently",
+      "Let one instance do everything while the others idle",
+      "Run the same full job on every instance at once",
+      "Process one row per minute to stay safe"
+     ],
+     "w": "Partitioning (by id range or hash) lets instances share the load. Claim rows with `SELECT ... FOR UPDATE SKIP LOCKED` or a status column.",
+     "s": 35
+    },
+    {
+     "q": "Which approach to processing 10 million rows across instances is NOT sensible?",
+     "o": [
+      "Run the full job on every instance at once",
+      "Split the rows into partitions",
+      "Claim rows with SKIP LOCKED",
+      "Use a status column to mark claimed work"
+     ],
+     "w": "Running everything everywhere duplicates work. Partitioning lets instances share the load."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which is a benefit of a dedicated scheduler service (for example Quartz cluster or a workflow engine) over per-service `@Scheduled`?",
+     "o": [
+      "Central persistence, misfire handling and a visible job history",
+      "No configuration is needed at all",
+      "Retries are no longer necessary",
+      "Jobs automatically run exactly once without any extra care"
+     ],
+     "w": "Persistent job stores let jobs survive restarts and let you inspect, pause and retrigger them. Exactly-once still needs idempotent job code.",
+     "s": 30
+    },
+    {
+     "q": "Which feature of a dedicated scheduler such as Quartz cluster helps after a restart?",
+     "o": [
+      "Persistent jobs and misfire handling",
+      "No retries are ever needed",
+      "Jobs always run exactly once",
+      "No database is needed"
+     ],
+     "w": "A persistent job store lets jobs survive restarts and lets you inspect and retrigger them."
+    }
+   ]
+  }
+ ]
 }

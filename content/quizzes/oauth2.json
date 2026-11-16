@@ -1,92 +1,212 @@
 {
-  "questions": [
+ "questions": [
+  {
+   "t": "",
+   "v": [
     {
-      "q": "What problem does OAuth 2.0 solve?",
-      "o": [
-        "Letting an app access a user's resources without their password",
-        "Encrypting database connections between services",
-        "Proving the owner of a website's identity",
-        "Storing user passwords safely in the browser"
-      ],
-      "w": "OAuth 2.0 is a delegated authorization framework. Login (who is this user?) is added by OpenID Connect on top.",
-      "s": 25
+     "q": "What problem does OAuth 2.0 solve?",
+     "o": [
+      "Letting an app access a user's resources without their password",
+      "Encrypting database connections between services",
+      "Proving the owner of a website's identity",
+      "Storing user passwords safely in the browser"
+     ],
+     "w": "OAuth 2.0 is a delegated authorization framework. Login (who is this user?) is added by OpenID Connect on top.",
+     "s": 25
     },
     {
-      "q": "Which grant type should a server-side web app or SPA use for user login in a modern setup?",
-      "o": [
-        "Authorization Code with PKCE",
-        "Implicit grant",
-        "Resource Owner Password Credentials",
-        "Client Credentials"
-      ],
-      "w": "The implicit and password grants are discouraged in OAuth 2.1. Authorization Code with PKCE keeps tokens out of the URL and protects the code from interception.",
-      "s": 30
-    },
-    {
-      "q": "Which grant fits a backend service calling another service with no user involved?",
-      "o": [
-        "Client Credentials",
-        "Authorization Code",
-        "Implicit",
-        "Refresh Token"
-      ],
-      "w": "The service authenticates itself with its own credentials and gets an access token for machine-to-machine calls.",
-      "s": 25
-    },
-    {
-      "q": "What is PKCE for?",
-      "o": [
-        "It binds the code to the requesting client, so a stolen code fails",
-        "It encrypts the access token while it sits in the browser",
-        "It refreshes tokens without making any network call",
-        "It hides the client id from the person using the app"
-      ],
-      "w": "The client sends a hashed code challenge up front and the verifier when exchanging the code. An attacker who intercepts the code does not have the verifier.",
-      "s": 35
-    },
-    {
-      "q": "Who are the four roles in OAuth 2.0?",
-      "o": [
-        "Resource owner, client, authorization server and resource server",
-        "User, browser, database and firewall in the request path",
-        "Issuer, subject, audience and verifier of a token claim",
-        "Producer, consumer, broker and registry of a message bus"
-      ],
-      "w": "The owner is the user. The client is the app. The authorization server issues tokens. The resource server hosts the API that accepts them.",
-      "s": 25
-    },
-    {
-      "q": "What is the `state` parameter in the authorization request used for?",
-      "o": [
-        "It guards against CSRF by matching the response to the request",
-        "It stores the user's session on the server",
-        "It tells the server which scopes to remove",
-        "It chooses the lifetime of the token"
-      ],
-      "w": "The client generates an unpredictable value, sends it, and checks that the same value comes back in the redirect.",
-      "s": 30
-    },
-    {
-      "q": "What do scopes represent?",
-      "o": [
-        "The specific permissions the client asks for, such as read-only access",
-        "The lifetime of the token, measured in minutes or hours",
-        "The list of servers that a token is allowed to reach",
-        "The encryption algorithm that is used to protect the token"
-      ],
-      "w": "Scopes limit what a token can do. Grant the least access needed, and let the resource server check them.",
-      "s": 25
-    },
-    {
-      "q": "Why must the redirect URI be registered and compared exactly by the authorization server?",
-      "o": [
-        "An attacker could get the code or token sent to their own site",
-        "It makes the redirect itself a little quicker",
-        "It lets the user pick any site to return to",
-        "Browsers need it before they will store cookies"
-      ],
-      "w": "Open or loosely matched redirect URIs are a classic way to steal authorization codes.",
-      "s": 30
+     "q": "Which statement about OAuth 2.0 is NOT true?",
+     "o": [
+      "It lets an app collect the user password",
+      "It delegates limited access",
+      "It issues access tokens",
+      "It avoids sharing the password with the client"
+     ],
+     "w": "OAuth exists so the client never sees the user password."
     }
-  ]
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which grant type should a server-side web app or SPA use for user login in a modern setup?",
+     "o": [
+      "Authorization Code with PKCE",
+      "Implicit grant",
+      "Resource Owner Password Credentials",
+      "Client Credentials"
+     ],
+     "w": "The implicit and password grants are discouraged in OAuth 2.1. Authorization Code with PKCE keeps tokens out of the URL and protects the code from interception.",
+     "s": 30
+    },
+    {
+     "q": "Which grant is no longer recommended for browser apps?",
+     "o": [
+      "Implicit",
+      "Authorization Code with PKCE",
+      "Client Credentials for services",
+      "Refresh Token"
+     ],
+     "w": "The implicit grant returns tokens in the URL. Use the authorization code flow with PKCE instead."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which grant fits a backend service calling another service with no user involved?",
+     "o": [
+      "Client Credentials",
+      "Authorization Code",
+      "Implicit",
+      "Refresh Token"
+     ],
+     "w": "The service authenticates itself with its own credentials and gets an access token for machine-to-machine calls.",
+     "s": 25
+    },
+    {
+     "q": "Which grant fits a nightly batch job that calls an API as itself?",
+     "o": [
+      "Client Credentials",
+      "Authorization Code",
+      "Implicit",
+      "Password"
+     ],
+     "w": "There is no user, so the service authenticates with its own client id and secret."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is PKCE for?",
+     "o": [
+      "It binds the code to the requesting client, so a stolen code fails",
+      "It encrypts the access token while it sits in the browser",
+      "It refreshes tokens without making any network call",
+      "It hides the client id from the person using the app"
+     ],
+     "w": "The client sends a hashed code challenge up front and the verifier when exchanging the code. An attacker who intercepts the code does not have the verifier.",
+     "s": 35
+    },
+    {
+     "q": "Which statement about PKCE is NOT true?",
+     "o": [
+      "It replaces the need for HTTPS",
+      "It sends a code challenge in the first request",
+      "It sends a code verifier when redeeming the code",
+      "It protects public clients"
+     ],
+     "w": "PKCE protects the code exchange but HTTPS is still required."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Who are the four roles in OAuth 2.0?",
+     "o": [
+      "Resource owner, client, authorization server and resource server",
+      "User, browser, database and firewall in the request path",
+      "Issuer, subject, audience and verifier of a token claim",
+      "Producer, consumer, broker and registry of a message bus"
+     ],
+     "w": "The owner is the user. The client is the app. The authorization server issues tokens. The resource server hosts the API that accepts them.",
+     "s": 25
+    },
+    {
+     "q": "Which party issues the access token?",
+     "o": [
+      "The authorization server",
+      "The resource server",
+      "The resource owner",
+      "The client"
+     ],
+     "w": "The authorization server authenticates the user, gets consent and issues tokens. The resource server only checks them."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is the `state` parameter in the authorization request used for?",
+     "o": [
+      "It guards against CSRF by matching the response to the request",
+      "It stores the user's session on the server",
+      "It tells the server which scopes to remove",
+      "It chooses the lifetime of the token"
+     ],
+     "w": "The client generates an unpredictable value, sends it, and checks that the same value comes back in the redirect.",
+     "s": 30
+    },
+    {
+     "q": "An attacker sends a victim a link containing the attacker authorization code. Which parameter helps reject it?",
+     "o": [
+      "state",
+      "scope",
+      "audience",
+      "expires_in"
+     ],
+     "w": "The client checks that the state in the response matches the one it created for this request."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What do scopes represent?",
+     "o": [
+      "The specific permissions the client asks for, such as read-only access",
+      "The lifetime of the token, measured in minutes or hours",
+      "The list of servers that a token is allowed to reach",
+      "The encryption algorithm that is used to protect the token"
+     ],
+     "w": "Scopes limit what a token can do. Grant the least access needed, and let the resource server check them.",
+     "s": 25
+    },
+    {
+     "q": "A client asks for the scope read:accounts. What may it do?",
+     "o": [
+      "Only what that scope allows",
+      "Everything the user can do",
+      "Nothing",
+      "Anything the client developer chooses"
+     ],
+     "w": "A scope limits the token to the permissions the user consented to."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Why must the redirect URI be registered and compared exactly by the authorization server?",
+     "o": [
+      "An attacker could get the code or token sent to their own site",
+      "It makes the redirect itself a little quicker",
+      "It lets the user pick any site to return to",
+      "Browsers need it before they will store cookies"
+     ],
+     "w": "Open or loosely matched redirect URIs are a classic way to steal authorization codes.",
+     "s": 30
+    },
+    {
+     "q": "Which registered redirect URI rule is correct?",
+     "o": [
+      "Exact string match",
+      "Any URI on the same host",
+      "Any HTTPS URI",
+      "Wildcards for every sub-path"
+     ],
+     "w": "Loose matching lets an attacker steer the code to a page they control."
+    }
+   ]
+  }
+ ]
 }

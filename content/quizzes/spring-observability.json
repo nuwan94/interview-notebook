@@ -1,92 +1,212 @@
 {
-  "questions": [
+ "questions": [
+  {
+   "t": "",
+   "v": [
     {
-      "q": "What are the three pillars of observability?",
-      "o": [
-        "Metrics, traces and logs",
-        "CPU, memory and disk",
-        "Unit, integration and end-to-end tests",
-        "Alerts, dashboards and tickets"
-      ],
-      "w": "Metrics show that something is wrong, traces show where, and logs show why. Correlate them with trace ids.",
-      "s": 25
+     "q": "What are the three pillars of observability?",
+     "o": [
+      "Metrics, traces and logs",
+      "CPU, memory and disk",
+      "Unit, integration and end-to-end tests",
+      "Alerts, dashboards and tickets"
+     ],
+     "w": "Metrics show that something is wrong, traces show where, and logs show why. Correlate them with trace ids.",
+     "s": 25
     },
     {
-      "q": "What does Micrometer provide?",
-      "o": [
-        "A vendor-neutral metrics facade with many registries",
-        "A new logging framework that replaces SLF4J and Logback",
-        "A message broker that carries events between services",
-        "A database driver that stores metrics inside a relational table"
-      ],
-      "w": "Spring Boot Actuator auto-configures it. You record metrics once and export them to your chosen backend.",
-      "s": 25
-    },
-    {
-      "q": "Which is a high-cardinality tag you should avoid on a metric?",
-      "o": [
-        "`userId` or `accountNumber`",
-        "`status`, with a handful of values",
-        "`method`, such as GET or POST",
-        "`outcome`, success or failure"
-      ],
-      "w": "Each distinct tag combination creates a new time series. Unbounded values can overwhelm the metrics backend.",
-      "s": 30
-    },
-    {
-      "q": "What is the difference between a liveness and a readiness probe?",
-      "o": [
-        "Liveness restarts a stuck app; readiness pauses its traffic until ready",
-        "Liveness checks the database and readiness checks the CPU",
-        "Readiness restarts the pod and liveness routes traffic",
-        "Both are the very same endpoint"
-      ],
-      "w": "Do not put slow dependency checks in liveness, or a database outage will restart every healthy pod.",
-      "s": 30
-    },
-    {
-      "q": "How do you follow one request through five services?",
-      "o": [
-        "Propagate a trace id and view the spans in a tracing tool",
-        "Search the logs of each service by timestamp alone",
-        "Restart each service one after another in order",
-        "Add an extra database query to every one of the services"
-      ],
-      "w": "Micrometer Tracing and OpenTelemetry propagate the W3C `traceparent` header and create spans automatically for HTTP and messaging.",
-      "s": 30
-    },
-    {
-      "q": "What is the MDC used for in logging?",
-      "o": [
-        "It adds context like a trace id to each log line",
-        "It rotates the log files whenever they grow too large",
-        "It encrypts the log output before it is written to disk",
-        "It chooses the active log level for each class at run time"
-      ],
-      "w": "Spring Boot with tracing puts `traceId` and `spanId` in the MDC so every log line can be tied to a trace.",
-      "s": 25
-    },
-    {
-      "q": "Which four signals does Google's SRE guidance call the golden signals?",
-      "o": [
-        "Latency, traffic, errors and saturation",
-        "CPU, memory, disk and network",
-        "Uptime, cost, users and revenue",
-        "Logs, metrics, traces and events"
-      ],
-      "w": "They give a compact health view of any service. Alert on symptoms that users feel rather than on every cause.",
-      "s": 25
-    },
-    {
-      "q": "What is an SLO?",
-      "o": [
-        "A reliability target, e.g. 99.9% of requests under 500 ms",
-        "A log retention policy for every node of the cluster",
-        "A special kind of load balancer placed in front of services",
-        "A contract clause that lists fixed financial penalties only"
-      ],
-      "w": "The gap between 100% and the SLO is the error budget, which guides how much risk the team can take with releases.",
-      "s": 30
+     "q": "Which of these is NOT a pillar of observability?",
+     "o": [
+      "Unit tests",
+      "Metrics",
+      "Traces",
+      "Logs"
+     ],
+     "w": "The pillars describe runtime signals. Tests are a development practice."
     }
-  ]
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What does Micrometer provide?",
+     "o": [
+      "A vendor-neutral metrics facade with many registries",
+      "A new logging framework that replaces SLF4J and Logback",
+      "A message broker that carries events between services",
+      "A database driver that stores metrics inside a relational table"
+     ],
+     "w": "Spring Boot Actuator auto-configures it. You record metrics once and export them to your chosen backend.",
+     "s": 25
+    },
+    {
+     "q": "Which statement about Micrometer is NOT true?",
+     "o": [
+      "It replaces SLF4J",
+      "It is a metrics facade",
+      "It has registries for Prometheus and others",
+      "Spring Boot Actuator uses it"
+     ],
+     "w": "Micrometer is for metrics. SLF4J is the logging facade."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which is a high-cardinality tag you should avoid on a metric?",
+     "o": [
+      "`userId` or `accountNumber`",
+      "`status`, with a handful of values",
+      "`method`, such as GET or POST",
+      "`outcome`, success or failure"
+     ],
+     "w": "Each distinct tag combination creates a new time series. Unbounded values can overwhelm the metrics backend.",
+     "s": 30
+    },
+    {
+     "q": "Which tag is safe on a metric?",
+     "o": [
+      "outcome",
+      "userId",
+      "accountNumber",
+      "requestId"
+     ],
+     "w": "Few distinct values keep the number of time series small. IDs create one per value."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is the difference between a liveness and a readiness probe?",
+     "o": [
+      "Liveness restarts a stuck app; readiness pauses its traffic until ready",
+      "Liveness checks the database and readiness checks the CPU",
+      "Readiness restarts the pod and liveness routes traffic",
+      "Both are the very same endpoint"
+     ],
+     "w": "Do not put slow dependency checks in liveness, or a database outage will restart every healthy pod.",
+     "s": 30
+    },
+    {
+     "q": "Which probe failure removes the pod from traffic without a restart?",
+     "o": [
+      "Readiness",
+      "Liveness",
+      "Startup",
+      "Heap"
+     ],
+     "w": "Readiness only gates traffic. Liveness restarts the container."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "How do you follow one request through five services?",
+     "o": [
+      "Propagate a trace id and view the spans in a tracing tool",
+      "Search the logs of each service by timestamp alone",
+      "Restart each service one after another in order",
+      "Add an extra database query to every one of the services"
+     ],
+     "w": "Micrometer Tracing and OpenTelemetry propagate the W3C `traceparent` header and create spans automatically for HTTP and messaging.",
+     "s": 30
+    },
+    {
+     "q": "Which tool shows where one slow request spent its time across services?",
+     "o": [
+      "A distributed trace",
+      "A CPU graph",
+      "A disk graph",
+      "A deployment list"
+     ],
+     "w": "Spans with durations show which hop was slow."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is the MDC used for in logging?",
+     "o": [
+      "It adds context like a trace id to each log line",
+      "It rotates the log files whenever they grow too large",
+      "It encrypts the log output before it is written to disk",
+      "It chooses the active log level for each class at run time"
+     ],
+     "w": "Spring Boot with tracing puts `traceId` and `spanId` in the MDC so every log line can be tied to a trace.",
+     "s": 25
+    },
+    {
+     "q": "Which header carries trace context between services?",
+     "o": [
+      "traceparent",
+      "Accept",
+      "Content-Length",
+      "Host"
+     ],
+     "w": "W3C Trace Context defines traceparent, and tracers add the ids to the MDC."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which four signals does Google's SRE guidance call the golden signals?",
+     "o": [
+      "Latency, traffic, errors and saturation",
+      "CPU, memory, disk and network",
+      "Uptime, cost, users and revenue",
+      "Logs, metrics, traces and events"
+     ],
+     "w": "They give a compact health view of any service. Alert on symptoms that users feel rather than on every cause.",
+     "s": 25
+    },
+    {
+     "q": "Which pair is part of the golden signals?",
+     "o": [
+      "Latency and saturation",
+      "Uptime and revenue",
+      "Logs and traces",
+      "CPU and disk"
+     ],
+     "w": "The golden signals are latency, traffic, errors and saturation."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is an SLO?",
+     "o": [
+      "A reliability target, e.g. 99.9% of requests under 500 ms",
+      "A log retention policy for every node of the cluster",
+      "A special kind of load balancer placed in front of services",
+      "A contract clause that lists fixed financial penalties only"
+     ],
+     "w": "The gap between 100% and the SLO is the error budget, which guides how much risk the team can take with releases.",
+     "s": 30
+    },
+    {
+     "q": "Which statement about SLOs is NOT true?",
+     "o": [
+      "They are legal contracts with fixed penalties",
+      "They are reliability targets",
+      "They are based on measured SLIs",
+      "They guide an error budget"
+     ],
+     "w": "An SLA is the contract. An SLO is an internal target."
+    }
+   ]
+  }
+ ]
 }

@@ -1,92 +1,204 @@
 {
  "questions": [
   {
-   "q": "A payment API runs on three instances behind a load balancer. Customers are randomly logged out. What is the most likely cause?",
-   "o": [
-    "The session is kept in each instance's own memory",
-    "The load balancer is using too many instances and needs fewer",
-    "The database transaction isolation level is set too low",
-    "The JWT signing algorithm is not strong enough"
-   ],
-   "w": "A session stored in one instance's memory is unknown to the others, so a request routed elsewhere looks logged out. Share the session (Redis) or use tokens.",
-   "s": "Stateless services"
+   "t": "Stateless services",
+   "v": [
+    {
+     "q": "A payment API runs on three instances behind a load balancer. Customers are randomly logged out. What is the most likely cause?",
+     "o": [
+      "The session is kept in each instance's own memory",
+      "The load balancer is using too many instances and needs fewer",
+      "The database transaction isolation level is set too low",
+      "The JWT signing algorithm is not strong enough"
+     ],
+     "w": "A session stored in one instance's memory is unknown to the others, so a request routed elsewhere looks logged out. Share the session (Redis) or use tokens."
+    },
+    {
+     "q": "Which design lets any instance serve any request?",
+     "o": [
+      "Keep session state in a shared store",
+      "Keep the session in instance memory",
+      "Pin users to an instance",
+      "Store the session in a static field"
+     ],
+     "w": "Stateless instances can be added, removed and replaced because state lives outside them."
+    }
+   ]
   },
   {
-   "q": "What is the main weakness of sticky sessions?",
-   "o": [
-    "The session is lost when the pinned instance restarts or is replaced",
-    "They make the load balancer reject all new clients",
-    "They stop a service from using HTTPS between instances",
-    "They require every request to be signed with a JWT"
-   ],
-   "w": "Stickiness only hides local state: when the instance dies, is redeployed or scaled in, its sessions are gone, and load can also become uneven.",
-   "s": "Sticky sessions"
+   "t": "Sticky sessions",
+   "v": [
+    {
+     "q": "What is the main weakness of sticky sessions?",
+     "o": [
+      "The session is lost when the pinned instance restarts or is replaced",
+      "They make the load balancer reject all new clients",
+      "They stop a service from using HTTPS between instances",
+      "They require every request to be signed with a JWT"
+     ],
+     "w": "Stickiness only hides local state: when the instance dies, is redeployed or scaled in, its sessions are gone, and load can also become uneven."
+    },
+    {
+     "q": "Which statement about sticky sessions is NOT true?",
+     "o": [
+      "They remove all shared state",
+      "The session is lost if the instance dies",
+      "Load can become uneven",
+      "They complicate rolling updates"
+     ],
+     "w": "They only pin a user to one instance. The state is still lost when that instance goes away."
+    }
+   ]
   },
   {
-   "q": "A mobile app times out on POST /payments and retries. How do you prevent a double charge?",
-   "o": [
-    "Send the same idempotency key with every attempt and store the result per key",
-    "Disable retries in the client for all payment calls",
-    "Add a longer timeout and ignore any duplicate requests",
-    "Run the payment inside a read-only database transaction"
-   ],
-   "w": "The unique key identifies the intent, so a repeat returns the saved result instead of charging again. Turning retries off just loses payments.",
-   "s": "Idempotency"
+   "t": "Idempotency",
+   "v": [
+    {
+     "q": "A mobile app times out on POST /payments and retries. How do you prevent a double charge?",
+     "o": [
+      "Send the same idempotency key with every attempt and store the result per key",
+      "Disable retries in the client for all payment calls",
+      "Add a longer timeout and ignore any duplicate requests",
+      "Run the payment inside a read-only database transaction"
+     ],
+     "w": "The unique key identifies the intent, so a repeat returns the saved result instead of charging again. Turning retries off just loses payments."
+    },
+    {
+     "q": "Which header carries the client generated key that makes a payment retry safe?",
+     "o": [
+      "Idempotency-Key",
+      "Content-Length",
+      "Accept-Language",
+      "ETag"
+     ],
+     "w": "The server stores the result under the key and returns it again when the same key arrives."
+    }
+   ]
   },
   {
-   "q": "Why should a Kafka consumer record the id of each processed message in the same transaction as its effect?",
-   "o": [
-    "Brokers deliver at least once, so duplicates must be detected and skipped",
-    "It makes Kafka deliver each message exactly one time",
-    "It lets the broker delete messages without acknowledgement",
-    "It removes the need for consumer groups"
-   ],
-   "w": "Redelivery is normal. A processed-id table with a unique constraint, committed with the effect, makes the consumer idempotent.",
-   "s": "Idempotent consumers"
+   "t": "Idempotent consumers",
+   "v": [
+    {
+     "q": "Why should a Kafka consumer record the id of each processed message in the same transaction as its effect?",
+     "o": [
+      "Brokers deliver at least once, so duplicates must be detected and skipped",
+      "It makes Kafka deliver each message exactly one time",
+      "It lets the broker delete messages without acknowledgement",
+      "It removes the need for consumer groups"
+     ],
+     "w": "Redelivery is normal. A processed-id table with a unique constraint, committed with the effect, makes the consumer idempotent."
+    },
+    {
+     "q": "A consumer saves the message id and the business update in one transaction. What does it gain?",
+     "o": [
+      "Duplicates are skipped safely",
+      "Exactly-once delivery by the broker",
+      "Faster publishing",
+      "No consumer groups needed"
+     ],
+     "w": "The broker may deliver twice. The stored id lets the consumer see that it already did the work."
+    }
+   ]
   },
   {
-   "q": "Two users update the same account row at once. How does optimistic locking handle it?",
-   "o": [
-    "The update with a stale version number fails and the caller retries",
-    "The database locks the row until the first user logs out",
-    "The second update silently overwrites the first one",
-    "Both updates are merged automatically by the database"
-   ],
-   "w": "UPDATE ... WHERE version = ? matches no row when someone else changed it first, so the second writer reloads and retries instead of overwriting.",
-   "s": "Optimistic locking"
+   "t": "Optimistic locking",
+   "v": [
+    {
+     "q": "Two users update the same account row at once. How does optimistic locking handle it?",
+     "o": [
+      "The update with a stale version number fails and the caller retries",
+      "The database locks the row until the first user logs out",
+      "The second update silently overwrites the first one",
+      "Both updates are merged automatically by the database"
+     ],
+     "w": "UPDATE ... WHERE version = ? matches no row when someone else changed it first, so the second writer reloads and retries instead of overwriting."
+    },
+    {
+     "q": "Which statement about optimistic locking is NOT true?",
+     "o": [
+      "It locks the row until the user logs out",
+      "It uses a version column",
+      "A stale update fails",
+      "The caller can reload and retry"
+     ],
+     "w": "Nothing is locked while the user thinks. The conflict is found at write time."
+    }
+   ]
   },
   {
-   "q": "In event sourcing, how is the current account balance obtained?",
-   "o": [
-    "By replaying the stored events, usually from the latest snapshot",
-    "By reading a balance column that every event overwrites",
-    "By asking the read model to recalculate it from scratch",
-    "By deleting old events and keeping only the last one"
-   ],
-   "w": "The events are the source of truth and are never edited. State is the fold of the events, and snapshots keep replay short.",
-   "s": "Event sourcing"
+   "t": "Event sourcing",
+   "v": [
+    {
+     "q": "In event sourcing, how is the current account balance obtained?",
+     "o": [
+      "By replaying the stored events, usually from the latest snapshot",
+      "By reading a balance column that every event overwrites",
+      "By asking the read model to recalculate it from scratch",
+      "By deleting old events and keeping only the last one"
+     ],
+     "w": "The events are the source of truth and are never edited. State is the fold of the events, and snapshots keep replay short."
+    },
+    {
+     "q": "In event sourcing, what is the source of truth?",
+     "o": [
+      "The stored events",
+      "The read model",
+      "A cache",
+      "The latest snapshot only"
+     ],
+     "w": "State is derived from events. Snapshots and read models can be rebuilt from them."
+    }
+   ]
   },
   {
-   "q": "What is the usual cost of using CQRS with separate read models?",
-   "o": [
-    "The read side is eventually consistent, so it can lag behind a write",
-    "Writes can no longer be validated by business rules",
-    "Every query must lock the event store for reading",
-    "Read models cannot be rebuilt once they are created"
-   ],
-   "w": "Read models are updated after events are stored, so a screen may briefly show old data. They can be rebuilt from the events, and rules still apply on the write side.",
-   "s": "CQRS"
+   "t": "CQRS",
+   "v": [
+    {
+     "q": "What is the usual cost of using CQRS with separate read models?",
+     "o": [
+      "The read side is eventually consistent, so it can lag behind a write",
+      "Writes can no longer be validated by business rules",
+      "Every query must lock the event store for reading",
+      "Read models cannot be rebuilt once they are created"
+     ],
+     "w": "Read models are updated after events are stored, so a screen may briefly show old data. They can be rebuilt from the events, and rules still apply on the write side."
+    },
+    {
+     "q": "Which claim about CQRS read models is NOT true?",
+     "o": [
+      "The read side is always immediately consistent",
+      "A projection can lag behind a write",
+      "Read models can be rebuilt",
+      "Reads and writes can scale separately"
+     ],
+     "w": "The usual price is eventual consistency between the two sides."
+    }
+   ]
   },
   {
-   "q": "Why does a database on Kubernetes normally use a StatefulSet instead of a Deployment?",
-   "o": [
-    "Pods keep a stable name and their own persistent volume across rescheduling",
-    "It makes the pods start faster than ordinary pods",
-    "It removes the need for any storage or backups",
-    "It lets all pods share one writable filesystem automatically"
-   ],
-   "w": "A StatefulSet gives db-0, db-1 and so on a stable identity and a volume each, so a rescheduled pod returns with the same data. Backups are still needed.",
-   "s": "Stateful workloads"
+   "t": "Stateful workloads",
+   "v": [
+    {
+     "q": "Why does a database on Kubernetes normally use a StatefulSet instead of a Deployment?",
+     "o": [
+      "Pods keep a stable name and their own persistent volume across rescheduling",
+      "It makes the pods start faster than ordinary pods",
+      "It removes the need for any storage or backups",
+      "It lets all pods share one writable filesystem automatically"
+     ],
+     "w": "A StatefulSet gives db-0, db-1 and so on a stable identity and a volume each, so a rescheduled pod returns with the same data. Backups are still needed."
+    },
+    {
+     "q": "Which Kubernetes feature gives each database pod its own stable volume?",
+     "o": [
+      "StatefulSet",
+      "Deployment",
+      "ReplicaSet",
+      "DaemonSet"
+     ],
+     "w": "A StatefulSet gives pods stable names and a persistent volume per pod."
+    }
+   ]
   }
  ]
 }

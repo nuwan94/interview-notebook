@@ -1,10 +1,204 @@
-{"questions":[
-{"q":"What does a Dev Container define?","o":["The development environment: tools, extensions and settings, in a container","The production image that is deployed to the cluster","The database schema and its migration scripts","The CI pipeline stages and their triggers"],"w":"A dev container holds the toolchain and editor setup, described by devcontainer.json in the repository. The application image is a separate concern.","s":"Basics"},
-{"q":"Which file configures a dev container?","o":[".devcontainer/devcontainer.json","docker-compose.override.yaml in the repository root","pom.xml with a devcontainer profile","A Dockerfile named dev.Dockerfile in the home directory"],"w":"The spec reads .devcontainer/devcontainer.json (or .devcontainer.json). It can reference a Dockerfile or Compose file.","s":"Basics"},
-{"q":"What is a Dev Container Feature?","o":["A reusable, versioned installer that adds a tool such as Java to any base image","A paid tier of the Dev Containers extension","A flag that enables experimental editor behaviour","A Compose service that starts alongside the container"],"w":"Features are OCI artifacts such as ghcr.io/devcontainers/features/java:1, with options, installed on top of the image.","s":"Features"},
-{"q":"Which lifecycle command runs on the host machine, before the container is created?","o":["initializeCommand","onCreateCommand","postCreateCommand","postAttachCommand"],"w":"initializeCommand runs on the host. The others run inside the container: onCreate, updateContent, postCreate, then postStart on each start and postAttach on each attach.","s":"Lifecycle"},
-{"q":"How do you give a dev container a PostgreSQL database?","o":["Use dockerComposeFile and service, with db as another Compose service","Install PostgreSQL on the host and use localhost","Set the image property to postgres:16","Add a forwardPorts entry of 5432 only"],"w":"The dev container is one Compose service and the database another on the same network, reachable as db:5432.","s":"Services"},
-{"q":"Why can a bind-mounted workspace be slow on macOS and Windows?","o":["Docker runs in a VM, so file access crosses a file-sharing layer","The container runs as root, which disables caching","Dev containers cannot read files larger than one megabyte","Git refuses to operate on mounted folders"],"w":"Use a container volume (Clone Repository in Container Volume) and named volumes for Maven or Gradle caches.","s":"Performance"},
-{"q":"What is the security downside of docker-outside-of-docker?","o":["It mounts the host Docker socket, giving the container control of the host's Docker","It disables all network access inside the container","It forces the container to run an outdated Docker version","It deletes local images each time the editor closes"],"w":"Access to the host socket is effectively root on the host. Docker-in-Docker is isolated but needs privileged mode.","s":"Security"},
-{"q":"What is the main benefit of a dev container prebuild?","o":["The image is built once in CI, so opening the project takes seconds","The container runs without Docker installed","Source code is encrypted inside the image","All developers share one running container"],"w":"Prebuilds run Feature installs and dependency downloads ahead of time and publish the image to a registry.","s":"Speed"}
-]}
+{
+ "questions": [
+  {
+   "t": "Basics",
+   "v": [
+    {
+     "q": "What does a Dev Container define?",
+     "o": [
+      "The development environment: tools, extensions and settings, in a container",
+      "The production image that is deployed to the cluster",
+      "The database schema and its migration scripts",
+      "The CI pipeline stages and their triggers"
+     ],
+     "w": "A dev container holds the toolchain and editor setup, described by devcontainer.json in the repository. The application image is a separate concern."
+    },
+    {
+     "q": "Which item is NOT part of what a dev container defines?",
+     "o": [
+      "The production image",
+      "Editor extensions",
+      "A JDK toolchain",
+      "Editor settings"
+     ],
+     "w": "The dev container describes the development environment. The deployable image is separate."
+    }
+   ]
+  },
+  {
+   "t": "Basics",
+   "v": [
+    {
+     "q": "Which file configures a dev container?",
+     "o": [
+      ".devcontainer/devcontainer.json",
+      "docker-compose.override.yaml in the repository root",
+      "pom.xml with a devcontainer profile",
+      "A Dockerfile named dev.Dockerfile in the home directory"
+     ],
+     "w": "The spec reads .devcontainer/devcontainer.json (or .devcontainer.json). It can reference a Dockerfile or Compose file."
+    },
+    {
+     "q": "Where does the Dev Containers specification look for its configuration?",
+     "o": [
+      ".devcontainer/devcontainer.json",
+      "pom.xml in the project root",
+      "package.json in the project root",
+      ".github/workflows/dev.yml"
+     ],
+     "w": "The tooling reads .devcontainer/devcontainer.json or .devcontainer.json in the repository."
+    }
+   ]
+  },
+  {
+   "t": "Features",
+   "v": [
+    {
+     "q": "What is a Dev Container Feature?",
+     "o": [
+      "A reusable, versioned installer that adds a tool such as Java to any base image",
+      "A paid tier of the Dev Containers extension",
+      "A flag that enables experimental editor behaviour",
+      "A Compose service that starts alongside the container"
+     ],
+     "w": "Features are OCI artifacts such as ghcr.io/devcontainers/features/java:1, with options, installed on top of the image."
+    },
+    {
+     "q": "Which statement about Dev Container Features is NOT true?",
+     "o": [
+      "A Feature is a paid tier of the extension",
+      "A Feature is a reusable installer",
+      "Features are published as OCI artifacts",
+      "Features accept options such as a version"
+     ],
+     "w": "Features are free, shareable installers that add tools such as Java or Node to an image."
+    }
+   ]
+  },
+  {
+   "t": "Lifecycle",
+   "v": [
+    {
+     "q": "Which lifecycle command runs on the host machine, before the container is created?",
+     "o": [
+      "initializeCommand",
+      "onCreateCommand",
+      "postCreateCommand",
+      "postAttachCommand"
+     ],
+     "w": "initializeCommand runs on the host. The others run inside the container: onCreate, updateContent, postCreate, then postStart on each start and postAttach on each attach."
+    },
+    {
+     "q": "Which lifecycle command runs after the container is created and the repository is available in it?",
+     "o": [
+      "postCreateCommand",
+      "initializeCommand",
+      "A host shell login script",
+      "The Dockerfile ENTRYPOINT only"
+     ],
+     "w": "postCreateCommand runs inside the container once it exists, so it suits mvn dependency:go-offline or npm install."
+    }
+   ]
+  },
+  {
+   "t": "Services",
+   "v": [
+    {
+     "q": "How do you give a dev container a PostgreSQL database?",
+     "o": [
+      "Use dockerComposeFile and service, with db as another Compose service",
+      "Install PostgreSQL on the host and use localhost",
+      "Set the image property to postgres:16",
+      "Add a forwardPorts entry of 5432 only"
+     ],
+     "w": "The dev container is one Compose service and the database another on the same network, reachable as db:5432."
+    },
+    {
+     "q": "A dev container service must reach PostgreSQL started by Compose. Which host name does it use?",
+     "o": [
+      "db, the Compose service name",
+      "localhost on the host machine",
+      "The host machine IP address",
+      "The container ID"
+     ],
+     "w": "Services on one Compose network resolve each other by service name."
+    }
+   ]
+  },
+  {
+   "t": "Performance",
+   "v": [
+    {
+     "q": "Why can a bind-mounted workspace be slow on macOS and Windows?",
+     "o": [
+      "Docker runs in a VM, so file access crosses a file-sharing layer",
+      "The container runs as root, which disables caching",
+      "Dev containers cannot read files larger than one megabyte",
+      "Git refuses to operate on mounted folders"
+     ],
+     "w": "Use a container volume (Clone Repository in Container Volume) and named volumes for Maven or Gradle caches."
+    },
+    {
+     "q": "Which change speeds up a slow bind-mounted workspace on Windows or macOS?",
+     "o": [
+      "Clone the repository into a container volume",
+      "Run the container as root",
+      "Disable Git inside the container",
+      "Reduce the file size limit"
+     ],
+     "w": "A volume lives inside the Docker VM, so file access no longer crosses the host file-sharing layer."
+    }
+   ]
+  },
+  {
+   "t": "Security",
+   "v": [
+    {
+     "q": "What is the security downside of docker-outside-of-docker?",
+     "o": [
+      "It mounts the host Docker socket, giving the container control of the host's Docker",
+      "It disables all network access inside the container",
+      "It forces the container to run an outdated Docker version",
+      "It deletes local images each time the editor closes"
+     ],
+     "w": "Access to the host socket is effectively root on the host. Docker-in-Docker is isolated but needs privileged mode."
+    },
+    {
+     "q": "Which statement about the host Docker socket is NOT true?",
+     "o": [
+      "Mounting it is harmless and isolated",
+      "It lets the container start siblings on the host",
+      "Access to it is effectively root on the host",
+      "Docker-in-Docker avoids it but needs privileged mode"
+     ],
+     "w": "Mounting the socket gives the container control of the host Docker, so it is a real security risk."
+    }
+   ]
+  },
+  {
+   "t": "Speed",
+   "v": [
+    {
+     "q": "What is the main benefit of a dev container prebuild?",
+     "o": [
+      "The image is built once in CI, so opening the project takes seconds",
+      "The container runs without Docker installed",
+      "Source code is encrypted inside the image",
+      "All developers share one running container"
+     ],
+     "w": "Prebuilds run Feature installs and dependency downloads ahead of time and publish the image to a registry."
+    },
+    {
+     "q": "Which step is typically moved into a dev container prebuild?",
+     "o": [
+      "Installing tools and libraries",
+      "Typing code in the editor",
+      "Running the developer tests",
+      "Reviewing pull requests"
+     ],
+     "w": "Prebuilds run the slow setup in CI and publish the image, so a developer opens the project in seconds."
+    }
+   ]
+  }
+ ]
+}

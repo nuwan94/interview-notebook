@@ -1,92 +1,212 @@
 {
-  "questions": [
+ "questions": [
+  {
+   "t": "",
+   "v": [
     {
-      "q": "What is the minimum Java version required by Spring Boot 3?",
-      "o": [
-        "Java 17",
-        "Java 8",
-        "Java 11",
-        "Java 21"
-      ],
-      "w": "Spring Boot 3 is built on Spring Framework 6, which requires Java 17 or later. Java 21 is supported and adds virtual threads.",
-      "s": 20
+     "q": "What is the minimum Java version required by Spring Boot 3?",
+     "o": [
+      "Java 17",
+      "Java 8",
+      "Java 11",
+      "Java 21"
+     ],
+     "w": "Spring Boot 3 is built on Spring Framework 6, which requires Java 17 or later. Java 21 is supported and adds virtual threads.",
+     "s": 20
     },
     {
-      "q": "What is the biggest source-level change when migrating from Spring Boot 2 to 3?",
-      "o": [
-        "`javax.*` packages are renamed to `jakarta.*`",
-        "XML configuration becomes mandatory",
-        "Gradle replaces Maven as the build tool",
-        "All beans become prototype scoped"
-      ],
-      "w": "Jakarta EE 9+ renamed the packages, so imports such as `javax.persistence` become `jakarta.persistence`. OpenRewrite recipes automate most of it.",
-      "s": 25
-    },
-    {
-      "q": "How do you turn on virtual threads for a Spring Boot 3.2+ web app on Java 21?",
-      "o": [
-        "Set `spring.threads.virtual.enabled=true`",
-        "Add `@EnableVirtualThreads` to every controller",
-        "Replace Tomcat with Netty",
-        "Rewrite controllers to return `Mono`"
-      ],
-      "w": "Blocking code keeps its simple style while the server handles requests on cheap virtual threads. Watch for pinning in `synchronized` blocks.",
-      "s": 30
-    },
-    {
-      "q": "What is Spring AOT used for?",
-      "o": [
-        "Generating code and hints at build time for faster, native-ready startup",
-        "Making the unit tests run faster inside the CI pipeline",
-        "Compiling Java source code into JavaScript for browsers",
-        "Hot reloading changed classes inside a production server"
-      ],
-      "w": "Ahead-of-time processing resolves bean definitions at build time. GraalVM native images need that because of the closed-world assumption.",
-      "s": 30
-    },
-    {
-      "q": "What does a GraalVM native image trade for its fast startup and low memory?",
-      "o": [
-        "Longer builds, plus limits on reflection and dynamic features",
-        "Loss of support for ordinary Java classes and interfaces",
-        "Losing the ability to run on Linux container hosts",
-        "Giving up the use of Spring beans in the application"
-      ],
-      "w": "Reflection, proxies and resources must be known at build time (hints). Peak throughput may also be lower than a warmed-up JIT JVM.",
-      "s": 30
-    },
-    {
-      "q": "Which class replaces `WebSecurityConfigurerAdapter` in modern Spring Security?",
-      "o": [
-        "A `SecurityFilterChain` bean",
-        "A `SecurityManager` subclass",
-        "An `@EnableOldSecurity` annotation",
-        "A `web.xml` file"
-      ],
-      "w": "You now declare one or more `SecurityFilterChain` beans using the lambda DSL of `HttpSecurity`.",
-      "s": 25
-    },
-    {
-      "q": "What is the standard way to return errors in Spring 6 / Boot 3 REST APIs?",
-      "o": [
-        "`ProblemDetail`, based on RFC 7807/9457 problem details",
-        "A plain string holding the stack trace",
-        "An HTML error page returned to every client",
-        "Always `200 OK` with an error field"
-      ],
-      "w": "Enable with `spring.mvc.problemdetails.enabled=true` or return `ProblemDetail` from an `@ExceptionHandler`.",
-      "s": 30
-    },
-    {
-      "q": "What does the Observation API in Spring 6 allow?",
-      "o": [
-        "Instrumenting code once to get metrics, traces and log context",
-        "Watching files on disk and reloading them when they change",
-        "Observing user behaviour in the browser for analytics",
-        "Replacing the logging framework that the application uses"
-      ],
-      "w": "It builds on Micrometer so one instrumentation point feeds Prometheus metrics and distributed tracing together.",
-      "s": 30
+     "q": "Which Java version is too old for Spring Boot 3?",
+     "o": [
+      "Java 11",
+      "Java 17",
+      "Java 21",
+      "Java 25"
+     ],
+     "w": "Spring Boot 3 requires Java 17 or later."
     }
-  ]
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is the biggest source-level change when migrating from Spring Boot 2 to 3?",
+     "o": [
+      "`javax.*` packages are renamed to `jakarta.*`",
+      "XML configuration becomes mandatory",
+      "Gradle replaces Maven as the build tool",
+      "All beans become prototype scoped"
+     ],
+     "w": "Jakarta EE 9+ renamed the packages, so imports such as `javax.persistence` become `jakarta.persistence`. OpenRewrite recipes automate most of it.",
+     "s": 25
+    },
+    {
+     "q": "Which import must change when migrating to Spring Boot 3?",
+     "o": [
+      "javax.persistence to jakarta.persistence",
+      "java.util to java.lang",
+      "org.springframework to org.spring",
+      "java.time to java.date"
+     ],
+     "w": "Jakarta EE 9 renamed the javax packages, so all Jakarta imports change."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "How do you turn on virtual threads for a Spring Boot 3.2+ web app on Java 21?",
+     "o": [
+      "Set `spring.threads.virtual.enabled=true`",
+      "Add `@EnableVirtualThreads` to every controller",
+      "Replace Tomcat with Netty",
+      "Rewrite controllers to return `Mono`"
+     ],
+     "w": "Blocking code keeps its simple style while the server handles requests on cheap virtual threads. Watch for pinning in `synchronized` blocks.",
+     "s": 30
+    },
+    {
+     "q": "Which Java version is needed for virtual threads in Spring Boot 3.2?",
+     "o": [
+      "Java 21",
+      "Java 8",
+      "Java 11",
+      "Java 17"
+     ],
+     "w": "Virtual threads were finalised in Java 21. Boot enables them with a single property."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is Spring AOT used for?",
+     "o": [
+      "Generating code and hints at build time for faster, native-ready startup",
+      "Making the unit tests run faster inside the CI pipeline",
+      "Compiling Java source code into JavaScript for browsers",
+      "Hot reloading changed classes inside a production server"
+     ],
+     "w": "Ahead-of-time processing resolves bean definitions at build time. GraalVM native images need that because of the closed-world assumption.",
+     "s": 30
+    },
+    {
+     "q": "What does Spring AOT do?",
+     "o": [
+      "It prepares code and hints at build time",
+      "It reloads classes at run time",
+      "It compiles Java to JavaScript",
+      "It speeds up unit tests"
+     ],
+     "w": "AOT processing generates what native images and faster startup need."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What does a GraalVM native image trade for its fast startup and low memory?",
+     "o": [
+      "Longer builds, plus limits on reflection and dynamic features",
+      "Loss of support for ordinary Java classes and interfaces",
+      "Losing the ability to run on Linux container hosts",
+      "Giving up the use of Spring beans in the application"
+     ],
+     "w": "Reflection, proxies and resources must be known at build time (hints). Peak throughput may also be lower than a warmed-up JIT JVM.",
+     "s": 30
+    },
+    {
+     "q": "Which is NOT a limit of a GraalVM native image?",
+     "o": [
+      "It cannot run on Linux",
+      "Longer build times",
+      "Reflection needs hints",
+      "Dynamic class loading is restricted"
+     ],
+     "w": "Native images run well on Linux and in containers. The costs are build time and a closed-world model."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which class replaces `WebSecurityConfigurerAdapter` in modern Spring Security?",
+     "o": [
+      "A `SecurityFilterChain` bean",
+      "A `SecurityManager` subclass",
+      "An `@EnableOldSecurity` annotation",
+      "A `web.xml` file"
+     ],
+     "w": "You now declare one or more `SecurityFilterChain` beans using the lambda DSL of `HttpSecurity`.",
+     "s": 25
+    },
+    {
+     "q": "Which style configures Spring Security 6 without the old adapter?",
+     "o": [
+      "A SecurityFilterChain bean with HttpSecurity",
+      "Extend WebSecurityConfigurerAdapter",
+      "A web.xml file",
+      "An XML security namespace only"
+     ],
+     "w": "The adapter was removed. Declare beans instead."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What is the standard way to return errors in Spring 6 / Boot 3 REST APIs?",
+     "o": [
+      "`ProblemDetail`, based on RFC 7807/9457 problem details",
+      "A plain string holding the stack trace",
+      "An HTML error page returned to every client",
+      "Always `200 OK` with an error field"
+     ],
+     "w": "Enable with `spring.mvc.problemdetails.enabled=true` or return `ProblemDetail` from an `@ExceptionHandler`.",
+     "s": 30
+    },
+    {
+     "q": "Which type returns RFC 9457 errors in Spring 6?",
+     "o": [
+      "ProblemDetail",
+      "ErrorString",
+      "HttpErrorPage",
+      "StackTraceResponse"
+     ],
+     "w": "ProblemDetail carries type, title, status and detail in a standard format."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What does the Observation API in Spring 6 allow?",
+     "o": [
+      "Instrumenting code once to get metrics, traces and log context",
+      "Watching files on disk and reloading them when they change",
+      "Observing user behaviour in the browser for analytics",
+      "Replacing the logging framework that the application uses"
+     ],
+     "w": "It builds on Micrometer so one instrumentation point feeds Prometheus metrics and distributed tracing together.",
+     "s": 30
+    },
+    {
+     "q": "Which statement about the Observation API is NOT true?",
+     "o": [
+      "It only produces log lines",
+      "It produces metrics",
+      "It produces traces",
+      "You instrument code once"
+     ],
+     "w": "One observation can feed metrics, traces and log context through handlers."
+    }
+   ]
+  }
+ ]
 }

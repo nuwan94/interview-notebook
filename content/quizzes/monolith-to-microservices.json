@@ -1,92 +1,204 @@
 {
  "questions": [
   {
-   "q": "A bank wants to split its monolith. What is the best basis for the service boundaries?",
-   "o": [
-    "Business capabilities and bounded contexts, such as accounts and payments",
-    "Technical layers, with one service each for web, logic and data",
-    "One service for every database table",
-    "The size of the Java packages in the monolith"
-   ],
-   "w": "Services should be vertical slices of a business capability. Splitting by layer or by table forces every feature to cross many services.",
-   "s": "Boundaries"
+   "t": "Boundaries",
+   "v": [
+    {
+     "q": "A bank wants to split its monolith. What is the best basis for the service boundaries?",
+     "o": [
+      "Business capabilities and bounded contexts, such as accounts and payments",
+      "Technical layers, with one service each for web, logic and data",
+      "One service for every database table",
+      "The size of the Java packages in the monolith"
+     ],
+     "w": "Services should be vertical slices of a business capability. Splitting by layer or by table forces every feature to cross many services."
+    },
+    {
+     "q": "Which split gives the best service boundaries?",
+     "o": [
+      "By business capability",
+      "By technical layer",
+      "By database table",
+      "By Java package"
+     ],
+     "w": "Services should own a business capability, such as accounts or payments, so they can change independently."
+    }
+   ]
   },
   {
-   "q": "What does a bounded context mean in domain-driven design?",
-   "o": [
-    "The area where a term has one precise meaning and model",
-    "A limit on how many requests a service accepts",
-    "A transaction that spans several services",
-    "The set of classes that share one database table"
-   ],
-   "w": "The word Customer can mean a verified identity in Accounts and a cardholder in Cards. Each context keeps its own model.",
-   "s": "Bounded context"
+   "t": "Bounded context",
+   "v": [
+    {
+     "q": "What does a bounded context mean in domain-driven design?",
+     "o": [
+      "The area where a term has one precise meaning and model",
+      "A limit on how many requests a service accepts",
+      "A transaction that spans several services",
+      "The set of classes that share one database table"
+     ],
+     "w": "The word Customer can mean a verified identity in Accounts and a cardholder in Cards. Each context keeps its own model."
+    },
+    {
+     "q": "Which statement about a bounded context is NOT true?",
+     "o": [
+      "One model must fit the whole company",
+      "A term has one meaning inside it",
+      "Different contexts can model the same thing differently",
+      "It often maps to a service"
+     ],
+     "w": "DDD accepts that the word customer can mean different things in different contexts."
+    }
+   ]
   },
   {
-   "q": "What is the first step of the strangler fig migration?",
-   "o": [
-    "Put a facade such as a gateway in front of the monolith",
-    "Rewrite the whole monolith in a new codebase",
-    "Split the shared database into one per service",
-    "Turn off the monolith for a weekend and switch over"
-   ],
-   "w": "The facade first forwards everything, so nothing changes for users. Slices are then moved behind it one at a time and each step can be rolled back.",
-   "s": "Strangler fig"
+   "t": "Strangler fig",
+   "v": [
+    {
+     "q": "What is the first step of the strangler fig migration?",
+     "o": [
+      "Put a facade such as a gateway in front of the monolith",
+      "Rewrite the whole monolith in a new codebase",
+      "Split the shared database into one per service",
+      "Turn off the monolith for a weekend and switch over"
+     ],
+     "w": "The facade first forwards everything, so nothing changes for users. Slices are then moved behind it one at a time and each step can be rolled back."
+    },
+    {
+     "q": "Which is NOT part of a strangler fig migration?",
+     "o": [
+      "A weekend big-bang cutover",
+      "A facade in front of the monolith",
+      "Moving one slice at a time",
+      "Routing calls to new services"
+     ],
+     "w": "The approach replaces the old system gradually without a switch-off weekend."
+    }
+   ]
   },
   {
-   "q": "Which sign best shows a distributed monolith?",
-   "o": [
-    "Services share one database and have to be deployed together",
-    "Every service has its own team and its own database",
-    "Services communicate mainly through published events",
-    "Each service can be released without the others"
-   ],
-   "w": "It has the operational cost of microservices without independent deployment. The test is whether a service can be changed and released alone.",
-   "s": "Distributed monolith"
+   "t": "Distributed monolith",
+   "v": [
+    {
+     "q": "Which sign best shows a distributed monolith?",
+     "o": [
+      "Services share one database and have to be deployed together",
+      "Every service has its own team and its own database",
+      "Services communicate mainly through published events",
+      "Each service can be released without the others"
+     ],
+     "w": "It has the operational cost of microservices without independent deployment. The test is whether a service can be changed and released alone."
+    },
+    {
+     "q": "Which situation signals a distributed monolith?",
+     "o": [
+      "Several services must be released together",
+      "Teams release independently",
+      "Each service owns its data",
+      "Services communicate through events"
+     ],
+     "w": "Network calls without independence give the cost of both styles."
+    }
+   ]
   },
   {
-   "q": "Why consider a modular monolith before microservices?",
-   "o": [
-    "It gives enforced boundaries without network calls",
-    "It removes the need to test the module boundaries",
-    "It is always faster than any other architecture style",
-    "It lets every module write to any table"
-   ],
-   "w": "Boundaries inside one deployable are cheap to fix. If a module later needs to scale or deploy alone, extraction is mostly mechanical.",
-   "s": "Modular monolith"
+   "t": "Modular monolith",
+   "v": [
+    {
+     "q": "Why consider a modular monolith before microservices?",
+     "o": [
+      "It gives enforced boundaries without network calls",
+      "It removes the need to test the module boundaries",
+      "It is always faster than any other architecture style",
+      "It lets every module write to any table"
+     ],
+     "w": "Boundaries inside one deployable are cheap to fix. If a module later needs to scale or deploy alone, extraction is mostly mechanical."
+    },
+    {
+     "q": "Which statement about a modular monolith is NOT true?",
+     "o": [
+      "Modules may read any table directly",
+      "It is deployed as one unit",
+      "Module boundaries are enforced",
+      "It can become services later"
+     ],
+     "w": "The point is enforced boundaries, so no module reaches into another module tables."
+    }
+   ]
   },
   {
-   "q": "In what order should the database be split when extracting a service?",
-   "o": [
-    "Stop direct table access, replicate data through events, then split the schema",
-    "Split the database first, then change the code",
-    "Copy every table into every service permanently",
-    "Keep one shared schema and add cross-service foreign keys"
-   ],
-   "w": "Do the database last and in reversible steps. Consumers first use an API, then a local copy fed by events or change data capture, then the schema is separated.",
-   "s": "Splitting the database"
+   "t": "Splitting the database",
+   "v": [
+    {
+     "q": "In what order should the database be split when extracting a service?",
+     "o": [
+      "Stop direct table access, replicate data through events, then split the schema",
+      "Split the database first, then change the code",
+      "Copy every table into every service permanently",
+      "Keep one shared schema and add cross-service foreign keys"
+     ],
+     "w": "Do the database last and in reversible steps. Consumers first use an API, then a local copy fed by events or change data capture, then the schema is separated."
+    },
+    {
+     "q": "Which step comes first when taking a table away from the monolith?",
+     "o": [
+      "Stop other code reading it directly",
+      "Drop the old table",
+      "Copy it into every service",
+      "Add cross-service foreign keys"
+     ],
+     "w": "Access goes through an API or events first, and only then is the schema moved."
+    }
+   ]
   },
   {
-   "q": "What does an anti-corruption layer do?",
-   "o": [
-    "Translates another system's model into your own so it does not leak in",
-    "Encrypts all traffic between two services",
-    "Retries failed calls with exponential backoff",
-    "Stores a copy of every event in an archive"
-   ],
-   "w": "All translation of codes and formats lives in one adapter, so a change in the other system affects only that layer.",
-   "s": "Anti-corruption layer"
+   "t": "Anti-corruption layer",
+   "v": [
+    {
+     "q": "What does an anti-corruption layer do?",
+     "o": [
+      "Translates another system's model into your own so it does not leak in",
+      "Encrypts all traffic between two services",
+      "Retries failed calls with exponential backoff",
+      "Stores a copy of every event in an archive"
+     ],
+     "w": "All translation of codes and formats lives in one adapter, so a change in the other system affects only that layer."
+    },
+    {
+     "q": "Which situation calls for an anti-corruption layer?",
+     "o": [
+      "A legacy model leaking in",
+      "Encrypting service traffic",
+      "Retrying failed calls",
+      "Archiving events"
+     ],
+     "w": "The layer translates the legacy model so its terms do not leak into your domain."
+    }
+   ]
   },
   {
-   "q": "Which capability is usually the best first candidate to extract as a service?",
-   "o": [
-    "A low-risk edge capability with clear boundaries, such as notifications",
-    "The core ledger that every other part depends on",
-    "The part of the code nobody understands",
-    "The shared utility library used by all modules"
-   ],
-   "w": "Start where risk is low so the team can build and learn the platform. The most entangled core domain goes last, if it ever needs to move.",
-   "s": "Migration order"
+   "t": "Migration order",
+   "v": [
+    {
+     "q": "Which capability is usually the best first candidate to extract as a service?",
+     "o": [
+      "A low-risk edge capability with clear boundaries, such as notifications",
+      "The core ledger that every other part depends on",
+      "The part of the code nobody understands",
+      "The shared utility library used by all modules"
+     ],
+     "w": "Start where risk is low so the team can build and learn the platform. The most entangled core domain goes last, if it ever needs to move."
+    },
+    {
+     "q": "Which capability is a poor first choice to extract?",
+     "o": [
+      "The core ledger every part depends on",
+      "Notifications",
+      "PDF statement generation",
+      "An edge reporting feature"
+     ],
+     "w": "Start with low-risk pieces that have clear boundaries and learn before touching the core."
+    }
+   ]
   }
  ]
 }

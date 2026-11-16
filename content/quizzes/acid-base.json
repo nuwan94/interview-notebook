@@ -1,92 +1,212 @@
 {
-  "questions": [
+ "questions": [
+  {
+   "t": "",
+   "v": [
     {
-      "q": "In ACID, what does the \"A\" guarantee?",
-      "o": [
-        "All steps of a transaction succeed together or none take effect",
-        "Data stays available on every node even during failures",
-        "Concurrent transactions can never see each other's changes",
-        "Each transaction is executed on the fastest replica only"
-      ],
-      "w": "Atomicity means all-or-nothing. A failure halfway rolls every step back. Availability is a different idea, from CAP.",
-      "s": 25
+     "q": "In ACID, what does the \"A\" guarantee?",
+     "o": [
+      "All steps of a transaction succeed together or none take effect",
+      "Data stays available on every node even during failures",
+      "Concurrent transactions can never see each other's changes",
+      "Each transaction is executed on the fastest replica only"
+     ],
+     "w": "Atomicity means all-or-nothing. A failure halfway rolls every step back. Availability is a different idea, from CAP.",
+     "s": 25
     },
     {
-      "q": "A transfer debits account A, then the server crashes before crediting B. Which ACID property makes the debit disappear after recovery?",
-      "o": [
-        "Atomicity, using the write-ahead log to undo partial work",
-        "Isolation, because other transactions never see the debit",
-        "Consistency, because balances must always stay positive",
-        "Durability, because committed data survives the crash"
-      ],
-      "w": "The write-ahead log lets the database undo uncommitted changes on restart. That is atomicity in practice.",
-      "s": 30
-    },
-    {
-      "q": "What does Durability promise?",
-      "o": [
-        "Once a commit is acknowledged, the data survives a crash",
-        "The database can never go down while handling writes",
-        "Stored data is always encrypted with a strong cipher",
-        "Old versions of every row are kept forever for audit"
-      ],
-      "w": "Durability is usually delivered by flushing the write-ahead log to disk before acknowledging the commit.",
-      "s": 25
-    },
-    {
-      "q": "Which isolation problem occurs when a transaction reads a row twice and gets different values because another transaction committed in between?",
-      "o": [
-        "Non-repeatable read: the same row returns a different value",
-        "Dirty read: the transaction sees uncommitted changes",
-        "Phantom read: new rows appear in a repeated range query",
-        "Lost update: two writers silently overwrite each other"
-      ],
-      "w": "A dirty read sees uncommitted data. A non-repeatable read sees two different committed values of the same row. A phantom read sees new or missing rows in a repeated range query.",
-      "s": 30
-    },
-    {
-      "q": "What does BASE stand for in the context of distributed data stores?",
-      "o": [
-        "Basically Available, Soft state, Eventual consistency",
-        "Balanced, Atomic, Serializable, Efficient replication",
-        "Backup, Archive, Snapshot and Export for every node",
-        "Basic Atomic Storage Engine with strict consistency"
-      ],
-      "w": "BASE trades strict consistency for availability and scale: the system keeps answering and replicas converge over time.",
-      "s": 25
-    },
-    {
-      "q": "Which system is the better fit for an account ledger where a balance must never be wrong, even briefly?",
-      "o": [
-        "A relational database with ACID transactions",
-        "An eventually consistent key-value store",
-        "A cache in front of the database with a long TTL",
-        "A full-text search index fed by change events"
-      ],
-      "w": "Money needs strong consistency and atomic multi-row updates. Eventual consistency suits feeds, counters and caches.",
-      "s": 25
-    },
-    {
-      "q": "A shopping-style social feed shows a like count that is a few seconds stale on some replicas. Which description fits?",
-      "o": [
-        "Eventual consistency, an accepted BASE trade-off",
-        "A violation of atomicity inside one transaction",
-        "A durability failure after a database crash",
-        "A deadlock between two competing transactions"
-      ],
-      "w": "Replicas that lag but converge are eventually consistent. For a like count that trade-off buys availability and speed.",
-      "s": 25
-    },
-    {
-      "q": "Which statement about ACID versus BASE is correct?",
-      "o": [
-        "They are ends of a spectrum, and systems often pick per operation",
-        "BASE databases are unable to commit data at all",
-        "ACID databases can never be run across several nodes",
-        "BASE guarantees stronger consistency than ACID does"
-      ],
-      "w": "Real systems mix them: for example strong consistency for payments and eventual consistency for analytics in the same product.",
-      "s": 30
+     "q": "Which statement about atomicity is NOT true?",
+     "o": [
+      "It makes concurrent transactions invisible to each other",
+      "A failure halfway rolls every step back",
+      "It is often implemented with a write-ahead log",
+      "It means all steps happen or none do"
+     ],
+     "w": "Hiding concurrent work is isolation. Atomicity is all-or-nothing, usually through undo information in a log."
     }
-  ]
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A transfer debits account A, then the server crashes before crediting B. Which ACID property makes the debit disappear after recovery?",
+     "o": [
+      "Atomicity, using the write-ahead log to undo partial work",
+      "Isolation, because other transactions never see the debit",
+      "Consistency, because balances must always stay positive",
+      "Durability, because committed data survives the crash"
+     ],
+     "w": "The write-ahead log lets the database undo uncommitted changes on restart. That is atomicity in practice.",
+     "s": 30
+    },
+    {
+     "q": "A transfer is half done when the server crashes. After restart the debit is gone and the credit never happened. Which property did the database honour?",
+     "o": [
+      "Atomicity",
+      "Availability",
+      "Durability of the uncommitted debit",
+      "Eventual consistency"
+     ],
+     "w": "Uncommitted work is undone from the log, so the transaction leaves no trace. Durability applies only to committed data."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What does Durability promise?",
+     "o": [
+      "Once a commit is acknowledged, the data survives a crash",
+      "The database can never go down while handling writes",
+      "Stored data is always encrypted with a strong cipher",
+      "Old versions of every row are kept forever for audit"
+     ],
+     "w": "Durability is usually delivered by flushing the write-ahead log to disk before acknowledging the commit.",
+     "s": 25
+    },
+    {
+     "q": "Which statement about durability is NOT true?",
+     "o": [
+      "It guarantees the database never goes down",
+      "It usually relies on flushing the log to disk",
+      "It applies once the commit is acknowledged",
+      "It means committed data survives a crash"
+     ],
+     "w": "Durability is about surviving a crash, not about avoiding one. Availability is a separate property."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which isolation problem occurs when a transaction reads a row twice and gets different values because another transaction committed in between?",
+     "o": [
+      "Non-repeatable read: the same row returns a different value",
+      "Dirty read: the transaction sees uncommitted changes",
+      "Phantom read: new rows appear in a repeated range query",
+      "Lost update: two writers silently overwrite each other"
+     ],
+     "w": "A dirty read sees uncommitted data. A non-repeatable read sees two different committed values of the same row. A phantom read sees new or missing rows in a repeated range query.",
+     "s": 30
+    },
+    {
+     "q": "Two reads of the same account row inside one transaction return 500 and then 400 after another transaction commits. Which isolation level removes this problem?",
+     "o": [
+      "Repeatable read",
+      "Read uncommitted",
+      "Read committed",
+      "Autocommit"
+     ],
+     "w": "Repeatable read keeps the value a transaction has already read stable. Read committed still allows a non-repeatable read."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "What does BASE stand for in the context of distributed data stores?",
+     "o": [
+      "Basically Available, Soft state, Eventual consistency",
+      "Balanced, Atomic, Serializable, Efficient replication",
+      "Backup, Archive, Snapshot and Export for every node",
+      "Basic Atomic Storage Engine with strict consistency"
+     ],
+     "w": "BASE trades strict consistency for availability and scale: the system keeps answering and replicas converge over time.",
+     "s": 25
+    },
+    {
+     "q": "Which statement about BASE is NOT true?",
+     "o": [
+      "It guarantees strict consistency after every write",
+      "The system stays available during failures",
+      "State may change over time without new input",
+      "Replicas converge eventually"
+     ],
+     "w": "BASE trades immediate consistency for availability. Strong consistency after every write is the ACID side."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which system is the better fit for an account ledger where a balance must never be wrong, even briefly?",
+     "o": [
+      "A relational database with ACID transactions",
+      "An eventually consistent key-value store",
+      "A cache in front of the database with a long TTL",
+      "A full-text search index fed by change events"
+     ],
+     "w": "Money needs strong consistency and atomic multi-row updates. Eventual consistency suits feeds, counters and caches.",
+     "s": 25
+    },
+    {
+     "q": "Which data is best kept in an eventually consistent store?",
+     "o": [
+      "A product view counter",
+      "A customer account balance",
+      "A payment authorization record",
+      "An inventory reservation for the last item"
+     ],
+     "w": "A slightly stale counter harms nobody. Balances, authorizations and last-item stock need strong consistency."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "A shopping-style social feed shows a like count that is a few seconds stale on some replicas. Which description fits?",
+     "o": [
+      "Eventual consistency, an accepted BASE trade-off",
+      "A violation of atomicity inside one transaction",
+      "A durability failure after a database crash",
+      "A deadlock between two competing transactions"
+     ],
+     "w": "Replicas that lag but converge are eventually consistent. For a like count that trade-off buys availability and speed.",
+     "s": 25
+    },
+    {
+     "q": "Which system behaviour is a sign of BASE, not ACID?",
+     "o": [
+      "Two replicas briefly return different values",
+      "A failed transfer leaves both balances unchanged",
+      "A commit is acknowledged only after the log is flushed",
+      "A transaction cannot see uncommitted rows"
+     ],
+     "w": "Brief divergence between replicas that later converge is eventual consistency. The other three are ACID guarantees."
+    }
+   ]
+  },
+  {
+   "t": "",
+   "v": [
+    {
+     "q": "Which statement about ACID versus BASE is correct?",
+     "o": [
+      "They are ends of a spectrum, and systems often pick per operation",
+      "BASE databases are unable to commit data at all",
+      "ACID databases can never be run across several nodes",
+      "BASE guarantees stronger consistency than ACID does"
+     ],
+     "w": "Real systems mix them: for example strong consistency for payments and eventual consistency for analytics in the same product.",
+     "s": 30
+    },
+    {
+     "q": "Which statement about choosing ACID or BASE is NOT true?",
+     "o": [
+      "A system must pick one model for all its data",
+      "Payments often need strong consistency",
+      "Analytics can accept eventual consistency",
+      "The choice can be made per operation"
+     ],
+     "w": "Real products mix both, so the choice is made per operation or per data set."
+    }
+   ]
+  }
+ ]
 }
