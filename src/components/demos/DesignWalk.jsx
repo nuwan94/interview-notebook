@@ -23,6 +23,7 @@ import { SQLNOSQL_SCENES } from './sqlNosqlScenes.js';
 import { CODING_PATTERN_SCENES } from './codingPatternScenes.js';
 import { MAVEN_SCENES } from './mavenScenes.js';
 import { GRADLE_SCENES } from './gradleScenes.js';
+import { JVM_SCENES } from './jvmScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
 import { SORT_SEARCH_SCENES } from './sortSearchScenes.js';
 import { COMMUNICATION_SCENES } from './communicationScenes.js';
@@ -259,3 +260,4 @@ export const DataStructureWalk = () => <Walk scenes={DATA_STRUCTURE_SCENES} icon
 export const CodingPatternWalk = () => <Walk scenes={CODING_PATTERN_SCENES} arrays ariaLabel="Coding interview patterns walk-through" />;
 export const MavenWalk = () => <Walk scenes={MAVEN_SCENES} icons graph ariaLabel="Maven walk-through" />;
 export const GradleWalk = () => <Walk scenes={GRADLE_SCENES} icons graph ariaLabel="Gradle walk-through" />;
+export const JvmWalk = () => <Walk scenes={JVM_SCENES} icons graph ariaLabel="JVM troubleshooting walk-through" />;
