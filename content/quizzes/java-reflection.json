@@ -1,0 +1,92 @@
+{
+ "questions": [
+  {
+   "q": "You write a custom annotation and a framework never sees it at run time. What is the most likely mistake?",
+   "o": [
+    "The annotation is missing @Retention(RetentionPolicy.RUNTIME)",
+    "The annotation has no elements with default values",
+    "The annotation was placed on a private field",
+    "The annotation interface was not declared as final"
+   ],
+   "w": "The default retention is CLASS, so the annotation is in the class file but not readable by reflection. RUNTIME is needed for frameworks.",
+   "s": "Retention"
+  },
+  {
+   "q": "What does getDeclaredMethods() return?",
+   "o": [
+    "All methods declared by that class, including private ones, but not inherited ones",
+    "All public methods of the class, including inherited ones",
+    "Only the methods annotated with a RUNTIME annotation",
+    "All methods of the class and of every superclass"
+   ],
+   "w": "getMethods() is the public and inherited set. getDeclaredMethods() is every method declared by this class only, whatever its visibility.",
+   "s": "Reflection API"
+  },
+  {
+   "q": "A method called through Method.invoke throws an IllegalStateException. What does the caller of invoke receive?",
+   "o": [
+    "An InvocationTargetException whose cause is the IllegalStateException",
+    "The IllegalStateException itself, unchanged",
+    "An IllegalAccessException describing the failed call",
+    "A RuntimeException with no cause attached"
+   ],
+   "w": "invoke wraps exceptions from the target method. Call getCause() to get the real one, and unwrap it in proxy handlers.",
+   "s": "InvocationTargetException"
+  },
+  {
+   "q": "Why can a JDK dynamic proxy only be created for interfaces?",
+   "o": [
+    "The generated class already extends java.lang.reflect.Proxy, and Java has single inheritance",
+    "Class files cannot be generated at run time for ordinary classes",
+    "Interfaces are the only types the class loader can load twice",
+    "Methods of a class cannot be called through an InvocationHandler"
+   ],
+   "w": "The proxy class extends Proxy, so it cannot also extend your class. CGLIB and ByteBuddy generate a subclass instead.",
+   "s": "JDK proxy"
+  },
+  {
+   "q": "Why is @Transactional ignored on a final method of a Spring bean proxied by CGLIB?",
+   "o": [
+    "A subclass proxy cannot override a final method, so the call skips the advice",
+    "Final methods are always run in a new thread by the JVM",
+    "Spring only reads annotations that are on interface methods",
+    "The JVM removes annotations from final methods at load time"
+   ],
+   "w": "A CGLIB proxy works by overriding methods. A final method cannot be overridden, and a private one is not visible, so no advice runs.",
+   "s": "Proxy limits"
+  },
+  {
+   "q": "What is the difference between an annotation processor and reflection?",
+   "o": [
+    "A processor runs at compile time and generates code, whereas reflection works on loaded classes at run time",
+    "A processor runs when the application starts, and reflection runs at compile time",
+    "A processor can only read annotations, and reflection can only read methods",
+    "They are two names for the same mechanism in different JDK versions"
+   ],
+   "w": "MapStruct and Dagger generate code during compilation, with no run-time cost. Reflection inspects classes while the program runs.",
+   "s": "Processing"
+  },
+  {
+   "q": "What happens on Java 17 when a library calls setAccessible(true) on a private field of a JDK internal class?",
+   "o": [
+    "It throws InaccessibleObjectException unless the package is opened with --add-opens",
+    "It works, but the JVM prints a warning to the log",
+    "It works only if the field is also declared final",
+    "It is silently ignored, and the field stays private"
+   ],
+   "w": "Since Java 16 and 17 the JDK's internal packages are strongly encapsulated. The right fix is to update the library.",
+   "s": "Modules"
+  },
+  {
+   "q": "Why do GraalVM native images need extra configuration for reflection?",
+   "o": [
+    "Classes used only through names in strings are invisible to the build-time analysis and would be removed",
+    "Native images cannot load any class that has an annotation",
+    "Reflection is too slow to be allowed in compiled programs",
+    "The native compiler removes every method that is not public"
+   ],
+   "w": "Native image assumes a closed world and keeps only reachable code. Reflective use must be registered. Spring AOT generates these hints.",
+   "s": "Native image"
+  }
+ ]
+}

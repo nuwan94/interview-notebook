@@ -24,6 +24,7 @@ import { CODING_PATTERN_SCENES } from './codingPatternScenes.js';
 import { MAVEN_SCENES } from './mavenScenes.js';
 import { GRADLE_SCENES } from './gradleScenes.js';
 import { JVM_SCENES } from './jvmScenes.js';
+import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
 import { SORT_SEARCH_SCENES } from './sortSearchScenes.js';
 import { COMMUNICATION_SCENES } from './communicationScenes.js';
@@ -261,3 +262,4 @@ export const CodingPatternWalk = () => <Walk scenes={CODING_PATTERN_SCENES} arra
 export const MavenWalk = () => <Walk scenes={MAVEN_SCENES} icons graph ariaLabel="Maven walk-through" />;
 export const GradleWalk = () => <Walk scenes={GRADLE_SCENES} icons graph ariaLabel="Gradle walk-through" />;
 export const JvmWalk = () => <Walk scenes={JVM_SCENES} icons graph ariaLabel="JVM troubleshooting walk-through" />;
+export const ReflectionWalk = () => <Walk scenes={REFLECTION_SCENES} icons graph ariaLabel="Reflection, annotations and proxies walk-through" />;
