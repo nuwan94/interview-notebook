@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Service models",
+   "v": [
+    {
+     "q": "Which model leaves the OS patching to the customer?",
+     "o": [
+      "IaaS",
+      "PaaS",
+      "FaaS",
+      "SaaS"
+     ],
+     "w": "With IaaS you rent a virtual machine and patch the guest OS. In the other models the provider manages it."
+    },
+    {
+     "q": "Which service is serverless?",
+     "o": [
+      "AWS Lambda",
+      "Amazon EC2",
+      "An EBS volume",
+      "A VPC"
+     ],
+     "w": "A Lambda function runs on events, scales to zero and bills per call. EC2 is a virtual machine."
+    }
+   ]
+  },
+  {
+   "t": "Regions and zones",
+   "v": [
+    {
+     "q": "What is an availability zone?",
+     "o": [
+      "A separate data centre in a region",
+      "A country-wide network",
+      "A caching location",
+      "A billing account"
+     ],
+     "w": "Zones have independent power, cooling and network, so they fail separately. A region contains several."
+    },
+    {
+     "q": "What protects a service from the loss of one data centre?",
+     "o": [
+      "Running in two availability zones",
+      "A larger instance type",
+      "A longer timeout",
+      "A second S3 bucket"
+     ],
+     "w": "Zones fail independently, so spreading the service and the database over two of them survives one failure."
+    }
+   ]
+  },
+  {
+   "t": "High availability and DR",
+   "v": [
+    {
+     "q": "What does RPO measure?",
+     "o": [
+      "The data loss you can accept",
+      "The time to restore",
+      "The monthly cost",
+      "The network latency"
+     ],
+     "w": "RPO is the most data you may lose, in time. RTO is the time to be back."
+    },
+    {
+     "q": "Which DR pattern gives the shortest recovery time?",
+     "o": [
+      "Active-active",
+      "Backup and restore",
+      "Pilot light",
+      "Cold archive"
+     ],
+     "w": "Both regions already serve traffic. It also costs the most and needs careful data replication."
+    }
+   ]
+  },
+  {
+   "t": "Elasticity",
+   "v": [
+    {
+     "q": "What must an application be to scale out freely?",
+     "o": [
+      "Stateless",
+      "Single-threaded",
+      "Written in one language",
+      "Run on one large server"
+     ],
+     "w": "Any instance must handle any request, so state moves to shared stores and instances can come and go."
+    },
+    {
+     "q": "Why set a maximum size on an auto scaling group?",
+     "o": [
+      "To cap cost if something goes wrong",
+      "To speed up the scale-in",
+      "To avoid using zones",
+      "To disable health checks"
+     ],
+     "w": "A runaway loop or an attack could otherwise create a very large bill."
+    }
+   ]
+  },
+  {
+   "t": "Shared responsibility",
+   "v": [
+    {
+     "q": "Who is responsible for the data stored in a managed database?",
+     "o": [
+      "The customer",
+      "The provider",
+      "The hardware vendor",
+      "Nobody"
+     ],
+     "w": "The provider secures the service, but the data, identities and configuration stay with the customer."
+    },
+    {
+     "q": "What causes most cloud breaches?",
+     "o": [
+      "Customer misconfiguration",
+      "Physical break-ins",
+      "Hypervisor bugs",
+      "Power failures"
+     ],
+     "w": "Public buckets, open ports, leaked keys and wide roles are the usual causes."
+    }
+   ]
+  },
+  {
+   "t": "IAM",
+   "v": [
+    {
+     "q": "How should an application on AWS get its credentials?",
+     "o": [
+      "An IAM role with temporary credentials",
+      "An access key in the properties",
+      "A key baked into the image",
+      "The root account key"
+     ],
+     "w": "The SDK obtains short-lived credentials from the role, so no secret is stored with the code."
+    },
+    {
+     "q": "What is the default result of an IAM request with no matching allow?",
+     "o": [
+      "Deny",
+      "Allow",
+      "Allow for the owner",
+      "Ask for approval"
+     ],
+     "w": "Everything is denied unless allowed, and an explicit deny beats any allow."
+    }
+   ]
+  },
+  {
+   "t": "Cost and lock-in",
+   "v": [
+    {
+     "q": "Which cost is often forgotten in the cloud?",
+     "o": [
+      "Data transfer",
+      "Compute per second",
+      "The login page",
+      "Tag storage"
+     ],
+     "w": "Traffic out of a region, across zones or through a NAT gateway can be a large part of the bill."
+    },
+    {
+     "q": "What is a sound way to handle lock-in?",
+     "o": [
+      "Decide where it is acceptable",
+      "Use every provider at once",
+      "Never use managed services",
+      "Ignore it"
+     ],
+     "w": "Managed services bring some lock-in and a lot of value. Keep logic portable and write an exit plan."
+    }
+   ]
+  },
+  {
+   "t": "Migration and banks",
+   "v": [
+    {
+     "q": "What does rehost mean in a cloud migration?",
+     "o": [
+      "Lift and shift to virtual machines",
+      "Rewrite as microservices",
+      "Replace with a SaaS product",
+      "Switch the application off"
+     ],
+     "w": "The application moves with few changes. It is fast and gets few cloud benefits."
+    },
+    {
+     "q": "Why does a bank choose the cloud region carefully?",
+     "o": [
+      "Data residency rules",
+      "Region names are cheaper",
+      "Zones differ in security",
+      "Latency does not matter"
+     ],
+     "w": "Where data is stored is a legal question, and the region decides it."
+    }
+   ]
+  }
+ ]
+}

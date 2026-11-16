@@ -26,6 +26,7 @@ import { GRADLE_SCENES } from './gradleScenes.js';
 import { JVM_SCENES } from './jvmScenes.js';
 import { CICD_SCENES } from './cicdScenes.js';
 import { DEPLOY_SCENES } from './deployScenes.js';
+import { CLOUD_SCENES } from './cloudScenes.js';
 import { EXCEPTION_SCENES } from './exceptionScenes.js';
 import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
@@ -269,3 +270,4 @@ export const ReflectionWalk = () => <Walk scenes={REFLECTION_SCENES} icons graph
 export const ExceptionWalk = () => <Walk scenes={EXCEPTION_SCENES} icons graph ariaLabel="Exceptions and error handling walk-through" />;
 export const CicdWalk = () => <Walk scenes={CICD_SCENES} icons graph ariaLabel="CI/CD walk-through" />;
 export const DeployWalk = () => <Walk scenes={DEPLOY_SCENES} icons graph ariaLabel="Deployment strategies walk-through" />;
+export const CloudWalk = () => <Walk scenes={CLOUD_SCENES} icons graph ariaLabel="Cloud basics walk-through" />;
