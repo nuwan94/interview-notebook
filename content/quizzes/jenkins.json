@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Controller and agents",
+   "v": [
+    {
+     "q": "What should the Jenkins controller NOT do?",
+     "o": [
+      "Run the builds itself",
+      "Hold the job configuration",
+      "Schedule the build queue",
+      "Serve the web UI"
+     ],
+     "w": "Builds belong on agents. Zero executors on the controller keeps heavy or untrusted code away from it."
+    },
+    {
+     "q": "What is an executor in Jenkins?",
+     "o": [
+      "A build slot on an agent",
+      "A plugin that runs shell scripts",
+      "The Jenkinsfile parser",
+      "A saved job result"
+     ],
+     "w": "An agent with four executors can run four builds at the same time."
+    }
+   ]
+  },
+  {
+   "t": "Jenkinsfile syntax",
+   "v": [
+    {
+     "q": "Which is the recommended Jenkinsfile style?",
+     "o": [
+      "Declarative",
+      "Scripted",
+      "Freestyle form",
+      "Inline shell only"
+     ],
+     "w": "Declarative has a fixed structure that Jenkins validates before running. script blocks cover rare cases."
+    },
+    {
+     "q": "Which section runs actions whatever the result of the build?",
+     "o": [
+      "post { always }",
+      "when { always }",
+      "options { always }",
+      "environment { always }"
+     ],
+     "w": "post conditions such as always, failure and cleanup run after the stage or pipeline."
+    }
+   ]
+  },
+  {
+   "t": "Multibranch pipelines",
+   "v": [
+    {
+     "q": "What does a multibranch pipeline do?",
+     "o": [
+      "A pipeline per branch and pull request",
+      "Runs one build on every agent",
+      "Merges all branches together",
+      "Deletes old branches nightly"
+     ],
+     "w": "It scans the repository and builds each branch that has a Jenkinsfile, then removes it when the branch is deleted."
+    },
+    {
+     "q": "How does a pull request build block a bad merge?",
+     "o": [
+      "A status check that must be green",
+      "Jenkins deletes the branch",
+      "The controller restarts itself",
+      "An email is sent to all admins"
+     ],
+     "w": "Jenkins reports the result to the Git server, and the protection rule can require it to be green."
+    }
+   ]
+  },
+  {
+   "t": "Triggers",
+   "v": [
+    {
+     "q": "Why prefer a webhook to polling the repository?",
+     "o": [
+      "Builds start at once with no polling",
+      "It needs no network access",
+      "It works without credentials",
+      "It skips the queue"
+     ],
+     "w": "The Git server tells Jenkins about a change, so there is no delay and no repeated checking."
+    },
+    {
+     "q": "Which option stops two builds of one branch from running together?",
+     "o": [
+      "disableConcurrentBuilds()",
+      "timeout(time: 30)",
+      "buildDiscarder(logRotator())",
+      "cleanWs() at the end"
+     ],
+     "w": "It makes a branch run one build at a time, which protects deploy stages."
+    }
+   ]
+  },
+  {
+   "t": "Credentials",
+   "v": [
+    {
+     "q": "How should a Jenkinsfile use a registry password?",
+     "o": [
+      "withCredentials with the credential id",
+      "A variable in the Jenkinsfile",
+      "A line in the repository README",
+      "A parameter typed by hand"
+     ],
+     "w": "The secret stays in the credentials store, and the Jenkinsfile only names its id."
+    },
+    {
+     "q": "Why use single quotes around a secret in an sh step?",
+     "o": [
+      "Groovy would otherwise interpolate it",
+      "It makes the shell faster",
+      "It hides the step in the UI",
+      "It disables masking"
+     ],
+     "w": "A double-quoted string puts the secret into the command line and process list. The shell should read the variable instead."
+    }
+   ]
+  },
+  {
+   "t": "Shared libraries",
+   "v": [
+    {
+     "q": "What is the main risk of a shared library?",
+     "o": [
+      "A bug breaks every pipeline at once",
+      "It cannot be versioned",
+      "It runs only on the controller",
+      "It needs a new Jenkinsfile format"
+     ],
+     "w": "A fix reaches every service, and so does a mistake. Pin a version such as @v3 and test changes."
+    },
+    {
+     "q": "Where does a shared library live?",
+     "o": [
+      "In its own Git repository",
+      "Inside every Jenkinsfile",
+      "In the agent workspace",
+      "In the build queue"
+     ],
+     "w": "Jenkinsfiles load it with @Library and call steps from its vars directory."
+    }
+   ]
+  },
+  {
+   "t": "Agents on Kubernetes",
+   "v": [
+    {
+     "q": "What is the benefit of a pod per build?",
+     "o": [
+      "Every build starts clean and capacity scales",
+      "Builds share one workspace",
+      "The controller runs the build",
+      "Plugins are not needed"
+     ],
+     "w": "The pod is created for the build and deleted afterwards, so there is no agent to maintain."
+    },
+    {
+     "q": "Which tool builds images in a pod without a Docker daemon?",
+     "o": [
+      "Kaniko",
+      "Docker-in-Docker",
+      "Freestyle job",
+      "Blue Ocean"
+     ],
+     "w": "Kaniko builds from a Dockerfile with no daemon and no privileged mode."
+    }
+   ]
+  },
+  {
+   "t": "Operations and security",
+   "v": [
+    {
+     "q": "Why keep the list of plugins small?",
+     "o": [
+      "Each plugin is a dependency with its own risks",
+      "Plugins slow the network",
+      "Jenkins limits plugins to ten",
+      "Plugins cannot be updated"
+     ],
+     "w": "Every plugin adds code, vulnerabilities and upgrade risk, so install only what you use and keep it updated."
+    },
+    {
+     "q": "What is Jenkins Configuration as Code for?",
+     "o": [
+      "Rebuilding the controller from a file",
+      "Writing Groovy a little faster",
+      "Running agents on Windows hosts",
+      "Encrypting the build logs on disk"
+     ],
+     "w": "The controller settings live in YAML in Git, so a lost controller can be rebuilt and changes are reviewed."
+    }
+   ]
+  }
+ ]
+}

@@ -4,7 +4,7 @@ nav: Deployment strategies
 slug: deployment-strategies
 summary: How to put a new version into production without downtime or with a small blast radius, comparing recreate, rolling update, blue-green, canary, shadow traffic and feature flags, with Kubernetes rolling-update settings, readiness probes and graceful shutdown, automatic analysis and rollback, database changes with expand and contract, and what a bank adds, with examples and interview questions.
 tags: [Deployment, Canary, Blue-green, Rolling update, Kubernetes, CI/CD, Release]
-order: 50
+order: 52
 topic: CI/CD / Releasing
 updated: 2026-11-17
 subnav: true

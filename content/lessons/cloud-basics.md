@@ -4,7 +4,7 @@ nav: Cloud basics
 slug: cloud-basics
 summary: What cloud computing is and why teams use it, IaaS, PaaS, FaaS and SaaS, public, private, hybrid and multi-cloud, regions, availability zones and edge locations, high availability and disaster recovery with RTO and RPO, elasticity and auto scaling, the shared responsibility model, identity and least privilege, cost and FinOps, cloud-native design and lock-in, migration strategies, and what a bank must consider, with AWS first and Azure and Google Cloud equivalents, examples and interview questions.
 tags: [Cloud, AWS, Azure, GCP, IaaS, PaaS, High availability, Elasticity, Security]
-order: 51
+order: 53
 topic: Cloud / Basics
 updated: 2026-11-17
 subnav: true
