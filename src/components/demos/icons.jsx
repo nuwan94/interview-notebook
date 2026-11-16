@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -17,6 +17,9 @@ import {
 } from 'react-icons/si';
 
 const ICONS = [
+  // --- jenkins and gitlab: specific titles that must win over the generic rules below ---
+  [/^(pull|merge) request$/i, LuGitPullRequest],
+  [/^multibranch job$/i, LuGitBranch],
   // --- technology brands (Simple Icons) ---
   [/spring boot/i, SiSpringboot],
   [/spring security|securityfilterchain/i, SiSpringsecurity],
@@ -353,6 +356,23 @@ const ICONS = [
   [/^workload$/i, LuBoxes],
   [/^public access$/i, LuLockOpen],
   [/^iam role$/i, LuUserCheck],
+  // --- jenkins and gitlab ---
+  [/^agent$/i, LuMonitorCog],
+  [/^workspace$/i, LuFolderOpen],
+  [/^checkout$/i, LuDownload],
+  [/^(build|deploy) stage$/i, LuHammer],
+  [/^post actions$/i, LuListChecks],
+  [/^notification$/i, LuBell],
+  [/^status check$/i, LuCircleCheck],
+  [/^shared library$/i, LuLibrary],
+  [/^push$/i, LuUpload],
+  [/^gitlab-ci\.yml$/i, LuFileCode],
+  [/^security scan$/i, LuScanSearch],
+  [/^environment$/i, LuServer],
+  [/^runner$/i, LuPlay],
+  [/^kaniko$/i, LuPackage],
+  [/^rules$/i, LuListFilter],
+  [/^main branch$/i, LuGitBranch],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */

@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Stages and jobs",
+   "v": [
+    {
+     "q": "How do jobs in the same stage run?",
+     "o": [
+      "In parallel",
+      "One after another",
+      "Only on the same runner",
+      "Only on a schedule"
+     ],
+     "w": "Stages run in order, and the jobs inside one stage run at the same time."
+    },
+    {
+     "q": "What happens when a job in the build stage fails?",
+     "o": [
+      "The next stage does not start",
+      "The next stage starts anyway",
+      "The pipeline restarts itself",
+      "The job is skipped"
+     ],
+     "w": "A stage must succeed before the next begins, unless the failed job has allow_failure."
+    }
+   ]
+  },
+  {
+   "t": "Runners and executors",
+   "v": [
+    {
+     "q": "What does a GitLab runner do?",
+     "o": [
+      "Polls GitLab and runs the jobs",
+      "Stores the repository",
+      "Hosts the merge requests",
+      "Renders the pipeline graph"
+     ],
+     "w": "The server runs no jobs. A runner asks for them, so it only needs outbound access."
+    },
+    {
+     "q": "Which executor runs each job in a fresh container?",
+     "o": [
+      "docker",
+      "shell",
+      "ssh",
+      "virtualbox"
+     ],
+     "w": "The Docker executor starts a new container from the image in the job, then removes it."
+    }
+   ]
+  },
+  {
+   "t": "Artifacts and cache",
+   "v": [
+    {
+     "q": "Which statement about the cache is true?",
+     "o": [
+      "It is best effort and may be missing",
+      "It is guaranteed for later jobs",
+      "It holds the test results",
+      "It never expires"
+     ],
+     "w": "A job must still work when the cache is empty. Use artifacts for results."
+    },
+    {
+     "q": "Which keyword passes a JAR to the next job?",
+     "o": [
+      "artifacts",
+      "cache",
+      "variables",
+      "services"
+     ],
+     "w": "Artifacts are results uploaded by GitLab and downloaded by later jobs of the same pipeline."
+    }
+   ]
+  },
+  {
+   "t": "Variables and secrets",
+   "v": [
+    {
+     "q": "What does a protected variable do?",
+     "o": [
+      "Limits it to protected branches and tags",
+      "Hides it from the UI forever",
+      "Encrypts the repository",
+      "Makes it read-only in YAML"
+     ],
+     "w": "A feature branch pipeline cannot read production credentials that are protected."
+    },
+    {
+     "q": "What is better than a stored production password?",
+     "o": [
+      "A short-lived ID token",
+      "A longer password",
+      "A masked variable",
+      "A comment in the YAML"
+     ],
+     "w": "The job exchanges a GitLab ID token with Vault or a cloud for temporary access, so nothing long-lived is stored."
+    }
+   ]
+  },
+  {
+   "t": "Rules",
+   "v": [
+    {
+     "q": "What does workflow:rules control?",
+     "o": [
+      "Which pipelines get created",
+      "The order of the stages in a file",
+      "Which runner tags a job needs",
+      "The cache key for a job"
+     ],
+     "w": "It avoids duplicate pipelines, for example one for the branch and one for its merge request."
+    },
+    {
+     "q": "What should a merge request pipeline normally NOT do?",
+     "o": [
+      "Deploy",
+      "Build",
+      "Run tests",
+      "Scan dependencies"
+     ],
+     "w": "It gives quick feedback on the change. Deployment belongs to the default branch or a release tag."
+    }
+   ]
+  },
+  {
+   "t": "Needs and speed",
+   "v": [
+    {
+     "q": "What does needs do?",
+     "o": [
+      "Starts a job when its needs finish",
+      "Installs system packages for it",
+      "Makes a job fully optional",
+      "Selects the runner for a job"
+     ],
+     "w": "It turns stages into a graph, so a job does not wait for the whole previous stage."
+    },
+    {
+     "q": "Which setting lets a new push cancel an old pipeline?",
+     "o": [
+      "interruptible: true",
+      "allow_failure: true",
+      "when: manual",
+      "retry: 2"
+     ],
+     "w": "Interruptible jobs can be cancelled when a newer pipeline makes them obsolete."
+    }
+   ]
+  },
+  {
+   "t": "Reuse",
+   "v": [
+    {
+     "q": "Why pin the ref of an included template?",
+     "o": [
+      "A template change hits every project",
+      "It makes the YAML file shorter",
+      "It hides the template from users",
+      "It speeds up the runners"
+     ],
+     "w": "Treat templates like a library: upgrade on purpose with a reviewed commit."
+    },
+    {
+     "q": "Which keyword inherits a hidden job such as .java-job?",
+     "o": [
+      "extends",
+      "needs",
+      "trigger",
+      "cache"
+     ],
+     "w": "Hidden jobs start with a dot and are reused with extends, so shared settings live in one place."
+    }
+   ]
+  },
+  {
+   "t": "Environments and production",
+   "v": [
+    {
+     "q": "What does a protected environment add?",
+     "o": [
+      "Named deployers and approvals",
+      "It makes builds run faster",
+      "It adds a second runner",
+      "It rolls back automatically"
+     ],
+     "w": "It gives four-eyes control: only listed roles may deploy, and approvals can be required."
+    },
+    {
+     "q": "What does resource_group prevent?",
+     "o": [
+      "Two deployments running together",
+      "Cache misses in a job",
+      "Secrets showing up in logs",
+      "Slow image pulls on runners"
+     ],
+     "w": "Jobs sharing a resource group run one at a time, so deployments do not overlap."
+    }
+   ]
+  }
+ ]
+}
