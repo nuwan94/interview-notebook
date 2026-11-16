@@ -69,18 +69,21 @@ export function TopicPage() {
       {node.lessons.length > 0 && (
         <>
           <h2>{node.children.length > 0 ? `Lessons in ${node.name}` : 'Lessons'}</h2>
-          <ul className="!list-none !p-0">
+          <ul className="lesson-list">
             {node.lessons.map((l) => (
-              <li key={l.slug} className="mb-[var(--lh)]">
-                <Link to={`/lessons/${l.slug}`} className="font-hand font-bold text-xl no-underline">
-                  {l.title}
-                </Link>
-                <br />
-                <span className="text-soft">{l.summary}</span>
-                <br />
-                <span className="text-sm font-bold text-pen">
-                  {l.questions.length} questions · {l.tags.join(', ')}
-                </span>
+              <li key={l.slug} className="lesson-item">
+                <div className="flex-1 min-w-0">
+                  <Link to={`/lessons/${l.slug}`} className="font-hand font-bold text-xl no-underline">
+                    {l.title}
+                  </Link>
+                  <br />
+                  <span className="text-soft">{l.summary}</span>
+                  <br />
+                  <span className="text-sm font-bold text-pen">
+                    {l.questions.length} questions · {l.tags.join(', ')}
+                  </span>
+                </div>
+                <QuizButton slug={l.slug} title={`${l.title} quiz`} className="btn primary !min-h-9 shrink-0" label="Quiz me" />
               </li>
             ))}
           </ul>
