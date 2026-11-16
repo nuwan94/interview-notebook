@@ -36,7 +36,7 @@ function ShareButton({ slug, anchor, label, toast, className = 'btn' }) {
       type="button"
       data-noread
       className={className}
-      title="Copy a link that opens this exact place"
+      data-tip="Copy a link that opens this exact place"
       onClick={async () => {
         const url = lessonUrl(slug, anchor);
         if (!anchor && navigator.share) {
@@ -123,7 +123,7 @@ function LessonView({ lesson, anchor }) {
                     type="button"
                     className="btn !min-h-7 !text-xs !px-2"
                     onClick={(e) => reader.playFrom(e.currentTarget.closest('h2'))}
-                    title="Read aloud from this section"
+                    data-tip="Read aloud from this section"
                   >
                     ▶ Read from here
                   </button>

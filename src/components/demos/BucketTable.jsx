@@ -3,7 +3,7 @@
 
 function NodeChip({ n, state, tag }) {
   return (
-    <span className="node" data-state={state} data-tag={tag} title={`stored hash ${n.hash}`}>
+    <span className="node" data-state={state} data-tag={tag} data-tip={`stored hash ${n.hash}`}>
       <span>
         <b>{n.label}</b> <span aria-hidden="true">→</span> {n.value}
       </span>
@@ -57,7 +57,7 @@ function TreeBin({ nodes, active, tags }) {
           data-state={active?.nodeId === n.id ? active.state : undefined}
           data-tag={tags?.[n.id]}
           style={{ left: `${(x + 0.5) * DX}rem`, top: `${y * DY}rem` }}
-          title={`${n.label} → ${n.value} (hash ${n.hash})`}
+          data-tip={`${n.label} → ${n.value} (hash ${n.hash})`}
         >
           <b>{n.label.replace(/"/g, '')}</b>
         </span>

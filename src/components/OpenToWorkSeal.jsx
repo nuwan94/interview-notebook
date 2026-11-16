@@ -7,7 +7,7 @@ export function OpenToWorkSeal() {
       target="_blank"
       rel="noreferrer noopener"
       aria-label="Open to work. Visit my portfolio at nuwan.dev"
-      title="Open to work: see my portfolio at nuwan.dev"
+      data-tip="Open to work: see my portfolio at nuwan.dev"
     >
       <svg viewBox="0 0 200 200" role="img" aria-hidden="true">
         <defs>

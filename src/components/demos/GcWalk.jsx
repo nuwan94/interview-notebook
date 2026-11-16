@@ -18,7 +18,7 @@ function Cell({ cell }) {
     <span
       className="relative inline-flex h-9 w-9 items-center justify-center rounded font-mono text-sm font-bold transition-colors"
       style={st}
-      title={`${cell.id}${cell.state === 'dead' ? ' (unreachable)' : ''}${cell.age ? `, age ${cell.age}` : ''}`}
+      data-tip={`${cell.id}${cell.state === 'dead' ? ' (unreachable)' : ''}${cell.age ? `, age ${cell.age}` : ''}`}
     >
       {cell.id}
       {cell.age != null && <sup className="absolute -top-1 -right-1 rounded-full bg-white px-1 text-[0.6rem] font-sans text-soft border border-slate-300">{cell.age}</sup>}
