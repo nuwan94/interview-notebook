@@ -4,7 +4,7 @@ nav: Concurrent collections
 slug: java-concurrent-collections
 summary: Why plain collections fail across threads, how ConcurrentHashMap, CopyOnWriteArrayList, ConcurrentLinkedQueue, BlockingQueue and ConcurrentSkipListMap work, weakly consistent iterators and atomic compound operations, with animations and interview questions.
 tags: [Java, Concurrency, Collections]
-order: 17
+order: 18
 topic: Java / Concurrency
 updated: 2026-11-13
 subnav: true

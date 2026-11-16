@@ -4,7 +4,7 @@ import { LuBlocks, LuBookOpen, LuCoffee, LuContainer, LuDatabase, LuLeaf, LuNetw
 // Sub-topics get a generated summary from their lesson titles. Unknown topics fall back to a generic icon.
 const TOPICS = {
   Fundamentals: { icon: LuBlocks, blurb: 'Object-oriented design, SOLID and design patterns, plus data structures, sorting, searching and the coding interview patterns: the vocabulary every interview starts with.' },
-  Java: { icon: LuCoffee, blurb: 'The language and platform: strings, generics, collections, streams, the JVM and garbage collection, concurrency, build tools.' },
+  Java: { icon: LuCoffee, blurb: 'The language and platform: strings, generics, collections, streams, the JVM and garbage collection, troubleshooting a running JVM, concurrency, build tools.' },
   Databases: { icon: LuDatabase, blurb: 'SQL and NoSQL, normalisation, ACID and BASE, transactions and caching with Redis.' },
   Security: { icon: LuShieldCheck, blurb: 'Cryptography, authentication and authorisation, OAuth 2.0, OpenID Connect and JWT.' },
   Microservices: { icon: LuNetwork, blurb: 'Distributed systems, decomposition and migration, communication, resilience, state, sagas, event sourcing and messaging.' },

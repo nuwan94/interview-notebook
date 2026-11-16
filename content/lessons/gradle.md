@@ -4,7 +4,7 @@ nav: Gradle
 slug: gradle
 summary: How Gradle builds a Java project: the Kotlin DSL build files, the three build phases, the task graph, inputs and outputs with up-to-date checks, the daemon, build cache and configuration cache, dependency configurations (api, implementation, runtimeOnly), version catalogs, multi-project builds, the Spring Boot plugin and troubleshooting, with examples and interview questions.
 tags: [Java, Gradle, Build tools, Dependencies, Spring Boot]
-order: 19
+order: 20
 topic: Java / Build tools
 updated: 2026-11-15
 subnav: true
