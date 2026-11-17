@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -17,6 +17,9 @@ import {
 } from 'react-icons/si';
 
 const ICONS = [
+  // --- aws: specific titles that must win over the generic rules below ---
+  [/^lambda function$/i, LuSquareFunction],
+  [/^dead-letter queue$/i, LuMailX],
   // --- jenkins and gitlab: specific titles that must win over the generic rules below ---
   [/^(pull|merge) request$/i, LuGitPullRequest],
   [/^multibranch job$/i, LuGitBranch],
@@ -373,6 +376,19 @@ const ICONS = [
   [/^kaniko$/i, LuPackage],
   [/^rules$/i, LuListFilter],
   [/^main branch$/i, LuGitBranch],
+  // --- aws ---
+  [/^route 53$/i, LuSignpost],
+  [/^cloudfront$/i, LuGlobe],
+  [/^fargate tasks$/i, LuContainer],
+  [/^cloudwatch$/i, LuActivity],
+  [/^cloudtrail$/i, LuScrollText],
+  [/^alarm$/i, LuBellRing],
+  [/^organization$/i, LuBuilding2],
+  [/^(production|development) ou$/i, LuFolderTree],
+  [/^guardrail$/i, LuShieldBan],
+  [/^blocked action$/i, LuBan],
+  [/^cross-account role$/i, LuUserCheck],
+  [/^production account$/i, LuCloud],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */
