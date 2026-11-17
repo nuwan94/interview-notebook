@@ -17,8 +17,8 @@ export const AWS_SCENES = [
       },
       {
         note: 'CloudFront forwards the request to an Application Load Balancer, the only public entry into the VPC. The load balancer spreads it over containers that run in private subnets in two availability zones, here on ECS with Fargate, so there are no servers to patch.',
-        boxes: [b('c', 'CloudFront', ['forwards dynamic calls'], 'ok'), b('l', 'Load balancer', ['ALB, spans two zones'], 'new'), b('f', 'Fargate tasks', ['Spring Boot containers'], 'ok')],
-        deps: [d('CloudFront', 'Load balancer', 'HTTPS', 'ok'), d('Load balancer', 'Fargate tasks', 'health-checked traffic', 'ok')],
+        boxes: [b('c', 'CloudFront', ['forwards dynamic calls'], 'ok'), b('l', 'ALB', ['ALB, spans two zones'], 'new'), b('f', 'Fargate tasks', ['Spring Boot containers'], 'ok')],
+        deps: [d('CloudFront', 'ALB', 'HTTPS', 'ok'), d('ALB', 'Fargate tasks', 'health-checked traffic', 'ok')],
       },
       {
         note: 'The containers keep no state. Accounts and payments go to Aurora PostgreSQL with a standby in the second zone. Hot reads come from ElastiCache for Redis, and statements and documents are written to S3 as objects.',
@@ -39,18 +39,18 @@ export const AWS_SCENES = [
     frames: [
       {
         note: 'The order service does not call every interested service. It publishes one event to an SNS topic. SNS pushes a copy to each subscribed SQS queue, so adding a new consumer needs no change in the publisher. This is the fan-out pattern.',
-        boxes: [b('o', 'Order service', ['publishes OrderPlaced'], 'ok'), b('t', 'SNS topic', ['fan-out'], 'new'), b('p', 'Payment queue', ['SQS'], 'ok'), b('n', 'Notification queue', ['SQS'], 'ok')],
-        deps: [d('Order service', 'SNS topic', 'publish', 'ok'), d('SNS topic', 'Payment queue', 'copy', 'ok'), d('SNS topic', 'Notification queue', 'copy', 'ok')],
+        boxes: [b('o', 'Order service', ['publishes OrderPlaced'], 'ok'), b('t', 'SNS topic', ['fan-out'], 'new'), b('p', 'Payments SQS', ['SQS'], 'ok'), b('n', 'Notifications SQS', ['SQS'], 'ok')],
+        deps: [d('Order service', 'SNS topic', 'publish', 'ok'), d('SNS topic', 'Payments SQS', 'copy', 'ok'), d('SNS topic', 'Notifications SQS', 'copy', 'ok')],
       },
       {
         note: 'Each queue holds its messages until a consumer is ready, which smooths out spikes. A Lambda function reads the payment queue in batches, processes the event and writes the result to a DynamoDB table. The queue scales the function, so there are no servers to run.',
-        boxes: [b('p', 'Payment queue', ['buffers the spike'], 'ok'), b('l', 'Lambda function', ['processes in batches'], 'new'), b('d', 'DynamoDB table', ['stores the result'], 'ok')],
-        deps: [d('Payment queue', 'Lambda function', 'triggers', 'ok'), d('Lambda function', 'DynamoDB table', 'writes', 'ok')],
+        boxes: [b('p', 'Payments SQS', ['buffers the spike'], 'ok'), b('l', 'Lambda function', ['processes in batches'], 'new'), b('d', 'DynamoDB table', ['stores the result'], 'ok')],
+        deps: [d('Payments SQS', 'Lambda function', 'triggers', 'ok'), d('Lambda function', 'DynamoDB table', 'writes', 'ok')],
       },
       {
         note: 'A poison message makes the function fail repeatedly. After a set number of receives SQS moves it to a dead-letter queue, so it stops blocking the others. A CloudWatch alarm on the dead-letter queue pages the team, and the message can be inspected and redriven.',
-        boxes: [b('l', 'Lambda function', ['fails on one message'], 'bad'), b('q', 'Dead-letter queue', ['after 5 attempts'], 'warn'), b('a', 'Alarm', ['messages in the DLQ'], 'bad')],
-        deps: [d('Lambda function', 'Dead-letter queue', 'moved after retries', 'warn'), d('Dead-letter queue', 'Alarm', 'triggers', 'bad')],
+        boxes: [b('l', 'Lambda function', ['fails on one message'], 'bad'), b('q', 'SQS DLQ', ['after 5 attempts'], 'warn'), b('a', 'Alarm', ['messages in the DLQ'], 'bad')],
+        deps: [d('Lambda function', 'SQS DLQ', 'moved after retries', 'warn'), d('SQS DLQ', 'Alarm', 'triggers', 'bad')],
       },
     ],
   },

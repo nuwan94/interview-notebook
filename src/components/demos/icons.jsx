@@ -16,6 +16,7 @@ import {
   SiApachecassandra, SiGithub, SiRedhatopenshift, SiTekton, SiArgo, SiIstio,
 } from 'react-icons/si';
 
+import { awsIcon } from './awsIcons.jsx';
 const ICONS = [
   // --- aws: specific titles that must win over the generic rules below ---
   [/^lambda function$/i, LuSquareFunction],
@@ -393,6 +394,8 @@ const ICONS = [
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */
 export function iconComponent(name = '') {
+  const aws = awsIcon(name);
+  if (aws) return aws;
   const rule = ICONS.find(([re]) => re.test(name));
   return rule ? rule[1] : null;
 }
