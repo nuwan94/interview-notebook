@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Compute choices",
+   "v": [
+    {
+     "q": "Which service runs containers with no nodes to manage?",
+     "o": [
+      "AWS Fargate",
+      "Amazon EC2",
+      "Amazon EBS",
+      "AWS Backup"
+     ],
+     "w": "Fargate is serverless compute for ECS and EKS. You size the task, and AWS runs it."
+    },
+    {
+     "q": "Which service fits a short, event-driven task with spiky traffic?",
+     "o": [
+      "AWS Lambda",
+      "A dedicated EC2 fleet",
+      "Amazon EFS",
+      "Amazon Redshift"
+     ],
+     "w": "Lambda scales with events, scales to zero and bills per call."
+    }
+   ]
+  },
+  {
+   "t": "Storage choices",
+   "v": [
+    {
+     "q": "Which AWS service stores objects accessed by an API?",
+     "o": [
+      "Amazon S3",
+      "Amazon EBS",
+      "Amazon EFS",
+      "Amazon RDS"
+     ],
+     "w": "S3 is object storage with high durability. EBS is a block disk, and EFS is a shared file system."
+    },
+    {
+     "q": "Which is a safe default for an S3 bucket that holds statements?",
+     "o": [
+      "Block public access and encrypt",
+      "A public read policy",
+      "No versioning at all",
+      "A shared access key"
+     ],
+     "w": "Public access stays blocked, encryption is on by default, and versioning protects against overwrites."
+    }
+   ]
+  },
+  {
+   "t": "Database choices",
+   "v": [
+    {
+     "q": "Which database needs access patterns known in advance?",
+     "o": [
+      "DynamoDB",
+      "RDS PostgreSQL",
+      "Aurora PostgreSQL",
+      "Redshift"
+     ],
+     "w": "DynamoDB is built for key-based access at scale. It has no joins, so the table follows the queries."
+    },
+    {
+     "q": "What does Aurora add compared with plain RDS?",
+     "o": [
+      "Faster failover and read replicas",
+      "A new SQL dialect",
+      "No backups needed",
+      "A free licence for Oracle"
+     ],
+     "w": "Aurora has shared storage, quick failover and up to 15 read replicas."
+    }
+   ]
+  },
+  {
+   "t": "Messaging choices",
+   "v": [
+    {
+     "q": "Which pair gives fan-out to several independent consumers?",
+     "o": [
+      "SNS to several SQS queues",
+      "One SQS queue only",
+      "S3 to EBS",
+      "Route 53 to CloudFront"
+     ],
+     "w": "SNS pushes a copy to each queue, so consumers are independent and new ones subscribe freely."
+    },
+    {
+     "q": "Why is a dead-letter queue useful?",
+     "o": [
+      "A poison message stops blocking others",
+      "It makes delivery exactly once",
+      "It encrypts messages",
+      "It speeds up the producer"
+     ],
+     "w": "After the maximum receives, the message is moved aside for inspection and redrive."
+    }
+   ]
+  },
+  {
+   "t": "Networking",
+   "v": [
+    {
+     "q": "Which service is the only public entry point in a typical design?",
+     "o": [
+      "The load balancer",
+      "The database",
+      "The app container",
+      "The NAT gateway"
+     ],
+     "w": "The ALB sits in public subnets. Applications and data stay in private subnets."
+    },
+    {
+     "q": "What does a VPC endpoint avoid?",
+     "o": [
+      "The public internet path to S3",
+      "Any need for an IAM policy",
+      "Paying for any storage",
+      "Running in two zones"
+     ],
+     "w": "Traffic to the AWS service stays on the AWS network."
+    }
+   ]
+  },
+  {
+   "t": "Identity and accounts",
+   "v": [
+    {
+     "q": "What does a service control policy do?",
+     "o": [
+      "Limits the maximum permissions",
+      "Grants permissions to users",
+      "Encrypts the accounts",
+      "Creates new accounts"
+     ],
+     "w": "It is a guardrail in Organizations. An action also needs an IAM policy that allows it."
+    },
+    {
+     "q": "How should a workload on ECS call AWS services?",
+     "o": [
+      "Through its task role",
+      "With keys in the image",
+      "With the root user",
+      "With a shared user"
+     ],
+     "w": "The role supplies temporary credentials automatically, so no key is stored."
+    }
+   ]
+  },
+  {
+   "t": "Operations and audit",
+   "v": [
+    {
+     "q": "Which service records every API call in an account?",
+     "o": [
+      "CloudTrail",
+      "CloudWatch metrics",
+      "Route 53",
+      "Cognito"
+     ],
+     "w": "CloudTrail is the audit log of who did what. CloudWatch is for metrics, logs and alarms."
+    },
+    {
+     "q": "Which tool describes AWS resources as code?",
+     "o": [
+      "CloudFormation",
+      "CloudWatch",
+      "GuardDuty",
+      "Cost Explorer"
+     ],
+     "w": "Templates describe the resources, and a stack creates and updates them repeatably."
+    }
+   ]
+  },
+  {
+   "t": "SQS behaviour",
+   "v": [
+    {
+     "q": "What must the SQS visibility timeout be compared with?",
+     "o": [
+      "Longer than the processing time",
+      "Shorter than the processing time",
+      "Equal to the retention period",
+      "Zero for speed"
+     ],
+     "w": "If it is shorter, the message reappears while still being handled and is processed twice."
+    },
+    {
+     "q": "Why must an SQS consumer be idempotent?",
+     "o": [
+      "Standard queues deliver at least once",
+      "Queues delete messages early",
+      "Messages are never ordered",
+      "Lambda cannot retry"
+     ],
+     "w": "A message can arrive twice, so a repeat must be harmless."
+    }
+   ]
+  }
+ ]
+}

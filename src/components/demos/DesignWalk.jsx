@@ -29,6 +29,7 @@ import { DEPLOY_SCENES } from './deployScenes.js';
 import { CLOUD_SCENES } from './cloudScenes.js';
 import { JENKINS_SCENES } from './jenkinsScenes.js';
 import { GITLAB_SCENES } from './gitlabScenes.js';
+import { AWS_SCENES } from './awsScenes.js';
 import { EXCEPTION_SCENES } from './exceptionScenes.js';
 import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
@@ -275,3 +276,4 @@ export const DeployWalk = () => <Walk scenes={DEPLOY_SCENES} icons graph ariaLab
 export const CloudWalk = () => <Walk scenes={CLOUD_SCENES} icons graph ariaLabel="Cloud basics walk-through" />;
 export const JenkinsWalk = () => <Walk scenes={JENKINS_SCENES} icons graph ariaLabel="Jenkins walk-through" />;
 export const GitlabWalk = () => <Walk scenes={GITLAB_SCENES} icons graph ariaLabel="GitLab CI/CD walk-through" />;
+export const AwsWalk = () => <Walk scenes={AWS_SCENES} icons graph ariaLabel="AWS service map walk-through" />;
