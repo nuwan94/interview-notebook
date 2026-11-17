@@ -1,9 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 110" role="img" aria-hidden="true"><defs><pattern id="g" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#cfe0ef" stroke-width="1"/></pattern></defs><rect width="320" height="110" fill="#f4f7fc"/><rect width="320" height="110" fill="url(#g)"/><g fill="none" stroke="#1b2433" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-<path d="M160 55L70 28M160 55L70 82M160 55L250 28M160 55L250 82M160 55V20M160 55V92" stroke="#23408f" stroke-dasharray="1 6"/>
-<rect x="136" y="38" width="48" height="34" rx="6" fill="#ffe45c"/><path d="M148 55h24"/>
-<rect x="44" y="14" width="52" height="28" rx="6" fill="#e3eafa"/>
-<rect x="44" y="68" width="52" height="28" rx="6" fill="#dff3e6"/>
-<rect x="224" y="14" width="52" height="28" rx="6" fill="#fdeccd"/>
-<rect x="224" y="68" width="52" height="28" rx="6" fill="#fbe0de"/>
-<circle cx="160" cy="12" r="7" fill="#fff"/><circle cx="160" cy="98" r="7" fill="#fff"/>
-</g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 320 110"><defs><pattern id="g" width="16" height="16" patternUnits="userSpaceOnUse"><path fill="none" stroke="#cfe0ef" stroke-width="1" d="M16 0H0V16"/></pattern></defs><rect width="320" height="110" fill="#f4f7fc"/><rect width="320" height="110" fill="url(#g)"/><g fill="none" stroke="#1b2433" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"><path stroke="#23408f" stroke-dasharray="1 6" d="M160 55L70 28M160 55L70 82M160 55L250 28M160 55L250 82M160 55V20M160 55V92"/><rect width="48" height="34" x="136" y="38" fill="#ffe45c" rx="6"/><path d="M148 55h24"/><rect width="52" height="28" x="44" y="14" fill="#e3eafa" rx="6"/><rect width="52" height="28" x="44" y="68" fill="#dff3e6" rx="6"/><rect width="52" height="28" x="224" y="14" fill="#fdeccd" rx="6"/><rect width="52" height="28" x="224" y="68" fill="#fbe0de" rx="6"/><circle cx="160" cy="12" r="7" fill="#fff"/><circle cx="160" cy="98" r="7" fill="#fff"/></g></svg>

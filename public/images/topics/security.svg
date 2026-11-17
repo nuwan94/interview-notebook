@@ -1,7 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 110" role="img" aria-hidden="true"><defs><pattern id="g" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#cfe0ef" stroke-width="1"/></pattern></defs><rect width="320" height="110" fill="#f4f7fc"/><rect width="320" height="110" fill="url(#g)"/><g fill="none" stroke="#1b2433" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-<path d="M96 16l46 14v26c0 22-18 36-46 46-28-10-46-24-46-46V30z" fill="#dff3e6"/>
-<path d="M76 58l14 14 28-30" stroke="#2f7d4f" stroke-width="4"/>
-<rect x="196" y="52" width="48" height="40" rx="5" fill="#ffe45c"/>
-<path d="M205 52V40a15 15 0 0 1 30 0v12"/><circle cx="220" cy="70" r="5" fill="#1b2433"/><path d="M220 75v8"/>
-<circle cx="270" cy="30" r="10" fill="#fff"/><path d="M280 30h26M298 30v10M290 30v7" stroke="#23408f"/>
-</g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 320 110"><defs><pattern id="g" width="16" height="16" patternUnits="userSpaceOnUse"><path fill="none" stroke="#cfe0ef" stroke-width="1" d="M16 0H0V16"/></pattern></defs><rect width="320" height="110" fill="#f4f7fc"/><rect width="320" height="110" fill="url(#g)"/><g fill="none" stroke="#1b2433" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"><path fill="#dff3e6" d="M96 16l46 14v26c0 22-18 36-46 46-28-10-46-24-46-46V30z"/><path stroke="#2f7d4f" stroke-width="4" d="M76 58l14 14 28-30"/><rect width="48" height="40" x="196" y="52" fill="#ffe45c" rx="5"/><path d="M205 52V40a15 15 0 0 1 30 0v12"/><circle cx="220" cy="70" r="5" fill="#1b2433"/><path d="M220 75v8"/><circle cx="270" cy="30" r="10" fill="#fff"/><path stroke="#23408f" d="M280 30h26M298 30v10M290 30v7"/></g></svg>
