@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Kinds of storage",
+   "v": [
+    {
+     "q": "Which storage is shared by many servers as a mounted file system?",
+     "o": [
+      "Amazon EFS",
+      "Amazon EBS",
+      "Instance store",
+      "S3 Glacier"
+     ],
+     "w": "EFS is managed NFS that many instances and containers mount at once. EBS attaches to one instance."
+    },
+    {
+     "q": "Which storage is a disk for one instance in one zone?",
+     "o": [
+      "Amazon EBS",
+      "Amazon EFS",
+      "Amazon S3",
+      "AWS Backup"
+     ],
+     "w": "An EBS volume lives in one availability zone and attaches to an instance there."
+    }
+   ]
+  },
+  {
+   "t": "S3 basics",
+   "v": [
+    {
+     "q": "What protects S3 data from an accidental delete?",
+     "o": [
+      "Versioning",
+      "Eleven nines of durability",
+      "A larger bucket",
+      "Transfer Acceleration"
+     ],
+     "w": "Durability covers hardware loss, not your own mistakes. Versioning keeps earlier versions to restore."
+    },
+    {
+     "q": "How consistent is S3 after a successful write?",
+     "o": [
+      "Strongly consistent",
+      "Eventually consistent only",
+      "Consistent after an hour",
+      "Consistent only in one zone"
+     ],
+     "w": "The next read or list sees the write or delete."
+    }
+   ]
+  },
+  {
+   "t": "Storage classes",
+   "v": [
+    {
+     "q": "Which class suits data with unpredictable access?",
+     "o": [
+      "Intelligent-Tiering",
+      "Deep Archive",
+      "One Zone-IA",
+      "Standard-IA"
+     ],
+     "w": "It moves objects between tiers by itself for a small monitoring fee."
+    },
+    {
+     "q": "What does a lifecycle rule do?",
+     "o": [
+      "Moves or deletes objects by age",
+      "Encrypts the bucket",
+      "Blocks public access",
+      "Creates a replica"
+     ],
+     "w": "It can move objects to cheaper classes, expire them, and clean old versions."
+    }
+   ]
+  },
+  {
+   "t": "Uploads",
+   "v": [
+    {
+     "q": "Why use a presigned URL for uploads?",
+     "o": [
+      "The file bypasses your API servers",
+      "It removes the need for a bucket",
+      "It makes the object public",
+      "It skips encryption"
+     ],
+     "w": "The client talks to S3 directly, so large files never load your servers."
+    },
+    {
+     "q": "Which setting should a presigned URL have?",
+     "o": [
+      "A short lifetime",
+      "A one-year lifetime",
+      "No expiry",
+      "Public write access"
+     ],
+     "w": "Whoever holds the URL can do the allowed action, so keep it to minutes."
+    }
+   ]
+  },
+  {
+   "t": "Bucket security",
+   "v": [
+    {
+     "q": "Which control stops a bucket policy from making data public?",
+     "o": [
+      "Block Public Access",
+      "Versioning",
+      "Lifecycle rules",
+      "Transfer Acceleration"
+     ],
+     "w": "It overrides mistaken policies and ACLs, so switch it on for the account."
+    },
+    {
+     "q": "What does a deny on aws:SecureTransport false do?",
+     "o": [
+      "Rejects requests that do not use TLS",
+      "Encrypts the objects at rest",
+      "Blocks all internet users",
+      "Enables versioning"
+     ],
+     "w": "Plain HTTP requests are refused, so data is always sent encrypted."
+    }
+   ]
+  },
+  {
+   "t": "Immutability",
+   "v": [
+    {
+     "q": "Which mode cannot be shortened even by the root user?",
+     "o": [
+      "Object Lock compliance mode",
+      "Object Lock governance mode",
+      "Versioning only",
+      "A lifecycle rule"
+     ],
+     "w": "Compliance mode holds the retention until it ends. Governance mode can be bypassed with a permission."
+    },
+    {
+     "q": "What does Vault Lock protect against?",
+     "o": [
+      "Early deletion of backups",
+      "Slow restores of a database",
+      "High S3 request costs",
+      "Public buckets in the account"
+     ],
+     "w": "Even administrators cannot delete locked recovery points, which blunts ransomware."
+    }
+   ]
+  },
+  {
+   "t": "EBS and EFS",
+   "v": [
+    {
+     "q": "What is true of an EBS snapshot?",
+     "o": [
+      "It is incremental",
+      "It is a full copy every time",
+      "It lives only on the instance",
+      "It cannot cross regions"
+     ],
+     "w": "Only changed blocks are stored after the first snapshot, and it can be copied to other regions or accounts."
+    },
+    {
+     "q": "What happens to instance store data when the instance stops?",
+     "o": [
+      "It is lost",
+      "It moves to S3",
+      "It is snapshotted",
+      "It becomes shared"
+     ],
+     "w": "Use it only for caches and scratch space."
+    }
+   ]
+  },
+  {
+   "t": "Cost",
+   "v": [
+    {
+     "q": "Which is a hidden S3 cost in a versioned bucket?",
+     "o": [
+      "Old object versions",
+      "The bucket name",
+      "The region code",
+      "The key prefix"
+     ],
+     "w": "Old versions keep adding storage until a lifecycle rule expires them."
+    },
+    {
+     "q": "How can you avoid NAT gateway charges for S3 traffic?",
+     "o": [
+      "A gateway VPC endpoint",
+      "A bigger NAT gateway",
+      "A public bucket",
+      "Transfer Acceleration"
+     ],
+     "w": "Traffic to S3 then stays on the AWS network, so it does not pass the NAT gateway."
+    }
+   ]
+  }
+ ]
+}

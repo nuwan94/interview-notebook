@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -18,6 +18,9 @@ import {
 
 import { awsIcon } from './awsIcons.jsx';
 const ICONS = [
+  // --- aws storage: titles that must win over the generic rules below ---
+  [/^bucket policy$/i, LuScrollText],
+  [/^lifecycle rule$/i, LuTimer],
   // --- aws: specific titles that must win over the generic rules below ---
   [/^lambda function$/i, LuSquareFunction],
   [/^dead-letter queue$/i, LuMailX],
@@ -397,6 +400,13 @@ const ICONS = [
   [/^warm call$/i, LuFlame],
   [/^snapstart$/i, LuCamera],
   [/^provisioned concurrency$/i, LuGauge],
+  // --- aws storage ---
+  [/^presigned url$/i, LuLink],
+  [/^new statement$/i, LuFileText],
+  [/^expired object$/i, LuTrash2],
+  [/^block public access$/i, LuShieldBan],
+  [/^vpc endpoint$/i, LuUnplug],
+  [/^audit archive$/i, LuArchive],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */
