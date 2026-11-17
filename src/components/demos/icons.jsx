@@ -18,6 +18,11 @@ import {
 
 import { awsIcon } from './awsIcons.jsx';
 const ICONS = [
+  // --- aws security: specific titles that must win over the generic rules below ---
+  [/^service control policy$/i, LuBan],
+  [/^key policy$/i, LuScrollText],
+  [/^data key$/i, LuKey],
+  [/^corporate directory$/i, LuContact],
   // --- aws networking: specific titles that must win over the generic rules below ---
   [/^internet gateway$/i, LuGlobe],
   [/^nat gateway$/i, LuArrowUpDown],

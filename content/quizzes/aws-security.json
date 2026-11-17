@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Roles",
+   "v": [
+    {
+     "q": "What does assuming an IAM role give a workload?",
+     "o": [
+      "Temporary credentials",
+      "A permanent password",
+      "A long-lived access key",
+      "Root access"
+     ],
+     "w": "A principal assumes the role through STS, and the credentials expire by themselves."
+    },
+    {
+     "q": "Which policy says who may assume a role?",
+     "o": [
+      "The trust policy",
+      "The permissions policy",
+      "The bucket policy",
+      "The SCP"
+     ],
+     "w": "The permissions policies say what the role can do after it is assumed."
+    }
+   ]
+  },
+  {
+   "t": "Policy evaluation",
+   "v": [
+    {
+     "q": "What wins when one policy allows and another explicitly denies?",
+     "o": [
+      "The deny",
+      "The allow",
+      "The newer policy",
+      "The longer policy"
+     ],
+     "w": "An explicit deny always overrides every allow."
+    },
+    {
+     "q": "How does a service control policy affect a role with AdministratorAccess?",
+     "o": [
+      "Sets the account maximum",
+      "Grants permissions to roles",
+      "Encrypts data at rest",
+      "Rotates database secrets"
+     ],
+     "w": "It only limits. A request still needs an allow in the account."
+    }
+   ]
+  },
+  {
+   "t": "Workload access",
+   "v": [
+    {
+     "q": "How should a CI pipeline get AWS access without stored keys?",
+     "o": [
+      "OIDC federation to a role",
+      "A shared IAM user",
+      "A key in the repository",
+      "The root user"
+     ],
+     "w": "The pipeline presents a signed token and assumes a role for about an hour."
+    },
+    {
+     "q": "Which grants a Fargate task its permissions?",
+     "o": [
+      "The task role",
+      "The execution role",
+      "A user access key",
+      "A security group"
+     ],
+     "w": "The execution role only pulls the image and writes logs."
+    }
+   ]
+  },
+  {
+   "t": "People",
+   "v": [
+    {
+     "q": "How should engineers get access to many accounts?",
+     "o": [
+      "IAM Identity Center with MFA",
+      "One IAM user each",
+      "A shared admin key",
+      "The root user"
+     ],
+     "w": "Permission sets become temporary roles, and access ends when the directory entry is removed."
+    },
+    {
+     "q": "What is break-glass access for?",
+     "o": [
+      "Emergencies when sign-in fails",
+      "Daily administration work",
+      "Making buckets public",
+      "Cheaper monthly billing"
+     ],
+     "w": "It is tightly controlled, monitored and alarmed whenever it is used."
+    }
+   ]
+  },
+  {
+   "t": "KMS",
+   "v": [
+    {
+     "q": "Why use envelope encryption?",
+     "o": [
+      "Encrypt big data locally",
+      "Avoid using any key at all",
+      "Make KMS keys public",
+      "Skip the audit logging"
+     ],
+     "w": "KMS handles only small inputs, so a data key encrypts the data locally."
+    },
+    {
+     "q": "What decides who may use a KMS key?",
+     "o": [
+      "The key policy",
+      "The bucket name",
+      "The region",
+      "The key size"
+     ],
+     "w": "The key policy is the root of access and can delegate to IAM."
+    }
+   ]
+  },
+  {
+   "t": "Key lifecycle",
+   "v": [
+    {
+     "q": "What happens on yearly automatic KMS key rotation?",
+     "o": [
+      "The key ID stays the same",
+      "All data is re-encrypted",
+      "The key is deleted at once",
+      "A new account is created"
+     ],
+     "w": "Old key versions still decrypt old data, so nothing has to be re-encrypted."
+    },
+    {
+     "q": "Why does KMS enforce a waiting period before deleting a key?",
+     "o": [
+      "Deleting makes the data unreadable",
+      "To save some money",
+      "To rotate the key faster",
+      "To change the region"
+     ],
+     "w": "The 7 to 30 days allow a mistake to be caught."
+    }
+   ]
+  },
+  {
+   "t": "Secrets",
+   "v": [
+    {
+     "q": "Which service rotates a database password automatically?",
+     "o": [
+      "Secrets Manager",
+      "Parameter Store standard",
+      "CloudTrail",
+      "Config"
+     ],
+     "w": "It calls a Lambda function that changes the password and updates the secret."
+    },
+    {
+     "q": "Where do plain, non-secret settings belong?",
+     "o": [
+      "Parameter Store",
+      "The Docker image",
+      "The Git repository history",
+      "A public bucket"
+     ],
+     "w": "It is cheaper and meant for configuration values."
+    }
+   ]
+  },
+  {
+   "t": "Detection",
+   "v": [
+    {
+     "q": "Which service records every API call?",
+     "o": [
+      "CloudTrail",
+      "GuardDuty",
+      "Macie",
+      "Inspector"
+     ],
+     "w": "It records who called what, when and from where."
+    },
+    {
+     "q": "Which service finds card numbers stored in S3?",
+     "o": [
+      "Macie",
+      "Inspector",
+      "Config",
+      "Shield"
+     ],
+     "w": "Macie scans buckets for sensitive data such as personal and card data."
+    }
+   ]
+  }
+ ]
+}
