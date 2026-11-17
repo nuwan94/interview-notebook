@@ -7,6 +7,7 @@ const BASE = import.meta.env.BASE_URL || './';
 
 const RULES = [
   [/^ec2( instances?)?$/i, 'ec2'],
+  [/^auto scaling group$/i, 'auto-scaling'],
   [/^lambda function$/i, 'lambda'],
   [/^ecs$/i, 'ecs'],
   [/^eks$/i, 'eks'],

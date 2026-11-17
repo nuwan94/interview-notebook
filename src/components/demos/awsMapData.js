@@ -119,3 +119,11 @@ export const AWS_MAP = [
     ],
   },
 ];
+
+// Sub-groups inside each category, so a card (or a single-category figure) reads as a few labelled columns.
+const GROUPS = {"compute": [["Virtual machines", ["ec2", "auto-scaling"]], ["Containers", ["ecs", "eks", "fargate"]], ["Functions and platforms", ["lambda", "beanstalk", "batch"]]], "storage": [["Objects and archive", ["s3", "glacier"]], ["Disks and file systems", ["ebs", "efs", "fsx"]], ["Protection", ["backup"]]], "databases": [["Relational", ["rds", "aurora"]], ["NoSQL and cache", ["dynamodb", "elasticache", "documentdb", "neptune"]], ["Analytics and search", ["redshift", "opensearch"]]], "networking": [["Your network", ["vpc", "direct-connect", "transit-gateway", "privatelink"]], ["Traffic", ["elb", "route53"]], ["Edge and APIs", ["cloudfront", "api-gateway"]]], "security": [["Identity", ["iam", "identity-center", "cognito"]], ["Data protection", ["kms", "secrets-manager", "acm"]], ["Threat protection", ["waf", "shield", "guardduty", "security-hub"]]], "integration": [["Queues and topics", ["sqs", "sns", "mq"]], ["Events and streams", ["eventbridge", "kinesis", "msk"]], ["Workflows", ["step-functions"]]], "operations": [["Infrastructure as code", ["cloudformation", "cdk"]], ["Build and deliver", ["ecr", "codebuild", "codepipeline", "codedeploy"]], ["Monitor and audit", ["cloudwatch", "x-ray", "cloudtrail", "config", "systems-manager"]]], "analytics": [["Analytics", ["athena", "glue", "emr", "lake-formation"]], ["AI and machine learning", ["sagemaker", "bedrock"]]], "governance": [["Accounts", ["organizations", "control-tower"]], ["Cost", ["cost-explorer", "budgets", "trusted-advisor"]]]};
+
+for (const c of AWS_MAP) {
+  const bySlug = new Map(c.services.map((x) => [x.slug, x]));
+  c.groups = GROUPS[c.id].map(([title, slugs]) => ({ title, services: slugs.map((sl) => bySlug.get(sl)) }));
+}

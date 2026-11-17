@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Choosing compute",
+   "v": [
+    {
+     "q": "Which option suits a new long-running service with the least operations?",
+     "o": [
+      "A container on ECS Fargate",
+      "A hand-built EC2 fleet",
+      "A Lambda with a 15-minute loop",
+      "A dedicated host"
+     ],
+     "w": "Fargate runs the task with no nodes to patch or scale. EC2 adds work, and Lambda is for events."
+    },
+    {
+     "q": "Which option fits an event handler with spiky, low traffic?",
+     "o": [
+      "AWS Lambda",
+      "A large EC2 instance",
+      "A dedicated host",
+      "An EKS node group"
+     ],
+     "w": "Lambda scales with events, to zero, and bills per call."
+    }
+   ]
+  },
+  {
+   "t": "EC2 basics",
+   "v": [
+    {
+     "q": "What does a launch template hold?",
+     "o": [
+      "AMI, type, role and security groups",
+      "Only the instance type",
+      "The application logs",
+      "The load balancer rules"
+     ],
+     "w": "It records how to launch an instance, is versioned, and an Auto Scaling group uses it."
+    },
+    {
+     "q": "Why require IMDSv2 on instances?",
+     "o": [
+      "It blocks SSRF credential theft",
+      "It speeds up the instance boot",
+      "It removes the need for a role",
+      "It encrypts the root disk"
+     ],
+     "w": "The session-based metadata service stops a simple request from reading the instance credentials."
+    }
+   ]
+  },
+  {
+   "t": "Purchasing options",
+   "v": [
+    {
+     "q": "Which option can AWS reclaim with two minutes notice?",
+     "o": [
+      "Spot",
+      "On-Demand",
+      "Savings Plans",
+      "Capacity Reservations"
+     ],
+     "w": "Spot is spare capacity at a deep discount, so use it for stateless, fault-tolerant work."
+    },
+    {
+     "q": "What is a good fit for Savings Plans?",
+     "o": [
+      "The steady baseline of usage",
+      "A one-day load test",
+      "Interruptible batch work",
+      "A single dev instance"
+     ],
+     "w": "You commit to steady spend for one or three years in return for a large discount."
+    }
+   ]
+  },
+  {
+   "t": "Auto Scaling",
+   "v": [
+    {
+     "q": "What does a target tracking policy do?",
+     "o": [
+      "Keeps a metric near a target",
+      "Scales only on a schedule",
+      "Replaces the AMI",
+      "Disables health checks"
+     ],
+     "w": "It adds and removes capacity like a thermostat, for example to hold average CPU at 60 percent."
+    },
+    {
+     "q": "How do you release a new AMI to an Auto Scaling group?",
+     "o": [
+      "Update the template and run an instance refresh",
+      "Reboot all instances at once",
+      "Edit each instance by hand",
+      "Change the security group"
+     ],
+     "w": "The group replaces instances in batches and waits for each to pass the health check."
+    }
+   ]
+  },
+  {
+   "t": "Lambda behaviour",
+   "v": [
+    {
+     "q": "What is a Lambda cold start?",
+     "o": [
+      "A new environment being created",
+      "A failed deployment of a function",
+      "A full queue of messages",
+      "A missing IAM role policy"
+     ],
+     "w": "Lambda downloads the code, starts the runtime and runs init. Warm calls reuse the environment."
+    },
+    {
+     "q": "Which feature restores a Java function from a snapshot?",
+     "o": [
+      "SnapStart",
+      "Provisioned concurrency",
+      "Reserved concurrency",
+      "A layer"
+     ],
+     "w": "SnapStart takes a snapshot of the initialised function and restores it for new environments."
+    }
+   ]
+  },
+  {
+   "t": "Lambda and SQS",
+   "v": [
+    {
+     "q": "What does a partial batch response do?",
+     "o": [
+      "Failed messages return to the queue",
+      "The whole batch is deleted",
+      "The batch size is doubled",
+      "The dead-letter queue is skipped"
+     ],
+     "w": "Lambda deletes the messages that succeeded and retries only the ones the handler reports."
+    },
+    {
+     "q": "Why cap a Lambda with reserved concurrency?",
+     "o": [
+      "To protect the database behind it",
+      "To make cold starts longer",
+      "To disable retries",
+      "To hide the logs"
+     ],
+     "w": "Hundreds of parallel functions can exhaust database connections, so the cap limits them."
+    }
+   ]
+  },
+  {
+   "t": "ECS and EKS",
+   "v": [
+    {
+     "q": "In ECS, what is the task role used for?",
+     "o": [
+      "Calls from the application to AWS",
+      "Pulling the image from ECR",
+      "Writing the task logs",
+      "Creating the cluster"
+     ],
+     "w": "The execution role sets the task up. The task role is the identity of your code."
+    },
+    {
+     "q": "How does an EKS pod get its own AWS permissions?",
+     "o": [
+      "IRSA or Pod Identity",
+      "The node instance role",
+      "An access key in a ConfigMap",
+      "The root account"
+     ],
+     "w": "A service account is tied to an IAM role, so each workload gets temporary credentials."
+    }
+   ]
+  },
+  {
+   "t": "JVM and cost",
+   "v": [
+    {
+     "q": "Why set -XX:MaxRAMPercentage in a container?",
+     "o": [
+      "The heap follows the container limit",
+      "It disables garbage collection",
+      "It makes images smaller",
+      "It sets the CPU count"
+     ],
+     "w": "A heap bigger than the memory limit gets the container killed."
+    },
+    {
+     "q": "Which change often lowers compute cost for Java services?",
+     "o": [
+      "Moving to Graviton instances",
+      "Doubling every instance size",
+      "Using only On-Demand",
+      "Turning off auto scaling"
+     ],
+     "w": "ARM-based Graviton typically gives similar performance for about 20 percent less."
+    }
+   ]
+  }
+ ]
+}
