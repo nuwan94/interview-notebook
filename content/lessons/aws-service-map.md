@@ -16,6 +16,8 @@ AWS has more than two hundred services, and nobody knows them all. The skill tha
 name: aws-walk
 ```
 
+*The AWS service icons in the diagrams are the official AWS Architecture Icons, shown unmodified. This site is not affiliated with, endorsed by or sponsored by Amazon Web Services.*
+
 > **One sentence to remember:** *Learn the AWS catalogue by problem, not by name: compute runs code, storage and databases keep data, networking connects and protects, security and identity decide who may do what, messaging decouples services, and operations tools watch and deploy all of it.*
 
 ## The global infrastructure {#infrastructure}
@@ -40,7 +42,13 @@ A useful default for a product team: **choose the most managed service that meet
 
 ## The service map {#map}
 
-The first column is the category, and the Azure and Google Cloud equivalents are beside each service so that you can talk across clouds.
+The picture shows the services this lesson covers, by category. Pick a category to see only its card.
+
+```demo
+name: aws-map
+```
+
+The tables below add what each service is for and its Azure and Google Cloud equivalents, so that you can talk across clouds.
 
 ### Compute {#compute}
 

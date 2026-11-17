@@ -16,3 +16,5 @@ Unused files in this folder are safe to delete. To add an image, copy it here an
 `![alt text](images/file.png "Caption | Author, licence | https://source-page")`.
 
 The topic illustrations in `topics/` on the home page are original drawings made for this site (no outside source).
+
+The AWS service icons in `aws/` are the official [AWS Architecture Icons](https://aws.amazon.com/architecture/icons/) (Icon package, July 2026 release), copied unmodified from the official package and used in the AWS lessons to illustrate architecture diagrams. AWS and the AWS icons are trademarks of Amazon.com, Inc. or its affiliates. This site is not affiliated with, endorsed by or sponsored by Amazon Web Services.
