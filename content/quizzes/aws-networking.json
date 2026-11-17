@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Subnets",
+   "v": [
+    {
+     "q": "What makes a subnet public?",
+     "o": [
+      "A route to an internet gateway",
+      "A larger address range",
+      "A security group on it",
+      "A NAT gateway inside it"
+     ],
+     "w": "The 0.0.0.0/0 route to the internet gateway is what makes it public."
+    },
+    {
+     "q": "Where should the application and database live?",
+     "o": [
+      "Private subnets",
+      "Public subnets",
+      "The default VPC",
+      "Next to the NAT gateway"
+     ],
+     "w": "Only load balancers and NAT gateways belong in public subnets."
+    }
+   ]
+  },
+  {
+   "t": "Outbound access",
+   "v": [
+    {
+     "q": "What does a NAT gateway allow?",
+     "o": [
+      "Outbound-only internet access",
+      "Inbound connections from the internet",
+      "Free private access to S3",
+      "Faster DNS answers inside a VPC"
+     ],
+     "w": "Replies return, but nothing outside can start a connection to the private resources."
+    },
+    {
+     "q": "How do you avoid NAT charges for S3 traffic?",
+     "o": [
+      "A gateway VPC endpoint",
+      "A larger NAT gateway",
+      "A public bucket",
+      "A second internet gateway"
+     ],
+     "w": "The route to S3 stays inside the AWS network, and the gateway endpoint is free."
+    }
+   ]
+  },
+  {
+   "t": "Firewalls",
+   "v": [
+    {
+     "q": "Which is stateful and allow-only?",
+     "o": [
+      "Security group",
+      "Network ACL",
+      "Route table",
+      "Internet gateway"
+     ],
+     "w": "Replies to allowed requests pass automatically. Network ACLs are stateless."
+    },
+    {
+     "q": "What is the best way to let only the app reach the database?",
+     "o": [
+      "Reference the app group in the database group",
+      "Open the port to the whole VPC range",
+      "Open the port to 0.0.0.0/0",
+      "Use a network ACL only"
+     ],
+     "w": "Group references need no address lists and block everything else."
+    }
+   ]
+  },
+  {
+   "t": "Load balancers",
+   "v": [
+    {
+     "q": "Which load balancer routes by URL path?",
+     "o": [
+      "ALB",
+      "NLB",
+      "Gateway Load Balancer",
+      "Route 53"
+     ],
+     "w": "The ALB works at layer 7 and understands host, path and headers."
+    },
+    {
+     "q": "Which load balancer gives a static IP per zone?",
+     "o": [
+      "NLB",
+      "ALB",
+      "CloudFront",
+      "API Gateway"
+     ],
+     "w": "An NLB has a fixed address per zone and can use Elastic IPs."
+    }
+   ]
+  },
+  {
+   "t": "Route 53",
+   "v": [
+    {
+     "q": "Why is DNS failover not instant?",
+     "o": [
+      "Answers are cached for the TTL",
+      "Route 53 is slow to start",
+      "Health checks run monthly",
+      "Aliases cannot fail over"
+     ],
+     "w": "Resolvers, systems and JVMs keep the old answer until the cache expires."
+    },
+    {
+     "q": "What does an alias record do?",
+     "o": [
+      "Points a name at an AWS resource",
+      "Encrypts the DNS query",
+      "Creates a new subnet",
+      "Replaces a security group"
+     ],
+     "w": "A CNAME cannot sit at the zone apex, but an alias can."
+    }
+   ]
+  },
+  {
+   "t": "Edge and API",
+   "v": [
+    {
+     "q": "What does CloudFront add in front of an application?",
+     "o": [
+      "Edge caching, TLS and WAF",
+      "A private subnet",
+      "A relational database",
+      "A NAT gateway"
+     ],
+     "w": "It serves content from the nearest edge and filters bad requests there."
+    },
+    {
+     "q": "What is the API Gateway integration time limit?",
+     "o": [
+      "About 29 seconds",
+      "About 5 minutes",
+      "One hour",
+      "There is none"
+     ],
+     "w": "Longer work returns 202 and finishes asynchronously through a queue."
+    }
+   ]
+  },
+  {
+   "t": "Private connectivity",
+   "v": [
+    {
+     "q": "Which link is a dedicated private line to a data centre?",
+     "o": [
+      "Direct Connect",
+      "Site-to-Site VPN",
+      "VPC peering",
+      "Internet gateway"
+     ],
+     "w": "A VPN runs over the internet. Direct Connect does not."
+    },
+    {
+     "q": "What does a Transit Gateway do?",
+     "o": [
+      "Connects many VPCs through one hub",
+      "Caches web content",
+      "Issues certificates",
+      "Balances HTTP traffic"
+     ],
+     "w": "It replaces a mesh of non-transitive peerings."
+    }
+   ]
+  },
+  {
+   "t": "Java behind a load balancer",
+   "v": [
+    {
+     "q": "Why set Tomcat keep-alive above the ALB idle timeout?",
+     "o": [
+      "To avoid 502 errors",
+      "To lower the bill",
+      "To enable TLS",
+      "To cache DNS"
+     ],
+     "w": "If the app closes first, the ALB may send a request on a dead connection."
+    },
+    {
+     "q": "What should the app do on SIGTERM?",
+     "o": [
+      "Shut down gracefully",
+      "Exit at once",
+      "Ignore the signal",
+      "Restart itself"
+     ],
+     "w": "Graceful shutdown finishes requests inside the deregistration delay and the stop timeout."
+    }
+   ]
+  }
+ ]
+}

@@ -33,6 +33,7 @@ import { AWS_SCENES } from './awsScenes.js';
 import { AWS_COMPUTE_SCENES } from './awsComputeScenes.js';
 import { AWS_STORAGE_SCENES } from './awsStorageScenes.js';
 import { AWS_DATABASE_SCENES } from './awsDatabaseScenes.js';
+import { AWS_NETWORK_SCENES } from './awsNetworkScenes.js';
 import { EXCEPTION_SCENES } from './exceptionScenes.js';
 import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
@@ -283,3 +284,4 @@ export const AwsWalk = () => <Walk scenes={AWS_SCENES} icons graph ariaLabel="AW
 export const AwsComputeWalk = () => <Walk scenes={AWS_COMPUTE_SCENES} icons graph ariaLabel="AWS compute walk-through" />;
 export const AwsStorageWalk = () => <Walk scenes={AWS_STORAGE_SCENES} icons graph ariaLabel="AWS storage walk-through" />;
 export const AwsDatabaseWalk = () => <Walk scenes={AWS_DATABASE_SCENES} icons graph ariaLabel="AWS databases walk-through" />;
+export const AwsNetworkWalk = () => <Walk scenes={AWS_NETWORK_SCENES} icons graph ariaLabel="AWS networking walk-through" />;
