@@ -1156,5 +1156,22 @@
   {"term":"Vault Lock","aliases":["Backup Vault Lock"],"short":"AWS Backup feature that makes a vault immutable: recovery points cannot be deleted before their retention ends, even by administrators."},
   {"term":"S3 Glacier Deep Archive","short":"The cheapest S3 class, for long-term retention of data read very rarely. Retrieval takes up to about 12 hours."},
   {"term":"Transfer Family","short":"AWS managed SFTP, FTPS and FTP into S3 or EFS, used when partners exchange files with a bank."},
-  {"term":"DataSync","short":"An AWS service that copies large datasets between on-premises storage and AWS over the network, with scheduling and verification."}
+  {"term":"DataSync","short":"An AWS service that copies large datasets between on-premises storage and AWS over the network, with scheduling and verification."},
+  {"term":"Amazon RDS","aliases":["RDS"],"short":"AWS managed relational database service. Runs PostgreSQL, MySQL, MariaDB, Oracle, SQL Server or Db2 and handles patching, backups and failover.","in":["aws-databases"]},
+  {"term":"read replica","aliases":["RDS read replica"],"short":"An asynchronous copy of a database that serves reads. It lags the primary, can be in another region and can be promoted."},
+  {"term":"point-in-time recovery","aliases":["PITR"],"short":"Restoring a database to any second within the backup retention period (up to 35 days on RDS) into a new instance or table."},
+  {"term":"Amazon Aurora","aliases":["Aurora"],"short":"AWS cloud-built MySQL and PostgreSQL compatible database with shared storage across three zones, up to 15 readers and fast failover."},
+  {"term":"Aurora Serverless v2","short":"Aurora capacity that scales in small steps (ACUs) with the load, so a cluster follows spiky demand and can scale down to a minimum."},
+  {"term":"Aurora Global Database","short":"Aurora storage replicated to other regions in under a second, with local reads and a managed cross-region failover in about a minute."},
+  {"term":"Amazon DynamoDB","aliases":["DynamoDB"],"short":"AWS serverless key-value and document database with single-digit millisecond reads and writes at any scale. Designed around access patterns."},
+  {"term":"sort key","aliases":["range key"],"short":"The optional DynamoDB key that orders items sharing a partition key, which allows range queries."},
+  {"term":"global secondary index","aliases":["GSI"],"short":"A DynamoDB index with its own partition and sort key, spanning the whole table. Eventually consistent and has its own capacity."},
+  {"term":"DynamoDB Streams","short":"An ordered 24-hour log of item changes in a DynamoDB table, consumed by Lambda or Kinesis for projections and event publishing."},
+  {"term":"DynamoDB Global Tables","aliases":["Global Tables"],"short":"Multi-region, active-active DynamoDB replication with last-writer-wins conflict resolution."},
+  {"term":"DAX","aliases":["DynamoDB Accelerator"],"short":"An in-memory cache in front of DynamoDB that serves hot reads in microseconds."},
+  {"term":"conditional write","short":"A DynamoDB write that succeeds only if a condition holds, such as attribute_not_exists. Gives idempotency and optimistic locking."},
+  {"term":"Amazon ElastiCache","aliases":["ElastiCache"],"short":"AWS managed in-memory store (Redis OSS, Valkey, Memcached) used for caching, sessions and counters."},
+  {"term":"Amazon MemoryDB","aliases":["MemoryDB"],"short":"A Redis-compatible in-memory database that is durable through a multi-AZ transaction log, so it can be a primary database."},
+  {"term":"AWS DMS","aliases":["Database Migration Service"],"short":"AWS service that migrates databases with a full load plus change data capture, so the source stays live until cut-over."},
+  {"term":"Blue/Green Deployments","aliases":["RDS Blue/Green"],"short":"An RDS feature that keeps a synchronised copy of a database for a major upgrade or schema change, then switches over in about a minute."}
 ]

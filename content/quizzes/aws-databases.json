@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Choosing a database",
+   "v": [
+    {
+     "q": "Which service suits key-based access at huge scale with single-digit millisecond latency?",
+     "o": [
+      "DynamoDB",
+      "RDS Oracle",
+      "Redshift",
+      "Neptune"
+     ],
+     "w": "DynamoDB is serverless and designed for key access at any scale. It is not for ad hoc joins."
+    },
+    {
+     "q": "Which service is built for relational data with up to 15 readers on shared storage?",
+     "o": [
+      "Aurora",
+      "DynamoDB",
+      "ElastiCache",
+      "Timestream"
+     ],
+     "w": "Aurora separates compute from a shared cluster volume, so readers add quickly."
+    }
+   ]
+  },
+  {
+   "t": "Multi-AZ and replicas",
+   "v": [
+    {
+     "q": "What is the purpose of RDS Multi-AZ?",
+     "o": [
+      "Availability by automatic failover",
+      "Scaling read traffic across zones",
+      "Cheaper storage for old data",
+      "Cross-region backup copies"
+     ],
+     "w": "A synchronous standby in another zone takes over on failure. Read replicas are for read scale."
+    },
+    {
+     "q": "Which is true of an RDS read replica?",
+     "o": [
+      "It replicates asynchronously and can lag",
+      "It is always strongly consistent",
+      "It cannot be promoted",
+      "It replaces Multi-AZ"
+     ],
+     "w": "Replicas lag a little, so reads that must see the latest write should use the primary."
+    }
+   ]
+  },
+  {
+   "t": "Aurora",
+   "v": [
+    {
+     "q": "How many copies of data does an Aurora cluster volume keep?",
+     "o": [
+      "Six, across three zones",
+      "Two, in one zone",
+      "Three, in one zone",
+      "One, with backups"
+     ],
+     "w": "Six copies over three zones, self-healing, so failover needs no data copy."
+    },
+    {
+     "q": "Which Aurora feature gives cross-region disaster recovery in about a minute?",
+     "o": [
+      "Global Database",
+      "Backtrack",
+      "Cloning",
+      "Parallel query"
+     ],
+     "w": "Global Database replicates storage to other regions in under a second and can promote a secondary."
+    }
+   ]
+  },
+  {
+   "t": "DynamoDB design",
+   "v": [
+    {
+     "q": "What makes a good DynamoDB partition key?",
+     "o": [
+      "Many evenly used values",
+      "A single constant value",
+      "Today's date for every item",
+      "A boolean flag"
+     ],
+     "w": "An even spread avoids a hot partition and throttling."
+    },
+    {
+     "q": "How do you query a DynamoDB table by an attribute that is not the key?",
+     "o": [
+      "A global secondary index",
+      "A join between two tables",
+      "A Scan on every request",
+      "A foreign key constraint"
+     ],
+     "w": "A GSI gives a second key for another access pattern. Scans read everything and are costly."
+    }
+   ]
+  },
+  {
+   "t": "Safe writes",
+   "v": [
+    {
+     "q": "Which condition makes a DynamoDB put idempotent?",
+     "o": [
+      "attribute_not_exists on the key",
+      "A larger item size",
+      "A TTL attribute",
+      "A strongly consistent read"
+     ],
+     "w": "A repeated request fails the condition instead of creating a duplicate."
+    },
+    {
+     "q": "How does the Enhanced Client give optimistic locking?",
+     "o": [
+      "@DynamoDbVersionAttribute",
+      "@DynamoDbIgnore",
+      "A table lock",
+      "A transaction on every read"
+     ],
+     "w": "The version is checked and incremented on update, so a concurrent change is rejected."
+    }
+   ]
+  },
+  {
+   "t": "Caching",
+   "v": [
+    {
+     "q": "What is the cache-aside pattern?",
+     "o": [
+      "Read the cache, then fill it on a miss",
+      "Write only to the cache and skip the database",
+      "Replicate the cache into the database",
+      "Cache every table in full at start-up"
+     ],
+     "w": "The application owns the logic, and the database stays the source of truth."
+    },
+    {
+     "q": "What causes a cache stampede?",
+     "o": [
+      "A hot key expires and many requests hit the database",
+      "A full disk on the database host",
+      "A failed nightly backup job",
+      "Too many read replicas in the cluster"
+     ],
+     "w": "Jitter, locking or early refresh reduce it."
+    }
+   ]
+  },
+  {
+   "t": "Connections",
+   "v": [
+    {
+     "q": "Why use RDS Proxy with Lambda?",
+     "o": [
+      "It pools connections for bursts",
+      "It encrypts the data at rest",
+      "It adds a read replica",
+      "It replaces IAM roles"
+     ],
+     "w": "Each Lambda environment would otherwise open its own connection."
+    },
+    {
+     "q": "Why keep a short JVM DNS TTL with RDS Multi-AZ?",
+     "o": [
+      "The endpoint name moves on failover",
+      "To speed up every query",
+      "To cache the database password",
+      "To avoid using TLS"
+     ],
+     "w": "A long DNS cache keeps pointing at the failed primary."
+    }
+   ]
+  },
+  {
+   "t": "Backup and security",
+   "v": [
+    {
+     "q": "What is the maximum automated backup retention for RDS point-in-time recovery?",
+     "o": [
+      "35 days",
+      "7 days",
+      "90 days",
+      "1 year"
+     ],
+     "w": "Automated backups keep up to 35 days. Manual snapshots stay until deleted."
+    },
+    {
+     "q": "How do you encrypt an existing unencrypted RDS instance?",
+     "o": [
+      "Restore from an encrypted snapshot copy",
+      "Tick a box on the running instance",
+      "Enable TLS on the listener",
+      "Add an encrypted read replica"
+     ],
+     "w": "Encryption at rest is chosen at creation, so you restore from an encrypted snapshot copy."
+    }
+   ]
+  }
+ ]
+}

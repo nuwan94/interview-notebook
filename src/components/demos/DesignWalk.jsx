@@ -32,6 +32,7 @@ import { GITLAB_SCENES } from './gitlabScenes.js';
 import { AWS_SCENES } from './awsScenes.js';
 import { AWS_COMPUTE_SCENES } from './awsComputeScenes.js';
 import { AWS_STORAGE_SCENES } from './awsStorageScenes.js';
+import { AWS_DATABASE_SCENES } from './awsDatabaseScenes.js';
 import { EXCEPTION_SCENES } from './exceptionScenes.js';
 import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
@@ -281,3 +282,4 @@ export const GitlabWalk = () => <Walk scenes={GITLAB_SCENES} icons graph ariaLab
 export const AwsWalk = () => <Walk scenes={AWS_SCENES} icons graph ariaLabel="AWS service map walk-through" />;
 export const AwsComputeWalk = () => <Walk scenes={AWS_COMPUTE_SCENES} icons graph ariaLabel="AWS compute walk-through" />;
 export const AwsStorageWalk = () => <Walk scenes={AWS_STORAGE_SCENES} icons graph ariaLabel="AWS storage walk-through" />;
+export const AwsDatabaseWalk = () => <Walk scenes={AWS_DATABASE_SCENES} icons graph ariaLabel="AWS databases walk-through" />;
