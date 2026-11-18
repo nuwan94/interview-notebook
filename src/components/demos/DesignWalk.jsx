@@ -36,6 +36,7 @@ import { AWS_DATABASE_SCENES } from './awsDatabaseScenes.js';
 import { AWS_NETWORK_SCENES } from './awsNetworkScenes.js';
 import { AWS_SECURITY_SCENES } from './awsSecurityScenes.js';
 import { JS_SCENES } from './jsScenes.js';
+import { JS_ASYNC_SCENES } from './jsAsyncScenes.js';
 import { EXCEPTION_SCENES } from './exceptionScenes.js';
 import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
@@ -289,3 +290,4 @@ export const AwsDatabaseWalk = () => <Walk scenes={AWS_DATABASE_SCENES} icons gr
 export const AwsNetworkWalk = () => <Walk scenes={AWS_NETWORK_SCENES} icons graph ariaLabel="AWS networking walk-through" />;
 export const AwsSecurityWalk = () => <Walk scenes={AWS_SECURITY_SCENES} icons graph ariaLabel="AWS identity and security walk-through" />;
 export const JsWalk = () => <Walk scenes={JS_SCENES} icons graph ariaLabel="JavaScript essentials walk-through" />;
+export const JsAsyncWalk = () => <Walk scenes={JS_ASYNC_SCENES} icons graph ariaLabel="Asynchronous JavaScript walk-through" />;

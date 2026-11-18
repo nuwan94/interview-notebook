@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "The event loop",
+   "v": [
+    {
+     "q": "What runs first when the call stack empties?",
+     "o": [
+      "All microtasks",
+      "The next timer",
+      "The next click",
+      "A new thread"
+     ],
+     "w": "The event loop drains the microtask queue before it takes the next task."
+    },
+    {
+     "q": "Why can a long loop freeze a web page?",
+     "o": [
+      "It keeps the only thread busy",
+      "It fills the DOM",
+      "It blocks the network card",
+      "It disables promises"
+     ],
+     "w": "Nothing can interrupt a running function, so clicks, timers and rendering wait."
+    }
+   ]
+  },
+  {
+   "t": "Execution order",
+   "v": [
+    {
+     "q": "In what order do synchronous code, a promise callback and setTimeout(0) run?",
+     "o": [
+      "Sync, promise, timeout",
+      "Timeout, promise, sync",
+      "Promise, sync, timeout",
+      "Sync, timeout, promise"
+     ],
+     "w": "Microtasks run before the next task, and a zero delay is still a task."
+    },
+    {
+     "q": "When does the function passed to new Promise run?",
+     "o": [
+      "Immediately and synchronously",
+      "In the next microtask",
+      "In the next task",
+      "When then is called"
+     ],
+     "w": "Only the then callbacks are asynchronous. The executor runs at once."
+    }
+   ]
+  },
+  {
+   "t": "Promises",
+   "v": [
+    {
+     "q": "What does then return?",
+     "o": [
+      "A new promise",
+      "The same promise",
+      "The value itself",
+      "Nothing"
+     ],
+     "w": "That is why calls chain, and a returned promise is awaited before the next step."
+    },
+    {
+     "q": "How many times can a promise settle?",
+     "o": [
+      "Once",
+      "Twice",
+      "Once per handler",
+      "Until it is cancelled"
+     ],
+     "w": "After it is fulfilled or rejected it never changes again."
+    }
+   ]
+  },
+  {
+   "t": "Combinators",
+   "v": [
+    {
+     "q": "Which helper reports every outcome and never rejects?",
+     "o": [
+      "Promise.allSettled",
+      "Promise.all",
+      "Promise.race",
+      "Promise.any"
+     ],
+     "w": "Each result is an object with status and value or reason."
+    },
+    {
+     "q": "What does Promise.any do when every promise rejects?",
+     "o": [
+      "Rejects with an AggregateError",
+      "Fulfills with an empty array",
+      "Waits forever",
+      "Fulfills with undefined"
+     ],
+     "w": "It fulfills with the first success, so it rejects only when there is none."
+    }
+   ]
+  },
+  {
+   "t": "async and await",
+   "v": [
+    {
+     "q": "What does await pause?",
+     "o": [
+      "Only the async function",
+      "The whole thread",
+      "The event loop",
+      "The browser tab"
+     ],
+     "w": "The rest of the program keeps running while the function waits."
+    },
+    {
+     "q": "Why is await inside forEach a bug?",
+     "o": [
+      "forEach ignores the promises",
+      "forEach is always too slow",
+      "await is never allowed there",
+      "It makes the loop run twice"
+     ],
+     "w": "Use for...of for sequence, or Promise.all with map for parallel work."
+    }
+   ]
+  },
+  {
+   "t": "Parallel work",
+   "v": [
+    {
+     "q": "Three independent one-second calls are awaited one after another. How long do they take?",
+     "o": [
+      "About three seconds",
+      "About one second",
+      "About half a second",
+      "About ten seconds"
+     ],
+     "w": "Awaiting each in turn adds the times. Promise.all would take about one second."
+    },
+    {
+     "q": "Which approach runs independent calls in parallel?",
+     "o": [
+      "Promise.all",
+      "Sequential awaits",
+      "forEach with await",
+      "A recursive then"
+     ],
+     "w": "Start them first, then wait for all at once."
+    }
+   ]
+  },
+  {
+   "t": "fetch and cancellation",
+   "v": [
+    {
+     "q": "When does fetch reject?",
+     "o": [
+      "On network failure or abort",
+      "On a 404 response",
+      "On a 500 response",
+      "On any non-200 status"
+     ],
+     "w": "An HTTP error status still resolves, so check res.ok."
+    },
+    {
+     "q": "How do you cancel a fetch request?",
+     "o": [
+      "AbortController",
+      "promise.cancel()",
+      "clearTimeout",
+      "Promise.race alone"
+     ],
+     "w": "Pass its signal to fetch and call abort. Promises themselves cannot be cancelled."
+    }
+   ]
+  },
+  {
+   "t": "Errors and workers",
+   "v": [
+    {
+     "q": "What does Node.js do by default on an unhandled rejection since version 15?",
+     "o": [
+      "Ends the process",
+      "Ignores it",
+      "Retries it",
+      "Logs nothing"
+     ],
+     "w": "A missing catch can crash a server, so handle or return every promise."
+    },
+    {
+     "q": "Where should CPU-heavy work run?",
+     "o": [
+      "In a worker thread",
+      "In a then callback",
+      "In a timer",
+      "In a microtask"
+     ],
+     "w": "Workers have their own thread, so the main event loop stays responsive."
+    }
+   ]
+  }
+ ]
+}
