@@ -4,7 +4,7 @@ nav: React core
 slug: react-core
 summary: The React fundamentals every interview starts with, declarative UI and the component tree, JSX rules, function components, props and children, composition, state with useState and why it is a snapshot, immutable updates, lifting state up, how rendering and reconciliation work with the render and commit phases, lists and keys, events and controlled forms, refs, purity and StrictMode, what is new in React 19, typing components with TypeScript, and the common bugs, with examples and interview questions.
 tags: [React, JSX, Components, Props, State, Rendering, Keys, React 19, TypeScript, Full stack]
-order: 63
+order: 64
 topic: Full stack / React
 updated: 2026-11-18
 subnav: true

@@ -45,6 +45,7 @@ import { REACT_PERF_SCENES } from './reactPerfScenes.js';
 import { NODE_SCENES } from './nodeScenes.js';
 import { EXPRESS_SCENES } from './expressScenes.js';
 import { FULLSTACK_SCENES } from './fullstackScenes.js';
+import { PROMISE_SCENES } from './promiseScenes.js';
 import { EXCEPTION_SCENES } from './exceptionScenes.js';
 import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
@@ -307,3 +308,4 @@ export const ReactPerfWalk = () => <Walk scenes={REACT_PERF_SCENES} icons graph 
 export const NodeWalk = () => <Walk scenes={NODE_SCENES} icons graph ariaLabel="Node.js runtime walk-through" />;
 export const ExpressWalk = () => <Walk scenes={EXPRESS_SCENES} icons graph ariaLabel="Express and REST walk-through" />;
 export const FullstackWalk = () => <Walk scenes={FULLSTACK_SCENES} icons graph ariaLabel="Full-stack integration walk-through" />;
+export const PromiseWalk = () => <Walk scenes={PROMISE_SCENES} icons graph ariaLabel="Promises in depth walk-through" />;

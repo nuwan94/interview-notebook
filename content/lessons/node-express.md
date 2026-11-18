@@ -4,7 +4,7 @@ nav: Express and REST
 slug: node-express
 summary: Building REST APIs with Express on Node.js, the middleware chain and ordering, routers and route parameters, request and response, JSON bodies and size limits, validation with zod, async handlers and central error handling in Express 4 and 5, status codes, CORS and preflight, JWT authentication and authorisation middleware, rate limiting and helmet, layered structure with services and repositories, pagination and idempotency, configuration, structured logging and request ids, graceful shutdown, testing with supertest, and comparisons with Fastify, NestJS and Spring MVC, with banking examples and interview questions.
 tags: [Express, Node.js, REST, Middleware, Validation, CORS, JWT, supertest, Backend, Full stack]
-order: 68
+order: 69
 topic: Full stack / Node.js
 updated: 2026-11-18
 subnav: true

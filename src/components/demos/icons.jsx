@@ -18,6 +18,10 @@ import {
 
 import { awsIcon } from './awsIcons.jsx';
 const ICONS = [
+  // --- promises: specific titles first ---
+  [/^new promise\(executor\)$/i, LuSparkles],
+  [/^callback api$/i, LuUnplug],
+  [/^promise cache$/i, LuDatabaseZap],
   // --- full stack: specific titles first ---
   [/^react app$/i, SiReact],
   [/^express api$/i, SiExpress],
@@ -714,6 +718,22 @@ const ICONS = [
   [/^valid input$|^assertions$/i, LuCircleCheck],
   [/^service$/i, LuLandmark],
   [/^repository$/i, LuDatabase],
+  // --- promises: remaining titles ---
+  [/^pending$|^inner promise$|^return a promise$/i, LuHourglass],
+  [/^outer promise$/i, LuLayers],
+  [/^outer settles with 7$|^return the promise$|^return a plain value$/i, LuCircleCheck],
+  [/^fetchaccount\(\)$/i, LuGlobe],
+  [/^then\(a => a\.balance\)$|^same result continues$/i, LuArrowRight],
+  [/^promise b$|^promise wrapper$/i, LuPackage],
+  [/^missing return$|^other chain finishes first$/i, LuTriangleAlert],
+  [/^floating work$|^step throws$/i, LuOctagonX],
+  [/^skipped thens$/i, LuBan],
+  [/^catch\(handler\)$/i, LuShieldCheck],
+  [/^fulfilled or rejected$/i, LuSplit],
+  [/^finally\(cleanup\)$/i, LuTrash2],
+  [/^chain [ab] step \d$/i, LuLink],
+  [/^await readfile\(path\)$/i, LuFileText],
+  [/^caller \d$/i, LuMonitor],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */

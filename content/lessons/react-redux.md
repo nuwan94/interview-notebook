@@ -4,7 +4,7 @@ nav: Redux
 slug: react-redux
 summary: State management with Redux, the store, actions and reducers, one-way data flow, immutability and Immer, Redux Toolkit with configureStore and createSlice, React-Redux hooks, typed hooks in TypeScript, createAsyncThunk for async work, selectors and Reselect memoisation, createEntityAdapter, listener middleware, RTK Query with cache tags and mutations, normalised state, Redux DevTools, testing, and when to use Redux instead of context, Zustand or TanStack Query, with banking examples and interview questions.
 tags: [Redux, Redux Toolkit, RTK Query, React, State management, Selectors, Thunk, Full stack]
-order: 65
+order: 66
 topic: Full stack / React
 updated: 2026-11-18
 subnav: true

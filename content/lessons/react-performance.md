@@ -4,7 +4,7 @@ nav: Performance and testing
 slug: react-performance
 summary: React performance and testing, what causes a re-render, reconciliation and the commit phase, finding slow components with the Profiler, moving state down, children as props, memo, useMemo and useCallback, useDeferredValue and useTransition, list virtualisation, code splitting with React.lazy and Suspense, bundle size, Web Vitals (LCP, INP, CLS), images and caching, the testing pyramid, Vitest, React Testing Library queries and userEvent, async tests with findBy and waitFor, Mock Service Worker, testing hooks, reducers and Redux, accessibility checks and end-to-end tests with Playwright, with banking examples and interview questions.
 tags: [React, Performance, Testing, React Testing Library, Vitest, MSW, Playwright, Profiler, Code splitting, Full stack]
-order: 66
+order: 67
 topic: Full stack / React
 updated: 2026-11-18
 subnav: true

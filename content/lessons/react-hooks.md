@@ -4,7 +4,7 @@ nav: React hooks
 slug: react-hooks
 summary: React hooks beyond useState, useEffect with dependencies, cleanup, races and StrictMode, why you might not need an effect, useRef and useLayoutEffect, useMemo, useCallback and memo with referential equality and the React Compiler, useReducer, useContext and how to avoid re-render storms, custom hooks, useTransition, useDeferredValue, useId and useSyncExternalStore, data fetching with TanStack Query, Suspense and error boundaries, stale closures and common mistakes, with examples and interview questions.
 tags: [React, Hooks, useEffect, useMemo, useCallback, useReducer, Context, Custom hooks, Performance, Full stack]
-order: 64
+order: 65
 topic: Full stack / React
 updated: 2026-11-18
 subnav: true

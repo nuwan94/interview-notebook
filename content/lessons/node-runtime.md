@@ -4,7 +4,7 @@ nav: Node.js runtime
 slug: node-runtime
 summary: The Node.js runtime for backend interviews, V8 and libuv and the thread pool, why Node suits I/O and not CPU work, CommonJS and ES modules, the event loop phases with process.nextTick, setImmediate and microtasks, EventEmitter, buffers and streams with backpressure and pipeline, the fs, path and http modules, process, environment variables and exit codes, error handling and unhandled rejections, worker_threads, cluster and child processes, graceful shutdown on SIGTERM, package.json and npm and pnpm, the built-in test runner, security basics and debugging memory and CPU, compared with Java, with banking examples and interview questions.
 tags: [Node.js, V8, libuv, Event loop, Streams, Modules, Workers, Backend, Full stack]
-order: 67
+order: 68
 topic: Full stack / Node.js
 updated: 2026-11-18
 subnav: true

@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "The executor",
+   "v": [
+    {
+     "q": "In new Promise(fn), when is fn called?",
+     "o": [
+      "Immediately and synchronously",
+      "After the next timer",
+      "When then is called",
+      "In a microtask"
+     ],
+     "w": "Only the handlers are asynchronous."
+    },
+    {
+     "q": "What happens if the executor throws synchronously?",
+     "o": [
+      "The promise rejects",
+      "The process exits",
+      "The error is ignored",
+      "The promise stays pending"
+     ],
+     "w": "A throw inside a later setTimeout callback is not caught."
+    }
+   ]
+  },
+  {
+   "t": "Settling",
+   "v": [
+    {
+     "q": "Can a settled promise change its value later?",
+     "o": [
+      "No, it is final",
+      "Yes, once more",
+      "Yes, by calling resolve again",
+      "Only if it rejected"
+     ],
+     "w": "Later resolve or reject calls are ignored."
+    },
+    {
+     "q": "What does resolve(otherPromise) do?",
+     "o": [
+      "The outer promise follows the other one",
+      "Fulfils with the promise object",
+      "Rejects with a TypeError",
+      "Throws synchronously"
+     ],
+     "w": "A promise never holds another promise as its value."
+    }
+   ]
+  },
+  {
+   "t": "What then returns",
+   "v": [
+    {
+     "q": "Which does promise.then(fn) give back?",
+     "o": [
+      "A new promise",
+      "The same promise",
+      "The handler result directly",
+      "undefined"
+     ],
+     "w": "It never changes the promise it was called on."
+    },
+    {
+     "q": "A then handler throws. What happens to the returned promise?",
+     "o": [
+      "It rejects with that error",
+      "It stays pending",
+      "It fulfils with undefined",
+      "The process exits"
+     ],
+     "w": "The next catch handles it."
+    }
+   ]
+  },
+  {
+   "t": "Errors and recovery",
+   "v": [
+    {
+     "q": "A catch handler returns a value. What state is the chain in?",
+     "o": [
+      "Fulfilled again",
+      "Still rejected",
+      "Pending",
+      "Cancelled"
+     ],
+     "w": "Re-throw inside the handler to keep failing."
+    },
+    {
+     "q": "Which statement about finally is true?",
+     "o": [
+      "It receives no argument and keeps the result",
+      "It can change the fulfilled value",
+      "It only runs on success",
+      "It receives the error"
+     ],
+     "w": "If finally throws, that error replaces the result."
+    }
+   ]
+  },
+  {
+   "t": "then(a, b)",
+   "v": [
+    {
+     "q": "Does the second argument of then(a, b) catch an error thrown in a?",
+     "o": [
+      "No",
+      "Yes",
+      "Only for async a",
+      "Only in Node.js"
+     ],
+     "w": "Use then(a).catch(b) to catch both."
+    },
+    {
+     "q": "What does a then with no handler for the outcome do?",
+     "o": [
+      "Passes the result through",
+      "Rejects the promise",
+      "Waits forever",
+      "Throws a TypeError"
+     ],
+     "w": "This is how a rejection reaches a later catch."
+    }
+   ]
+  },
+  {
+   "t": "Execution order",
+   "v": [
+    {
+     "q": "Which runs first after the synchronous code?",
+     "o": [
+      "Promise handlers",
+      "setTimeout callbacks",
+      "setInterval callbacks",
+      "Event listeners"
+     ],
+     "w": "Microtasks run before the next task."
+    },
+    {
+     "q": "Why does a handler that returns a promise delay its chain?",
+     "o": [
+      "Adopting it takes extra microtask ticks",
+      "Promises are slower to create",
+      "The engine retries it",
+      "It runs on another thread"
+     ],
+     "w": "Returning a plain value avoids those ticks."
+    }
+   ]
+  },
+  {
+   "t": "Patterns",
+   "v": [
+    {
+     "q": "What should an in-flight cache store?",
+     "o": [
+      "The promise",
+      "Only the resolved value",
+      "A boolean flag",
+      "The callback"
+     ],
+     "w": "Concurrent callers share one request."
+    },
+    {
+     "q": "Why clear the timer in a timeout wrapper?",
+     "o": [
+      "A pending timer keeps Node.js alive",
+      "Timers leak into other tabs",
+      "Promise.race requires it",
+      "It speeds up the work"
+     ],
+     "w": "Racing also does not cancel the slow work, so abort it too."
+    }
+   ]
+  },
+  {
+   "t": "Anti-patterns",
+   "v": [
+    {
+     "q": "What is wrong with new Promise(async (resolve) => {...})?",
+     "o": [
+      "Its errors are lost",
+      "Promises cannot be async",
+      "resolve is not available",
+      "It runs twice"
+     ],
+     "w": "The outer promise can stay pending forever."
+    },
+    {
+     "q": "What is the explicit construction anti-pattern?",
+     "o": [
+      "Wrapping a promise again",
+      "Using then twice",
+      "Returning a promise from then",
+      "Calling catch last"
+     ],
+     "w": "Return the existing promise instead."
+    }
+   ]
+  }
+ ]
+}

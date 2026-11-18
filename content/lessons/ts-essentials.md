@@ -4,7 +4,7 @@ nav: TypeScript
 slug: ts-essentials
 summary: TypeScript for React and Node.js interviews, how the compiler works and what types do not do at run time, basic and special types (any, unknown, never, tuples, literals, enums and unions), interface against type, structural typing, unions, intersections and discriminated unions, narrowing and type guards with exhaustive checks, functions and overloads, generics with constraints, utility types, mapped, conditional and template literal types, classes, modules and declaration files, tsconfig strict options, validating data at the boundary, compared with Java, with examples and interview questions.
 tags: [TypeScript, Types, Generics, Narrowing, Utility types, tsconfig, Full stack]
-order: 62
+order: 63
 topic: Full stack / JavaScript and TypeScript
 updated: 2026-11-18
 subnav: true
