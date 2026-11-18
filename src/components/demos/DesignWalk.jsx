@@ -48,6 +48,7 @@ import { FULLSTACK_SCENES } from './fullstackScenes.js';
 import { PROMISE_SCENES } from './promiseScenes.js';
 import { STREAM_SCENES } from './streamScenes.js';
 import { MIDDLEWARE_SCENES } from './middlewareScenes.js';
+import { AUTH_NODE_SCENES } from './authNodeScenes.js';
 import { EXCEPTION_SCENES } from './exceptionScenes.js';
 import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
@@ -313,3 +314,4 @@ export const FullstackWalk = () => <Walk scenes={FULLSTACK_SCENES} icons graph a
 export const PromiseWalk = () => <Walk scenes={PROMISE_SCENES} icons graph ariaLabel="Promises in depth walk-through" />;
 export const StreamWalk = () => <Walk scenes={STREAM_SCENES} icons graph ariaLabel="Node.js streams walk-through" />;
 export const MiddlewareWalk = () => <Walk scenes={MIDDLEWARE_SCENES} icons graph ariaLabel="Express middleware walk-through" />;
+export const AuthNodeWalk = () => <Walk scenes={AUTH_NODE_SCENES} icons graph ariaLabel="Authentication in Node.js walk-through" />;

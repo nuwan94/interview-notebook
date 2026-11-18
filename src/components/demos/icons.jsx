@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage, LuKeyRound, LuShieldAlert, LuCircleHelp, LuFingerprint, LuCookie, LuCloudUpload, LuPlus, LuMinus, LuFileOutput, LuFileInput, LuBox, LuReplace, LuMemoryStick, LuDroplets, LuSkipForward,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage, LuKeyRound, LuShieldAlert, LuCircleHelp, LuFingerprint, LuCookie, LuCloudUpload, LuPlus, LuMinus, LuFileOutput, LuFileInput, LuBox, LuReplace, LuMemoryStick, LuDroplets, LuSkipForward, LuLogIn, LuUserX, LuLogOut, LuMailCheck,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -18,6 +18,14 @@ import {
 
 import { awsIcon } from './awsIcons.jsx';
 const ICONS = [
+  // --- node authentication: specific titles first ---
+  [/^login request$|^sign in again$/i, LuLogIn],
+  [/^401 generic message$|^wrong password$/i, LuOctagonX],
+  [/^users table$/i, LuTable],
+  [/^access token expired$/i, LuAlarmClock],
+  [/^structured audit log$|^auth events$/i, LuScrollText],
+  [/^alerts$/i, LuBell],
+  [/^samesite \+ csrf token$/i, LuShieldCheck],
   // --- express middleware: specific titles first ---
   [/^layer 1: logger$/i, LuScrollText],
   [/^layer 2: parser$/i, LuBraces],
@@ -782,6 +790,23 @@ const ICONS = [
   [/^originalurl$|^baseurl$|^req\.url inside$/i, LuLink],
   [/^handler runs$/i, LuPlay],
   [/^unknown error$/i, LuTriangleAlert],
+  // --- node authentication: remaining titles ---
+  [/^password typed$/i, LuKeyRound],
+  [/^salted slow hash$/i, LuHash],
+  [/^verify hash$/i, LuUserCheck],
+  [/^same answer both ways$|^verified at login$|^password correct$/i, LuCircleCheck],
+  [/^unknown email$/i, LuUserX],
+  [/^old hash$/i, LuHistory],
+  [/^rehash and save$|^refresh endpoint$/i, LuRefreshCw],
+  [/^logout or ban$/i, LuLogOut],
+  [/^revoked at once$|^revoke the family$/i, LuBan],
+  [/^new id at login$/i, LuFingerprint],
+  [/^backend for frontend$/i, LuLayers],
+  [/^many login attempts$/i, LuFlame],
+  [/^rate limit and delay$/i, LuGauge],
+  [/^breached password check$/i, LuShieldAlert],
+  [/^step-up for transfers$/i, LuTriangleAlert],
+  [/^generic reply$/i, LuMailCheck],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */

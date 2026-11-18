@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Password storage",
+   "v": [
+    {
+     "q": "Which is suitable for storing passwords?",
+     "o": [
+      "argon2id with a salt",
+      "SHA-256 of the password",
+      "MD5 with a global salt",
+      "AES encryption at rest"
+     ],
+     "w": "Password hashes are slow and memory-hard on purpose."
+    },
+    {
+     "q": "What does a per-user salt prevent?",
+     "o": [
+      "Rainbow table attacks",
+      "Weak user passwords",
+      "Phishing emails",
+      "Session theft"
+     ],
+     "w": "The salt is stored next to the hash and is not secret."
+    }
+   ]
+  },
+  {
+   "t": "Login responses",
+   "v": [
+    {
+     "q": "How should login answer an unknown email?",
+     "o": [
+      "The same as a wrong password",
+      "With \"no such user\"",
+      "With a 404",
+      "With a longer delay"
+     ],
+     "w": "Different answers allow account enumeration."
+    },
+    {
+     "q": "Why run a dummy hash for unknown emails?",
+     "o": [
+      "To equalise response time",
+      "To save the email",
+      "To warm the cache",
+      "To lock the account"
+     ],
+     "w": "Timing can reveal which accounts exist."
+    }
+   ]
+  },
+  {
+   "t": "Sessions",
+   "v": [
+    {
+     "q": "Why regenerate the session id at login?",
+     "o": [
+      "To prevent session fixation",
+      "To shorten the cookie",
+      "To enable CORS",
+      "To hash the password"
+     ],
+     "w": "An attacker may have planted the old id."
+    },
+    {
+     "q": "What does the HttpOnly cookie flag do?",
+     "o": [
+      "Hides it from JavaScript",
+      "Forces HTTPS",
+      "Blocks cross-site sends",
+      "Sets the expiry"
+     ],
+     "w": "It stops XSS from reading the session id."
+    }
+   ]
+  },
+  {
+   "t": "JWT validation",
+   "v": [
+    {
+     "q": "What must be done with a received JWT?",
+     "o": [
+      "Verify signature and claims",
+      "Only decode the payload",
+      "Trust the token alg header",
+      "Check only the length"
+     ],
+     "w": "A JWT is signed, not encrypted."
+    },
+    {
+     "q": "Why are access tokens short-lived?",
+     "o": [
+      "No revocation before expiry",
+      "They are very large",
+      "They are encrypted",
+      "Browsers delete them quickly"
+     ],
+     "w": "Pair them with refresh tokens."
+    }
+   ]
+  },
+  {
+   "t": "Refresh tokens",
+   "v": [
+    {
+     "q": "What does rotation do?",
+     "o": [
+      "Issues a new refresh token on each use",
+      "Changes the signing key daily",
+      "Encrypts the token",
+      "Extends the access token"
+     ],
+     "w": "The old refresh token becomes used."
+    },
+    {
+     "q": "What happens when a used refresh token is replayed?",
+     "o": [
+      "The whole family is revoked",
+      "It is accepted once more",
+      "Only that token fails",
+      "Nothing"
+     ],
+     "w": "Either the user or a thief holds a stale copy."
+    }
+   ]
+  },
+  {
+   "t": "Session or token",
+   "v": [
+    {
+     "q": "Which is revocable at once?",
+     "o": [
+      "A server-side session",
+      "A signed JWT before expiry",
+      "A cached public key",
+      "A browser cookie"
+     ],
+     "w": "Delete the record from the store."
+    },
+    {
+     "q": "Where should a SPA keep tokens in a bank?",
+     "o": [
+      "On a backend for frontend",
+      "In localStorage",
+      "In the URL",
+      "In a global variable"
+     ],
+     "w": "The browser gets only a session cookie."
+    }
+   ]
+  },
+  {
+   "t": "MFA",
+   "v": [
+    {
+     "q": "How does TOTP produce a code?",
+     "o": [
+      "HMAC of secret and time",
+      "A random number each time",
+      "A hash of the password",
+      "An SMS from the bank"
+     ],
+     "w": "Accept one step of clock drift."
+    },
+    {
+     "q": "Which second factor resists phishing best?",
+     "o": [
+      "A passkey",
+      "SMS code",
+      "Email code",
+      "Security question"
+     ],
+     "w": "It is bound to the genuine origin."
+    }
+   ]
+  },
+  {
+   "t": "Reset and attacks",
+   "v": [
+    {
+     "q": "How should a reset token be handled?",
+     "o": [
+      "Random, hashed, single-use",
+      "The user id in base64",
+      "Valid for one week",
+      "Reusable many times"
+     ],
+     "w": "Respond the same whether the email exists or not."
+    },
+    {
+     "q": "Why avoid hard account lockout?",
+     "o": [
+      "Attackers can lock out users",
+      "It is not allowed by law",
+      "It disables MFA",
+      "It slows hashing down"
+     ],
+     "w": "Prefer delays, alerts and MFA."
+    }
+   ]
+  }
+ ]
+}
