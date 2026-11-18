@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Runtime basics",
+   "v": [
+    {
+     "q": "What does Node.js combine?",
+     "o": [
+      "V8, libuv and core modules",
+      "Java and the JVM",
+      "A browser and the DOM",
+      "Only npm packages"
+     ],
+     "w": "It has no DOM. V8 runs the JavaScript and libuv does the I/O."
+    },
+    {
+     "q": "How many threads run your JavaScript in Node.js by default?",
+     "o": [
+      "One main thread",
+      "One per request",
+      "Four",
+      "One per CPU core"
+     ],
+     "w": "The pool of four threads is for fs, dns, crypto and zlib, not for your code."
+    }
+   ]
+  },
+  {
+   "t": "Thread pool and blocking",
+   "v": [
+    {
+     "q": "Which work runs on the libuv thread pool?",
+     "o": [
+      "fs and crypto calls",
+      "HTTP sockets",
+      "Your callbacks",
+      "Promise handlers"
+     ],
+     "w": "Sockets use OS readiness APIs on the main thread."
+    },
+    {
+     "q": "What happens if one request runs a 2 second CPU loop?",
+     "o": [
+      "All requests wait",
+      "Only that request waits",
+      "A new thread starts",
+      "Node restarts"
+     ],
+     "w": "There is one main thread, so the loop is blocked for everyone."
+    }
+   ]
+  },
+  {
+   "t": "Modules",
+   "v": [
+    {
+     "q": "Which is true of ES modules in Node.js?",
+     "o": [
+      "They support top-level await",
+      "They use require",
+      "They have __dirname",
+      "They load synchronously"
+     ],
+     "w": "Use import.meta.dirname instead of __dirname."
+    },
+    {
+     "q": "How is a .js file treated as ESM?",
+     "o": [
+      "\"type\": \"module\" in package.json",
+      "It starts with use strict",
+      "It imports node:fs",
+      "It is in src"
+     ],
+     "w": "The .mjs extension also forces ESM."
+    }
+   ]
+  },
+  {
+   "t": "Event loop",
+   "v": [
+    {
+     "q": "What runs first after a callback ends?",
+     "o": [
+      "process.nextTick queue",
+      "setTimeout callbacks",
+      "setImmediate callbacks",
+      "Close callbacks"
+     ],
+     "w": "Then the promise microtasks, before the loop moves on."
+    },
+    {
+     "q": "Inside an I/O callback, which runs first?",
+     "o": [
+      "setImmediate",
+      "setTimeout 0",
+      "They are random",
+      "Neither runs"
+     ],
+     "w": "The check phase follows the poll phase."
+    }
+   ]
+  },
+  {
+   "t": "Streams",
+   "v": [
+    {
+     "q": "Why stream a 2 GB file instead of using readFile?",
+     "o": [
+      "Memory use stays flat",
+      "It is always faster",
+      "readFile is deprecated",
+      "Streams skip the disk"
+     ],
+     "w": "readFile loads the whole file into memory."
+    },
+    {
+     "q": "What does backpressure do?",
+     "o": [
+      "Pauses the source",
+      "Compresses data",
+      "Retries failed writes",
+      "Closes the stream"
+     ],
+     "w": "write returns false until the drain event."
+    }
+   ]
+  },
+  {
+   "t": "Errors and shutdown",
+   "v": [
+    {
+     "q": "What should happen after an uncaughtException?",
+     "o": [
+      "Log it, then exit",
+      "Keep running as normal",
+      "Retry the request",
+      "Ignore it"
+     ],
+     "w": "The state may be corrupt after a programmer error."
+    },
+    {
+     "q": "What does a graceful shutdown do on SIGTERM?",
+     "o": [
+      "Drains, then exits cleanly",
+      "Exits at once",
+      "Ignores the signal",
+      "Restarts the loop"
+     ],
+     "w": "SIGKILL cannot be handled, so finish before the grace period ends."
+    }
+   ]
+  },
+  {
+   "t": "Scaling",
+   "v": [
+    {
+     "q": "When do you use worker_threads?",
+     "o": [
+      "For CPU-heavy work",
+      "To serve more sockets",
+      "To read files faster",
+      "To install packages"
+     ],
+     "w": "The main thread stays free to serve requests."
+    },
+    {
+     "q": "What does the cluster module do?",
+     "o": [
+      "Forks worker processes",
+      "Splits a file",
+      "Starts a database",
+      "Compiles TypeScript"
+     ],
+     "w": "In containers one process per container is more common."
+    }
+   ]
+  },
+  {
+   "t": "Security and debugging",
+   "v": [
+    {
+     "q": "What is a common cause of a Node.js memory leak?",
+     "o": [
+      "An unbounded cache or Map",
+      "Using async functions",
+      "Using const",
+      "Many short strings"
+     ],
+     "w": "Compare two heap snapshots to find what grows."
+    },
+    {
+     "q": "Why avoid exec with user input?",
+     "o": [
+      "Command injection",
+      "It is slow",
+      "It needs a thread",
+      "It returns a promise"
+     ],
+     "w": "Use execFile with an argument array."
+    }
+   ]
+  }
+ ]
+}

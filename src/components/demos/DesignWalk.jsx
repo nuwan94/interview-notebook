@@ -42,6 +42,7 @@ import { REACT_SCENES } from './reactScenes.js';
 import { REACT_HOOKS_SCENES } from './reactHooksScenes.js';
 import { REDUX_SCENES } from './reduxScenes.js';
 import { REACT_PERF_SCENES } from './reactPerfScenes.js';
+import { NODE_SCENES } from './nodeScenes.js';
 import { EXCEPTION_SCENES } from './exceptionScenes.js';
 import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
@@ -301,3 +302,4 @@ export const ReactWalk = () => <Walk scenes={REACT_SCENES} icons graph ariaLabel
 export const ReactHooksWalk = () => <Walk scenes={REACT_HOOKS_SCENES} icons graph ariaLabel="React hooks walk-through" />;
 export const ReduxWalk = () => <Walk scenes={REDUX_SCENES} icons graph ariaLabel="Redux Toolkit walk-through" />;
 export const ReactPerfWalk = () => <Walk scenes={REACT_PERF_SCENES} icons graph ariaLabel="React performance and testing walk-through" />;
+export const NodeWalk = () => <Walk scenes={NODE_SCENES} icons graph ariaLabel="Node.js runtime walk-through" />;
