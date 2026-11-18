@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage, LuKeyRound, LuShieldAlert, LuCircleHelp, LuFingerprint, LuCookie, LuCloudUpload, LuPlus, LuMinus, LuFileOutput, LuFileInput, LuBox, LuReplace, LuMemoryStick, LuDroplets, LuSkipForward, LuLogIn, LuUserX, LuLogOut, LuMailCheck, LuEye, LuUndo2, LuBug, LuWrench, LuShuffle,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage, LuKeyRound, LuShieldAlert, LuCircleHelp, LuFingerprint, LuCookie, LuCloudUpload, LuPlus, LuMinus, LuFileOutput, LuFileInput, LuBox, LuReplace, LuMemoryStick, LuDroplets, LuSkipForward, LuLogIn, LuUserX, LuLogOut, LuMailCheck, LuEye, LuUndo2, LuBug, LuWrench, LuShuffle, LuSnail, LuTrafficCone, LuMerge, LuOctagonAlert, LuRotateCcw, LuServerOff, LuChartColumn, LuCrosshair, LuScissors, LuBadgeCheck,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -18,6 +18,19 @@ import {
 
 import { awsIcon } from './awsIcons.jsx';
 const ICONS = [
+  // --- node performance: specific titles first ---
+  [/^slow handler$/i, LuSnail],
+  [/^event loop lag$/i, LuGauge],
+  [/^p99 latency$/i, LuHourglass],
+  [/^load shedding$/i, LuTrafficCone],
+  [/^other requests$/i, LuUsers],
+  [/^coalesce requests$/i, LuMerge],
+  [/^cache stampede$/i, LuOctagonAlert],
+  [/^process cache$/i, LuMemoryStick],
+  [/^cache-aside$/i, LuRefreshCw],
+  [/^invalidation$/i, LuRotateCcw],
+  [/^load test$/i, LuActivity],
+  [/^cpu profile$/i, LuScanSearch],
   // --- node testing: specific titles first ---
   [/^service with fakes$|^createtransferservice$/i, LuPuzzle],
   [/^consumer contract$|^same contract tests$/i, LuHandshake],
@@ -834,6 +847,19 @@ const ICONS = [
   [/^clean state each time$/i, LuSparkles],
   [/^port 0$/i, LuNetwork],
   [/^shared state$/i, LuShuffle],
+  // --- node performance: remaining titles ---
+  [/^total time$/i, LuTimer],
+  [/^unbounded fan-out$/i, LuSplit],
+  [/^pool exhausted$/i, LuServerOff],
+  [/^limited concurrency$/i, LuListOrdered],
+  [/^n\+1 queries$/i, LuLayers],
+  [/^one round trip$/i, LuRoute],
+  [/^percentiles$/i, LuChartColumn],
+  [/^latency goal$/i, LuTarget],
+  [/^hot function$/i, LuCrosshair],
+  [/^fix the widest bar$/i, LuScissors],
+  [/^measure again$/i, LuHistory],
+  [/^keep or revert$/i, LuBadgeCheck],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */

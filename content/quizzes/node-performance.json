@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Latency",
+   "v": [
+    {
+     "q": "Why look at p99 instead of the average latency?",
+     "o": [
+      "The average hides the slow tail",
+      "p99 is always faster",
+      "The average is not measurable",
+      "p99 ignores errors"
+     ],
+     "w": "One very slow request barely moves the average."
+    },
+    {
+     "q": "What does Little's law say?",
+     "o": [
+      "In flight = throughput x latency",
+      "Latency = CPU x memory",
+      "Throughput = pool size",
+      "Errors = latency / 2"
+     ],
+     "w": "Doubling latency at the same load doubles concurrency."
+    }
+   ]
+  },
+  {
+   "t": "Event loop",
+   "v": [
+    {
+     "q": "What happens while a handler runs a long synchronous loop?",
+     "o": [
+      "No other request is served by that process",
+      "Other requests run in parallel",
+      "The thread pool takes over",
+      "Node restarts the handler"
+     ],
+     "w": "There is one JavaScript thread."
+    },
+    {
+     "q": "Which signal best shows the loop is overloaded?",
+     "o": [
+      "Rising event loop lag",
+      "Free disk space",
+      "Number of routes",
+      "Package size"
+     ],
+     "w": "Measure it with monitorEventLoopDelay."
+    }
+   ]
+  },
+  {
+   "t": "Blocking work",
+   "v": [
+    {
+     "q": "Which call blocks the event loop?",
+     "o": [
+      "JSON.parse of a 40 MB body",
+      "fs.promises.readFile",
+      "fetch to another service",
+      "setTimeout"
+     ],
+     "w": "Parsing is synchronous and linear in size."
+    },
+    {
+     "q": "How can CPU-heavy work stay off the main thread?",
+     "o": [
+      "A worker thread pool",
+      "More await keywords",
+      "A bigger Promise.all",
+      "Using var instead of let"
+     ],
+     "w": "Piscina is a common pool."
+    }
+   ]
+  },
+  {
+   "t": "Measuring",
+   "v": [
+    {
+     "q": "What does a flame graph show?",
+     "o": [
+      "Where CPU time goes",
+      "Memory per route",
+      "Network packets",
+      "Database size"
+     ],
+     "w": "Read the widest bars at the top."
+    },
+    {
+     "q": "What is the right order when tuning?",
+     "o": [
+      "Measure, then tune",
+      "Rewrite hot code",
+      "Cache everything",
+      "Add servers"
+     ],
+     "w": "Keep a change only if the numbers improve."
+    }
+   ]
+  },
+  {
+   "t": "Parallel awaits",
+   "v": [
+    {
+     "q": "Three independent 100 ms calls awaited one by one take about:",
+     "o": [
+      "300 ms",
+      "100 ms",
+      "30 ms",
+      "3 ms"
+     ],
+     "w": "Promise.all would take about 100 ms."
+    },
+    {
+     "q": "When should awaits stay sequential?",
+     "o": [
+      "Dependent calls",
+      "Never",
+      "Independent calls",
+      "Read-only calls"
+     ],
+     "w": "Dependencies force the order."
+    }
+   ]
+  },
+  {
+   "t": "Concurrency limits",
+   "v": [
+    {
+     "q": "Why not Promise.all over 10,000 database calls?",
+     "o": [
+      "It exhausts the pool",
+      "It is a syntax error",
+      "It runs on one core",
+      "It skips errors"
+     ],
+     "w": "Limit with p-limit or mapLimit."
+    },
+    {
+     "q": "How do you fix N+1 queries?",
+     "o": [
+      "Join or load ids in one query",
+      "Add more awaits",
+      "Raise the pool size",
+      "Retry each query"
+     ],
+     "w": "A batcher per request does the same."
+    }
+   ]
+  },
+  {
+   "t": "Caching",
+   "v": [
+    {
+     "q": "What is cache-aside?",
+     "o": [
+      "Read cache, on a miss load and store",
+      "Write to cache only",
+      "Cache every query result forever",
+      "Copy the database daily"
+     ],
+     "w": "On writes, update the database and delete the key."
+    },
+    {
+     "q": "Why bound an in-process cache?",
+     "o": [
+      "It can leak memory",
+      "Maps are slow",
+      "JSON forbids it",
+      "TTL stops working"
+     ],
+     "w": "Use LRU with a maximum size."
+    }
+   ]
+  },
+  {
+   "t": "Stampede and memory",
+   "v": [
+    {
+     "q": "How do you stop a cache stampede?",
+     "o": [
+      "Coalesce concurrent loads",
+      "Remove the TTL",
+      "Add more instances",
+      "Cache errors"
+     ],
+     "w": "Share one in-flight promise."
+    },
+    {
+     "q": "What share of a container's memory should the V8 heap limit be?",
+     "o": [
+      "About 70% of it",
+      "All of it",
+      "None of it",
+      "Twice as much"
+     ],
+     "w": "Buffers and native memory also need room."
+    }
+   ]
+  }
+ ]
+}
