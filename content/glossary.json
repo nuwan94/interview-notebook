@@ -1338,5 +1338,18 @@
   {"term":"listener middleware","aliases":["redux-saga"],"short":"Redux Toolkit middleware that runs side effects when matching actions are dispatched, as a lighter alternative to redux-saga.","in":["react-*"]},
   {"term":"RTK Query","aliases":["createApi"],"short":"Data-fetching and caching layer in Redux Toolkit. createApi generates hooks that cache by endpoint and arguments, share requests and refetch on tag invalidation.","in":["react-*"]},
   {"term":"cache tag","aliases":["providesTags","invalidatesTags"],"short":"RTK Query label: queries provide tags and mutations invalidate them, so affected queries refetch automatically.","in":["react-*"]},
-  {"term":"Redux DevTools","aliases":["time-travel debugging"],"short":"Browser extension that shows every dispatched action and the state after it, with time-travel debugging.","in":["react-*"]}
+  {"term":"Redux DevTools","aliases":["time-travel debugging"],"short":"Browser extension that shows every dispatched action and the state after it, with time-travel debugging.","in":["react-*"]},
+  {"term":"React Profiler","aliases":["Profiler"],"short":"React DevTools tab (and a component) that records renders: which components rendered, why, and how long each took. Use it on a production build before optimising.","in":["react-*"]},
+  {"term":"list virtualisation","aliases":["virtualization","windowing","react-window"],"short":"Rendering only the rows visible in the viewport plus a few extra, so a list of 50,000 items keeps about 20 DOM nodes. Libraries: TanStack Virtual, react-window.","in":["react-*"]},
+  {"term":"Web Vitals","aliases":["Core Web Vitals","LCP","INP","CLS"],"short":"Google metrics for user-perceived performance: LCP (main content appears), INP (input to next paint) and CLS (layout shift).","in":["react-*"]},
+  {"term":"testing pyramid","short":"Many fast unit tests, fewer component or integration tests, and a few end-to-end tests. Confidence per cost is highest in the middle for UI code.","in":["react-*"]},
+  {"term":"React Testing Library","aliases":["RTL","Testing Library"],"short":"Testing library that renders components in a real DOM and queries them like a user (by role, label, text). Tests behaviour, not implementation.","in":["react-*"]},
+  {"term":"Vitest","aliases":["Jest"],"short":"Fast test runner for Vite projects with a Jest-compatible API and native ESM. Jest is the long-standing alternative.","in":["react-*"]},
+  {"term":"jsdom","short":"A browser-like DOM implemented in Node.js, used by Vitest and Jest so component tests run without a real browser.","in":["react-*"]},
+  {"term":"user-event","aliases":["userEvent"],"short":"Testing Library companion that simulates real user interaction (focus, typing, click) and is preferred over fireEvent. Its methods are async.","in":["react-*"]},
+  {"term":"Mock Service Worker","aliases":["MSW"],"short":"Library that intercepts network requests and returns fake responses, so components run their real fetch code in tests, Storybook and development.","in":["react-*"]},
+  {"term":"renderHook","short":"Testing Library helper that runs a custom hook inside a test component so you can read its result and call its functions with act.","in":["react-*"]},
+  {"term":"Playwright","aliases":["Cypress","end-to-end test","E2E"],"short":"End-to-end testing tool that drives real browsers with auto-waiting, parallel runs and trace recording. Cypress is the common alternative.","in":["react-*"]},
+  {"term":"snapshot test","aliases":["snapshot testing"],"short":"A test that compares rendered output with a stored copy. Large snapshots are brittle and rarely catch real bugs, so prefer small explicit assertions.","in":["react-*"]},
+  {"term":"flaky test","aliases":["flaky"],"short":"A test that sometimes passes and sometimes fails with no code change, usually from fixed sleeps, shared data or timing. Fix or remove it.","in":["react-*"]}
 ]

@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Why components render",
+   "v": [
+    {
+     "q": "Which of these makes a component re-render?",
+     "o": [
+      "Its state changes",
+      "A sibling logs to the console",
+      "Its CSS file changes",
+      "A ref value changes"
+     ],
+     "w": "A parent render and a context change also trigger it."
+    },
+    {
+     "q": "What does a wasted re-render cost?",
+     "o": [
+      "JavaScript time",
+      "A full DOM rewrite",
+      "A network request",
+      "Nothing at all"
+     ],
+     "w": "React diffs the trees and writes only real changes to the DOM."
+    }
+   ]
+  },
+  {
+   "t": "Measuring",
+   "v": [
+    {
+     "q": "Where should you measure React performance?",
+     "o": [
+      "A production build",
+      "A development build with StrictMode",
+      "Only in the unit tests",
+      "In the code editor"
+     ],
+     "w": "Development mode renders twice and is much slower."
+    },
+    {
+     "q": "What does the Profiler flame graph show?",
+     "o": [
+      "Renders and their cause",
+      "The network waterfall",
+      "The bundle size",
+      "The Git history"
+     ],
+     "w": "Enable the option that records why each component rendered."
+    }
+   ]
+  },
+  {
+   "t": "Fixing renders",
+   "v": [
+    {
+     "q": "What is usually the first fix for a slow screen?",
+     "o": [
+      "Move state down",
+      "Wrap everything in useMemo",
+      "Rewrite in plain JavaScript",
+      "Disable StrictMode"
+     ],
+     "w": "Structure beats memoisation because it removes the render."
+    },
+    {
+     "q": "When does React.memo help?",
+     "o": [
+      "When props are stable references",
+      "When props are inline functions",
+      "When there are no props",
+      "Only for class components"
+     ],
+     "w": "An inline object or function prop is new every render."
+    }
+   ]
+  },
+  {
+   "t": "Concurrent rendering",
+   "v": [
+    {
+     "q": "What does useDeferredValue do?",
+     "o": [
+      "Lets a value lag while React is busy",
+      "Delays a network request",
+      "Caches an API response",
+      "Stops all re-renders"
+     ],
+     "w": "The input stays urgent and the slow list updates a moment later."
+    },
+    {
+     "q": "How do you render 50,000 rows?",
+     "o": [
+      "Virtualise or page",
+      "Memo each row only",
+      "Use index as key",
+      "Render them all"
+     ],
+     "w": "Only the visible rows need DOM nodes."
+    }
+   ]
+  },
+  {
+   "t": "Loading performance",
+   "v": [
+    {
+     "q": "What does React.lazy with Suspense give you?",
+     "o": [
+      "Code loaded when needed",
+      "Faster state updates",
+      "Server rendering",
+      "Smaller images"
+     ],
+     "w": "Splitting by route is the usual first step."
+    },
+    {
+     "q": "Which metric measures the delay after a user input?",
+     "o": [
+      "INP",
+      "LCP",
+      "CLS",
+      "TTL"
+     ],
+     "w": "LCP is the main content and CLS is layout movement."
+    }
+   ]
+  },
+  {
+   "t": "Testing strategy",
+   "v": [
+    {
+     "q": "Which layer should have the most tests?",
+     "o": [
+      "Unit and component tests",
+      "End-to-end tests",
+      "Manual tests",
+      "Visual tests"
+     ],
+     "w": "They are faster and less flaky than browser journeys."
+    },
+    {
+     "q": "What is the Testing Library philosophy?",
+     "o": [
+      "Test like a user uses the app",
+      "Test every internal state",
+      "Test class names",
+      "Test private functions"
+     ],
+     "w": "Behaviour tests survive refactoring."
+    }
+   ]
+  },
+  {
+   "t": "Queries and events",
+   "v": [
+    {
+     "q": "Which query is preferred first?",
+     "o": [
+      "getByRole",
+      "getByTestId",
+      "container.querySelector",
+      "getByClassName"
+     ],
+     "w": "Roles match how users and assistive technology find elements."
+    },
+    {
+     "q": "How do you wait for content that appears later?",
+     "o": [
+      "await findBy...",
+      "A fixed setTimeout",
+      "getBy...",
+      "Call render twice"
+     ],
+     "w": "findBy retries until the element appears or times out."
+    }
+   ]
+  },
+  {
+   "t": "Mocking",
+   "v": [
+    {
+     "q": "What does Mock Service Worker intercept?",
+     "o": [
+      "Network requests",
+      "React renders",
+      "CSS files",
+      "Console logs"
+     ],
+     "w": "The component still runs its real fetch code."
+    },
+    {
+     "q": "What should you avoid mocking?",
+     "o": [
+      "Your own child components",
+      "The network boundary",
+      "The system clock",
+      "Missing browser APIs"
+     ],
+     "w": "Mocking your own code tests the mock."
+    }
+   ]
+  }
+ ]
+}
