@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage, LuKeyRound, LuShieldAlert, LuCircleHelp, LuFingerprint, LuCookie, LuCloudUpload, LuPlus, LuMinus,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage, LuKeyRound, LuShieldAlert, LuCircleHelp, LuFingerprint, LuCookie, LuCloudUpload, LuPlus, LuMinus, LuFileOutput, LuFileInput, LuBox, LuReplace, LuMemoryStick, LuDroplets,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -18,6 +18,12 @@ import {
 
 import { awsIcon } from './awsIcons.jsx';
 const ICONS = [
+  // --- node streams: specific titles first ---
+  [/^consumer$/i, LuFileOutput],
+  [/^producer$/i, LuFileInput],
+  [/^writable destination$/i, LuHardDrive],
+  [/^all streams destroyed$/i, LuTrash2],
+  [/^pipeline rejects$/i, LuOctagonX],
   // --- promises: specific titles first ---
   [/^new promise\(executor\)$/i, LuSparkles],
   [/^callback api$/i, LuUnplug],
@@ -734,6 +740,25 @@ const ICONS = [
   [/^chain [ab] step \d$/i, LuLink],
   [/^await readfile\(path\)$/i, LuFileText],
   [/^caller \d$/i, LuMonitor],
+  // --- node streams: remaining titles ---
+  [/^readable source$|^steady flow$|^readable of rows$/i, LuWaves],
+  [/^chunk$|^byte mode$/i, LuBox],
+  [/^finish event$|^file handle closed$/i, LuCircleCheck],
+  [/^input chunks$/i, LuDownload],
+  [/^transform$|^format transform$/i, LuReplace],
+  [/^output chunks$/i, LuUpload],
+  [/^internal buffer$/i, LuMemoryStick],
+  [/^object mode$/i, LuBraces],
+  [/^memory grows$|^leaked handles$|^first error$/i, LuTriangleAlert],
+  [/^write\(chunk\)$/i, LuSend],
+  [/^returns false$|^source errors$/i, LuOctagonX],
+  [/^source paused$/i, LuPause],
+  [/^drain event$/i, LuDroplets],
+  [/^source resumes$/i, LuPlay],
+  [/^destination stays open$/i, LuUnplug],
+  [/^load all rows$/i, LuListOrdered],
+  [/^row objects$/i, LuTable],
+  [/^gzip (transform|output)$/i, LuArchive],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */

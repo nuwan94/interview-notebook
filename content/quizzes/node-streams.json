@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Why streams",
+   "v": [
+    {
+     "q": "What is the main benefit of streaming a large file?",
+     "o": [
+      "Memory stays flat",
+      "The disk is faster",
+      "No error handling needed",
+      "Files are smaller"
+     ],
+     "w": "Data is processed in chunks as it arrives."
+    },
+    {
+     "q": "Which data suits a plain await instead of a stream?",
+     "o": [
+      "A small JSON config",
+      "A 2 GB export",
+      "A video upload",
+      "A live socket"
+     ],
+     "w": "Streams matter for large or unbounded data."
+    }
+   ]
+  },
+  {
+   "t": "Stream types",
+   "v": [
+    {
+     "q": "Which type is a TCP socket?",
+     "o": [
+      "Duplex",
+      "Readable only",
+      "Writable only",
+      "PassThrough"
+     ],
+     "w": "It has independent read and write sides."
+    },
+    {
+     "q": "What is a Transform?",
+     "o": [
+      "A Duplex that changes data",
+      "A read-only file handle",
+      "A pipe operator symbol",
+      "An extra worker thread"
+     ],
+     "w": "gzip and CSV parsers are examples."
+    }
+   ]
+  },
+  {
+   "t": "Buffers and modes",
+   "v": [
+    {
+     "q": "What does highWaterMark set?",
+     "o": [
+      "When the buffer counts as full",
+      "The maximum file size",
+      "The number of listeners",
+      "The chunk encoding"
+     ],
+     "w": "It is a signalling threshold, not a hard limit."
+    },
+    {
+     "q": "What does object mode change?",
+     "o": [
+      "Chunks become arbitrary values",
+      "Streams become synchronous",
+      "Backpressure is disabled",
+      "Chunks are encrypted"
+     ],
+     "w": "highWaterMark then counts objects, 16 by default."
+    }
+   ]
+  },
+  {
+   "t": "Backpressure",
+   "v": [
+    {
+     "q": "What does write() returning false mean?",
+     "o": [
+      "Stop writing until drain",
+      "The write failed",
+      "The stream ended",
+      "The data was lost"
+     ],
+     "w": "The chunk was buffered, but the buffer is above the limit."
+    },
+    {
+     "q": "Which event tells a producer it can write again?",
+     "o": [
+      "drain",
+      "finish",
+      "close",
+      "end"
+     ],
+     "w": "finish comes after end() once data is flushed."
+    }
+   ]
+  },
+  {
+   "t": "pipe and pipeline",
+   "v": [
+    {
+     "q": "What does pipe NOT do?",
+     "o": [
+      "Forward errors and clean up",
+      "Apply backpressure",
+      "Connect two streams",
+      "Return the destination"
+     ],
+     "w": "Use stream.pipeline for error handling."
+    },
+    {
+     "q": "What does pipeline do on an error?",
+     "o": [
+      "Destroys all the streams",
+      "Ignores the error",
+      "Retries the chunk",
+      "Pauses the source only"
+     ],
+     "w": "The promise rejects with the first error."
+    }
+   ]
+  },
+  {
+   "t": "Errors",
+   "v": [
+    {
+     "q": "A client closes a download early. What does pipeline reject with?",
+     "o": [
+      "ERR_STREAM_PREMATURE_CLOSE",
+      "ECONNRESET only",
+      "A TypeError",
+      "Nothing, it resolves"
+     ],
+     "w": "It is normal, so log it at a low level."
+    },
+    {
+     "q": "Which event is always the last on a stream?",
+     "o": [
+      "close",
+      "end",
+      "finish",
+      "drain"
+     ],
+     "w": "It signals the resource is released."
+    }
+   ]
+  },
+  {
+   "t": "Writing streams",
+   "v": [
+    {
+     "q": "What is flush used for in a Transform?",
+     "o": [
+      "Emitting leftover data",
+      "Clearing the buffer",
+      "Closing the socket",
+      "Starting the stream"
+     ],
+     "w": "A batching Transform emits its last partial batch there."
+    },
+    {
+     "q": "How many times must a Transform callback be called per chunk?",
+     "o": [
+      "Exactly once",
+      "Twice",
+      "Never",
+      "Once per byte"
+     ],
+     "w": "Pass an error to fail the stream."
+    }
+   ]
+  },
+  {
+   "t": "Processing data",
+   "v": [
+    {
+     "q": "How should a huge file be read line by line?",
+     "o": [
+      "readline with for await",
+      "readFile then split",
+      "Split each chunk on newline",
+      "JSON.parse the file"
+     ],
+     "w": "A line can span two chunks."
+    },
+    {
+     "q": "What carries stream data in fetch responses?",
+     "o": [
+      "A web ReadableStream",
+      "A Buffer array",
+      "A Promise array",
+      "A Duplex socket"
+     ],
+     "w": "Convert with Readable.fromWeb."
+    }
+   ]
+  }
+ ]
+}
