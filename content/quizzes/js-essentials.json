@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Equality and types",
+   "v": [
+    {
+     "q": "What does \"5\" == 5 give?",
+     "o": [
+      "true",
+      "false",
+      "A TypeError",
+      "undefined"
+     ],
+     "w": "The loose equality operator converts the string to a number first. === would give false."
+    },
+    {
+     "q": "Which value is truthy?",
+     "o": [
+      "An empty array",
+      "The number 0",
+      "An empty string",
+      "NaN"
+     ],
+     "w": "Only false, 0, -0, 0n, \"\", null, undefined and NaN are falsy. An empty array is truthy."
+    }
+   ]
+  },
+  {
+   "t": "Variables",
+   "v": [
+    {
+     "q": "What happens when a let variable is read before its declaration?",
+     "o": [
+      "A ReferenceError",
+      "It is undefined",
+      "It is null",
+      "It is 0"
+     ],
+     "w": "The variable is in the temporal dead zone until its line runs."
+    },
+    {
+     "q": "What does const guarantee?",
+     "o": [
+      "The binding cannot be reassigned",
+      "The object cannot change",
+      "Deep immutability",
+      "A frozen array"
+     ],
+     "w": "The object it holds can still change unless it is frozen."
+    }
+   ]
+  },
+  {
+   "t": "Closures",
+   "v": [
+    {
+     "q": "What does a closure keep alive?",
+     "o": [
+      "The scope where the function was created",
+      "The whole call stack",
+      "The global object only",
+      "Every variable in the program"
+     ],
+     "w": "A function carries the lexical scope around it, even after the outer function returned."
+    },
+    {
+     "q": "Why do var callbacks in a loop all print the final value?",
+     "o": [
+      "They share one variable",
+      "The loop runs twice",
+      "Callbacks run before the loop",
+      "var is block scoped"
+     ],
+     "w": "let creates a new binding per iteration, which fixes it."
+    }
+   ]
+  },
+  {
+   "t": "this",
+   "v": [
+    {
+     "q": "What is this in a plain function call in strict mode?",
+     "o": [
+      "undefined",
+      "The global object",
+      "The function itself",
+      "null"
+     ],
+     "w": "There is no object before the dot, so strict mode leaves this undefined."
+    },
+    {
+     "q": "Which function type uses the this of its enclosing scope?",
+     "o": [
+      "Arrow function",
+      "Function declaration",
+      "Constructor function",
+      "Generator function"
+     ],
+     "w": "Arrow functions have no this of their own, and call or bind cannot change it."
+    }
+   ]
+  },
+  {
+   "t": "Prototypes",
+   "v": [
+    {
+     "q": "What does the engine do when a property is not found on an object?",
+     "o": [
+      "It checks the prototype chain",
+      "It throws at once",
+      "It creates the property",
+      "It returns null always"
+     ],
+     "w": "The lookup walks the prototype chain until it finds the key or reaches null."
+    },
+    {
+     "q": "What is the class keyword in JavaScript?",
+     "o": [
+      "Syntax over prototypes",
+      "A new object model",
+      "A Java-style type",
+      "A module system"
+     ],
+     "w": "Methods go on Class.prototype and extends links two prototypes."
+    }
+   ]
+  },
+  {
+   "t": "Copies",
+   "v": [
+    {
+     "q": "What does the spread operator copy for an object?",
+     "o": [
+      "Only the top level",
+      "Everything deeply",
+      "Only the prototype",
+      "Nothing"
+     ],
+     "w": "Nested objects stay shared, so spread makes a shallow copy."
+    },
+    {
+     "q": "Which built-in makes a deep copy, including dates and cycles?",
+     "o": [
+      "structuredClone",
+      "Object.assign",
+      "Array.slice",
+      "Object.freeze"
+     ],
+     "w": "It cannot copy functions. JSON round trips lose dates, undefined and functions."
+    }
+   ]
+  },
+  {
+   "t": "Arrays and collections",
+   "v": [
+    {
+     "q": "Why does [10, 9, 1].sort() return [1, 10, 9]?",
+     "o": [
+      "The default compares strings",
+      "It sorts descending",
+      "It is random",
+      "It ignores numbers"
+     ],
+     "w": "Pass a comparator such as (a, b) => a - b for numbers."
+    },
+    {
+     "q": "Which array method returns a sorted copy without changing the original?",
+     "o": [
+      "toSorted",
+      "sort",
+      "reverse",
+      "splice"
+     ],
+     "w": "The newer methods toSorted, toReversed, toSpliced and with return copies."
+    }
+   ]
+  },
+  {
+   "t": "Modules",
+   "v": [
+    {
+     "q": "Why can bundlers tree-shake ES modules?",
+     "o": [
+      "Imports are static",
+      "They are smaller",
+      "They run in Node only",
+      "They are strict"
+     ],
+     "w": "Static imports can be analysed before the code runs, so unused exports are removed."
+    },
+    {
+     "q": "Which module system uses require and module.exports?",
+     "o": [
+      "CommonJS",
+      "ES modules",
+      "AMD only",
+      "WebAssembly"
+     ],
+     "w": "It loads synchronously at run time and is common in older Node.js code."
+    }
+   ]
+  }
+ ]
+}

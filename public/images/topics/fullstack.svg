@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 110" role="img" aria-hidden="true"><defs><pattern id="g" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#cfe0ef" stroke-width="1"/></pattern></defs><rect width="320" height="110" fill="#f4f7fc"/><rect width="320" height="110" fill="url(#g)"/><g fill="none" stroke="#1b2433" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<rect x="28" y="24" width="86" height="62" rx="6" fill="#e3eafa"/><path d="M28 38h86"/><circle cx="38" cy="31" r="1.6" fill="#1b2433"/><circle cx="46" cy="31" r="1.6" fill="#1b2433"/>
+<path d="M44 52h30M44 62h50M44 72h22" stroke="#23408f"/><rect x="78" y="48" width="26" height="18" rx="3" fill="#ffe45c"/>
+<path d="M124 48h44" stroke="#23408f"/><path d="M162 42l6 6-6 6" stroke="#23408f"/><path d="M168 64h-44" stroke="#2f7d4f"/><path d="M130 58l-6 6 6 6" stroke="#2f7d4f"/>
+<rect x="178" y="26" width="52" height="26" rx="5" fill="#dff3e6"/><path d="M188 36h14M188 43h26" stroke="#2f7d4f"/><circle cx="220" cy="36" r="3" fill="#ffe45c"/>
+<rect x="178" y="58" width="52" height="26" rx="5" fill="#fdeccd"/><path d="M188 68h14M188 75h26" stroke="#a65b0a"/>
+<ellipse cx="270" cy="40" rx="24" ry="8" fill="#e3eafa"/><path d="M246 40v26c0 4.5 10.7 8 24 8s24-3.5 24-8V40"/><path d="M246 53c0 4.5 10.7 8 24 8s24-3.5 24-8" stroke="#23408f"/>
+<path d="M232 39h14M232 71h14" stroke="#23408f" stroke-dasharray="1 5"/>
+</g></svg>

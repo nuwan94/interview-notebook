@@ -1,4 +1,4 @@
-import { LuBlocks, LuBookOpen, LuCloud, LuGitBranch, LuCoffee, LuContainer, LuDatabase, LuLeaf, LuNetwork, LuShieldCheck } from 'react-icons/lu';
+import { LuBlocks, LuBookOpen, LuCloud, LuGitBranch, LuCoffee, LuContainer, LuDatabase, LuLayers, LuLeaf, LuNetwork, LuShieldCheck } from 'react-icons/lu';
 
 // Home-page card details for the top-level topics (the `topic:` front matter of lessons, first part).
 // Sub-topics get a generated summary from their lesson titles. Unknown topics fall back to a generic icon.
@@ -11,6 +11,7 @@ const TOPICS = {
   Containers: { image: 'containers', icon: LuContainer, blurb: 'Docker, Compose, Dev Containers, Kubernetes, local clusters (minikube, kind) and OpenShift.' },
   'CI/CD': { image: 'cicd', icon: LuGitBranch, blurb: 'Pipelines from commit to production, quality gates, branching, deployment strategies and release management.' },
   Cloud: { image: 'cloud', icon: LuCloud, blurb: 'Cloud models, regions and zones, AWS services, networking, identity, managed data, serverless and cost.' },
+  'Full stack': { image: 'fullstack', icon: LuLayers, blurb: 'JavaScript and TypeScript, React and Redux, Node.js and Express: the browser and server side of a full-stack application.' },
   Spring: { image: 'spring', icon: LuLeaf, blurb: 'Spring Core, Boot, MVC, Data, Security, testing, caching, observability, Cloud and messaging.' },
 };
 

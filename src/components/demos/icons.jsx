@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -18,6 +18,27 @@ import {
 
 import { awsIcon } from './awsIcons.jsx';
 const ICONS = [
+  // --- javascript: specific titles that must win over the generic rules below ---
+  [/^global scope$/i, LuGlobe],
+  [/^(makecounter scope|scope [ab]|enclosing scope)$/i, LuLayers],
+  [/^(increment function|makeCounter call|detached function|arrow function)$/i, LuSquareFunction],
+  [/^counter[ab]$/i, LuTimer],
+  [/^(var|let) i$|^variable [ab]$/i, LuBraces],
+  [/^callbacks with (var|let)$/i, LuRepeat],
+  [/^call site$/i, LuTerminal],
+  [/^this$/i, LuTarget],
+  [/^(account object|nested address)$/i, LuPackage],
+  [/^typeerror$/i, LuOctagonX],
+  [/^call and apply$/i, LuPlay],
+  [/^bind$/i, LuLink],
+  [/^new$|^new account\(\)$/i, LuSparkles],
+  [/\.prototype$/i, LuListTree],
+  [/^lookup deposit$/i, LuSearch],
+  [/^class account$/i, LuBoxes],
+  [/^instanceof$/i, LuScanSearch],
+  [/^original$/i, LuFileText],
+  [/^shallow copy$/i, LuCopy],
+  [/^structuredclone$|^deep copy$/i, LuCopyCheck],
   // --- aws security: specific titles that must win over the generic rules below ---
   [/^service control policy$/i, LuBan],
   [/^key policy$/i, LuScrollText],

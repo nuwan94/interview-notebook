@@ -35,6 +35,7 @@ import { AWS_STORAGE_SCENES } from './awsStorageScenes.js';
 import { AWS_DATABASE_SCENES } from './awsDatabaseScenes.js';
 import { AWS_NETWORK_SCENES } from './awsNetworkScenes.js';
 import { AWS_SECURITY_SCENES } from './awsSecurityScenes.js';
+import { JS_SCENES } from './jsScenes.js';
 import { EXCEPTION_SCENES } from './exceptionScenes.js';
 import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
@@ -287,3 +288,4 @@ export const AwsStorageWalk = () => <Walk scenes={AWS_STORAGE_SCENES} icons grap
 export const AwsDatabaseWalk = () => <Walk scenes={AWS_DATABASE_SCENES} icons graph ariaLabel="AWS databases walk-through" />;
 export const AwsNetworkWalk = () => <Walk scenes={AWS_NETWORK_SCENES} icons graph ariaLabel="AWS networking walk-through" />;
 export const AwsSecurityWalk = () => <Walk scenes={AWS_SECURITY_SCENES} icons graph ariaLabel="AWS identity and security walk-through" />;
+export const JsWalk = () => <Walk scenes={JS_SCENES} icons graph ariaLabel="JavaScript essentials walk-through" />;
