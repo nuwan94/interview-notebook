@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Architecture",
+   "v": [
+    {
+     "q": "Why does the browser never talk to the database?",
+     "o": [
+      "It is untrusted and can be forged",
+      "Browsers cannot open sockets",
+      "SQL is too slow",
+      "Databases need cookies"
+     ],
+     "w": "All rules are enforced in the API."
+    },
+    {
+     "q": "How is a built React app usually served?",
+     "o": [
+      "As static files from a CDN",
+      "By the database",
+      "By a Java server only",
+      "Through WebSockets"
+     ],
+     "w": "Only the API needs servers."
+    }
+   ]
+  },
+  {
+   "t": "Origins and CORS",
+   "v": [
+    {
+     "q": "How do you avoid CORS in production?",
+     "o": [
+      "Use one origin",
+      "Disable the browser",
+      "Use localStorage",
+      "Send fewer headers"
+     ],
+     "w": "A reverse proxy routes /api to the API."
+    },
+    {
+     "q": "Why are VITE_ variables not secret?",
+     "o": [
+      "They are built into the bundle",
+      "They expire daily",
+      "They are encrypted twice",
+      "They are server only"
+     ],
+     "w": "Anyone can read them in the downloaded JavaScript."
+    }
+   ]
+  },
+  {
+   "t": "Shared contract",
+   "v": [
+    {
+     "q": "What does a shared zod package give both sides?",
+     "o": [
+      "One schema",
+      "A faster network",
+      "A database",
+      "Free hosting"
+     ],
+     "w": "A change breaks the build on both sides."
+    },
+    {
+     "q": "Which option generates a typed client from a spec?",
+     "o": [
+      "OpenAPI",
+      "CSS modules",
+      "Webpack",
+      "JSX"
+     ],
+     "w": "It also suits a Java back end."
+    }
+   ]
+  },
+  {
+   "t": "Token storage",
+   "v": [
+    {
+     "q": "Where is the safest place for tokens in a bank SPA?",
+     "o": [
+      "A BFF with an httpOnly cookie",
+      "localStorage in the browser",
+      "A global JavaScript variable",
+      "The URL query string"
+     ],
+     "w": "JavaScript cannot read an httpOnly cookie."
+    },
+    {
+     "q": "What does PKCE protect against?",
+     "o": [
+      "A stolen code",
+      "SQL injection",
+      "Slow queries",
+      "Large bundles"
+     ],
+     "w": "The code is useless without the verifier."
+    }
+   ]
+  },
+  {
+   "t": "401 handling",
+   "v": [
+    {
+     "q": "What should happen on the first 401?",
+     "o": [
+      "Refresh once and retry",
+      "Retry forever",
+      "Ignore it",
+      "Show a blank page"
+     ],
+     "w": "Share one refresh between concurrent calls."
+    },
+    {
+     "q": "What clears client data on logout?",
+     "o": [
+      "Clearing the query cache",
+      "Closing the tab",
+      "Reloading the CSS",
+      "Nothing is needed"
+     ],
+     "w": "The next user must not see old data."
+    }
+   ]
+  },
+  {
+   "t": "Safe writes",
+   "v": [
+    {
+     "q": "What stops a retry from sending money twice?",
+     "o": [
+      "An idempotency key",
+      "A faster network",
+      "A larger button",
+      "A longer timeout"
+     ],
+     "w": "The server returns the first result for a repeated key."
+    },
+    {
+     "q": "Why use a database transaction for a transfer?",
+     "o": [
+      "Both ledger entries commit or none",
+      "It makes reads faster",
+      "It removes validation",
+      "It hides errors"
+     ],
+     "w": "Add a row lock so concurrent transfers cannot overdraw."
+    }
+   ]
+  },
+  {
+   "t": "Errors and tracing",
+   "v": [
+    {
+     "q": "What ties a user report to the server logs?",
+     "o": [
+      "A request id",
+      "The browser name",
+      "The screen size",
+      "The page title"
+     ],
+     "w": "Return it in error bodies and show it to the user."
+    },
+    {
+     "q": "Which layer maps a unique violation to 409?",
+     "o": [
+      "Error middleware",
+      "The CSS",
+      "The CDN",
+      "The browser cache"
+     ],
+     "w": "The database error becomes a coded domain error."
+    }
+   ]
+  },
+  {
+   "t": "Deployment",
+   "v": [
+    {
+     "q": "How is index.html cached?",
+     "o": [
+      "no-cache, so new releases load",
+      "For one year",
+      "Forever in localStorage",
+      "It is not served"
+     ],
+     "w": "Hashed assets can be cached for a year."
+    },
+    {
+     "q": "What is the safe way to drop a database column?",
+     "o": [
+      "Expand and contract",
+      "Drop it in the migration at once",
+      "Rename it quietly",
+      "Restart the database"
+     ],
+     "w": "Old and new code run together during a rollout."
+    }
+   ]
+  }
+ ]
+}
