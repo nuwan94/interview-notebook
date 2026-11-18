@@ -49,6 +49,7 @@ import { PROMISE_SCENES } from './promiseScenes.js';
 import { STREAM_SCENES } from './streamScenes.js';
 import { MIDDLEWARE_SCENES } from './middlewareScenes.js';
 import { AUTH_NODE_SCENES } from './authNodeScenes.js';
+import { NODE_TEST_SCENES } from './nodeTestScenes.js';
 import { EXCEPTION_SCENES } from './exceptionScenes.js';
 import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
@@ -315,3 +316,4 @@ export const PromiseWalk = () => <Walk scenes={PROMISE_SCENES} icons graph ariaL
 export const StreamWalk = () => <Walk scenes={STREAM_SCENES} icons graph ariaLabel="Node.js streams walk-through" />;
 export const MiddlewareWalk = () => <Walk scenes={MIDDLEWARE_SCENES} icons graph ariaLabel="Express middleware walk-through" />;
 export const AuthNodeWalk = () => <Walk scenes={AUTH_NODE_SCENES} icons graph ariaLabel="Authentication in Node.js walk-through" />;
+export const NodeTestWalk = () => <Walk scenes={NODE_TEST_SCENES} icons graph ariaLabel="Node.js testing walk-through" />;

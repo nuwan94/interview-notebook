@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Test pyramid",
+   "v": [
+    {
+     "q": "Which shape does the test pyramid recommend?",
+     "o": [
+      "Many fast unit tests, few end-to-end tests",
+      "Mostly end-to-end tests",
+      "Equal numbers of every kind",
+      "Only integration tests"
+     ],
+     "w": "Cheaper tests at the bottom give faster, more precise failures."
+    },
+    {
+     "q": "Why keep end-to-end tests few?",
+     "o": [
+      "They are slow and fragile",
+      "They cannot find bugs",
+      "They need no setup",
+      "They are not allowed in CI"
+     ],
+     "w": "Cover only critical journeys with them."
+    }
+   ]
+  },
+  {
+   "t": "Test doubles",
+   "v": [
+    {
+     "q": "What does a stub do?",
+     "o": [
+      "Returns canned answers",
+      "Records every call",
+      "Stores real data",
+      "Starts a container"
+     ],
+     "w": "It lets the code under test run."
+    },
+    {
+     "q": "What is a fake?",
+     "o": [
+      "A simple working implementation",
+      "A function that always throws",
+      "A copy of production data",
+      "A random value"
+     ],
+     "w": "An in-memory repository is a typical fake."
+    }
+   ]
+  },
+  {
+   "t": "Over-mocking",
+   "v": [
+    {
+     "q": "Why is over-mocking a problem?",
+     "o": [
+      "Brittle tests that prove little",
+      "It makes tests too fast",
+      "It hides the framework",
+      "It needs more memory"
+     ],
+     "w": "It repeats the implementation."
+    },
+    {
+     "q": "What should you mock?",
+     "o": [
+      "Network, clock and randomness",
+      "Every class you wrote",
+      "Pure functions",
+      "The assertion library"
+     ],
+     "w": "Use real objects for your own code."
+    }
+   ]
+  },
+  {
+   "t": "Testability",
+   "v": [
+    {
+     "q": "What makes a service easy to test?",
+     "o": [
+      "Dependencies passed in as arguments",
+      "Creating the database inside it",
+      "Reading Date.now() directly",
+      "Module-level globals"
+     ],
+     "w": "Tests pass fakes, production passes real ones."
+    },
+    {
+     "q": "Which dependency is worth injecting?",
+     "o": [
+      "The clock",
+      "Math.abs",
+      "A constant string",
+      "The console colour"
+     ],
+     "w": "A fixed clock removes time from the test."
+    }
+   ]
+  },
+  {
+   "t": "Async and time",
+   "v": [
+    {
+     "q": "How should a test check that a promise rejects?",
+     "o": [
+      "await assert.rejects(promise)",
+      "A try/catch with the assert in catch",
+      "setTimeout then check",
+      "Ignore the promise"
+     ],
+     "w": "A catch-only assertion passes when nothing is thrown."
+    },
+    {
+     "q": "How do you test a retry with backoff quickly?",
+     "o": [
+      "Fake timers and tick",
+      "A real sleep",
+      "Run it twice",
+      "Lower the Node version"
+     ],
+     "w": "Move the fake clock forward by hand."
+    }
+   ]
+  },
+  {
+   "t": "HTTP tests",
+   "v": [
+    {
+     "q": "Why listen on port 0 in a test?",
+     "o": [
+      "The OS picks a free port",
+      "It disables HTTP",
+      "It is faster than TCP",
+      "It enables HTTPS"
+     ],
+     "w": "Fixed ports cause EADDRINUSE."
+    },
+    {
+     "q": "Where should the app be created for testing?",
+     "o": [
+      "In a function that does not call listen",
+      "Inside the test runner",
+      "Only in main.js with listen",
+      "In a global variable"
+     ],
+     "w": "Tests import it and start or call it themselves."
+    }
+   ]
+  },
+  {
+   "t": "Database tests",
+   "v": [
+    {
+     "q": "Why avoid SQLite when production uses PostgreSQL?",
+     "o": [
+      "Its SQL and constraints differ",
+      "SQLite cannot store data",
+      "It needs a licence",
+      "It is too slow"
+     ],
+     "w": "Test against the production engine."
+    },
+    {
+     "q": "How do you give each database test a clean state?",
+     "o": [
+      "Truncate tables or roll back a transaction",
+      "Restart the container each time",
+      "Reuse leftover rows",
+      "Delete the migrations"
+     ],
+     "w": "Start the container once, reset state cheaply."
+    }
+   ]
+  },
+  {
+   "t": "Quality and flakiness",
+   "v": [
+    {
+     "q": "What does 100% code coverage guarantee?",
+     "o": [
+      "Lines ran, not checked",
+      "No bugs at all",
+      "Good assertions",
+      "Fast tests"
+     ],
+     "w": "Mutation testing checks the assertions."
+    },
+    {
+     "q": "What is a common cause of flaky tests?",
+     "o": [
+      "Shared state and real time",
+      "Using describe",
+      "Short test names",
+      "Strict assertions"
+     ],
+     "w": "Isolate state and inject the clock."
+    }
+   ]
+  }
+ ]
+}

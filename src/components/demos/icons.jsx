@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage, LuKeyRound, LuShieldAlert, LuCircleHelp, LuFingerprint, LuCookie, LuCloudUpload, LuPlus, LuMinus, LuFileOutput, LuFileInput, LuBox, LuReplace, LuMemoryStick, LuDroplets, LuSkipForward, LuLogIn, LuUserX, LuLogOut, LuMailCheck,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage, LuKeyRound, LuShieldAlert, LuCircleHelp, LuFingerprint, LuCookie, LuCloudUpload, LuPlus, LuMinus, LuFileOutput, LuFileInput, LuBox, LuReplace, LuMemoryStick, LuDroplets, LuSkipForward, LuLogIn, LuUserX, LuLogOut, LuMailCheck, LuEye, LuUndo2, LuBug, LuWrench, LuShuffle,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -18,6 +18,15 @@ import {
 
 import { awsIcon } from './awsIcons.jsx';
 const ICONS = [
+  // --- node testing: specific titles first ---
+  [/^service with fakes$|^createtransferservice$/i, LuPuzzle],
+  [/^consumer contract$|^same contract tests$/i, LuHandshake],
+  [/^stub gateway$|^mocked client$/i, LuVenetianMask],
+  [/^spy gateway$/i, LuEye],
+  [/^hard to test$/i, LuOctagonX],
+  [/^testcontainers$/i, LuContainer],
+  [/^transaction per test$/i, LuUndo2],
+  [/^few end-to-end tests$/i, LuMousePointerClick],
   // --- node authentication: specific titles first ---
   [/^login request$|^sign in again$/i, LuLogIn],
   [/^401 generic message$|^wrong password$/i, LuOctagonX],
@@ -807,6 +816,24 @@ const ICONS = [
   [/^breached password check$/i, LuShieldAlert],
   [/^step-up for transfers$/i, LuTriangleAlert],
   [/^generic reply$/i, LuMailCheck],
+  // --- node testing: remaining titles ---
+  [/^pure logic$/i, LuSquareFunction],
+  [/^fast feedback$/i, LuZap],
+  [/^wiring bugs found$/i, LuBug],
+  [/^provider verification$|^assert on the result$|^mock only the edges$|^assert$/i, LuCircleCheck],
+  [/^assert on calls$/i, LuListChecks],
+  [/^in-memory fake$/i, LuBoxes],
+  [/^mocks everywhere$/i, LuLayers],
+  [/^breaks on refactor$/i, LuTriangleAlert],
+  [/^hidden dependencies$/i, LuUnplug],
+  [/^production wiring$/i, LuPlug],
+  [/^arrange$/i, LuWrench],
+  [/^act$/i, LuPlay],
+  [/^removed after the run$/i, LuTrash2],
+  [/^start once$/i, LuRocket],
+  [/^clean state each time$/i, LuSparkles],
+  [/^port 0$/i, LuNetwork],
+  [/^shared state$/i, LuShuffle],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */
