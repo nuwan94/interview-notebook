@@ -39,6 +39,7 @@ import { JS_SCENES } from './jsScenes.js';
 import { JS_ASYNC_SCENES } from './jsAsyncScenes.js';
 import { TS_SCENES } from './tsScenes.js';
 import { REACT_SCENES } from './reactScenes.js';
+import { REACT_HOOKS_SCENES } from './reactHooksScenes.js';
 import { EXCEPTION_SCENES } from './exceptionScenes.js';
 import { REFLECTION_SCENES } from './reflectionScenes.js';
 import { DATA_STRUCTURE_SCENES } from './dataStructureScenes.js';
@@ -295,3 +296,4 @@ export const JsWalk = () => <Walk scenes={JS_SCENES} icons graph ariaLabel="Java
 export const JsAsyncWalk = () => <Walk scenes={JS_ASYNC_SCENES} icons graph ariaLabel="Asynchronous JavaScript walk-through" />;
 export const TsWalk = () => <Walk scenes={TS_SCENES} icons graph ariaLabel="TypeScript walk-through" />;
 export const ReactWalk = () => <Walk scenes={REACT_SCENES} icons graph ariaLabel="React core walk-through" />;
+export const ReactHooksWalk = () => <Walk scenes={REACT_HOOKS_SCENES} icons graph ariaLabel="React hooks walk-through" />;

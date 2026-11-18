@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "useEffect basics",
+   "v": [
+    {
+     "q": "When does useEffect run?",
+     "o": [
+      "After render, after paint",
+      "Before the render",
+      "Only on mount",
+      "Only on unmount"
+     ],
+     "w": "The dependency array decides how often it runs after that."
+    },
+    {
+     "q": "What does an empty dependency array mean?",
+     "o": [
+      "Run once after mount",
+      "Run on every render",
+      "Never run",
+      "Run before render"
+     ],
+     "w": "The cleanup then runs on unmount."
+    }
+   ]
+  },
+  {
+   "t": "Cleanup and races",
+   "v": [
+    {
+     "q": "When does React run an effect cleanup?",
+     "o": [
+      "Before the next run and on unmount",
+      "Only on unmount",
+      "Before every render of the parent",
+      "Never automatically"
+     ],
+     "w": "This is where you unsubscribe, clear timers and abort requests."
+    },
+    {
+     "q": "How do you stop an old fetch overwriting new state?",
+     "o": [
+      "Abort it in the cleanup",
+      "Add more state",
+      "Call it twice",
+      "Use a longer timeout"
+     ],
+     "w": "An AbortController signal cancels the old request when the dependency changes."
+    }
+   ]
+  },
+  {
+   "t": "Avoiding effects",
+   "v": [
+    {
+     "q": "Where does code that reacts to a button click belong?",
+     "o": [
+      "In the event handler",
+      "In an effect watching state",
+      "In the render body",
+      "In a ref"
+     ],
+     "w": "The handler knows exactly what happened, so no effect is needed."
+    },
+    {
+     "q": "How should you reset a form state when the user prop changes?",
+     "o": [
+      "Give the form a key",
+      "An effect that sets state",
+      "A global variable",
+      "Reload the page"
+     ],
+     "w": "A changed key remounts the component with fresh state."
+    }
+   ]
+  },
+  {
+   "t": "Memoization",
+   "v": [
+    {
+     "q": "Why can memo fail with an inline function prop?",
+     "o": [
+      "It is a new reference each render",
+      "Functions cannot be props",
+      "memo ignores functions",
+      "It runs the function twice"
+     ],
+     "w": "Props are compared shallowly by reference."
+    },
+    {
+     "q": "What does useCallback return?",
+     "o": [
+      "Same function while deps match",
+      "A promise of the result",
+      "A new function every render",
+      "The result of the function call"
+     ],
+     "w": "It is a way to keep a stable reference."
+    }
+   ]
+  },
+  {
+   "t": "Reducer",
+   "v": [
+    {
+     "q": "What must a reducer be?",
+     "o": [
+      "A pure function",
+      "An async function",
+      "A class method",
+      "A hook"
+     ],
+     "w": "It takes the state and an action and returns the next state without side effects."
+    },
+    {
+     "q": "What is true about dispatch from useReducer?",
+     "o": [
+      "It is stable between renders",
+      "It changes every render",
+      "It returns the new state",
+      "It is async"
+     ],
+     "w": "That makes it safe to pass down and use in dependencies."
+    }
+   ]
+  },
+  {
+   "t": "Context",
+   "v": [
+    {
+     "q": "What happens when a context provider value changes?",
+     "o": [
+      "All consumers re-render",
+      "Only the nearest consumer renders",
+      "Nothing until a refresh",
+      "The provider remounts"
+     ],
+     "w": "memo does not stop a consumer reading changed context."
+    },
+    {
+     "q": "How do you reduce context re-renders?",
+     "o": [
+      "Split state and dispatch contexts",
+      "Wrap each consumer in a ref",
+      "Use more effects",
+      "Store it in a global variable"
+     ],
+     "w": "Memoise the value and keep state close to where it is used."
+    }
+   ]
+  },
+  {
+   "t": "Custom hooks",
+   "v": [
+    {
+     "q": "What does a custom hook share?",
+     "o": [
+      "Logic, not state",
+      "State between components",
+      "DOM nodes",
+      "Props"
+     ],
+     "w": "Each call gets its own state."
+    },
+    {
+     "q": "Why name custom hooks starting with use?",
+     "o": [
+      "So the linter checks the Rules of Hooks",
+      "It is a JavaScript keyword",
+      "React needs it to compile",
+      "It makes them faster"
+     ],
+     "w": "The prefix is how tooling recognises a hook."
+    }
+   ]
+  },
+  {
+   "t": "Stale closures and server data",
+   "v": [
+    {
+     "q": "Why does setInterval(() => setCount(count + 1)) in a [] effect stick?",
+     "o": [
+      "It closes over the first render count",
+      "setInterval is blocked",
+      "Effects cannot set state",
+      "Counts cannot change"
+     ],
+     "w": "Use setCount(c => c + 1) or restructure the effect."
+    },
+    {
+     "q": "What should manage server data in a large app?",
+     "o": [
+      "TanStack Query or a loader",
+      "A global useState",
+      "A hand-written effect per component",
+      "localStorage"
+     ],
+     "w": "It adds caching, de-duplication and retries, which an effect does not."
+    }
+   ]
+  }
+ ]
+}
