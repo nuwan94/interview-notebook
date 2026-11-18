@@ -7,13 +7,13 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
   SiJenkins, SiJsonwebtokens, SiJunit5, SiKeycloak, SiKubernetes, SiMongodb, SiMysql, SiNeo4J, SiNginx, SiOpenjdk,
   SiOpentelemetry, SiPostgresql, SiPrometheus, SiRabbitmq, SiRedis, SiSpring, SiSpringboot, SiSpringsecurity, SiVault,
-  SiApachecassandra, SiGithub, SiRedhatopenshift, SiTekton, SiArgo, SiIstio, SiTypescript, SiJavascript,
+  SiApachecassandra, SiGithub, SiRedhatopenshift, SiTekton, SiArgo, SiIstio, SiTypescript, SiJavascript, SiReact,
 } from 'react-icons/si';
 
 import { awsIcon } from './awsIcons.jsx';
@@ -503,6 +503,34 @@ const ICONS = [
   [/^(partial|pick|omit|readonly)</i, LuShapes],
   [/^findaccount\(id\)$/i, LuSearch],
   [/^account$/i, LuLandmark],
+  // --- react ---
+  [/^click event$|^click handler$/i, LuMousePointerClick],
+  [/^setcount\(count \+ 1\)$|^re-render$/i, LuRefreshCw],
+  [/^react scheduler$/i, LuTimer],
+  [/^counter component$/i, SiReact],
+  [/^(new element tree|previous tree)$/i, LuListTree],
+  [/^diff$/i, LuGitCompare],
+  [/^dom update$/i, LuFileCode],
+  [/^browser paint$/i, LuMonitor],
+  [/^effects$/i, LuZap],
+  [/^app$/i, SiReact],
+  [/^searchbox$/i, LuSearch],
+  [/^productlist$/i, LuList],
+  [/^common parent$/i, LuGitBranch],
+  [/^sibling [ab]$/i, LuBoxes],
+  [/^array of items$/i, LuBraces],
+  [/^map to elements$/i, LuWorkflow],
+  [/^list rows$/i, LuListChecks],
+  [/^(reordered array|rows moved)$/i, LuArrowUpDown],
+  [/^(stable keys|new key|index keys)$/i, LuKey],
+  [/^input state$/i, LuTextCursorInput],
+  [/^wrong row$/i, LuOctagonX],
+  [/^(old|fresh) form$/i, LuFileText],
+  [/^render [12]$/i, LuLayers],
+  [/^setcount\(.*\) x3$/i, LuRepeat],
+  [/^items\.push\(x\)$/i, LuPencil],
+  [/^no re-render$/i, LuBan],
+  [/^setitems\(/i, LuCopy],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */

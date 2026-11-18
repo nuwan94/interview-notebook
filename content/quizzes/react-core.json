@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "What React is",
+   "v": [
+    {
+     "q": "What does declarative UI mean in React?",
+     "o": [
+      "Describe the UI for the current state",
+      "Update each DOM node by hand",
+      "Write HTML on the server",
+      "Avoid JavaScript"
+     ],
+     "w": "You describe what it should look like and React works out the DOM changes."
+    },
+    {
+     "q": "What is JSX compiled into?",
+     "o": [
+      "Function calls creating elements",
+      "An HTML string for the DOM",
+      "Real DOM nodes built at once",
+      "A separate CSS stylesheet file"
+     ],
+     "w": "JSX is a description, not HTML and not a string."
+    }
+   ]
+  },
+  {
+   "t": "Props and state",
+   "v": [
+    {
+     "q": "Which is read-only for the component that receives it?",
+     "o": [
+      "Props",
+      "State",
+      "A ref",
+      "A local variable"
+     ],
+     "w": "A component never changes its props. A parent passes a callback instead."
+    },
+    {
+     "q": "What happens when you call a state setter?",
+     "o": [
+      "React schedules a re-render",
+      "The variable changes at once",
+      "The page reloads",
+      "The parent unmounts"
+     ],
+     "w": "The new value shows in the next render, not on the next line."
+    }
+   ]
+  },
+  {
+   "t": "Updating state",
+   "v": [
+    {
+     "q": "Why must state not be mutated?",
+     "o": [
+      "React compares by reference",
+      "Mutation is slower to type",
+      "Arrays are frozen",
+      "The setter is private"
+     ],
+     "w": "The same reference looks unchanged, so the render may be skipped."
+    },
+    {
+     "q": "How do you add an item to array state?",
+     "o": [
+      "setItems([...items, item])",
+      "items.push(item)",
+      "items[items.length] = item",
+      "items.add(item)"
+     ],
+     "w": "Create a new array so React sees a new reference."
+    }
+   ]
+  },
+  {
+   "t": "State as a snapshot",
+   "v": [
+    {
+     "q": "What does setCount(count + 1) three times in one handler give?",
+     "o": [
+      "An increase of 1",
+      "An increase of 3",
+      "An increase of 0",
+      "An error"
+     ],
+     "w": "All three calls use the same snapshot of count."
+    },
+    {
+     "q": "Which form adds 3 with three calls?",
+     "o": [
+      "setCount(c => c + 1)",
+      "setCount(count + 1)",
+      "setCount(count++)",
+      "count += 1"
+     ],
+     "w": "The updater form receives the latest queued value each time."
+    }
+   ]
+  },
+  {
+   "t": "Rendering",
+   "v": [
+    {
+     "q": "When does a component re-render?",
+     "o": [
+      "Its state or its parent changes",
+      "Only when props change deeply",
+      "Only after a user click",
+      "Never anymore in React 19"
+     ],
+     "w": "Context changes also trigger it, and memo can skip it for equal props."
+    },
+    {
+     "q": "What must the render phase be?",
+     "o": [
+      "Pure",
+      "Asynchronous",
+      "Run once only",
+      "Run on the server only"
+     ],
+     "w": "No side effects, because React can pause, repeat or discard a render."
+    }
+   ]
+  },
+  {
+   "t": "Lists and keys",
+   "v": [
+    {
+     "q": "What is the best key for a list item?",
+     "o": [
+      "A stable id from the data",
+      "The array index position",
+      "A random number each render",
+      "The text of the item"
+     ],
+     "w": "Index keys break when items are inserted or reordered."
+    },
+    {
+     "q": "What does changing a component key do?",
+     "o": [
+      "Resets its state",
+      "Skips the render",
+      "Keeps its state",
+      "Throws an error"
+     ],
+     "w": "React unmounts the old one and mounts a new one."
+    }
+   ]
+  },
+  {
+   "t": "Forms",
+   "v": [
+    {
+     "q": "What is a controlled input?",
+     "o": [
+      "Its value comes from state",
+      "Its value lives in the DOM",
+      "It has no onChange",
+      "It is read-only"
+     ],
+     "w": "State is the single source of truth, updated in onChange."
+    },
+    {
+     "q": "Which is correct for a click handler?",
+     "o": [
+      "onClick={() => handle(id)}",
+      "onClick={handle(id)}",
+      "onclick=\"handle()\"",
+      "onClick=handle(id)"
+     ],
+     "w": "Calling the function in JSX runs it during render."
+    }
+   ]
+  },
+  {
+   "t": "Composition and hooks",
+   "v": [
+    {
+     "q": "How does React favour reuse over inheritance?",
+     "o": [
+      "Composition with children",
+      "Base component classes",
+      "Global shared variables",
+      "Mixins on the DOM"
+     ],
+     "w": "A Card renders children, and shared logic goes into custom hooks."
+    },
+    {
+     "q": "Why call hooks only at the top level?",
+     "o": [
+      "React tracks state by call order",
+      "Hooks are slow inside loops",
+      "Hooks need a class first",
+      "It is only a style rule"
+     ],
+     "w": "A hook inside a condition shifts the order and mixes up the state."
+    }
+   ]
+  }
+ ]
+}
