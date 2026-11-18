@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Contract and engine",
+   "v": [
+    {
+     "q": "What does a middleware function receive?",
+     "o": [
+      "req, res and next",
+      "Only the request",
+      "A returned promise",
+      "The parent router"
+     ],
+     "w": "It either responds or calls next."
+    },
+    {
+     "q": "How does Express choose which layer runs?",
+     "o": [
+      "It walks an ordered list",
+      "It sorts by path length",
+      "It runs all layers at once",
+      "It picks the newest layer"
+     ],
+     "w": "next resumes the scan from where it stopped."
+    }
+   ]
+  },
+  {
+   "t": "use and methods",
+   "v": [
+    {
+     "q": "Which matches any HTTP method and a path prefix?",
+     "o": [
+      "app.use",
+      "app.get",
+      "app.post",
+      "app.route"
+     ],
+     "w": "app.get matches one method and the full path."
+    },
+    {
+     "q": "What happens if a middleware never calls next or responds?",
+     "o": [
+      "The request hangs",
+      "Express sends a 404",
+      "It is retried",
+      "The next layer runs"
+     ],
+     "w": "Every path must end the cycle or continue."
+    }
+   ]
+  },
+  {
+   "t": "Ordering",
+   "v": [
+    {
+     "q": "Why must CORS come before authentication?",
+     "o": [
+      "Preflight requests carry no token",
+      "CORS is faster",
+      "Auth needs CORS headers",
+      "Express requires it"
+     ],
+     "w": "Otherwise a preflight gets 401."
+    },
+    {
+     "q": "Where does the error handler go?",
+     "o": [
+      "After all routes and layers",
+      "Before the body parser",
+      "Inside each route",
+      "First in the file"
+     ],
+     "w": "Express finds it by its four parameters."
+    }
+   ]
+  },
+  {
+   "t": "next variants",
+   "v": [
+    {
+     "q": "What does next(err) do?",
+     "o": [
+      "Skips to error handlers",
+      "Retries the same layer",
+      "Ends the response",
+      "Restarts the app"
+     ],
+     "w": "Normal layers are skipped while an error is in flight."
+    },
+    {
+     "q": "What does next(\"router\") do?",
+     "o": [
+      "Leaves the current router",
+      "Skips one handler",
+      "Raises an error",
+      "Reloads routes"
+     ],
+     "w": "next(\"route\") skips the rest of one route."
+    }
+   ]
+  },
+  {
+   "t": "Mounting",
+   "v": [
+    {
+     "q": "Inside a router mounted at /api/accounts, what is req.url for /api/accounts/42?",
+     "o": [
+      "/42",
+      "/api/accounts/42",
+      "/api",
+      "/accounts"
+     ],
+     "w": "req.originalUrl keeps the full URL."
+    },
+    {
+     "q": "What does mergeParams: true allow?",
+     "o": [
+      "A child router sees parent params",
+      "Two routers merge into one",
+      "Params become optional",
+      "Params are validated"
+     ],
+     "w": "It is needed for nested routes like /accounts/:accountId/transfers."
+    }
+   ]
+  },
+  {
+   "t": "Async and errors",
+   "v": [
+    {
+     "q": "How does Express 5 treat a rejected promise in a handler?",
+     "o": [
+      "Forwards it as an error",
+      "Ignores the rejection",
+      "Retries the handler",
+      "Exits the process"
+     ],
+     "w": "Express 4 needs a wrapper."
+    },
+    {
+     "q": "Which errors does Express not catch?",
+     "o": [
+      "Throws in timers",
+      "Sync throws in handlers",
+      "Body parser errors",
+      "next(err) calls"
+     ],
+     "w": "They become uncaught exceptions."
+    }
+   ]
+  },
+  {
+   "t": "Context and hooks",
+   "v": [
+    {
+     "q": "What carries a request id into deep service code?",
+     "o": [
+      "AsyncLocalStorage",
+      "A module variable",
+      "process.env",
+      "A global array"
+     ],
+     "w": "It follows the async call chain of one request."
+    },
+    {
+     "q": "When is the status code known for logging?",
+     "o": [
+      "In the res finish event",
+      "Before next is called",
+      "At app startup",
+      "In the parser"
+     ],
+     "w": "close also fires when the client aborts."
+    }
+   ]
+  },
+  {
+   "t": "Raw bodies and signatures",
+   "v": [
+    {
+     "q": "Why use express.raw for a webhook route?",
+     "o": [
+      "The HMAC covers the exact bytes",
+      "It is faster than json",
+      "It validates the schema",
+      "It encrypts the body"
+     ],
+     "w": "Re-serialised JSON can differ from what was signed."
+    },
+    {
+     "q": "How should a signature be compared?",
+     "o": [
+      "crypto.timingSafeEqual",
+      "The === operator",
+      "String includes",
+      "JSON.stringify both"
+     ],
+     "w": "Check lengths first, it needs equal-length buffers."
+    }
+   ]
+  }
+ ]
+}
