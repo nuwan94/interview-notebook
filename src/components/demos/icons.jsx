@@ -7,13 +7,13 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
   SiJenkins, SiJsonwebtokens, SiJunit5, SiKeycloak, SiKubernetes, SiMongodb, SiMysql, SiNeo4J, SiNginx, SiOpenjdk,
   SiOpentelemetry, SiPostgresql, SiPrometheus, SiRabbitmq, SiRedis, SiSpring, SiSpringboot, SiSpringsecurity, SiVault,
-  SiApachecassandra, SiGithub, SiRedhatopenshift, SiTekton, SiArgo, SiIstio, SiTypescript, SiJavascript, SiReact,
+  SiApachecassandra, SiGithub, SiRedhatopenshift, SiTekton, SiArgo, SiIstio, SiTypescript, SiJavascript, SiReact, SiRedux,
 } from 'react-icons/si';
 
 import { awsIcon } from './awsIcons.jsx';
@@ -560,6 +560,29 @@ const ICONS = [
   [/^(usefetch|usecounter) hook$/i, LuPuzzle],
   [/^tanstack query$/i, LuDatabaseZap],
   [/^component$/i, SiReact],
+  // --- redux ---
+  [/^redux store$/i, SiRedux],
+  [/^click in the ui$/i, LuMousePointerClick],
+  [/^dispatch\(/i, LuSend],
+  [/^any dispatch$/i, LuSend],
+  [/^reducer$/i, LuWorkflow],
+  [/^useselector$|^select (the items|with filter)$|^input selectors$/i, LuFilter],
+  [/^cart badge$/i, LuBell],
+  [/^footer$/i, LuMonitor],
+  [/^middleware chain$/i, LuPlug],
+  [/^thunk$/i, LuZap],
+  [/^accounts\/pending$/i, LuHourglass],
+  [/^accounts\/fulfilled$/i, LuCircleCheck],
+  [/^accounts\/rejected$/i, LuOctagonX],
+  [/^accounts slice$/i, LuLayers],
+  [/^createselector$/i, LuBrain],
+  [/^memoised result$/i, LuCircleCheck],
+  [/^rtk query cache$/i, LuDatabaseZap],
+  [/^api server$/i, LuServer],
+  [/^(header menu|accounts page)$/i, LuMonitor],
+  [/^addaccount mutation$/i, LuUpload],
+  [/^tag: accounts$/i, LuTag],
+  [/^refetch$/i, LuRefreshCw],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */

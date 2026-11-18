@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Redux basics",
+   "v": [
+    {
+     "q": "How can the Redux state be changed?",
+     "o": [
+      "By dispatching an action",
+      "By assigning to store.state",
+      "By calling a selector",
+      "By editing the reducer at runtime"
+     ],
+     "w": "The store is read-only. Every change is an action that a reducer handles."
+    },
+    {
+     "q": "What does a Redux action describe?",
+     "o": [
+      "An event that happened",
+      "The whole next state",
+      "A React component",
+      "A network request"
+     ],
+     "w": "By convention it is { type, payload }, named like cart/itemAdded."
+    }
+   ]
+  },
+  {
+   "t": "Pure reducers",
+   "v": [
+    {
+     "q": "Why must a reducer not mutate state?",
+     "o": [
+      "Change is detected by reference",
+      "Mutation is slower",
+      "It breaks the browser",
+      "Arrays are read-only"
+     ],
+     "w": "A mutated object keeps the same reference, so selectors and React see no change."
+    },
+    {
+     "q": "Which is allowed in a reducer?",
+     "o": [
+      "Returning new state",
+      "fetch() calls",
+      "Math.random()",
+      "Writing to the DOM"
+     ],
+     "w": "A reducer is a pure function with no side effects."
+    }
+   ]
+  },
+  {
+   "t": "Redux Toolkit and Immer",
+   "v": [
+    {
+     "q": "What does Immer let you do inside createSlice?",
+     "o": [
+      "Write code that looks like mutation",
+      "Skip writing reducers",
+      "Mutate state anywhere",
+      "Store class instances"
+     ],
+     "w": "It records changes on a draft and produces a new immutable state."
+    },
+    {
+     "q": "What does createSlice generate?",
+     "o": [
+      "Actions and reducer",
+      "A React component",
+      "A database table",
+      "An API server"
+     ],
+     "w": "Action types follow the slice name, such as accounts/accountFrozen."
+    }
+   ]
+  },
+  {
+   "t": "Async work",
+   "v": [
+    {
+     "q": "Which actions does createAsyncThunk dispatch?",
+     "o": [
+      "pending, fulfilled, rejected",
+      "start and stop",
+      "load and save",
+      "request and response only"
+     ],
+     "w": "The slice handles them in extraReducers to set loading, data and error."
+    },
+    {
+     "q": "Where should a network call be made in Redux?",
+     "o": [
+      "In a thunk or RTK Query",
+      "In a reducer",
+      "In the store constructor",
+      "In a selector"
+     ],
+     "w": "Reducers must stay pure, so effects live outside them."
+    }
+   ]
+  },
+  {
+   "t": "Selectors and re-renders",
+   "v": [
+    {
+     "q": "Why does a selector using state.items.filter(...) re-render on every dispatch?",
+     "o": [
+      "It returns a new array each time",
+      "filter is async",
+      "useSelector ignores arrays",
+      "The store is rebuilt"
+     ],
+     "w": "useSelector compares by reference, and a new array never equals the old one."
+    },
+    {
+     "q": "What does createSelector do?",
+     "o": [
+      "Memoises derived data",
+      "Creates a slice",
+      "Dispatches an action",
+      "Fetches data"
+     ],
+     "w": "It recomputes only when its input selectors return different values."
+    }
+   ]
+  },
+  {
+   "t": "Normalised state",
+   "v": [
+    {
+     "q": "What does normalised state look like?",
+     "o": [
+      "Entities by id plus a list of ids",
+      "Deeply nested arrays",
+      "A single string",
+      "One component per item"
+     ],
+     "w": "createEntityAdapter generates this shape and its selectors."
+    },
+    {
+     "q": "What is a benefit of normalising?",
+     "o": [
+      "One copy per entity",
+      "No need for selectors",
+      "Larger state",
+      "Mutation is allowed"
+     ],
+     "w": "Updating by id is O(1) and the data cannot drift between copies."
+    }
+   ]
+  },
+  {
+   "t": "RTK Query",
+   "v": [
+    {
+     "q": "How is the RTK Query cache keyed?",
+     "o": [
+      "Endpoint and args",
+      "By component name",
+      "By URL only",
+      "By timestamp"
+     ],
+     "w": "Components asking for the same key share one request and one entry."
+    },
+    {
+     "q": "What makes a list refetch after a mutation?",
+     "o": [
+      "A tag invalidation",
+      "A page reload",
+      "A setInterval",
+      "Calling dispatch twice"
+     ],
+     "w": "providesTags and invalidatesTags connect queries and mutations."
+    }
+   ]
+  },
+  {
+   "t": "Choosing a tool",
+   "v": [
+    {
+     "q": "Where should server data (lists, details) usually live?",
+     "o": [
+      "RTK Query or TanStack Query",
+      "Hand-written slices",
+      "localStorage",
+      "A global variable"
+     ],
+     "w": "Keep only real client state in Redux."
+    },
+    {
+     "q": "Which state is a poor fit for Redux?",
+     "o": [
+      "Text typed into a form field",
+      "A shared multi-step workflow",
+      "App-wide notification queue",
+      "A cart used on many pages"
+     ],
+     "w": "Form input is local and short-lived. Keep it in the component or a form library."
+    }
+   ]
+  }
+ ]
+}
