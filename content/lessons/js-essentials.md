@@ -5,7 +5,7 @@ slug: js-essentials
 summary: The JavaScript core that React and Node.js interviews assume, types and coercion, var let const with hoisting and the temporal dead zone, functions and arrow functions, scope and closures, how this is decided, prototypes and classes, value and reference with shallow and deep copies, destructuring and spread, arrays and iteration, Map and Set, modules, and the common coding questions (debounce, memoize, deep clone), explained for a Java developer, with examples and interview questions.
 tags: [JavaScript, ES2023, Closures, this, Prototype, Scope, Hoisting, Modules, Full stack]
 order: 60
-topic: Full stack / JavaScript
+topic: Full stack / JavaScript and TypeScript
 updated: 2026-11-17
 subnav: true
 ---

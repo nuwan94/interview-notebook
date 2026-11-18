@@ -5,7 +5,7 @@ slug: js-async
 summary: How JavaScript runs asynchronous code on one thread, the call stack, task and microtask queues and the event loop with the exact execution order, timers, callbacks and callback hell, promises and chaining, Promise.all, allSettled, race and any, async and await with sequential and parallel patterns and error handling, fetch pitfalls, cancellation and timeouts with AbortController, retries and concurrency limits, unhandled rejections, workers and the Node.js thread pool, compared with Java threads and CompletableFuture, with examples and interview questions.
 tags: [JavaScript, Async, Event loop, Promises, async await, fetch, Node.js, Full stack]
 order: 61
-topic: Full stack / JavaScript
+topic: Full stack / JavaScript and TypeScript
 updated: 2026-11-18
 subnav: true
 ---

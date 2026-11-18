@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "What TypeScript does",
+   "v": [
+    {
+     "q": "What happens to types in the emitted JavaScript?",
+     "o": [
+      "They are erased",
+      "They are kept as comments",
+      "They are checked at run time",
+      "They become classes"
+     ],
+     "w": "The compiler checks and then removes them, so the runtime never sees a type."
+    },
+    {
+     "q": "Which data can TypeScript types not check by themselves?",
+     "o": [
+      "JSON from the network",
+      "A local constant",
+      "A function argument you pass",
+      "An enum member"
+     ],
+     "w": "Types are gone at run time, so external data needs a validator such as zod."
+    }
+   ]
+  },
+  {
+   "t": "any, unknown, never",
+   "v": [
+    {
+     "q": "Which type forces you to narrow a value before using it?",
+     "o": [
+      "unknown",
+      "any",
+      "object",
+      "void"
+     ],
+     "w": "any switches checking off. unknown accepts anything but must be narrowed."
+    },
+    {
+     "q": "What is the type of a function that always throws?",
+     "o": [
+      "never",
+      "void",
+      "unknown",
+      "null"
+     ],
+     "w": "It has no return value at all, which is what never means."
+    }
+   ]
+  },
+  {
+   "t": "Types and shapes",
+   "v": [
+    {
+     "q": "What does structural typing mean?",
+     "o": [
+      "The shape decides compatibility",
+      "The class name decides",
+      "Types need implements",
+      "Types exist at run time"
+     ],
+     "w": "An object with the required members fits the type, whatever its name."
+    },
+    {
+     "q": "What can an interface do that a type alias cannot?",
+     "o": [
+      "Declaration merging",
+      "Name a union",
+      "Describe a tuple",
+      "Use conditional types"
+     ],
+     "w": "Two interfaces with one name combine. Type aliases cover unions and computed types."
+    }
+   ]
+  },
+  {
+   "t": "Narrowing",
+   "v": [
+    {
+     "q": "What makes a discriminated union narrow?",
+     "o": [
+      "A shared literal field",
+      "A common base class",
+      "An as assertion",
+      "A generic parameter"
+     ],
+     "w": "Checking the discriminant such as status tells the compiler which member it is."
+    },
+    {
+     "q": "What does assigning the leftover value to never in a switch do?",
+     "o": [
+      "The build fails on a missing case",
+      "The default branch is removed",
+      "The value is cast to any",
+      "All errors are silenced"
+     ],
+     "w": "Add a new variant and forget its case, and the value is no longer never."
+    }
+   ]
+  },
+  {
+   "t": "Generics",
+   "v": [
+    {
+     "q": "What does the constraint T extends HasId do?",
+     "o": [
+      "Only types that have an id",
+      "It makes T a class type",
+      "It makes T optional",
+      "It erases T at build time"
+     ],
+     "w": "The body can then use item.id safely."
+    },
+    {
+     "q": "What does keyof T give?",
+     "o": [
+      "The union of the keys of T",
+      "The values of T as an array",
+      "The class that T came from",
+      "A readonly copy of T"
+     ],
+     "w": "With indexed access T[K] it types property lookups."
+    }
+   ]
+  },
+  {
+   "t": "Utility types",
+   "v": [
+    {
+     "q": "Which utility type makes all properties optional?",
+     "o": [
+      "Partial",
+      "Required",
+      "Readonly",
+      "Pick"
+     ],
+     "w": "It is how update payloads are usually typed."
+    },
+    {
+     "q": "Which utility type removes some properties from a type?",
+     "o": [
+      "Omit",
+      "Pick",
+      "Record",
+      "Awaited"
+     ],
+     "w": "Pick keeps chosen properties, Omit removes them."
+    }
+   ]
+  },
+  {
+   "t": "Assertions and strictness",
+   "v": [
+    {
+     "q": "What does value as Account check at run time?",
+     "o": [
+      "Nothing",
+      "The shape of value",
+      "The class of value",
+      "That value is not null"
+     ],
+     "w": "It is a promise to the compiler, so a wrong shape fails later."
+    },
+    {
+     "q": "What does strictNullChecks change?",
+     "o": [
+      "null and undefined become separate types",
+      "Null is banned from JSON",
+      "Arrays cannot be empty",
+      "Functions must return a value"
+     ],
+     "w": "A value that may be missing must say so and be handled."
+    }
+   ]
+  },
+  {
+   "t": "Real-world typing",
+   "v": [
+    {
+     "q": "How do you type data from fetch safely?",
+     "o": [
+      "Parse it as unknown and validate",
+      "Cast it with the as keyword",
+      "Declare the result as any",
+      "Trust whatever the server sends"
+     ],
+     "w": "A zod schema validates at run time and derives the type."
+    },
+    {
+     "q": "Which is preferred over a TypeScript enum?",
+     "o": [
+      "A union of string literals",
+      "A numeric constant list",
+      "A class with static fields",
+      "A global variable list"
+     ],
+     "w": "It erases cleanly, serialises naturally and has no generated code."
+    }
+   ]
+  }
+ ]
+}

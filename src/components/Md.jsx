@@ -7,6 +7,7 @@ import rehypeHighlight from 'rehype-highlight';
 import java from 'highlight.js/lib/languages/java';
 import javascript from 'highlight.js/lib/languages/javascript';
 import bash from 'highlight.js/lib/languages/bash';
+import typescript from 'highlight.js/lib/languages/typescript';
 import { rehypeGlossary } from '../lib/glossary.js';
 import { resolveLessonLink, slugify } from '../lib/content.js';
 import { Term } from './Term.jsx';
@@ -151,7 +152,7 @@ const components = {
 
 const highlightPlugin = [
   rehypeHighlight,
-  { languages: { java, javascript, bash }, aliases: { javascript: ['js'] }, detect: false, plainText: ['demo', 'mermaid', 'text', 'txt', 'console'] },
+  { languages: { java, javascript, typescript, bash }, aliases: { javascript: ['js', 'jsx'], typescript: ['ts', 'tsx'] }, detect: false, plainText: ['demo', 'mermaid', 'text', 'txt', 'console'] },
 ];
 const remarkPlugins = [remarkGfm];
 // react-markdown drops unknown URL schemes; let our lesson: links through

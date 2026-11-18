@@ -13,7 +13,7 @@ import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
   SiJenkins, SiJsonwebtokens, SiJunit5, SiKeycloak, SiKubernetes, SiMongodb, SiMysql, SiNeo4J, SiNginx, SiOpenjdk,
   SiOpentelemetry, SiPostgresql, SiPrometheus, SiRabbitmq, SiRedis, SiSpring, SiSpringboot, SiSpringsecurity, SiVault,
-  SiApachecassandra, SiGithub, SiRedhatopenshift, SiTekton, SiArgo, SiIstio,
+  SiApachecassandra, SiGithub, SiRedhatopenshift, SiTekton, SiArgo, SiIstio, SiTypescript, SiJavascript,
 } from 'react-icons/si';
 
 import { awsIcon } from './awsIcons.jsx';
@@ -482,6 +482,27 @@ const ICONS = [
   [/^libuv thread pool$/i, LuLayers],
   [/^operating system$/i, LuMonitor],
   [/^postmessage$/i, LuSend],
+  // --- typescript ---
+  [/\.ts$/i, SiTypescript],
+  [/\.js$/i, SiJavascript],
+  [/^type checker$|^runtime validator$/i, LuShieldCheck],
+  [/^runtime$/i, LuPlay],
+  [/^(wrong call|runtime error|compile error|direct use|failure)$/i, LuOctagonX],
+  [/^ci build$/i, LuHammer],
+  [/^api response$/i, LuGlobe],
+  [/^type assertion$/i, LuTriangleAlert],
+  [/^(typed data|assignable|success|result type)$/i, LuCircleCheck],
+  [/^(payment type|union type|constraint|type parameter t|label)$/i, LuShapes],
+  [/^object literal$/i, LuBraces],
+  [/^discriminant$/i, LuTag],
+  [/^(check status|guard)$/i, LuFilter],
+  [/^narrowed type$|^argument$/i, LuTarget],
+  [/^(else branch|switch on status)$/i, LuSplit],
+  [/^new variant$/i, LuSparkles],
+  [/^never check$/i, LuBan],
+  [/^(partial|pick|omit|readonly)</i, LuShapes],
+  [/^findaccount\(id\)$/i, LuSearch],
+  [/^account$/i, LuLandmark],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */
