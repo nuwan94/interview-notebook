@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage, LuKeyRound, LuShieldAlert, LuCircleHelp,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -18,6 +18,28 @@ import {
 
 import { awsIcon } from './awsIcons.jsx';
 const ICONS = [
+  // --- express: specific titles first ---
+  [/^helmet \+ cors$|^cors middleware$/i, LuShieldCheck],
+  [/^logger \+ request id$/i, LuScrollText],
+  [/^express\.json\(limit\)$/i, LuBraces],
+  [/^authenticate$/i, LuKeyRound],
+  [/^401 unauthorized$/i, LuLock],
+  [/^post \/transfers$/i, LuSend],
+  [/^validate with schema$/i, LuListChecks],
+  [/^400 bad request$|^429 too many requests$/i, LuOctagonX],
+  [/^transferservice$/i, LuLandmark],
+  [/^service throws$/i, LuTriangleAlert],
+  [/^error middleware$/i, LuShieldAlert],
+  [/^422 \+ json body$/i, LuFileText],
+  [/^browser app$/i, LuLaptop],
+  [/^options preflight$/i, LuCircleHelp],
+  [/^bearer token$/i, LuKey],
+  [/^verify jwt$/i, LuSignature],
+  [/^req\.user$/i, LuUser],
+  [/^rate limiter$/i, LuGauge],
+  [/^within limit$/i, LuCircleCheck],
+  [/^createapp\(\)$/i, LuRocket],
+  [/^supertest$/i, LuFlaskConical],
   // --- node runtime: exact titles, placed first so they win ---
   [/^your javascript$/i, LuFileCode],
   [/^v8 engine$/i, SiV8],
@@ -650,6 +672,12 @@ const ICONS = [
   [/^userevent \+ expect$/i, LuCircleCheck],
   [/^msw handler$/i, LuNetwork],
   [/^assertion$/i, LuCircleCheck],
+  // --- express: generic titles last ---
+  [/^http request$/i, LuGlobe],
+  [/^route handler$|^handler$|^router$/i, LuSignpost],
+  [/^valid input$|^assertions$/i, LuCircleCheck],
+  [/^service$/i, LuLandmark],
+  [/^repository$/i, LuDatabase],
 ];
 
 /** The icon component that best matches a box or actor name, or null when none does (for drawing at any size). */

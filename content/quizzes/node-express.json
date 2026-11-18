@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Middleware",
+   "v": [
+    {
+     "q": "What does a middleware do to continue the request?",
+     "o": [
+      "Calls next()",
+      "Returns true",
+      "Throws an error",
+      "Calls res.end() twice"
+     ],
+     "w": "If it neither responds nor calls next, the request hangs."
+    },
+    {
+     "q": "Where should the error handler be registered?",
+     "o": [
+      "Last",
+      "First",
+      "Before the body parser",
+      "Inside each route"
+     ],
+     "w": "Express recognises it by its four arguments."
+    }
+   ]
+  },
+  {
+   "t": "Ordering",
+   "v": [
+    {
+     "q": "Why must express.json() come before the routes?",
+     "o": [
+      "Routes read req.body",
+      "It starts the server",
+      "It opens the database",
+      "It sets CORS headers"
+     ],
+     "w": "Otherwise req.body is undefined in Express 5."
+    },
+    {
+     "q": "Why put cors before authentication?",
+     "o": [
+      "Preflights have no token",
+      "CORS is faster",
+      "Auth needs headers",
+      "It hides errors"
+     ],
+     "w": "The browser sends OPTIONS without credentials."
+    }
+   ]
+  },
+  {
+   "t": "Routing and REST",
+   "v": [
+    {
+     "q": "Which status does a successful POST that creates a resource return?",
+     "o": [
+      "201 Created",
+      "200 with no body",
+      "204",
+      "302"
+     ],
+     "w": "Return the new resource or its URL."
+    },
+    {
+     "q": "Which status means authenticated but not allowed?",
+     "o": [
+      "403",
+      "401",
+      "404",
+      "400"
+     ],
+     "w": "401 means not authenticated."
+    }
+   ]
+  },
+  {
+   "t": "Validation",
+   "v": [
+    {
+     "q": "Where should input be validated?",
+     "o": [
+      "At the edge with a schema",
+      "Only in the database",
+      "Only in the browser",
+      "Nowhere, TypeScript is enough"
+     ],
+     "w": "Types do not exist at run time."
+    },
+    {
+     "q": "What does a strict zod object prevent?",
+     "o": [
+      "Unknown body fields",
+      "Slow queries",
+      "CORS errors",
+      "Duplicate requests"
+     ],
+     "w": "It helps stop mass assignment."
+    }
+   ]
+  },
+  {
+   "t": "Error handling",
+   "v": [
+    {
+     "q": "What does Express 5 do with a rejected promise in a handler?",
+     "o": [
+      "Forwards it to next",
+      "Ignores it",
+      "Crashes the process",
+      "Retries the handler"
+     ],
+     "w": "Express 4 needs a wrapper or next(err)."
+    },
+    {
+     "q": "What should a 500 response contain?",
+     "o": [
+      "A code and a request id",
+      "The stack trace",
+      "The SQL statement",
+      "The environment variables"
+     ],
+     "w": "Log the details server side."
+    }
+   ]
+  },
+  {
+   "t": "CORS and security",
+   "v": [
+    {
+     "q": "Does CORS protect the API from curl?",
+     "o": [
+      "No, only browsers enforce it",
+      "Yes, it blocks all clients",
+      "Yes, with credentials",
+      "Only for POST"
+     ],
+     "w": "Authentication is still required."
+    },
+    {
+     "q": "What does helmet do?",
+     "o": [
+      "Sets security headers",
+      "Hashes passwords",
+      "Validates JSON",
+      "Limits the rate"
+     ],
+     "w": "It adds headers such as HSTS and X-Content-Type-Options."
+    }
+   ]
+  },
+  {
+   "t": "Authentication",
+   "v": [
+    {
+     "q": "Which JWT claims must be checked?",
+     "o": [
+      "Signature, exp, iss, aud",
+      "Only the payload body",
+      "Only the signature bytes",
+      "The header name only"
+     ],
+     "w": "Never decode without verifying."
+    },
+    {
+     "q": "What is checked besides the role?",
+     "o": [
+      "Object ownership",
+      "The browser version",
+      "The IP country",
+      "The cookie size"
+     ],
+     "w": "Broken object-level access is a top API risk."
+    }
+   ]
+  },
+  {
+   "t": "Structure and testing",
+   "v": [
+    {
+     "q": "Why keep createApp() separate from listen()?",
+     "o": [
+      "No port is needed",
+      "It starts faster",
+      "listen needs a class",
+      "Express requires it"
+     ],
+     "w": "supertest sends requests to the app in memory."
+    },
+    {
+     "q": "Where do business rules belong?",
+     "o": [
+      "In a service layer",
+      "In the route path",
+      "In the body parser",
+      "In CORS options"
+     ],
+     "w": "The service does not know about req and res."
+    }
+   ]
+  }
+ ]
+}

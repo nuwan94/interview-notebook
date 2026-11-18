@@ -1284,7 +1284,7 @@
   {"term":"strictNullChecks","aliases":["strict mode","noUncheckedIndexedAccess"],"short":"The tsconfig strict option under which null and undefined are separate types that must be handled before use.","in":["ts-*"]},
   {"term":"tsconfig.json","aliases":["tsconfig"],"short":"The TypeScript compiler configuration: target, module, strict options, jsx, include. Bundlers read it for type checking only.","in":["ts-*"]},
   {"term":"declaration file","aliases":[".d.ts","@types","DefinitelyTyped"],"short":"A .d.ts file that describes the types of JavaScript code. Libraries ship them, or install @types packages.","in":["ts-*"]},
-  {"term":"zod","aliases":["valibot","schema validation"],"short":"A schema library that validates data at run time and derives the TypeScript type from the same schema.","in":["ts-*"]},
+  {"term":"zod","aliases":["valibot","schema validation"],"short":"A schema library that validates data at run time and derives the TypeScript type from the same schema.","in":["ts-*","node-*"]},
   {"term":"React","short":"A JavaScript library for building user interfaces from components. Declarative: you describe the UI for the current state and React updates the DOM.","in":["react-*"]},
   {"term":"JSX","short":"Markup syntax inside JavaScript that a compiler turns into function calls creating element objects. Not HTML, not a string.","in":["react-*"]},
   {"term":"React component","aliases":["component","components","function component"],"short":"A function that takes props and returns JSX. Pure with respect to its props and state. The unit of reuse. Names start with a capital letter.","in":["react-*"]},
@@ -1367,5 +1367,18 @@
   {"term":"npm","aliases":["pnpm","package.json","node_modules"],"short":"The default Node.js package manager and registry. Uses package.json and a lockfile. pnpm and Yarn are alternatives; pnpm shares one store and is strict about dependencies.","in":["node-*"]},
   {"term":"pino","short":"Fast structured JSON logger for Node.js. Log objects with a request id instead of console.log strings.","in":["node-*"]},
   {"term":"keep-alive","aliases":["keepAlive","HTTP agent"],"short":"HTTP connection reuse across requests. A shared agent with keep-alive avoids a new TCP and TLS handshake per call.","in":["node-*"]},
-  {"term":"event loop lag","aliases":["event loop delay","monitorEventLoopDelay"],"short":"Delay between when a timer should fire and when it does. Rising lag means the main thread is blocked, the best health signal for a Node.js service.","in":["node-*"]}
+  {"term":"event loop lag","aliases":["event loop delay","monitorEventLoopDelay"],"short":"Delay between when a timer should fire and when it does. Rising lag means the main thread is blocked, the best health signal for a Node.js service.","in":["node-*"]},
+  {"term":"Express","aliases":["Express.js","expressjs"],"short":"Minimal web framework for Node.js: routing and a middleware chain on top of the http module. No ORM or validation included. Express 5 forwards async errors automatically.","in":["node-*"]},
+  {"term":"Express middleware","aliases":["middleware","next()","error-handling middleware"],"short":"A function (req, res, next) in the request pipeline. It can change req or res, end the response, or call next(). Runs in registration order. Four arguments make it an error handler.","in":["node-*"]},
+  {"term":"Express Router","aliases":["router.use"],"short":"Mini application that groups routes and middleware for one feature, mounted under a path prefix with app.use.","in":["node-*"]},
+  {"term":"CORS preflight","aliases":["preflight","OPTIONS request"],"short":"OPTIONS request a browser sends before a non-simple cross-origin call (JSON body, Authorization header, PUT or DELETE) to ask whether the origin, method and headers are allowed.","in":["node-*"]},
+  {"term":"helmet","short":"Express middleware that sets security-related HTTP headers such as Strict-Transport-Security, X-Content-Type-Options and Content-Security-Policy.","in":["node-*"]},
+  {"term":"rate limiting","aliases":["express-rate-limit","throttling"],"short":"Capping requests per client in a time window, answered with 429 and Retry-After. Use a shared Redis store when running several instances.","in":["node-*"]},
+  {"term":"supertest","short":"Library that sends HTTP requests to an Express app in memory, without opening a port, so tests assert on status, headers and body.","in":["node-*"]},
+  {"term":"Passport","aliases":["Passport.js"],"short":"Strategy-based authentication middleware for Express, wrapping login methods such as local, OAuth and JWT.","in":["node-*"]},
+  {"term":"mass assignment","short":"Vulnerability where a client sets fields it should not (role, balance) because the whole request body is copied into a model. Prevent it with strict schemas and field whitelists.","in":["node-*"]},
+  {"term":"Fastify","short":"Fast Node.js web framework with a plugin system and built-in JSON-schema validation and serialisation. An alternative to Express.","in":["node-*"]},
+  {"term":"NestJS","aliases":["Nest"],"short":"Opinionated Node.js framework with modules, decorators and dependency injection, similar to Spring Boot. Runs on Express or Fastify.","in":["node-*"]},
+  {"term":"trust proxy","short":"Express setting that makes req.ip and req.protocol use forwarded headers from a load balancer or reverse proxy. Needed for correct rate limiting and secure cookies.","in":["node-*"]},
+  {"term":"connection pool","aliases":["pg pool","HikariCP"],"short":"A set of reusable database connections created once per process, so requests do not open a new connection each time. Close it on shutdown.","in":["node-*"]}
 ]
