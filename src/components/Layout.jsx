@@ -4,6 +4,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { usePrefs } from '../lib/prefs.jsx';
 import { AccessMenu } from './AccessMenu.jsx';
 import { getLesson } from '../lib/content.js';
+import { getLab } from '../labs/index.js';
 import { ErrorBoundary } from './ErrorBoundary.jsx';
 import { SearchPalette } from './SearchPalette.jsx';
 import { TipHost } from './Tip.jsx';
@@ -18,6 +19,8 @@ export function Layout() {
 
   const slug = /^\/lessons\/([^/]+)/.exec(loc.pathname)?.[1];
   const lesson = slug ? getLesson(slug) : undefined;
+  const labSlug = /^\/lab\/([^/]+)/.exec(loc.pathname)?.[1];
+  const lab = labSlug ? getLab(labSlug) : undefined;
 
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -44,7 +47,7 @@ export function Layout() {
 
   // plain page navigations (not in-lesson anchors) start at the top
   useEffect(() => {
-    if (!/^\/lessons\/[^/]+\/./.test(loc.pathname)) window.scrollTo({ top: 0, behavior: 'auto' });
+    if (!/^\/(lessons|lab)\/[^/]+\/./.test(loc.pathname)) window.scrollTo({ top: 0, behavior: 'auto' });
   }, [loc.pathname]);
 
   return (
@@ -103,9 +106,10 @@ export function Layout() {
           id="sidebar"
           className={`${menuOpen ? 'block' : 'hidden'} lg:block mb-4 lg:mb-0 lg:sticky lg:top-[4.6rem] lg:self-start lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto rounded-lg border border-slate-300 bg-sidebar p-3 shadow-sm`}
         >
-          <Sidebar lesson={lesson} onNavigate={() => setMenuOpen(false)} />
+          <Sidebar lesson={lesson} lab={lab} onNavigate={() => setMenuOpen(false)} />
         </aside>
-        <main id="main" className="min-w-0 max-w-[56rem] w-full mx-auto lg:mx-0">
+        {/* a lab page uses the full width so its scene and step panel sit side by side */}
+        <main id="main" className={`min-w-0 w-full mx-auto lg:mx-0 ${labSlug ? '' : 'max-w-[56rem]'}`}>
           <ErrorBoundary resetKey={loc.pathname}>
             <Outlet context={{ toast: showToast }} />
           </ErrorBoundary>

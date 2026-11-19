@@ -3,7 +3,7 @@ import { LuSearch } from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
 import { search } from '../lib/search.js';
 
-const TYPE_LABEL = { lesson: 'Lesson', section: 'Section', question: 'Question', term: 'Term' };
+const TYPE_LABEL = { lesson: 'Lesson', lab: 'Lab', section: 'Section', question: 'Question', term: 'Term' };
 
 export function SearchPalette({ open, onClose }) {
   const [q, setQ] = useState('');

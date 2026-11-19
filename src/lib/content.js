@@ -1,5 +1,6 @@
 // Loads lessons from /content/lessons/*.md at build time and splits them into
 // intro / sections / interview questions so the UI can navigate and search them.
+import { labs } from '../labs/index.js';
 
 const files = import.meta.glob('../../content/lessons/*.md', { query: '?raw', import: 'default', eager: true });
 
@@ -110,21 +111,23 @@ export const getLesson = (slug) => lessons.find((l) => l.slug === slug);
  * Nested topics built from each lesson's `topic:` front matter ("Java / Collections").
  * Node: { name, path, children: Node[], lessons: Lesson[] }. Lessons without a topic sit at the root.
  */
-function buildTopicTree(list) {
-  const root = { name: '', path: '', slug: '', children: [], lessons: [] };
-  for (const l of list) {
+function buildTopicTree(list, labList) {
+  const root = { name: '', path: '', slug: '', children: [], lessons: [], labs: [] };
+  const nodeFor = (parts) => {
     let node = root;
-    for (const name of l.topic) {
+    for (const name of parts) {
       const path = node.path ? `${node.path} / ${name}` : name;
       let child = node.children.find((c) => c.name === name);
-      if (!child) node.children.push((child = { name, path, slug: node.slug ? `${node.slug}/${slugify(name)}` : slugify(name), children: [], lessons: [] }));
+      if (!child) node.children.push((child = { name, path, slug: node.slug ? `${node.slug}/${slugify(name)}` : slugify(name), children: [], lessons: [], labs: [] }));
       node = child;
     }
-    node.lessons.push(l);
-  }
+    return node;
+  };
+  for (const l of list) nodeFor(l.topic).lessons.push(l);
+  for (const lab of labList) nodeFor(lab.topic).labs.push(lab);   // labs sit in their own group under the sub-topic
   return root;
 }
-export const topicTree = buildTopicTree(lessons);
+export const topicTree = buildTopicTree(lessons, labs);
 
 /** The topic with this URL path ("java/collections"), or undefined. */
 export const findTopic = (slugPath) => {
@@ -142,6 +145,19 @@ export const topicPath = (node) => `/topics/${node.slug}`;
 
 export const topicLessonCount = (node) => node.lessons.length + node.children.reduce((n, c) => n + topicLessonCount(c), 0);
 export const topicContains = (node, slug) => node.lessons.some((l) => l.slug === slug) || node.children.some((c) => topicContains(c, slug));
+/** Every lab in a topic, including its sub-topics. */
+export const topicLabs = (node) => [...node.labs, ...node.children.flatMap(topicLabs)];
+/** Topic paths from the top down to a topic given as parts (["Full stack", "Node.js"]). */
+export const topicAncestors = (parts) => parts.map((_, i) => parts.slice(0, i + 1).join(' / '));
+/** The topic node for topic parts, or undefined. */
+export const topicNodeOf = (parts) => {
+  let node = topicTree;
+  for (const name of parts) {
+    node = node.children.find((c) => c.name === name);
+    if (!node) return undefined;
+  }
+  return node;
+};
 
 /**
  * Resolve a cross-lesson link written in Markdown as [text](lesson:slug#anchor).

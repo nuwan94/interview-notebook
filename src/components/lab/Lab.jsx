@@ -1,0 +1,413 @@
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  LuArrowLeft, LuArrowRight, LuCheck, LuClock, LuExpand, LuLightbulb, LuLink, LuListChecks, LuMinimize, LuPause, LuPlay,
+  LuRotateCcw, LuSignal, LuSparkles, LuTriangleAlert,
+} from 'react-icons/lu';
+import { useLocation } from 'react-router-dom';
+import { Glossed } from '../Term.jsx';
+import { useReducedMotion } from '../../lib/prefs.jsx';
+import { copyText } from '../../lib/share.js';
+import { buildStates, allPlacedNodes } from './model.js';
+import { IsoScene, iso, sceneBox } from './IsoScene.jsx';
+import './lab.css';
+
+const KIND_LABEL = { setup: 'Setup', problem: 'Problem', technique: 'Technique', case: 'Case', recap: 'Recap', try: 'Try it' };
+const BOX_ICON = { idea: LuSparkles, tip: LuLightbulb, warn: LuTriangleAlert };
+const BOX_TITLE = { idea: 'Key idea', tip: 'Good to know', warn: 'Watch out' };
+const SCENE_MIN = 544; // px, matches .lab-scene svg min-width (34rem)
+const FLOW_LEGEND ={ req: 'request', res: 'response', bad: 'failure', msg: 'message', data: 'data' };
+
+/** Inline text: **bold**, `code` and glossary terms. */
+function Inline({ text }) {
+  return String(text)
+    .split('**')
+    .map((seg, i) => (i % 2 ? <strong key={i}><Glossed text={seg} /></strong> : <Glossed key={i} text={seg} />));
+}
+const paras = (t) => (Array.isArray(t) ? t : String(t ?? '').split(/\n\n+/)).filter(Boolean);
+
+// --- progress, kept per browser: the furthest step reached and whether the lab was finished ---
+const PROGRESS_KEY = 'nb-lab-progress';
+function readProgress() {
+  try {
+    return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+function saveProgress(slug, index, done) {
+  try {
+    const all = readProgress();
+    const cur = all[slug] ?? { max: 0, done: false };
+    all[slug] = { max: Math.max(cur.max, index), done: cur.done || done };
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(all));
+  } catch {
+    /* storage unavailable: progress is a convenience only */
+  }
+}
+
+// --- deep links: #/lab/<slug>/<n> opens step n ---
+function stepFromHash(slug) {
+  const page = /^#\/lab\/([\w-]+)\/(\d+)/.exec(window.location.hash);
+  return page && page[1] === slug ? Number(page[2]) - 1 : null;
+}
+const hashForStep = (slug, n) => `#/lab/${slug}/${n}`;
+
+/** Measures the stage so labels can grow on narrow screens and stay readable. */
+function useWidth(ref) {
+  const [w, setW] = useState(800);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const ro = new ResizeObserver(([e]) => setW(e.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+  return w;
+}
+
+/**
+ * An interactive lab: one isometric scene that changes step by step, with metrics, a step panel,
+ * a "what changed" list, a learning checklist, a timeline, keyboard control, step links and a focus mode.
+ */
+export function Lab({ lab }) {
+  const states = useMemo(() => buildStates(lab), [lab]);
+  const box = useMemo(() => sceneBox(allPlacedNodes(lab)), [lab]);
+  const last = states.length - 1;
+  const clamp = (i) => Math.max(0, Math.min(last, i));
+
+  const [index, setIndex] = useState(() => clamp(stepFromHash(lab.slug) ?? 0));
+  const [paused, setPaused] = useState(false);
+  const [replayKey, setReplayKey] = useState(0);
+  const [focus, setFocusState] = useState(false);
+  const [hold, setHold] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const reduced = useReducedMotion();
+  const rootRef = useRef(null);
+  const stageRef = useRef(null);
+  const sceneRef = useRef(null);
+  const timelineRef = useRef(null);
+  const touched = useRef(false);
+  const width = useWidth(stageRef);
+
+  const st = states[index];
+  const step = st.step;
+  const next = states[index + 1]?.step;
+
+  // scene units per screen pixel decide the label size: about 11px on screen at least.
+  // Below SCENE_MIN pixels the scene keeps that width and scrolls sideways instead of shrinking.
+  const perPx = box.w / Math.max(width, SCENE_MIN);
+  const fs = Math.min(26, Math.max(12, 11 * perPx));
+  const compact = width < 560;
+
+  // Entering focus mode takes the figure out of the page flow. A placeholder of the same height keeps the
+  // page from getting shorter, otherwise the browser shifts the scroll under the overlay and can paint nothing.
+  const setFocus = useCallback(
+    (next) => {
+      const el = rootRef.current;
+      const on = typeof next === 'function' ? next(el?.classList.contains('lab-focus')) : next;
+      if (on && el && !el.classList.contains('lab-focus')) {
+        setHold(el.getBoundingClientRect().height + parseFloat(getComputedStyle(el).marginBottom || '0'));
+      }
+      setFocusState(on);
+    },
+    [],
+  );
+
+  const go = useCallback(
+    (i) => {
+      touched.current = true;
+      setIndex(clamp(i));
+      setPaused(false);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [last],
+  );
+
+  // a link to a step (on load or after an in-app navigation) opens that step
+  const location = useLocation();
+  useEffect(() => {
+    const s = stepFromHash(lab.slug);
+    if (s !== null) setIndex(clamp(s));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key, lab.slug]);
+
+  // remember progress and keep the address pointing at this step (only after the reader moved)
+  useEffect(() => {
+    saveProgress(lab.slug, index, index === last);
+    if (!touched.current) return;
+    window.history.replaceState(window.history.state, '', hashForStep(lab.slug, index + 1));
+  }, [index, lab.slug, last]);
+
+  // focus mode locks the page scroll behind the overlay
+  useEffect(() => {
+    if (!focus) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    rootRef.current?.focus({ preventScroll: true });
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [focus]);
+
+  // keyboard: arrows step, R replays the step, Space pauses, F toggles focus, Escape leaves focus.
+  // The lab is the page, so keys work unless another control (a sidebar link, the search box) has focus.
+  const live = useRef({});
+  live.current = { index, go, focus, setFocus };
+  useEffect(() => {
+    const el = rootRef.current;
+    let hovered = false;
+    const enter = () => (hovered = true);
+    const leave = () => (hovered = false);
+    el.addEventListener('pointerenter', enter);
+    el.addEventListener('pointerleave', leave);
+    const onKey = (e) => {
+      const q = live.current;
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+      const active = document.activeElement;
+      if (!q.focus && !hovered && !el.contains(active) && active && active !== document.body) return;
+      const t = e.target;
+      if (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+      const k = e.key.toLowerCase();
+      if (k === 'arrowright') q.go(q.index + 1);
+      else if (k === 'arrowleft') q.go(q.index - 1);
+      else if (k === 'r') setReplayKey((x) => x + 1);
+      else if (k === ' ' && t.tagName !== 'BUTTON') setPaused((p) => !p);
+      else if (k === 'f') q.setFocus((f) => !f);
+      else if (k === 'escape' && q.focus) q.setFocus(false);
+      else return;
+      e.preventDefault();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      el.removeEventListener('pointerenter', enter);
+      el.removeEventListener('pointerleave', leave);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, []);
+
+  // on narrow screens the scene and the timeline scroll sideways: bring this step's action into view
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (scene && scene.scrollWidth > scene.clientWidth + 1) {
+      const ids = st.changedNodes.size ? [...st.changedNodes] : (step.flows ?? []).flatMap((f) => f.path);
+      const xs = ids.map((id) => st.nodes.find((n) => n.id === id)).filter(Boolean).map((n) => iso(...n.at)[0]);
+      if (xs.length) {
+        const mid = (Math.min(...xs) + Math.max(...xs)) / 2;
+        const px = ((mid - box.x) / box.w) * scene.scrollWidth;
+        scene.scrollTo({ left: px - scene.clientWidth / 2, behavior: 'auto' });
+      }
+    }
+    const ol = timelineRef.current;
+    const li = ol?.children[index];
+    if (ol && li && ol.scrollWidth > ol.clientWidth + 1) {
+      ol.scrollTo({ left: li.offsetLeft - ol.clientWidth / 2 + li.offsetWidth / 2, behavior: 'auto' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
+
+  const copyLink = async () => {
+    const url = `${window.location.origin}${window.location.pathname}${hashForStep(lab.slug, index + 1)}`;
+    if (await copyText(url)) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1400);
+    }
+  };
+
+  const flowTones = [...new Set((step.flows ?? []).map((f) => f.tone ?? 'req'))];
+  const BoxIcon = step.box ? BOX_ICON[step.box.kind ?? 'idea'] ?? LuSparkles : null;
+  const sceneLabel = `${step.title}. Shown: ${st.nodes.map((n) => n.label ?? n.id).join(', ')}.`;
+
+  return (
+    <>
+    {focus && hold > 0 && <div className="lab-hold" aria-hidden="true" style={{ height: hold }} />}
+    <figure
+      ref={rootRef}
+      className={`demo lab ${focus ? 'lab-focus' : ''}`}
+      data-noread
+      tabIndex={-1}
+      aria-label={`Interactive lab: ${lab.title}`}
+      aria-keyshortcuts="ArrowLeft ArrowRight R Space F Escape"
+    >
+      <header className="lab-head">
+        <div className="min-w-0">
+          <div className="lab-crumb">Lab{lab.topic?.length ? ` · ${lab.topic.at(-1)}` : ''}</div>
+          <figcaption className="lab-title">{lab.title}</figcaption>
+          {lab.subtitle && <p className="lab-subtitle">{lab.subtitle}</p>}
+        </div>
+        <div className="lab-tags">
+          {lab.minutes && (
+            <span className="lab-tag">
+              <LuClock aria-hidden="true" /> {lab.minutes} min
+            </span>
+          )}
+          {lab.level && (
+            <span className="lab-tag is-level">
+              <LuSignal aria-hidden="true" /> {lab.level}
+            </span>
+          )}
+          <span className="lab-tag is-steps">
+            <LuListChecks aria-hidden="true" /> {states.length} steps
+          </span>
+          <button type="button" className="lab-iconbtn" onClick={copyLink} aria-label="Copy a link to this step" data-tip={copied ? 'Copied' : 'Copy link to this step'}>
+            {copied ? <LuCheck aria-hidden="true" /> : <LuLink aria-hidden="true" />}
+          </button>
+          <button type="button" className="lab-iconbtn" onClick={() => setFocus((f) => !f)} aria-pressed={focus} aria-label={focus ? 'Leave focus mode' : 'Open in focus mode'} data-tip={focus ? 'Leave focus (Esc)' : 'Focus mode (F)'}>
+            {focus ? <LuMinimize aria-hidden="true" /> : <LuExpand aria-hidden="true" />}
+          </button>
+        </div>
+      </header>
+
+      <div className="lab-body">
+        <div className="lab-main">
+          {lab.metrics?.length > 0 && (
+            <div className="lab-metrics" role="group" aria-label="Metrics">
+              {lab.metrics.map((m) => {
+                const v = st.metrics[m.id] ?? '—';
+                const tone = st.metricTone[m.id];
+                return (
+                  <div key={m.id} className={`lab-metric ${tone ? `is-${tone}` : ''} ${m.total ? 'is-total' : ''}`}>
+                    <span className="lab-metric-label">{m.label}</span>
+                    <span key={`${index}-${v}`} className={`lab-metric-value ${st.changedMetrics.has(m.id) ? 'is-changed' : ''}`}>
+                      {v}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div ref={stageRef} className="lab-stage">
+            <div className="lab-scene" ref={sceneRef}>
+              <IsoScene state={st} box={box} fs={fs} paused={paused} reduced={reduced} replayKey={replayKey} compact={compact} label={sceneLabel} />
+            </div>
+            {step.table && (
+              <div className="lab-table">
+                {step.table.title && <div className="lab-table-title">{step.table.title}</div>}
+                <table>
+                  <tbody>
+                    {step.table.rows.map(([k, v], i) => (
+                      <tr key={k} className={step.table.total && i === step.table.rows.length - 1 ? 'is-total' : undefined}>
+                        <th scope="row">{k}</th>
+                        <td>{v}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {step.table.foot && <div className="lab-table-foot">{step.table.foot}</div>}
+              </div>
+            )}
+            <div className="lab-stage-foot">
+              <div className="lab-legend" aria-label="Legend">
+                {flowTones.map((t) => (
+                  <span key={t} className={`lab-legend-item is-${t}`}>{FLOW_LEGEND[t] ?? t}</span>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                <button type="button" className="lab-iconbtn" onClick={() => setReplayKey((x) => x + 1)} aria-label="Replay this step" data-tip="Replay (R)">
+                  <LuRotateCcw aria-hidden="true" />
+                </button>
+                <button type="button" className="lab-iconbtn" onClick={() => setPaused((p) => !p)} aria-pressed={paused} aria-label={paused ? 'Resume the animation' : 'Pause the animation'} data-tip={paused ? 'Play (Space)' : 'Pause (Space)'}>
+                  {paused ? <LuPlay aria-hidden="true" /> : <LuPause aria-hidden="true" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <nav className="lab-timeline" aria-label="Steps in this lab">
+            <div className="lab-timeline-head">
+              <span>In this lab</span>
+              <span>
+                Step {index + 1} of {states.length}
+              </span>
+            </div>
+            <ol ref={timelineRef}>
+              {states.map((s, i) => (
+                <li key={i} className={i < index ? 'is-done' : i === index ? 'is-current' : undefined}>
+                  <button type="button" onClick={() => go(i)} aria-current={i === index ? 'step' : undefined} aria-label={`Step ${i + 1}: ${s.step.label ?? s.step.title}`}>
+                    <span className="lab-dot">{i + 1}</span>
+                    <span className="lab-dot-label">{s.step.label ?? s.step.title}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        </div>
+
+        <aside className="lab-side">
+          <section className="lab-panel" aria-live="polite">
+            <div className="lab-panel-scroll" key={index}>
+              <div className="lab-panel-top">
+                <span className="lab-stepno">
+                  Step {index + 1} / {states.length}
+                </span>
+                <span className={`lab-kind is-${step.kind ?? 'technique'}`}>{KIND_LABEL[step.kind] ?? step.kind ?? 'Step'}</span>
+              </div>
+              <h3 className="lab-step-title">{step.title}</h3>
+              {paras(step.text).map((p, i) => (
+                <p key={i} className="lab-text">
+                  <Inline text={p} />
+                </p>
+              ))}
+              {step.box && (
+                <div className={`lab-box is-${step.box.kind ?? 'idea'}`}>
+                  <BoxIcon aria-hidden="true" className="lab-box-icon" />
+                  <div>
+                    <div className="lab-box-title">{step.box.title ?? BOX_TITLE[step.box.kind ?? 'idea']}</div>
+                    <Inline text={step.box.text} />
+                  </div>
+                </div>
+              )}
+              {st.changes.length > 0 && (
+                <div className="lab-changes">
+                  <div className="lab-section-title">What changed</div>
+                  <ul>
+                    {st.changes.map((c, i) => (
+                      <li key={i} className={`is-${c.sign === '+' ? 'add' : c.sign === '-' ? 'del' : 'mod'}`}>
+                        <span aria-hidden="true">{c.sign === '-' ? '−' : c.sign}</span> {c.text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <div className="lab-nav">
+              <button type="button" className="btn" onClick={() => go(index - 1)} disabled={index === 0}>
+                <LuArrowLeft aria-hidden="true" className="btn-icon" /> Back
+              </button>
+              {next ? (
+                <button type="button" className="btn primary lab-next" onClick={() => go(index + 1)}>
+                  Next: {next.label ?? next.title} <LuArrowRight aria-hidden="true" className="btn-icon" />
+                </button>
+              ) : (
+                <button type="button" className="btn primary lab-next" onClick={() => go(0)}>
+                  <LuRotateCcw aria-hidden="true" className="btn-icon" /> Start again
+                </button>
+              )}
+            </div>
+            <div className="lab-keys" aria-hidden="true">
+              <kbd>←</kbd> <kbd>→</kbd> step · <kbd>R</kbd> replay · <kbd>Space</kbd> pause · <kbd>F</kbd> focus
+            </div>
+          </section>
+
+          {lab.learn?.length > 0 && (
+            <section className="lab-learn" aria-label="What you will learn">
+              <div className="lab-section-title">You'll learn</div>
+              <ul>
+                {lab.learn.map((item, i) => (
+                  <li key={item} className={st.learned.has(i) ? 'is-done' : undefined}>
+                    <span className="lab-check" aria-hidden="true">{st.learned.has(i) && <LuCheck />}</span>
+                    <span>
+                      {item}
+                      <span className="sr-only">{st.learned.has(i) ? ' (covered)' : ''}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </aside>
+      </div>
+    </figure>
+    </>
+  );
+}

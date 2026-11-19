@@ -1,5 +1,5 @@
 import { Children, isValidElement, memo, useMemo, useState } from 'react';
-import { LuLink, LuPlay } from 'react-icons/lu';
+import { LuFlaskConical, LuLink, LuPlay } from 'react-icons/lu';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -11,6 +11,7 @@ import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
 import { rehypeGlossary } from '../lib/glossary.js';
 import { resolveLessonLink, slugify } from '../lib/content.js';
+import { getLab } from '../labs/index.js';
 import { Term } from './Term.jsx';
 import { DemoFrame } from './demos/index.jsx';
 import { MermaidDiagram } from './Mermaid.jsx';
@@ -70,6 +71,23 @@ function LessonLink({ spec, children }) {
     );
   }
   return <Link to={r.to}>{children}</Link>;
+}
+
+/** Link to a lab page: [text](lab:slug). A lab that does not exist yet shows as a "coming soon" word. */
+function LabLink({ slug, children }) {
+  if (!getLab(slug)) {
+    return (
+      <span className="pending-link" data-tip={`Lab “${slug}” is not built yet`}>
+        {children}
+      </span>
+    );
+  }
+  return (
+    <Link to={`/lab/${slug}`} className="lab-link">
+      <LuFlaskConical aria-hidden="true" className="lab-link-icon" />
+      {children}
+    </Link>
+  );
 }
 
 function Heading({ level, children }) {
@@ -136,6 +154,8 @@ const components = {
   a: ({ href, children }) =>
     href?.startsWith('lesson:') ? (
       <LessonLink spec={href.slice('lesson:'.length)}>{children}</LessonLink>
+    ) : href?.startsWith('lab:') ? (
+      <LabLink slug={href.slice('lab:'.length)}>{children}</LabLink>
     ) : (
       <a href={href} target={href?.startsWith('http') ? '_blank' : undefined} rel="noreferrer noopener">
         {children}
@@ -156,8 +176,8 @@ const highlightPlugin = [
   { languages: { java, javascript, typescript, xml, bash }, aliases: { javascript: ['js', 'jsx'], typescript: ['ts', 'tsx'], xml: ['html'] }, detect: false, plainText: ['demo', 'mermaid', 'text', 'txt', 'console'] },
 ];
 const remarkPlugins = [remarkGfm];
-// react-markdown drops unknown URL schemes; let our lesson: links through
-const urlTransform = (url) => (url.startsWith('lesson:') ? url : defaultUrlTransform(url));
+// react-markdown drops unknown URL schemes; let our lesson: and lab: links through
+const urlTransform = (url) => (url.startsWith('lesson:') || url.startsWith('lab:') ? url : defaultUrlTransform(url));
 
 /** Renders lesson markdown: GFM, syntax highlighting, glossary tooltips, ```demo fences. */
 export const Md = memo(function Md({ children }) {

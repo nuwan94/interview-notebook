@@ -1,5 +1,6 @@
+import { LuFlaskConical } from 'react-icons/lu';
 import { Link, useParams } from 'react-router-dom';
-import { findTopic, topicLessonCount, topicLessons, topicPath, topicQuestionCount, topicTree } from '../lib/content.js';
+import { findTopic, topicLabs, topicLessonCount, topicLessons, topicPath, topicQuestionCount, topicTree } from '../lib/content.js';
 import { topicBlurb, topicIcon } from '../lib/topics.js';
 import { Holes } from '../components/Holes.jsx';
 import { QuizButton } from '../components/Quiz.jsx';
@@ -35,6 +36,7 @@ export function TopicPage() {
   const Icon = topicIcon(node);
   const all = topicLessons(node);
   const blurb = topicBlurb(node);
+  const labs = topicLabs(node);
   return (
     <div className="paper prose-nb">
       <Holes />
@@ -45,6 +47,7 @@ export function TopicPage() {
       {blurb && <p>{blurb}</p>}
       <p className="text-sm font-bold text-pen">
         {topicLessonCount(node)} {topicLessonCount(node) === 1 ? 'lesson' : 'lessons'} · {topicQuestionCount(node)} questions
+        {labs.length > 0 && ` · ${labs.length} ${labs.length === 1 ? 'lab' : 'labs'}`}
       </p>
       <p>
         <QuizButton
@@ -63,6 +66,36 @@ export function TopicPage() {
               <TopicCard key={c.path} node={c} />
             ))}
           </div>
+        </>
+      )}
+
+      {labs.length > 0 && (
+        <>
+          <h2>
+            <LuFlaskConical aria-hidden="true" className="inline-icon" /> {node.children.length > 0 ? `Labs in ${node.name}` : 'Labs'}
+          </h2>
+          <ul className="lesson-list">
+            {labs.map((x) => (
+              <li key={x.slug} className="lesson-item">
+                <div className="flex-1 min-w-0">
+                  <Link to={`/lab/${x.slug}`} className="font-hand font-bold text-xl no-underline">
+                    {x.title}
+                  </Link>
+                  <br />
+                  <span className="text-soft">{x.subtitle}</span>
+                  <br />
+                  <span className="text-sm font-bold text-pen">
+                    {x.steps.length} steps{x.minutes ? ` · ${x.minutes} min` : ''}
+                    {x.level ? ` · ${x.level}` : ''}
+                    {x.topic.join(' / ') !== node.path ? ` · ${x.topic.at(-1)}` : ''}
+                  </span>
+                </div>
+                <Link to={`/lab/${x.slug}`} className="btn primary !min-h-9 shrink-0 no-underline">
+                  Open lab
+                </Link>
+              </li>
+            ))}
+          </ul>
         </>
       )}
 

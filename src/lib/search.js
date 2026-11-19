@@ -1,6 +1,7 @@
 import MiniSearch from 'minisearch';
 import { lessons, plainText } from './content.js';
 import { glossary } from './glossary.js';
+import { labs } from '../labs/index.js';
 
 const docs = [];
 for (const l of lessons) {
@@ -46,6 +47,16 @@ for (const l of lessons) {
     });
   }
 }
+for (const x of labs) {
+  docs.push({
+    id: `lab:${x.slug}`,
+    type: 'lab',
+    title: x.title,
+    text: `lab ${x.subtitle ?? ''} ${(x.learn ?? []).join(' ')} ${x.steps.map((s) => s.title).join(' ')}`,
+    url: `/lab/${x.slug}`,
+    lessonTitle: `Lab · ${x.topic.join(' / ')}`,
+  });
+}
 for (const g of glossary) {
   docs.push({
     id: `term:${g.id}`,
@@ -70,7 +81,7 @@ const index = new MiniSearch({
 });
 index.addAll(docs);
 
-const ORDER = { lesson: 0, question: 1, section: 2, term: 3 };
+const ORDER = { lesson: 0, lab: 1, question: 2, section: 3, term: 4 };
 
 export function search(query, limit = 14) {
   const q = query.trim();

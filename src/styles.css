@@ -1771,3 +1771,29 @@ mark.reading-word {
   text-transform: uppercase;
   color: var(--color-soft, #556070);
 }
+
+/* ---------- labs: sidebar group and lesson links (the lab player itself is styled in components/lab/lab.css) ---------- */
+.nav-labs {
+  margin: 0.35rem 0 0.25rem;
+  padding-top: 0.3rem;
+  border-top: 1px dashed #c3cfdd;
+}
+.nav-labs-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.5rem 0.1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-soft);
+}
+a.lab-link {
+  white-space: nowrap;
+}
+.lab-link-icon {
+  display: inline;
+  margin-right: 0.2em;
+  vertical-align: -0.12em;
+}

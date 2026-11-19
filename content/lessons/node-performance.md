@@ -249,6 +249,8 @@ Caching trades **freshness** for speed. Put each answer as close to the caller a
 | **Redis** | shared by instances | sessions, rate limits, computed results | network hop, needs invalidation and care |
 | **database** | the source of truth | everything | the slowest and the most expensive to scale |
 
+Try it in the lab: [A rush hour for the FX rates endpoint](lab:request-path) steps through a payday spike that swamps the database and shows what cache-aside changes.
+
 ### HTTP caching
 
 For a read endpoint that may be stale for a while, let the client and the CDN do the work: `Cache-Control: public, max-age=60` for public data or `private, max-age=30` for user data, and **validators**. Express generates a weak `ETag` for `res.json` and answers `304 Not Modified` to `If-None-Match` automatically, which saves the body but still runs your handler, so combine it with a server-side cache for expensive handlers. Never cache responses that contain personal or account data in a shared cache (`Cache-Control: no-store`).
