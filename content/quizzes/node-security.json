@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Validation",
+   "v": [
+    {
+     "q": "At what point is request data checked for security?",
+     "o": [
+      "At the server edge",
+      "In the browser only",
+      "In the database only",
+      "After saving"
+     ],
+     "w": "Client checks are for usability only."
+    },
+    {
+     "q": "What should a schema do with unknown fields?",
+     "o": [
+      "Reject them",
+      "Pass them through",
+      "Store them",
+      "Rename them"
+     ],
+     "w": "That blocks mass assignment."
+    }
+   ]
+  },
+  {
+   "t": "SQL injection",
+   "v": [
+    {
+     "q": "How do you prevent SQL injection?",
+     "o": [
+      "Parameterised queries",
+      "Escaping quotes by hand",
+      "Longer passwords",
+      "Hiding error text"
+     ],
+     "w": "Values travel separately from the SQL."
+    },
+    {
+     "q": "How should a sort column from the request be handled?",
+     "o": [
+      "An allow-list",
+      "A parameter",
+      "Concatenation",
+      "Trimming"
+     ],
+     "w": "Identifiers cannot be parameters."
+    }
+   ]
+  },
+  {
+   "t": "NoSQL and commands",
+   "v": [
+    {
+     "q": "What is NoSQL operator injection?",
+     "o": [
+      "Injected query operators",
+      "A slow index",
+      "A missing replica",
+      "A bad shard key"
+     ],
+     "w": "Validate that fields are strings."
+    },
+    {
+     "q": "Which call avoids command injection?",
+     "o": [
+      "execFile with args",
+      "exec with a string",
+      "vm.runInContext",
+      "eval of the input"
+     ],
+     "w": "No shell parses the text."
+    }
+   ]
+  },
+  {
+   "t": "Object attacks",
+   "v": [
+    {
+     "q": "What does prototype pollution change?",
+     "o": [
+      "Every object in the process",
+      "Only the request object",
+      "The database schema",
+      "The HTTP headers"
+     ],
+     "w": "It writes onto Object.prototype."
+    },
+    {
+     "q": "How is mass assignment avoided?",
+     "o": [
+      "Pick allowed fields explicitly",
+      "Spread req.body into the update",
+      "Trust TypeScript types",
+      "Hide the field names"
+     ],
+     "w": "Types disappear at runtime."
+    }
+   ]
+  },
+  {
+   "t": "SSRF and paths",
+   "v": [
+    {
+     "q": "What does an SSRF defence include?",
+     "o": [
+      "Blocking private addresses",
+      "Following every redirect",
+      "Trusting the user URL",
+      "Disabling timeouts"
+     ],
+     "w": "Also allow-list hosts and add egress rules."
+    },
+    {
+     "q": "How do you stop path traversal?",
+     "o": [
+      "Resolve and compare paths",
+      "Replace dots with spaces",
+      "Block the word etc",
+      "Use longer file names"
+     ],
+     "w": "path.relative must not start with .."
+    }
+   ]
+  },
+  {
+   "t": "Browser protections",
+   "v": [
+    {
+     "q": "What does CORS control?",
+     "o": [
+      "Who may read responses",
+      "Who may send requests",
+      "Password strength",
+      "Cookie lifetime"
+     ],
+     "w": "It is not authentication."
+    },
+    {
+     "q": "Which setting makes CORS unsafe?",
+     "o": [
+      "Reflecting any Origin",
+      "An exact allow-list",
+      "A short max-age",
+      "Listing needed methods"
+     ],
+     "w": "Match origins exactly."
+    }
+   ]
+  },
+  {
+   "t": "Abuse and ReDoS",
+   "v": [
+    {
+     "q": "Why is a nested quantifier like (a+)+ dangerous?",
+     "o": [
+      "Exponential backtracking",
+      "It is a syntax error",
+      "It matches nothing",
+      "It leaks memory"
+     ],
+     "w": "Limit length or use re2."
+    },
+    {
+     "q": "Which control limits repeated login attempts?",
+     "o": [
+      "Rate limiting",
+      "A larger body limit",
+      "More log lines",
+      "A longer keep-alive"
+     ],
+     "w": "Use a shared store across pods."
+    }
+   ]
+  },
+  {
+   "t": "Crypto and supply chain",
+   "v": [
+    {
+     "q": "Which mode should encrypt sensitive fields?",
+     "o": [
+      "AES-256-GCM with a fresh IV",
+      "AES-ECB",
+      "AES-CBC without a tag",
+      "A home-made cipher"
+     ],
+     "w": "GCM also detects tampering."
+    },
+    {
+     "q": "How do you reduce supply chain risk?",
+     "o": [
+      "Frozen lockfile, audit and reviewed updates",
+      "Install the latest version always",
+      "Run every install script",
+      "Copy code from forums"
+     ],
+     "w": "Pin CI actions to a commit SHA too."
+    }
+   ]
+  }
+ ]
+}
