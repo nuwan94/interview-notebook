@@ -4,7 +4,7 @@ nav: Full-stack integration
 slug: fullstack-integration
 summary: Putting a React front end, an Express API and a database together, the three-tier architecture, serving the SPA and the API from one origin or two, the Vite dev proxy, monorepo with pnpm workspaces and a shared zod schema, a typed API client with TanStack Query, login with OIDC authorization code and PKCE, BFF and httpOnly cookies versus tokens in memory, refresh and 401 handling, CSRF and XSS, a transfer feature end to end with idempotency and a database transaction, error contracts across layers, caching, real-time updates with polling, SSE and WebSockets, file upload with presigned URLs, observability with request and trace ids, Docker and CI/CD, static hosting on a CDN, expand and contract database migrations, and server rendering with Next.js, with banking examples and interview questions.
 tags: [Full stack, React, Express, Node.js, PostgreSQL, Authentication, BFF, API contract, Deployment, Architecture]
-order: 77
+order: 78
 topic: Full stack / Integration
 updated: 2026-11-18
 subnav: true

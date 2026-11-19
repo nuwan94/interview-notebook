@@ -50,6 +50,7 @@ import { STREAM_SCENES } from './streamScenes.js';
 import { MIDDLEWARE_SCENES } from './middlewareScenes.js';
 import { AUTH_NODE_SCENES } from './authNodeScenes.js';
 import { NODE_TEST_SCENES } from './nodeTestScenes.js';
+import { NODE_MICRO_SCENES } from './nodeMicroScenes.js';
 import { NODE_SECURITY_SCENES } from './nodeSecurityScenes.js';
 import { NODE_DEPLOY_SCENES } from './nodeDeployScenes.js';
 import { NODE_PERF_SCENES } from './nodePerfScenes.js';
@@ -323,3 +324,4 @@ export const NodeTestWalk = () => <Walk scenes={NODE_TEST_SCENES} icons graph ar
 export const NodePerfWalk = () => <Walk scenes={NODE_PERF_SCENES} icons graph ariaLabel="Node.js performance walk-through" />;
 export const NodeDeployWalk = () => <Walk scenes={NODE_DEPLOY_SCENES} icons graph ariaLabel="Node.js deployment walk-through" />;
 export const NodeSecurityWalk = () => <Walk scenes={NODE_SECURITY_SCENES} icons graph ariaLabel="Node.js security walk-through" />;
+export const NodeMicroWalk = () => <Walk scenes={NODE_MICRO_SCENES} icons graph ariaLabel="Node.js microservices walk-through" />;

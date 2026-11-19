@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Boundaries",
+   "v": [
+    {
+     "q": "What should a Node team usually build first?",
+     "o": [
+      "A modular monolith",
+      "Fifty nano-services",
+      "A shared database",
+      "A common library"
+     ],
+     "w": "Extract services when boundaries prove themselves."
+    },
+    {
+     "q": "What may services share safely?",
+     "o": [
+      "Versioned contract packages",
+      "Business models",
+      "Database tables",
+      "A common utils library"
+     ],
+     "w": "Shared business code couples releases."
+    }
+   ]
+  },
+  {
+   "t": "Remote calls",
+   "v": [
+    {
+     "q": "Which calls are safe to retry?",
+     "o": [
+      "Idempotent ones",
+      "Every POST",
+      "Only failed logins",
+      "None ever"
+     ],
+     "w": "Or a POST with an idempotency key."
+    },
+    {
+     "q": "Why add jitter to backoff?",
+     "o": [
+      "Clients stop retrying in step",
+      "It shortens timeouts",
+      "It encrypts calls",
+      "It removes the breaker"
+     ],
+     "w": "Synchronised retries cause a retry storm."
+    }
+   ]
+  },
+  {
+   "t": "Circuit breaker",
+   "v": [
+    {
+     "q": "What does an open breaker do?",
+     "o": [
+      "Fails calls at once",
+      "Retries faster",
+      "Queues every call",
+      "Restarts the pod"
+     ],
+     "w": "No network call is made."
+    },
+    {
+     "q": "Which response should not trip the breaker?",
+     "o": [
+      "400 Bad Request",
+      "503 Unavailable",
+      "A timeout",
+      "A refused connection"
+     ],
+     "w": "A 4xx is the caller mistake."
+    }
+   ]
+  },
+  {
+   "t": "BFF",
+   "v": [
+    {
+     "q": "How should a BFF call three services?",
+     "o": [
+      "In parallel with one deadline",
+      "One after another",
+      "Through the database",
+      "Without timeouts"
+     ],
+     "w": "Promise.allSettled with an AbortSignal."
+    },
+    {
+     "q": "What makes allSettled wait too long?",
+     "o": [
+      "A callee ignoring the signal",
+      "Too many response fields",
+      "Parsing JSON bodies",
+      "Very small payloads"
+     ],
+     "w": "Pass the signal to every call."
+    }
+   ]
+  },
+  {
+   "t": "Consumers",
+   "v": [
+    {
+     "q": "Why must consumers be idempotent?",
+     "o": [
+      "Messages can arrive twice",
+      "Brokers lose order",
+      "JSON is slow",
+      "Kafka needs it to start"
+     ],
+     "w": "Delivery is at least once."
+    },
+    {
+     "q": "Where is the processed message id stored?",
+     "o": [
+      "In the same transaction",
+      "In memory only",
+      "In a log file",
+      "In the broker"
+     ],
+     "w": "Both commit or roll back together."
+    }
+   ]
+  },
+  {
+   "t": "Outbox",
+   "v": [
+    {
+     "q": "What problem does the outbox solve?",
+     "o": [
+      "The dual write",
+      "Slow queries",
+      "Large images",
+      "Weak passwords"
+     ],
+     "w": "Data and event are saved in one transaction."
+    },
+    {
+     "q": "What delivery does an outbox relay give?",
+     "o": [
+      "At least once",
+      "Exactly once",
+      "At most once",
+      "Never twice"
+     ],
+     "w": "A crash after publishing sends it again."
+    }
+   ]
+  },
+  {
+   "t": "Sagas",
+   "v": [
+    {
+     "q": "How does a saga undo an earlier step?",
+     "o": [
+      "A compensating action",
+      "A distributed rollback",
+      "Two-phase commit",
+      "Deleting the logs"
+     ],
+     "w": "For example refunding a debit."
+    },
+    {
+     "q": "What should a saga do with a duplicate reply?",
+     "o": [
+      "Ignore it",
+      "Apply it again",
+      "Crash",
+      "Restart the saga"
+     ],
+     "w": "Track the reply ids it has seen."
+    }
+   ]
+  },
+  {
+   "t": "Contracts and tracing",
+   "v": [
+    {
+     "q": "Which API change is backward compatible?",
+     "o": [
+      "Adding an optional field",
+      "Renaming a field",
+      "Removing a field",
+      "Changing a type"
+     ],
+     "w": "Consumers ignore unknown fields."
+    },
+    {
+     "q": "What carries the correlation id inside a Node service?",
+     "o": [
+      "AsyncLocalStorage",
+      "A global variable",
+      "process.env",
+      "A cookie"
+     ],
+     "w": "Forward it on every outbound call."
+    }
+   ]
+  }
+ ]
+}

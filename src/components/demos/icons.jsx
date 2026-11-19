@@ -7,7 +7,7 @@ import {
   LuHeartPulse, LuInbox, LuKey, LuLandmark, LuLaptop, LuLayers, LuList, LuLock, LuLockKeyhole, LuMail, LuMap,
   LuOctagonX, LuPackage, LuPuzzle, LuReceipt, LuRefreshCw, LuRepeat, LuRocket, LuScrollText, LuSearch, LuServer,
   LuShieldCheck, LuSignature, LuSignpost, LuSlidersHorizontal, LuTarget, LuTelescope, LuTerminal, LuTicket, LuTriangleAlert,
-  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage, LuKeyRound, LuShieldAlert, LuCircleHelp, LuFingerprint, LuCookie, LuCloudUpload, LuPlus, LuMinus, LuFileOutput, LuFileInput, LuBox, LuReplace, LuMemoryStick, LuDroplets, LuSkipForward, LuLogIn, LuUserX, LuLogOut, LuMailCheck, LuEye, LuUndo2, LuBug, LuWrench, LuShuffle, LuSnail, LuTrafficCone, LuMerge, LuOctagonAlert, LuRotateCcw, LuServerOff, LuChartColumn, LuCrosshair, LuScissors, LuBadgeCheck, LuCircleOff, LuSkull, LuSiren, LuFileWarning, LuFolderGit2, LuPackageCheck, LuWeight, LuVariable, LuSyringe, LuCircleMinus, LuCirclePlus, LuUserCog, LuCrown, LuBiohazard, LuShield, LuScale, LuFolderLock, LuMonitorX, LuEraser, LuFileLock2, LuGlobeLock, LuTicketCheck, LuTimerReset, LuRuler, LuShieldHalf, LuEyeOff, LuPackageX, LuPackageSearch, LuLifeBuoy,
+  LuTable, LuTag, LuFlag, LuFileClock, LuBookOpen, LuBoxes, LuCamera, LuLayoutList, LuUnplug, LuUser, LuVenetianMask, LuWandSparkles, LuWaves, LuWorkflow, LuZap, LuBraces, LuCircleCheck, LuQuote, LuShapes, LuSnowflake, LuFileCode, LuCode, LuFileBadge, LuTrash2, LuHammer, LuDownload, LuUpload, LuScanSearch, LuGitBranch, LuGitPullRequest, LuGitMerge, LuConstruction, LuHistory, LuSparkles, LuPause, LuSplit, LuBird, LuDatabaseZap, LuMonitor, LuSquareFunction, LuAppWindow, LuMapPin, LuBuilding2, LuScaling, LuCoins, LuCloud, LuUsers, LuLockOpen, LuUserCheck, LuMonitorCog, LuFolderOpen, LuListChecks, LuBell, LuLibrary, LuPlay, LuListFilter, LuMailX, LuContainer, LuActivity, LuBellRing, LuFolderTree, LuShieldBan, LuBan, LuDisc, LuFlame, LuGauge, LuLink, LuTimer, LuListTree, LuNetwork, LuHandshake, LuCopy, LuCopyCheck, LuMousePointerClick, LuHourglass, LuPower, LuCircleStop, LuSend, LuGitCompare, LuTextCursorInput, LuPencil, LuPlug, LuBrain, LuGitCompareArrows, LuPaintbrush, LuKeyboard, LuListOrdered, LuCircleDot, LuLayoutPanelTop, LuMousePointer, LuRoute, LuLoader, LuImage, LuKeyRound, LuShieldAlert, LuCircleHelp, LuFingerprint, LuCookie, LuCloudUpload, LuPlus, LuMinus, LuFileOutput, LuFileInput, LuBox, LuReplace, LuMemoryStick, LuDroplets, LuSkipForward, LuLogIn, LuUserX, LuLogOut, LuMailCheck, LuEye, LuUndo2, LuBug, LuWrench, LuShuffle, LuSnail, LuTrafficCone, LuMerge, LuOctagonAlert, LuRotateCcw, LuServerOff, LuChartColumn, LuCrosshair, LuScissors, LuBadgeCheck, LuCircleOff, LuSkull, LuSiren, LuFileWarning, LuFolderGit2, LuPackageCheck, LuWeight, LuVariable, LuSyringe, LuCircleMinus, LuCirclePlus, LuUserCog, LuCrown, LuBiohazard, LuShield, LuScale, LuFolderLock, LuMonitorX, LuEraser, LuFileLock2, LuGlobeLock, LuTicketCheck, LuTimerReset, LuRuler, LuShieldHalf, LuEyeOff, LuPackageX, LuPackageSearch, LuLifeBuoy, LuBlocks, LuLink2, LuFileJson, LuUnlink, LuGitFork, LuPackageOpen, LuWaypoints, LuCopyX, LuMailWarning, LuRepeat2, LuHeartCrack, LuFilePlus, LuShieldOff,
 } from 'react-icons/lu';
 import {
   SiApachekafka, SiApachemaven, SiApachetomcat, SiDocker, SiElasticsearch, SiGit, SiGradle, SiGrafana, SiHelm, SiHibernate,
@@ -18,6 +18,35 @@ import {
 
 import { awsIcon } from './awsIcons.jsx';
 const ICONS = [
+  // --- node microservices ---
+  [/^modular monolith first$/i, LuBlocks],
+  [/^split by capability$/i, LuSplit],
+  [/^own team and data$/i, LuUsers],
+  [/^shared common library$/i, LuLibrary],
+  [/^lockstep releases$/i, LuLink2],
+  [/^contracts-only package$/i, LuFileJson],
+  [/^hidden coupling$/i, LuUnlink],
+  [/^own data and api$/i, LuDatabaseZap],
+  [/^remote call$/i, LuNetwork],
+  [/^timeout and retry$/i, LuRefreshCw],
+  [/^parallel calls$/i, LuGitFork],
+  [/^partial result$/i, LuPackageOpen],
+  [/^backend for frontend$/i, LuMerge],
+  [/^correlation id$/i, LuFingerprint],
+  [/^propagated in headers$/i, LuRoute],
+  [/^one trace$/i, LuWaypoints],
+  [/^dual write$/i, LuCopyX],
+  [/^lost event$/i, LuMailWarning],
+  [/^outbox relay$/i, LuRepeat2],
+  [/^at-least-once delivery$/i, LuCopy],
+  [/^idempotent consumer$/i, LuReplace],
+  [/^duplicate delivery$/i, LuCopy],
+  [/^compensation$/i, LuUndo2],
+  [/^breaking change$/i, LuHeartCrack],
+  [/^additive change$/i, LuFilePlus],
+  [/^trusted network$/i, LuShieldOff],
+  [/^mtls between services$/i, LuHandshake],
+  [/^service template$/i, LuShapes],
   // --- node security ---
   [/^untrusted input$/i, LuTriangleAlert],
   [/^schema validation$/i, LuShieldCheck],
