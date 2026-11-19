@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Build once",
+   "v": [
+    {
+     "q": "What does \"build once, deploy everywhere\" mean?",
+     "o": [
+      "The same image runs in every environment",
+      "One developer builds everything",
+      "Build only on Fridays",
+      "Build in production"
+     ],
+     "w": "Only the configuration differs between environments."
+    },
+    {
+     "q": "Which command gives reproducible installs in CI?",
+     "o": [
+      "pnpm install --frozen-lockfile",
+      "pnpm install --latest",
+      "pnpm update --latest",
+      "pnpm dlx tsc"
+     ],
+     "w": "It fails if the lockfile is out of date."
+    }
+   ]
+  },
+  {
+   "t": "Dockerfile",
+   "v": [
+    {
+     "q": "Why use a multi-stage build?",
+     "o": [
+      "Dev tools stay out of the runtime image",
+      "It makes Node faster",
+      "It removes the need for a lockfile",
+      "It hides the source"
+     ],
+     "w": "The final stage copies only dist and prod dependencies."
+    },
+    {
+     "q": "Why copy package.json and the lockfile before the source?",
+     "o": [
+      "The dependency layer stays cached",
+      "Docker requires that order",
+      "It speeds up TypeScript",
+      "It encrypts the layer"
+     ],
+     "w": "Source edits do not reinstall dependencies."
+    }
+   ]
+  },
+  {
+   "t": "Signals",
+   "v": [
+    {
+     "q": "Why prefer CMD [\"node\", \"dist/main.js\"] to npm start?",
+     "o": [
+      "node receives SIGTERM directly",
+      "npm is not installed",
+      "It uses less memory",
+      "It enables HTTPS"
+     ],
+     "w": "npm as PID 1 does not forward signals."
+    },
+    {
+     "q": "What follows SIGTERM if the app ignores it?",
+     "o": [
+      "A SIGKILL later",
+      "Nothing happens",
+      "A silent restart",
+      "A log warning"
+     ],
+     "w": "Kubernetes waits 30 s by default."
+    }
+   ]
+  },
+  {
+   "t": "Configuration",
+   "v": [
+    {
+     "q": "Where do secrets belong?",
+     "o": [
+      "A secret manager, injected at start",
+      "In the Docker image",
+      "In the Git repository",
+      "In a build argument"
+     ],
+     "w": "Rotate them without rebuilding the image."
+    },
+    {
+     "q": "What should a service do with invalid config?",
+     "o": [
+      "Exit non-zero at startup",
+      "Start and fail on first request",
+      "Use random defaults",
+      "Ignore it"
+     ],
+     "w": "A crashing pod stops the rollout."
+    }
+   ]
+  },
+  {
+   "t": "Probes",
+   "v": [
+    {
+     "q": "What should the liveness probe check?",
+     "o": [
+      "Only that the process responds",
+      "The database and the queue",
+      "The partner API",
+      "Disk usage of the node"
+     ],
+     "w": "A dependency check could restart every pod."
+    },
+    {
+     "q": "What does a failing readiness probe cause?",
+     "o": [
+      "The pod leaves the Service",
+      "The pod is restarted",
+      "The image is deleted",
+      "The node is drained"
+     ],
+     "w": "It is not restarted."
+    }
+   ]
+  },
+  {
+   "t": "Rollouts",
+   "v": [
+    {
+     "q": "Which setting avoids losing capacity in a rolling update?",
+     "o": [
+      "maxUnavailable: 0",
+      "replicas: 0",
+      "maxSurge: 0",
+      "terminationGracePeriodSeconds: 0"
+     ],
+     "w": "Start a new pod before stopping an old one."
+    },
+    {
+     "q": "How should a column be removed during a rolling release?",
+     "o": [
+      "Expand, then contract later",
+      "Drop it at once",
+      "Rename it at startup",
+      "Lock the table"
+     ],
+     "w": "Old and new code run at the same time."
+    }
+   ]
+  },
+  {
+   "t": "Resources",
+   "v": [
+    {
+     "q": "How many CPUs does a Node pod usually need?",
+     "o": [
+      "About one",
+      "Sixteen",
+      "Exactly zero",
+      "One per route"
+     ],
+     "w": "Scale out with more pods instead."
+    },
+    {
+     "q": "How should the V8 heap limit relate to the memory limit?",
+     "o": [
+      "About 75% of it",
+      "All of it",
+      "Twice as much",
+      "No relation"
+     ],
+     "w": "Buffers and native memory live outside the heap."
+    }
+   ]
+  },
+  {
+   "t": "Proxy and timeouts",
+   "v": [
+    {
+     "q": "What fixes sporadic 502 errors after idle periods?",
+     "o": [
+      "A longer keepAliveTimeout",
+      "A shorter keepAliveTimeout",
+      "No keep-alive in browsers",
+      "More log lines"
+     ],
+     "w": "Node must not close first."
+    },
+    {
+     "q": "Why set trust proxy in Express?",
+     "o": [
+      "Real client IP and protocol",
+      "It enables HTTPS",
+      "It compresses responses",
+      "It caches routes"
+     ],
+     "w": "Trust only the known number of hops."
+    }
+   ]
+  }
+ ]
+}
