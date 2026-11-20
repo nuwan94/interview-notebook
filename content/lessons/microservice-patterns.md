@@ -95,6 +95,8 @@ Instances come and go, so addresses cannot be hard-coded. **Service discovery** 
 
 Keep configuration outside the artifact and per environment: environment variables, Kubernetes ConfigMaps and Secrets, Spring Cloud Config, or a secret manager (Vault). The same image runs everywhere; secrets are never in the repository.
 
+Try it in the lab: [One front door: gateway and backend for frontend](lab:ms-api-gateway-bff).
+
 ## Resilience {#resilience}
 
 ### Failure is normal {#failure}
@@ -162,6 +164,8 @@ resilience4j:
 
 Because retries and at-least-once messaging deliver the same request twice, operations must be **idempotent**: doing them twice has the same effect as once. Reads and `PUT`/`DELETE` are naturally so; for `POST` (create a transfer) the client sends an **idempotency key**, and the server stores the key with the result and returns the stored result for a repeat. On the consumer side keep a table of processed message ids.
 
+Try it in the lab: [A circuit breaker in front of the card service](lab:ms-circuit-breaker).
+
 ## Data patterns {#data}
 
 ### Transactional outbox {#outbox}
@@ -194,6 +198,8 @@ public void publishPending() {
 ### Distributed transactions {#saga-link}
 
 Without a transaction spanning services, a business process that touches several of them (move money, book a trip) is coordinated with a **saga**: a sequence of local transactions, each with a **compensating action** that undoes it if a later step fails. Choreography and orchestration, compensation, and failure handling are covered in the [Saga lesson](lesson:saga). Two-phase commit is generally avoided in microservices because it blocks and couples services to a coordinator.
+
+Try it in the lab: [Saving a transfer and publishing its event reliably](lab:ms-outbox).
 
 ## Operating microservices {#operations}
 

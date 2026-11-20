@@ -107,6 +107,8 @@ flowchart LR
 
 A frequent answer is: **choreography for simple, short sagas; orchestration once there are more than a few steps, branching or a need to see the state of each business transaction.** Orchestration is not a distributed monolith if the orchestrator holds only the process, not the business rules of the participants.
 
+Try it in the lab: [An orchestrated saga: booking a trip](lab:ms-saga-orchestrated), [A choreographed saga: services react to events](lab:ms-saga-choreography).
+
 ## Designing compensations {#compensation}
 
 ### Rules for compensating transactions {#compensation-rules}
@@ -128,6 +130,8 @@ Because intermediate states are visible, a saga can suffer anomalies:
 | **Non-repeatable read** | two reads in one saga return different data | pessimistic view (reorder steps), re-read the value |
 
 Common countermeasures: the **semantic lock** (a state flag such as `RESERVATION_PENDING` that other transactions respect or wait on), **commutative updates** (decrement and increment instead of set), **pessimistic view** (order steps to limit exposure), **re-read the value** before updating, **version file** (record the operations to apply them in the right order) and **by-value** (choose the mechanism by the risk of the business request). Show pending data to users as pending.
+
+Try it in the lab: [When the payment fails: compensating transactions](lab:ms-saga-compensation).
 
 ## Making it reliable {#reliability}
 

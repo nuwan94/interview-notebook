@@ -47,6 +47,8 @@ Practical ways to find contexts: **event storming** workshops with domain expert
 
 Signs of a wrong boundary: two services always change and deploy together, one service needs a synchronous call to another for almost every request, or a business operation needs a distributed transaction across three services.
 
+Try it in the lab: [Finding the boundaries of a bank](lab:ms-boundaries).
+
 ## The modular monolith {#modular}
 
 Before splitting, make the boundaries real **inside** the monolith:
@@ -82,6 +84,8 @@ class PaymentService {
 
 The payoff: you get most of the design benefit with none of the network cost, and the seams are where services would be cut later. Sometimes that is the end of the story, and that is a good outcome.
 
+Try it in the lab: [From a ball of mud to a modular monolith](lab:ms-modular-monolith).
+
 ## The strangler fig migration {#strangler}
 
 The **strangler fig** pattern (named after a vine that grows around a tree) replaces a system **gradually** instead of with a big-bang rewrite:
@@ -96,6 +100,8 @@ Why it works: every step is small, shippable and reversible, the business keeps 
 
 Useful supporting techniques: **branch by abstraction** (introduce an interface in the monolith, then swap its implementation for a remote call), **feature flags** to switch traffic gradually, and **shadow traffic** or a **parallel run** to compare old and new results before cutting over.
 
+Try it in the lab: [Strangling a banking monolith, one route at a time](lab:ms-strangler).
+
 ## Splitting the database {#database}
 
 The shared database is the strongest coupling and the hardest part to cut. Do it in steps, so every step can be released and rolled back:
@@ -106,6 +112,8 @@ The shared database is the strongest coupling and the hardest part to cut. Do it
 4. **Replace transactions that spanned services** with a [saga](lesson:saga) and an outbox, and accept eventual consistency where the business can.
 
 Hard cases: **shared reference data** (copy it, or make it its own small service), **reports that join everything** (build a read model or a data warehouse, not a join across services), and **a table two contexts both write** (decide the owner; the other asks).
+
+Try it in the lab: [Cutting a shared bank database apart](lab:ms-split-database).
 
 ## Traps {#traps}
 

@@ -45,6 +45,8 @@ Three ways to make a service stateless:
 2. **Move the state to the client** in a signed token (a [JWT](lesson:jwt)); the service verifies it on each call.
 3. **Make the state derivable**: rebuild it from a database or an event log when needed.
 
+Try it in the lab: [Why a login must not live in one instance's memory](lab:ms-stateless).
+
 ## Where each kind of state lives {#where}
 
 | Kind of state | Example | Natural home | If it is lost |
@@ -57,6 +59,8 @@ Three ways to make a service stateless:
 | Event history | payment completed, card blocked | event log (Kafka) or event store | other services miss changes |
 
 Two rules keep this tidy. **Every piece of state has exactly one owner**, the service responsible for it, and other services read it through that service's API or through events, never straight from its database. And **a cache or session store must never be the only copy** of something that matters.
+
+Try it in the lab: [Where each kind of state should live](lab:ms-state-homes).
 
 ## Sessions and tokens {#sessions}
 
@@ -110,6 +114,8 @@ The standard technique is an **idempotency key**:
 
 The same idea protects **message consumers**: store the id of each processed message in the same transaction as its effect, and skip duplicates.
 
+Try it in the lab: [A retried payment and the idempotency key](lab:ms-idempotency).
+
 ## Event sourcing and CQRS {#events}
 
 **Event sourcing** stores the **sequence of changes** instead of the current value. An account is `Opened`, `Deposited 100`, `Withdrawn 20`; the balance (80) is computed by replaying them. The events are append-only and never edited, so you get a full audit trail, the ability to rebuild state at any past moment, and a natural stream to publish. **Snapshots** keep replay fast.
@@ -117,6 +123,8 @@ The same idea protects **message consumers**: store the id of each processed mes
 **CQRS** (Command Query Responsibility Segregation) separates the **write model** (commands that enforce rules and produce events) from one or more **read models** (tables shaped for screens, built by projecting the events). Reads and writes can then use different stores and scale separately.
 
 They are often used together but are independent ideas. The costs are real: read models are **eventually consistent**, events need **versioning** as their shape changes, corrections are made with new compensating events rather than edits, and there is more to operate. Choose them where history and audit are central (ledgers, trading, claims), not for every CRUD service.
+
+Try it in the lab: [From command to event on a bank account](lab:ms-es-commands).
 
 ## Stateful workloads in Kubernetes {#kubernetes}
 
@@ -126,6 +134,8 @@ In [Kubernetes](lesson:kubernetes) pods are disposable: they are killed and resc
 - **Data that must survive** a pod uses a **PersistentVolumeClaim**, which binds to a **PersistentVolume** that outlives the pod.
 - **Databases and brokers** that need stable identity use a **StatefulSet**: pods get stable names (`db-0`, `db-1`) and each keeps its own volume, and they start and stop in order.
 - Running stateful systems yourself means owning backups, failover and upgrades. Many teams use a **managed** database or Redis and keep only stateless services in the cluster; an **operator** can automate the work when you do run them.
+
+Try it in the lab: [Disposable pods and the data that must survive them](lab:ms-stateful-workloads).
 
 ## Cheat sheet {#cheatsheet}
 

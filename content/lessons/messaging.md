@@ -107,6 +107,8 @@ Neither is better: pick by the need for **replay and throughput** (log) or **ric
 | Services must keep working while another is down | messaging |
 | Strong, immediate consistency across data | avoid: restructure, or accept eventual consistency |
 
+Try it in the lab: [Queue or topic? Sharing work versus announcing facts](lab:ms-queue-vs-pubsub).
+
 ## Reliability {#reliability}
 
 ### Delivery guarantees {#delivery}
@@ -168,6 +170,8 @@ Strict ordering costs parallelism, so only require it per entity, not globally.
 ### Backpressure and capacity {#backpressure}
 
 Queues turn overload into **latency** instead of failure, but an unbounded queue only hides a consumer that cannot keep up. Control it: limit **prefetch** (how many unacknowledged messages a consumer holds), set concurrency per consumer, scale consumers on **queue depth or age of the oldest message**, apply **rate limits** and **bounded queues** with overflow rules (reject, drop, or push back to the producer), and use **message TTL** for data that becomes useless. Track **consumer lag** and message age as the key health metrics.
+
+Try it in the lab: [A lost acknowledgement and a double debit](lab:ms-ack-duplicates), [A poison message and the dead-letter queue](lab:ms-retry-dlq), [Deposit then withdraw: keeping messages in order](lab:ms-ordering).
 
 ## Message design {#design}
 

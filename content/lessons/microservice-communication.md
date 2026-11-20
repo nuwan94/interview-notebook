@@ -49,6 +49,8 @@ A common bank layout: **REST at the edge** (mobile, web, partners, through the g
 
 **GraphQL** lets the client ask for exactly the fields it needs across several sources in one call, which suits varied front ends. It needs care: query depth and cost limits, caching, and field-level authorisation. A **federation** gateway can combine several services' schemas.
 
+Try it in the lab: [REST, gRPC or events between bank services](lab:ms-comm-styles).
+
 ## API gateway and backend for frontend {#gateway}
 
 An **API gateway** is the single entry point for clients. It handles cross-cutting concerns so services do not each repeat them:
@@ -64,6 +66,8 @@ A **backend for frontend (BFF)** is a gateway built for one kind of client (mobi
 **API composition** is the BFF calling several services in parallel and merging results. Rules: set a timeout on each call, run them in parallel, mark optional parts so a partial result can be returned, and keep **business rules out of the gateway**. A gateway that grows logic becomes a new monolith and a bottleneck.
 
 Also watch for the gateway as a **single point of failure**: run several instances behind a load balancer, keep it stateless, and keep its configuration in version control. In the Spring world this is **Spring Cloud Gateway**; cloud providers and tools such as Kong, Apigee and Envoy-based gateways play the same role.
+
+Try it in the lab: [One front door: gateway and backend for frontend](lab:ms-api-gateway-bff).
 
 ## Contracts, compatibility and versioning {#contracts}
 
@@ -87,6 +91,8 @@ An API is a **contract** between independently deployed teams. You cannot change
 
 **Contract testing.** Integration tests across many services are slow and flaky. **Consumer-driven contract tests** (Pact, Spring Cloud Contract) let each consumer record what it needs from a provider, and the provider's build verifies it, so a breaking change fails before release without starting every service together. Pair this with an **OpenAPI** file as documentation and for generating clients.
 
+Try it in the lab: [Changing a payment API without breaking callers](lab:ms-contracts-versioning).
+
 ## Errors and the contract of failure {#errors}
 
 A caller needs to know *what kind* of failure it was. Use HTTP status codes consistently (4xx the caller's fault, 5xx the service's fault, 429 and 503 retryable) and return a standard body: **Problem Details (RFC 9457)**, which Spring supports as `ProblemDetail`, with a machine-readable `type`, a title, status, detail and any extra fields such as an error code and a correlation id. Never leak stack traces or internal messages. For gRPC use the standard status codes (`UNAVAILABLE`, `DEADLINE_EXCEEDED`, `NOT_FOUND`) and rich error details.
@@ -102,6 +108,8 @@ Addresses change as instances come and go, so callers use a **name**, not an add
 - **Health checks** decide which instances receive traffic (readiness probes on Kubernetes).
 - Load balancing policies: round robin, least connections, zone-aware. For long-lived gRPC connections balance **per request**, not per connection, because HTTP/2 multiplexes many calls over one connection.
 - A **service mesh** (Istio, Linkerd) moves discovery, load balancing, retries, mutual TLS and telemetry into sidecar proxies, so application code stays simple.
+
+Try it in the lab: [Finding the card service when instances keep moving](lab:ms-service-discovery).
 
 ## Communication anti-patterns {#anti-patterns}
 

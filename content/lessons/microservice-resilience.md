@@ -57,6 +57,8 @@ Many failures are **transient**: a dropped connection, a brief overload, a failo
 
 A related technique is the **hedged request**: if no answer comes in the typical time, send a second request to another instance and use the first reply. It cuts tail latency, at the cost of extra load, and is for idempotent reads only.
 
+Try it in the lab: [Timeouts and retries on a card payment](lab:ms-timeouts-retries).
+
 ## Circuit breaker {#breaker}
 
 A circuit breaker wraps calls to a dependency and tracks outcomes over a sliding window. It has three states:
@@ -71,6 +73,8 @@ It trips when the **failure rate** (for example 50 percent) or the **slow-call r
 
 Benefits: callers get instant answers instead of timeouts, threads are freed, and the sick service gets quiet to recover. A breaker per dependency (not one global one) is the usual design. Always pair it with a sensible **fallback**.
 
+Try it in the lab: [A circuit breaker in front of the card service](lab:ms-circuit-breaker).
+
 ## Bulkheads {#bulkhead}
 
 Named after the watertight walls in a ship, a bulkhead limits how much of your resources one dependency can use, so that a slow dependency cannot starve the rest. Two forms:
@@ -79,6 +83,8 @@ Named after the watertight walls in a ship, a bulkhead limits how much of your r
 - **Semaphore bulkhead:** a limit on **concurrent calls** to the dependency; extra calls are rejected at once. Cheaper, and the choice with virtual threads or reactive code.
 
 Bulkheads also apply to **connection pools** per downstream host, **per-tenant or per-client** limits, and separate deployments for critical and non-critical traffic (for example batch work on its own instances).
+
+Try it in the lab: [Bulkheads: one slow dependency, one pool](lab:ms-bulkheads).
 
 ## Rate limiting, load shedding and backpressure {#load}
 
@@ -91,9 +97,13 @@ These protect a service from too much work:
 
 An **unbounded queue** is a hidden outage: it hides overload until memory runs out and every request is too old to matter. Bound queues and reject.
 
+Try it in the lab: [Shedding load when payments is flooded](lab:ms-load-shedding).
+
 ## Graceful degradation and fallbacks {#degrade}
 
 When a dependency fails, return **less** rather than nothing. Separate **essential** data from **optional**: if the offers service fails, show the account summary without offers. Fallback options: a cached (stale) value, a default, an empty list, queueing the request for later with a "pending" message, or a simpler feature. Agree them with the business, and never choose an unsafe fallback: approving a payment because the fraud service is down is not graceful, it is a vulnerability.
+
+Try it in the lab: [An account screen that survives a failing offers service](lab:ms-graceful-degradation).
 
 ## Health, probes and self-healing {#health}
 

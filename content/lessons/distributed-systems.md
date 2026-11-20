@@ -98,6 +98,8 @@ From strongest to weakest:
 
 Practical points: **eventual consistency is not "inconsistent"**, it is a promise of convergence and it is what makes high availability and low latency possible. Choose the **weakest model that keeps the business correct**: a bank transfer needs strong consistency on the balance; a "likes" counter does not. **Linearizability** (single-object, real-time) is different from **serializability** (multi-object transactions with some serial order); a system with both is *strictly serializable*. **ACID** is the single-node transaction ideal, **BASE** (basically available, soft state, eventually consistent) describes the opposite end.
 
+Try it in the lab: [A network split between two data centers](lab:ms-cap).
+
 ## Replication {#replication}
 
 ### Replication styles {#styles}
@@ -134,6 +136,8 @@ When two replicas accept different writes to the same data concurrently you must
 - **CRDTs** (conflict-free replicated data types): data structures designed so concurrent updates always merge deterministically (counters, sets, registers); used in collaborative editing and AP stores.
 - **Application-level merge:** domain rules, for example "union the carts".
 
+Try it in the lab: [Quorums: why W + R > N finds the latest write](lab:ms-quorum).
+
 ## Partitioning {#partitioning}
 
 ### Sharding {#sharding}
@@ -149,6 +153,8 @@ Challenges: **rebalancing** when nodes are added or removed, **hot keys** (one c
 ### Consistent hashing {#consistent-hashing}
 
 `hash(key) mod N` remaps nearly every key when N changes. **Consistent hashing** puts nodes and keys on the same **hash ring**; a key belongs to the first node clockwise from it. Adding or removing a node only moves the keys next to it, about **1/N** of all keys. **Virtual nodes** (each physical node owns many points on the ring) even out the load and spread a failed node's keys over many neighbours. It is used in Dynamo-style stores, Cassandra, memcached clients, load balancers and CDNs. The ring also gives natural **replica placement**: store a key on the next R nodes clockwise.
+
+Try it in the lab: [Adding a cache node without moving every key](lab:ms-consistent-hashing).
 
 ## Consensus {#consensus}
 
@@ -179,6 +185,8 @@ In a partition, the side with a majority continues; the minority cannot elect a 
 ### Atomic commit: 2PC {#two-pc}
 
 **Two-phase commit** is atomic commit across resource managers, not consensus: a coordinator asks all participants to *prepare* (vote), and if all vote yes tells them to *commit*. It **blocks** if the coordinator fails after participants have voted (they hold locks and cannot decide alone), which is why microservices avoid it ([why](lesson:microservice-patterns#q-two-phase)). Consensus-based commit (Paxos Commit, Spanner's use of Paxos groups with 2PC across groups) removes the single coordinator as a point of failure.
+
+Try it in the lab: [Five nodes agree: leader election and the log in Raft](lab:ms-raft).
 
 ## Time and ordering {#time}
 

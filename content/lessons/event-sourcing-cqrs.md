@@ -53,6 +53,8 @@ An **aggregate** (from domain-driven design) is the object that owns the rules f
 
 The aggregate's `apply` method that changes state from an event must **never fail and never decide anything**. All decisions happen before the event is created, so replaying old events is always safe.
 
+Try it in the lab: [From command to event on a bank account](lab:ms-es-commands).
+
 ## The event store {#store}
 
 An event store keeps **one ordered stream per aggregate**, append-only. It can be a plain relational table, an event database such as EventStoreDB, or an Axon Server; a Kafka topic can carry events but is not a good store for per-aggregate loading and concurrency checks.
@@ -72,6 +74,8 @@ CREATE TABLE event (
 
 **Snapshots.** Long streams are slow to replay, so every N events the aggregate's state is saved with its version. Loading means "latest snapshot, then the events after it". A snapshot is only a cache: it can be deleted and rebuilt from the events.
 
+Try it in the lab: [The event store: streams, versions and snapshots](lab:ms-es-event-store).
+
 ## Projections and read models {#projections}
 
 A **projection** (or projector, event handler) listens to events and maintains a **read model**: a table, document or index shaped for one question. One stream can feed many read models, each in a suitable store (a relational table for statements, Elasticsearch for search, Redis for a mobile balance).
@@ -83,6 +87,8 @@ Rules for good projections:
 - **Rebuildable.** A bug or a new question is solved by dropping the read model and replaying all events from the start. This is one of the biggest benefits, and the reason events must be kept.
 - **Own data only.** A projection reads events, not other services' databases.
 
+Try it in the lab: [Read models built from events](lab:ms-es-read-models).
+
 ## Eventual consistency {#consistency}
 
 The read model is updated **after** the event is stored, so a screen that reads straight after a write may see old data for a short time. Ways to deal with it:
@@ -93,6 +99,8 @@ The read model is updated **after** the event is stored, so a screen that reads 
 - **Design the user experience for it:** "Your deposit is being processed" is honest and fine for most screens.
 
 This is the same trade-off as in [ACID vs BASE](lesson:acid-base): the write side keeps strong consistency inside an aggregate, and the system as a whole is eventually consistent.
+
+Try it in the lab: [A deposit that is not on the screen yet](lab:ms-es-consistency).
 
 ## Publishing events and processes across services {#publishing}
 
@@ -111,6 +119,8 @@ Events live forever, so their design needs care.
 - **Versioning.** Give each event a type and a version. Make changes backward compatible when you can (add optional fields). When you cannot, write an **upcaster** that converts an old version to the current shape as events are read, so handlers only know the newest version.
 - **Naming.** Name events after business facts (`LoanApproved`), not table changes (`LoanStatusUpdated`). Fact-based events survive refactoring.
 - **Personal data.** An immutable log clashes with the right to erase. Keep personal data out of events (store a reference and keep the data in a deletable table), or encrypt it with a key per customer and delete the key (**crypto-shredding**).
+
+Try it in the lab: [Fixing mistakes in an immutable history](lab:ms-es-evolution).
 
 ## Event sourcing in Java and Spring {#spring}
 

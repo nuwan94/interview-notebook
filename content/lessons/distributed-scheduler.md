@@ -50,6 +50,8 @@ With three instances the method runs three times. The same happens with Kubernet
 | **Idempotent job** | running it twice has the same effect as once |
 | **Time zone / DST** | a "02:30" job may not exist (or exist twice) on a daylight-saving day; prefer UTC or an explicit zone |
 
+Try it in the lab: [The statement job that ran three times](lab:ms-sched-duplicate).
+
 ## Approaches {#approaches}
 
 ### Overview {#overview}
@@ -209,6 +211,8 @@ Read the documented semantics carefully: a run can occasionally be **skipped or 
 ### Workflow engines {#workflow}
 
 For multi-step, long-running, observable work use a **workflow engine**: **Temporal** (durable code with built-in schedules, retries, timers, history; also useful for [sagas](lesson:saga)), **Apache Airflow** (batch DAGs, data pipelines), **Camunda**, **AWS Step Functions**, **Spring Batch** with a scheduler for chunked batch processing. They persist the state of each execution, so a crashed worker resumes where it stopped, at the cost of running and learning another platform.
+
+Try it in the lab: [A leader that freezes: leases and fencing tokens](lab:ms-sched-leader), [Workers claiming due tasks from a table](lab:ms-sched-claim).
 
 ## Designing a scheduler service {#design}
 
