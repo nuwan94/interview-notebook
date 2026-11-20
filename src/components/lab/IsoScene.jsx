@@ -3,6 +3,7 @@ import {
   LuCog, LuDatabase, LuDoorOpen, LuGlobe, LuHardDrive, LuInbox, LuLaptop, LuNetwork, LuServer, LuShield, LuSmartphone, LuUsers, LuZap,
 } from 'react-icons/lu';
 import { iconComponent } from '../demos/icons.jsx';
+import { bendOf } from '../../labs/route.js';
 
 // The look follows the "designed to scale" lessons: soft rounded isometric blocks with an ink outline and a gradient,
 // a blurred shadow on the floor, the name printed on the front of the block, ink arrows, white pills with a hard shadow,
@@ -97,10 +98,10 @@ function geomOf(n) {
 function blockText(n) {
   const label = String(n.label ?? n.id);
   const sub = n.sub ? String(n.sub) : '';
-  const width = Math.min(168, Math.max(112, textW(label, 13.5) + 26, sub ? textW(sub, 9.5) + 26 : 0));
+  const width = Math.min(168, Math.max(112, textW(label, 14.5) + 26, sub ? textW(sub, 10.5) + 26 : 0));
   const room = width - 18;
-  const nameFs = Math.min(13.5, room / (label.length * 0.6));
-  const subFs = sub ? Math.min(9.5, room / (sub.length * 0.6)) : 0;
+  const nameFs = Math.min(14.5, room / (label.length * 0.6));
+  const subFs = sub ? Math.min(10.5, room / (sub.length * 0.6)) : 0;
   const nameW = textW(label, nameFs);
   const subW = sub ? textW(sub, subFs) : 0;
   const textH = nameFs * 1.2 + (sub ? subFs * 1.45 : 0);
@@ -295,18 +296,33 @@ function Pad({ n }) {
  */
 function routeOf(ids, byId, trim = 36, fs = 12) {
   const nodes = ids.map((id) => byId.get(id)).filter(Boolean);
-  const pts = nodes.map(anchor);
-  if (pts.length < 2) return null;
+  if (nodes.length < 2) return null;
+  // every leg runs along the grid axes, with one bend unless the two nodes are on one axis
+  const pts = [anchor(nodes[0])];
+  for (let i = 1; i < nodes.length; i++) {
+    const na = nodes[i - 1];
+    const nb = nodes[i];
+    const others = [...byId.values()].filter((o) => o !== na && o !== nb).map((o) => ({ at: o.at, pill: geomOf(o).pill }));
+    const bend = bendOf(na.at, nb.at, others);
+    const A = anchor(na);
+    const B = anchor(nb);
+    if (bend) {
+      const [cx, cy] = iso(...bend);
+      const lift = (A[1] - iso(...na.at)[1] + (B[1] - iso(...nb.at)[1])) / 2;   // the bend sits at the height of the bodies
+      pts.push([cx, cy + lift]);
+    }
+    pts.push(B);
+  }
   const cut = (p, q, d) => {
     const len = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
     return [p[0] + ((q[0] - p[0]) * d) / len, p[1] + ((q[1] - p[1]) * d) / len];
   };
-  const dist = (i, j) => {
+  const dist = (node, p, q) => {
     if (trim !== 'edge') return trim;
-    const len = Math.hypot(pts[j][0] - pts[i][0], pts[j][1] - pts[i][1]) || 1;
-    const ux = (pts[j][0] - pts[i][0]) / len;
-    const uy = (pts[j][1] - pts[i][1]) / len;
-    const g = geomOf(nodes[i]);
+    const len = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+    const ux = (q[0] - p[0]) / len;
+    const uy = (q[1] - p[1]) / len;
+    const g = geomOf(node);
     const rx = g.a + 6;
     const ry = (g.top + g.bottom) / 2 + 6;
     const edge = 1 / Math.sqrt((ux / rx) ** 2 + (uy / ry) ** 2);
@@ -318,8 +334,8 @@ function routeOf(ids, byId, trim = 36, fs = 12) {
     return edge;
   };
   const last = pts.length - 1;
-  const a = cut(pts[0], pts[1], dist(0, 1));
-  const z = cut(pts[last], pts[last - 1], dist(last, last - 1));
+  const a = cut(pts[0], pts[1], dist(nodes[0], pts[0], pts[1]));
+  const z = cut(pts[last], pts[last - 1], dist(nodes[nodes.length - 1], pts[last], pts[last - 1]));
   pts[0] = a;
   pts[last] = z;
   let total = 0;
@@ -331,8 +347,27 @@ function routeOf(ids, byId, trim = 36, fs = 12) {
   }
   return { pts, segs, total };
 }
+
+/** A path through the points with softly rounded corners. */
+function roundedPath(pts, radius = 18) {
+  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const p = pts[i - 1];
+    const c = pts[i];
+    const q = pts[i + 1];
+    const l1 = Math.hypot(c[0] - p[0], c[1] - p[1]) || 1;
+    const l2 = Math.hypot(q[0] - c[0], q[1] - c[1]) || 1;
+    const r = Math.min(radius, l1 / 2, l2 / 2);
+    const a = [c[0] + ((p[0] - c[0]) / l1) * r, c[1] + ((p[1] - c[1]) / l1) * r];
+    const b = [c[0] + ((q[0] - c[0]) / l2) * r, c[1] + ((q[1] - c[1]) / l2) * r];
+    d += ` L${a[0].toFixed(1)},${a[1].toFixed(1)} Q${c[0].toFixed(1)},${c[1].toFixed(1)} ${b[0].toFixed(1)},${b[1].toFixed(1)}`;
+  }
+  const z = pts[pts.length - 1];
+  return `${d} L${z[0].toFixed(1)},${z[1].toFixed(1)}`;
+}
+const segAt = (route, d) => route.segs.find((g) => d <= g.start + g.len) ?? route.segs[route.segs.length - 1];
 const pointAt = (route, d) => {
-  const s = route.segs.find((g) => d <= g.start + g.len) ?? route.segs[route.segs.length - 1];
+  const s = segAt(route, d);
   const f = s.len ? Math.min(1, Math.max(0, (d - s.start) / s.len)) : 0;
   return [s.from[0] + (s.to[0] - s.from[0]) * f, s.from[1] + (s.to[1] - s.from[1]) * f];
 };
@@ -397,39 +432,50 @@ function layoutLinks(state, byId, pf, box, compact) {
     const sp = noteSpot(note, n, pf * 0.95, box);
     solid.push(rectOf(sp.x, sp.y, sp.w, sp.h * 1.1));
   }
-  const lines = [...routes.values()].map((r) => r.pts);
+  const lines = [...routes.values()].flatMap((r) => r.segs.map((g) => [g.from, g.to]));
 
   const lf = pf * 0.9;
   for (const l of state.links) {
     if (!l.label) continue;
     const r = routes.get(l.key);
     if (!r) continue;
-    const [a, b] = r.pts;
     const w = textW(l.label, lf) + lf * 1.7;
     const h = lf * 2.1;
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
-    const ux = (b[0] - a[0]) / len;
-    const uy = (b[1] - a[1]) / len;
-    let nx = -uy;
-    let ny = ux;
-    if (ny > 0.001 || (Math.abs(ny) <= 0.001 && nx < 0)) { nx = -nx; ny = -ny; }   // the side that points up (or right for a vertical line)
-    const gap = (Math.abs(nx) * w) / 2 + (Math.abs(ny) * h) / 2 + 4;
+    // candidate spots: beside the line at several places, and under or over each bend
+    const cands = [];
     const fracs = [...new Set([l.at ?? 0.5, 0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74, 0.18, 0.82])];
-    let best = null;
     for (const [fi, f] of fracs.entries()) {
+      const d = r.total * f;
+      const sg = segAt(r, d);
+      const [px, py] = pointAt(r, d);
+      const ux = (sg.to[0] - sg.from[0]) / (sg.len || 1);
+      const uy = (sg.to[1] - sg.from[1]) / (sg.len || 1);
+      let nx = -uy;
+      let ny = ux;
+      if (ny > 0.001 || (Math.abs(ny) <= 0.001 && nx < 0)) { nx = -nx; ny = -ny; }   // the side that points up (or right for a vertical line)
+      const gap = (Math.abs(nx) * w) / 2 + (Math.abs(ny) * h) / 2 + 4;
       for (const [si, side] of [1, -1].entries()) {
         for (const extra of [0, 9, 20, 32]) {
-          const cx = a[0] + (b[0] - a[0]) * f + nx * (gap + extra) * side + (l.labelDx ?? 0);
-          const cy = a[1] + (b[1] - a[1]) * f + ny * (gap + extra) * side + (l.labelDy ?? 0);
-          const rect = rectOf(cx, cy, w, h);
-          let cost = fi * 2 + si * 3 + extra * 0.3;
-          for (const o of solid) cost += overlap(grow(o, 2), rect) > 0 ? 200 + overlap(o, rect) / 20 : 0;
-          for (const ln of lines) cost += lineHits(grow(rect, 2), ln[0], ln[1]) * 14;
-          for (const p of labels) cost += overlap(grow(p.rect, 3), rect) > 0 ? 200 : 0;
-          if (rect.x0 < box.x + 4 || rect.x1 > box.x + box.w - 4 || rect.y0 < box.y + 4 || rect.y1 > box.y + box.h - 4) cost += 150;
-          if (!best || cost < best.cost) best = { cost, cx, cy, rect };
+          cands.push({ cx: px + nx * (gap + extra) * side, cy: py + ny * (gap + extra) * side, pri: fi * 2 + si * 3 + extra * 0.3 });
         }
       }
+    }
+    for (const [i, [bx, by]] of r.pts.slice(1, -1).entries()) {
+      for (const [si, side] of [1, -1].entries()) {
+        for (const extra of [0, 10, 22]) cands.push({ cx: bx, cy: by + side * (h / 2 + 8 + extra), pri: -2 + i + si * 2 + extra * 0.3 });
+      }
+    }
+    let best = null;
+    for (const c of cands) {
+      const cx = c.cx + (l.labelDx ?? 0);
+      const cy = c.cy + (l.labelDy ?? 0);
+      const rect = rectOf(cx, cy, w, h);
+      let cost = c.pri;
+      for (const o of solid) cost += overlap(grow(o, 2), rect) > 0 ? 200 + overlap(o, rect) / 20 : 0;
+      for (const ln of lines) cost += lineHits(grow(rect, 2), ln[0], ln[1]) * 14;
+      for (const p of labels) cost += overlap(grow(p.rect, 3), rect) > 0 ? 200 : 0;
+      if (rect.x0 < box.x + 4 || rect.x1 > box.x + box.w - 4 || rect.y0 < box.y + 4 || rect.y1 > box.y + box.h - 4) cost += 150;
+      if (!best || cost < best.cost) best = { cost, cx, cy, rect };
     }
     labels.push({ key: l.key, text: l.label, tone: l.tone ?? 'none', x: best.cx, y: best.cy, rect: best.rect, lf });
   }
@@ -499,10 +545,10 @@ function Defs({ uid, box }) {
  * The isometric stage: floor, links, packets, nodes, pills and notes.
  * `fs` is the label size in scene units (bigger on narrow screens so text stays readable).
  */
-export function IsoScene({ state, box, fs = 12, paused = false, reduced = false, replayKey = 0, compact = false, label }) {
+export function IsoScene({ state, box, view, fs = 12, paused = false, reduced = false, replayKey = 0, compact = false, label }) {
   const byId = useMemo(() => new Map(state.nodes.map((n) => [n.id, n])), [state.nodes]);
   const order = useMemo(() => [...state.nodes].sort((p, q) => p.at[0] + p.at[1] - (q.at[0] + q.at[1])), [state.nodes]);
-  const pf = Math.min(15, Math.max(10.5, fs * 0.88));          // pill font in scene units
+  const pf = Math.min(16, Math.max(11.5, fs * 0.92));          // pill font in scene units
   
   const layout = useMemo(() => layoutLinks(state, byId, pf, box, compact), [state, byId, pf, box, compact]);
 
@@ -579,7 +625,7 @@ export function IsoScene({ state, box, fs = 12, paused = false, reduced = false,
   let dotIndex = 0;
 
   return (
-    <svg className="lab-svg" viewBox={`${box.x} ${box.y} ${box.w} ${box.h}`} role="img" aria-label={label} style={{ fontFamily: 'var(--font-mono)' }}>
+    <svg className="lab-svg" viewBox={`${(view ?? box).x} ${(view ?? box).y} ${(view ?? box).w} ${(view ?? box).h}`} role="img" aria-label={label} style={{ fontFamily: 'var(--font-mono)' }}>
       <Defs uid={uid} box={box} />
       <g className="lab-grid" mask={`url(#lab-mask-${uid})`}>
         <rect x={box.x - 200} y={box.y - 200} width={box.w + 400} height={box.h + 400} fill={`url(#lab-grid-${uid})`} />
@@ -596,14 +642,15 @@ export function IsoScene({ state, box, fs = 12, paused = false, reduced = false,
         if (!r) return null;
         const tone = l.faint ? 'faint' : l.tone ?? 'none';
         const fresh = state.newLinks.has(l.key);
-        const [a, b] = r.pts;
         return (
-          <line
+          <path
             key={l.key}
-            x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]}
+            d={roundedPath(r.pts)}
+            fill="none"
             stroke={LINK_COLOR[tone] ?? INK}
             strokeWidth={l.faint ? 1.6 : fresh ? 2.3 : 1.9}
             strokeLinecap="round"
+            strokeLinejoin="round"
             strokeDasharray={l.faint ? '4 5' : l.dashed ? '5 4.5' : undefined}
             markerEnd={l.arrow === false ? undefined : arrow(tone)}
             markerStart={l.both ? arrow(tone) : undefined}

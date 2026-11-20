@@ -4,6 +4,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { normalizeLab } from '../src/labs/normalize.js';
+import { bendOf } from '../src/labs/route.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const labsDir = join(root, 'src', 'labs');
@@ -27,7 +28,7 @@ const lessonTopics = new Set(
 
 let errors = 0;
 let warnings = 0;
-const files = readdirSync(labsDir).filter((f) => f.endsWith('.js') && f !== 'index.js' && f !== 'normalize.js');
+const files = readdirSync(labsDir).filter((f) => f.endsWith('.js') && f !== 'index.js' && f !== 'normalize.js' && f !== 'route.js');
 
 for (const file of files) {
   const slug = file.slice(0, -3);
@@ -117,15 +118,22 @@ for (const file of files) {
     const segs = [...links.values(), ...(s.flows ?? []).flatMap((f) => (f.path ?? []).slice(1).map((id, k) => [f.path[k], id]))];
     for (const [from, to] of segs) {
       if (!screen.has(from) || !screen.has(to) || !onStage.has(from) || !onStage.has(to)) continue;
-      const [px, py] = screen.get(from);
-      const [qx, qy] = screen.get(to);
-      // distance from a point to the segment, in units of an ellipse of half sizes (rx, ry)
+      // the line follows the grid axes, with one bend unless the nodes sit on one axis (see src/labs/route.js)
+      const others = [...onStage].filter((id) => id !== from && id !== to && lab.nodes[id]).map((id) => ({ at: lab.nodes[id].at, pill: PILL_KINDS.has(lab.nodes[id].kind) }));
+      const bend = bendOf(lab.nodes[from].at, lab.nodes[to].at, others);
+      const poly = [screen.get(from), ...(bend ? [[(bend[0] - bend[1]) * 64, (bend[0] + bend[1]) * 32]] : []), screen.get(to)];
+      // is the point (cx, cy) inside the ellipse of half sizes (rx, ry) of any part of the line?
       const near = (cx, cy, rx, ry) => {
-        const len2 = (qx - px) ** 2 + (qy - py) ** 2 || 1;
-        const t = Math.max(0, Math.min(1, ((cx - px) * (qx - px) + (cy - py) * (qy - py)) / len2));
-        const dx = (px + (qx - px) * t - cx) / rx;
-        const dy = (py + (qy - py) * t - cy) / ry;
-        return dx * dx + dy * dy < 1;
+        for (let i = 1; i < poly.length; i++) {
+          const [px, py] = poly[i - 1];
+          const [qx, qy] = poly[i];
+          const len2 = (qx - px) ** 2 + (qy - py) ** 2 || 1;
+          const t = Math.max(0, Math.min(1, ((cx - px) * (qx - px) + (cy - py) * (qy - py)) / len2));
+          const dx = (px + (qx - px) * t - cx) / rx;
+          const dy = (py + (qy - py) * t - cy) / ry;
+          if (dx * dx + dy * dy < 1) return true;
+        }
+        return false;
       };
       for (const id of onStage) {
         if (id === from || id === to || !screen.has(id)) continue;

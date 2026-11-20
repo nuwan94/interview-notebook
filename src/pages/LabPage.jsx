@@ -27,18 +27,6 @@ export default function LabPage() {
 
   return (
     <div className="lab-page">
-      <nav aria-label="Breadcrumb" className="text-sm mb-3 text-soft">
-        <Link to="/">Home</Link>
-        {trail.map((t) => (
-          <span key={t.path}>
-            {' › '}
-            <Link to={topicPath(t)}>{t.name}</Link>
-          </span>
-        ))}
-        {' › '}
-        <span aria-current="page">Lab</span>
-      </nav>
-
       <Lab key={lab.slug} lab={lab} />
 
       {(lesson || others.length > 0) && (

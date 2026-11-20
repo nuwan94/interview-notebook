@@ -22,7 +22,7 @@ export default {
   nodes: {
     q: { kind: 'queue', label: 'Main queue', col: 0, row: 1 },
     cons: { kind: 'worker', label: 'Consumer', col: 2, row: 1 },
-    rq: { kind: 'queue', label: 'Retry queue', sub: 'delay 1s, 10s, 1min', col: 2, row: 3 },
+    rq: { kind: 'queue', label: 'Retry queue', sub: 'delay 1s, 10s, 1min', col: 0.8, row: 3 },
     dlq: { kind: 'queue', label: 'Dead letters', sub: 'dead-letter queue', col: 4, row: 1 },
     eng: { kind: 'client', label: 'Engineer', col: 4, row: 3 },
   },

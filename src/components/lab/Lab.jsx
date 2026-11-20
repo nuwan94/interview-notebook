@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  LuArrowLeft, LuArrowRight, LuCheck, LuClock, LuExpand, LuLightbulb, LuLink, LuListChecks, LuMinimize, LuPause, LuPlay,
+  LuArrowLeft, LuArrowRight, LuCheck, LuClock, LuExpand, LuLightbulb, LuLink, LuListChecks, LuMaximize, LuMinimize, LuPause, LuPlay,
+  LuZoomIn, LuZoomOut,
   LuRotateCcw, LuSignal, LuSparkles, LuTriangleAlert,
 } from 'react-icons/lu';
 import { useLocation } from 'react-router-dom';
@@ -54,17 +55,17 @@ function stepFromHash(slug) {
 }
 const hashForStep = (slug, n) => `#/lab/${slug}/${n}`;
 
-/** Measures the stage so labels can grow on narrow screens and stay readable. */
-function useWidth(ref) {
-  const [w, setW] = useState(800);
+/** Measures the scene area (width and height) so the labels keep a readable size whatever the window. */
+function useSize(ref) {
+  const [size, setSize] = useState({ w: 800, h: 500 });
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
-    const ro = new ResizeObserver(([e]) => setW(e.contentRect.width));
+    const ro = new ResizeObserver(([e]) => setSize({ w: e.contentRect.width, h: e.contentRect.height }));
     ro.observe(el);
     return () => ro.disconnect();
   }, [ref]);
-  return w;
+  return size;
 }
 
 /**
@@ -89,7 +90,81 @@ export function Lab({ lab }) {
   const sceneRef = useRef(null);
   const timelineRef = useRef(null);
   const touched = useRef(false);
-  const width = useWidth(stageRef);
+  const { w: width, h: height } = useSize(sceneRef);
+
+  // zoom and move inside the scene: the camera is a zoom level k and an offset of its centre from the scene's centre
+  const [cam, setCam] = useState({ k: 1, x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const camRef = useRef(cam);
+  camRef.current = cam;
+  const clampCam = useCallback(
+    (c) => {
+      const k = Math.min(4, Math.max(1, c.k));
+      const mx = (box.w / 2) * (1 - 1 / k) + box.w * 0.04;
+      const my = (box.h / 2) * (1 - 1 / k) + box.h * 0.04;
+      return { k, x: k === 1 ? 0 : Math.min(mx, Math.max(-mx, c.x)), y: k === 1 ? 0 : Math.min(my, Math.max(-my, c.y)) };
+    },
+    [box],
+  );
+  /** Zoom by a factor, keeping the point under (clientX, clientY) where it is. Without a point it zooms about the centre. */
+  const zoomBy = useCallback(
+    (factor, clientX, clientY) => {
+      const svg = sceneRef.current?.querySelector('svg');
+      const cur = camRef.current;
+      const k2 = Math.min(4, Math.max(1, cur.k * factor));
+      if (k2 === cur.k) return;
+      if (!svg || clientX === undefined) {
+        setCam(clampCam({ ...cur, k: k2 }));
+        return;
+      }
+      const ctm = svg.getScreenCTM();
+      const rect = svg.getBoundingClientRect();
+      const s = ctm.a;
+      const pt = new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse());
+      const dx = clientX - (rect.left + rect.width / 2);
+      const dy = clientY - (rect.top + rect.height / 2);
+      const s2 = (s * k2) / cur.k;
+      setCam(clampCam({ k: k2, x: pt.x - dx / s2 - (box.x + box.w / 2), y: pt.y - dy / s2 - (box.y + box.h / 2) }));
+    },
+    [box, clampCam],
+  );
+  const resetCam = useCallback(() => setCam({ k: 1, x: 0, y: 0 }), []);
+  const view = useMemo(
+    () => ({ w: box.w / cam.k, h: box.h / cam.k, x: box.x + box.w / 2 + cam.x - box.w / (2 * cam.k), y: box.y + box.h / 2 + cam.y - box.h / (2 * cam.k) }),
+    [box, cam],
+  );
+
+  // the mouse wheel zooms (in a window that fits the lab; otherwise Ctrl + wheel, so the page can still scroll) and dragging moves
+  useEffect(() => {
+    const el = sceneRef.current;
+    if (!el) return undefined;
+    const onWheel = (e) => {
+      const fits = window.matchMedia('(min-width: 1200px) and (min-height: 540px)').matches;
+      if (!fits && !e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      zoomBy(Math.exp(-e.deltaY * 0.0016), e.clientX, e.clientY);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [zoomBy]);
+  const drag = useRef(null);
+  const onPointerDown = (e) => {
+    if (e.pointerType === 'touch' || e.button !== 0 || camRef.current.k === 1) return;
+    const svg = sceneRef.current?.querySelector('svg');
+    if (!svg) return;
+    drag.current = { x: e.clientX, y: e.clientY, cam: camRef.current, s: svg.getScreenCTM().a };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragging(true);
+  };
+  const onPointerMove = (e) => {
+    const d = drag.current;
+    if (!d) return;
+    setCam(clampCam({ k: d.cam.k, x: d.cam.x - (e.clientX - d.x) / d.s, y: d.cam.y - (e.clientY - d.y) / d.s }));
+  };
+  const onPointerUp = () => {
+    drag.current = null;
+    setDragging(false);
+  };
 
   const st = states[index];
   const step = st.step;
@@ -97,7 +172,8 @@ export function Lab({ lab }) {
 
   // scene units per screen pixel decide the label size: about 11px on screen at least.
   // Below SCENE_MIN pixels the scene keeps that width and scrolls sideways instead of shrinking.
-  const perPx = box.w / Math.max(width, SCENE_MIN);
+  // The scene fits its area: whichever of width and height is tighter decides the scale.
+  const perPx = Math.max(box.w / Math.max(width, SCENE_MIN), box.h / Math.max(height, 120));
   const fs = Math.min(26, Math.max(12, 11 * perPx));
   const compact = width < 560;
 
@@ -231,11 +307,7 @@ export function Lab({ lab }) {
       aria-keyshortcuts="ArrowLeft ArrowRight R Space F Escape"
     >
       <header className="lab-head">
-        <div className="min-w-0">
-          <div className="lab-crumb">Lab{lab.topic?.length ? ` · ${lab.topic.at(-1)}` : ''}</div>
-          <figcaption className="lab-title">{lab.title}</figcaption>
-          {lab.subtitle && <p className="lab-subtitle">{lab.subtitle}</p>}
-        </div>
+        <figcaption className="lab-title" title={lab.title}>{lab.nav ?? lab.title}</figcaption>
         <div className="lab-tags">
           {lab.minutes && (
             <span className="lab-tag">
@@ -279,8 +351,16 @@ export function Lab({ lab }) {
           )}
 
           <div ref={stageRef} className="lab-stage">
-            <div className="lab-scene" ref={sceneRef}>
-              <IsoScene state={st} box={box} fs={fs} paused={paused} reduced={reduced} replayKey={replayKey} compact={compact} label={sceneLabel} />
+            <div
+              className={`lab-scene ${cam.k > 1 ? 'is-zoomed' : ''} ${dragging ? 'is-dragging' : ''}`}
+              ref={sceneRef}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerUp}
+              onDoubleClick={resetCam}
+            >
+              <IsoScene state={st} box={box} view={view} fs={fs} paused={paused} reduced={reduced} replayKey={replayKey} compact={compact} label={sceneLabel} />
             </div>
             {step.table && (
               <div className="lab-table">
@@ -305,6 +385,15 @@ export function Lab({ lab }) {
                 ))}
               </div>
               <div className="flex gap-1">
+                <button type="button" className="lab-iconbtn" onClick={() => zoomBy(1 / 1.35)} disabled={cam.k <= 1} aria-label="Zoom out" data-tip="Zoom out (wheel)">
+                  <LuZoomOut aria-hidden="true" />
+                </button>
+                <button type="button" className="lab-iconbtn" onClick={() => zoomBy(1.35)} disabled={cam.k >= 4} aria-label="Zoom in" data-tip="Zoom in (wheel)">
+                  <LuZoomIn aria-hidden="true" />
+                </button>
+                <button type="button" className="lab-iconbtn" onClick={resetCam} disabled={cam.k === 1} aria-label="Fit the whole scene" data-tip="Fit (double-click)">
+                  <LuMaximize aria-hidden="true" />
+                </button>
                 <button type="button" className="lab-iconbtn" onClick={() => setReplayKey((x) => x + 1)} aria-label="Replay this step" data-tip="Replay (R)">
                   <LuRotateCcw aria-hidden="true" />
                 </button>
@@ -387,7 +476,7 @@ export function Lab({ lab }) {
               )}
             </div>
             <div className="lab-keys" aria-hidden="true">
-              <kbd>←</kbd> <kbd>→</kbd> step · <kbd>R</kbd> replay · <kbd>Space</kbd> pause · <kbd>F</kbd> focus
+              <kbd>←</kbd> <kbd>→</kbd> step · <kbd>R</kbd> replay · <kbd>Space</kbd> pause · <kbd>F</kbd> focus · wheel zoom · drag move
             </div>
           </section>
 

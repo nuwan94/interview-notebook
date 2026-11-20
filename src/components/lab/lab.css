@@ -27,7 +27,7 @@
   box-shadow: 0 10px 22px -16px rgba(80, 60, 35, 0.35);
   color: var(--lab-ink);
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.96rem;
   line-height: 1.5;
 }
 .lab.demo::before,
@@ -42,7 +42,7 @@
 }
 .lab-loading {
   color: var(--color-soft);
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 /* the lab page: breadcrumb, the lab, then links to its lesson and the other labs of the sub-topic */
@@ -67,7 +67,7 @@
   text-decoration: none;
   box-shadow: 0 1.5px 0 var(--lab-ink-2);
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.96rem;
 }
 .lab-related-card:hover {
   background: var(--lab-green-tile);
@@ -82,7 +82,7 @@
 }
 .lab-related-kind {
   display: block;
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -97,31 +97,18 @@
 .lab-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.6rem 1rem;
-  margin-bottom: 0.8rem;
-}
-.lab-crumb {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--lab-muted);
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.6rem;
 }
 .lab-title {
-  margin: 0.1rem 0 0;
-  font-size: 1.55rem;
+  margin: 0;
+  font-size: 1.3rem;
   font-weight: 800;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: -0.02em;
   color: var(--lab-ink);
-}
-.lab-subtitle {
-  margin: 0.35rem 0 0;
-  max-width: 44rem;
-  font-size: 0.8rem;
-  color: var(--lab-muted);
 }
 .lab-tags {
   display: flex;
@@ -139,7 +126,7 @@
   border-radius: 13px;
   background: var(--lab-sand);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1.5px 0 var(--lab-ink-2);
-  font-size: 0.72rem;
+  font-size: 0.86rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -179,9 +166,9 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 0.9rem;
 }
-@container (min-width: 60rem) {
+@container (min-width: 48rem) {
   .lab-body {
-    grid-template-columns: minmax(0, 1fr) 21rem;
+    grid-template-columns: minmax(0, 1fr) 20rem;
     align-items: start;
   }
   .lab-side {
@@ -228,7 +215,7 @@
   transition: background 0.4s;
 }
 .lab-metric-label {
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -239,7 +226,7 @@
   margin-left: -0.15rem;
   padding: 0 0.15rem;
   border-radius: 4px;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--lab-ink);
 }
@@ -291,7 +278,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem 0.9rem;
-  font-size: 0.68rem;
+  font-size: 0.82rem;
   color: var(--lab-muted);
 }
 .lab-legend-item::before {
@@ -322,7 +309,7 @@
   border-radius: 10px;
   background: var(--lab-card);
   box-shadow: 0 1.5px 0 var(--lab-ink-2);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
 }
 .lab-table-title {
   margin-bottom: 0.3rem;
@@ -355,7 +342,7 @@
 }
 .lab-table-foot {
   margin-top: 0.3rem;
-  font-size: 0.68rem;
+  font-size: 0.82rem;
   color: var(--lab-muted);
 }
 
@@ -370,7 +357,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.4rem;
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -433,11 +420,11 @@
   border-radius: 999px;
   background: var(--lab-card);
   color: var(--lab-ink);
-  font-size: 0.7rem;
+  font-size: 0.84rem;
   font-weight: 700;
 }
 .lab-dot-label {
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   line-height: 1.2;
   text-align: center;
 }
@@ -476,7 +463,7 @@
   margin-bottom: 0.45rem;
 }
 .lab-stepno {
-  font-size: 0.68rem;
+  font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -488,7 +475,7 @@
   border-radius: 999px;
   background: var(--lab-sand);
   box-shadow: 0 1.5px 0 var(--lab-ink-2);
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -507,7 +494,7 @@
 }
 .lab .lab-text {
   margin: 0 0 0.6rem;
-  font-size: 0.78rem;
+  font-size: 0.94rem;
   line-height: 1.65;
   color: var(--lab-ink-2);
 }
@@ -519,7 +506,7 @@
   border: 1px solid var(--lab-violet-line);
   border-radius: 10px;
   background: var(--lab-violet-tile);
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   line-height: 1.55;
   color: var(--lab-ink-2);
 }
@@ -550,7 +537,7 @@
 }
 .lab-box-title {
   margin-bottom: 0.1rem;
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -558,7 +545,7 @@
 }
 .lab-section-title {
   margin-bottom: 0.3rem;
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -572,7 +559,7 @@
 }
 .lab .lab-changes li {
   margin: 0 0 0.15rem;
-  font-size: 0.72rem;
+  font-size: 0.86rem;
 }
 .lab-changes li > span {
   display: inline-block;
@@ -595,7 +582,7 @@
   background: var(--lab-card);
   box-shadow: 0 1.5px 0 var(--lab-ink-2);
   color: var(--lab-ink);
-  font-size: 0.78rem;
+  font-size: 0.94rem;
   font-weight: 600;
 }
 .lab .lab-nav .btn:disabled {
@@ -623,7 +610,7 @@
 }
 .lab-keys {
   padding: 0 0.95rem 0.65rem;
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   color: var(--lab-muted);
 }
 .lab-keys kbd {
@@ -633,7 +620,7 @@
   border-radius: 4px;
   background: var(--lab-card);
   font-family: inherit;
-  font-size: 0.62rem;
+  font-size: 0.74rem;
 }
 @media (pointer: coarse) {
   .lab-keys {
@@ -652,7 +639,7 @@
   display: flex;
   gap: 0.55rem;
   margin: 0 0 0.35rem;
-  font-size: 0.74rem;
+  font-size: 0.89rem;
   line-height: 1.4;
   color: var(--lab-muted);
 }
@@ -667,7 +654,7 @@
   border: 1.3px solid var(--lab-ink-2);
   border-radius: 4px;
   background: var(--lab-card);
-  font-size: 0.7rem;
+  font-size: 0.84rem;
 }
 .lab .lab-learn li.is-done {
   color: var(--lab-ink);
@@ -693,7 +680,7 @@
 }
 .lab.lab-focus .lab-head,
 .lab.lab-focus .lab-body {
-  max-width: 90rem;
+  max-width: none;
   margin-inline: auto;
 }
 
@@ -728,5 +715,103 @@
   }
   to {
     background: transparent;
+  }
+}
+
+/* A lab fits the window: no page scroll, the scene scales to the space left (width and height),
+   and only the step text scrolls inside its panel if it is long. Needs a window that is wide and tall enough. */
+@media (min-width: 1200px) and (min-height: 540px) {
+  .lab {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0.7rem 0.9rem 0.8rem;
+  }
+  .lab:not(.lab-focus) {
+    height: calc(100dvh - 5.2rem);
+  }
+  .lab.lab-focus {
+    overflow: hidden;
+    padding: 0.8rem clamp(1rem, 2vw, 2rem);
+  }
+  .lab-head {
+    flex: none;
+  }
+  .lab-body {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+  }
+  .lab.lab-focus .lab-body {
+    width: 100%;
+  }
+  .lab-main {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    min-height: 0;
+  }
+  .lab-side {
+    position: static;
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-height: 0;
+  }
+  .lab-stage {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .lab-scene {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .lab-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+  }
+  .lab-table {
+    flex: none;
+  }
+  .lab-panel {
+    min-height: 0;
+  }
+  .lab-panel-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .lab-learn {
+    padding: 0.55rem 0.8rem;
+  }
+  .lab .lab-learn li {
+    margin-bottom: 0.2rem;
+  }
+}
+
+/* on a short window the checklist gives its room to the step text */
+@media (min-width: 1200px) and (min-height: 540px) and (max-height: 820px) {
+  .lab:not(.lab-focus) .lab-learn {
+    display: none;
+  }
+}
+
+/* zoom and move inside the scene */
+.lab-scene.is-zoomed {
+  cursor: grab;
+}
+.lab-scene.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+.lab-iconbtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+@media (min-width: 1200px) and (min-height: 540px) {
+  .lab-scene {
+    touch-action: none;
   }
 }

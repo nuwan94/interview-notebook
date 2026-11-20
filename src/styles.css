@@ -46,7 +46,7 @@ body {
   background: var(--color-desk);
   color: var(--color-ink);
   font-family: var(--font-body);
-  font-size: 1.0625rem;
+  font-size: 1.125rem;
   -webkit-font-smoothing: antialiased;
 }
 

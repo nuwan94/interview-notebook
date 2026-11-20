@@ -3,7 +3,7 @@
 // `lesson` names the lesson it belongs to: labs of one lesson are listed together.
 import { normalizeLab } from './normalize.js';
 
-const files = import.meta.glob(['./*.js', '!./index.js', '!./normalize.js'], { import: 'default', eager: true });
+const files = import.meta.glob(['./*.js', '!./index.js', '!./normalize.js', '!./route.js'], { import: 'default', eager: true });
 
 export const labs = Object.entries(files)
   .map(([p, lab]) => ({

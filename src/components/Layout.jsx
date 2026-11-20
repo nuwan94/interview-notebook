@@ -62,7 +62,7 @@ export function Layout() {
         Skip to content
       </a>
       <header className="sticky top-0 z-30 bg-desk/95 backdrop-blur border-b border-slate-300">
-        <div className="max-w-[88rem] mx-auto flex items-center gap-2 px-3 py-2">
+        <div className="mx-auto flex items-center gap-2 px-3 py-2">
           {/* narrow screens: the title is the menu button (the sidebar has a Home link); wide screens: the title is the home link */}
           <button
             type="button"
@@ -107,7 +107,7 @@ export function Layout() {
         </div>
       </header>
 
-      <div className="max-w-[88rem] mx-auto px-3 py-5 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-6">
+      <div className={`mx-auto px-3 ${labSlug ? 'py-2.5' : 'py-5'} lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-6`}>
         <aside
           id="sidebar"
           className={`${menuOpen ? 'block' : 'hidden'} lg:block mb-4 lg:mb-0 lg:sticky lg:top-[4.6rem] lg:self-start lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto rounded-lg border border-slate-300 bg-sidebar p-3 shadow-sm`}
@@ -115,7 +115,7 @@ export function Layout() {
           <Sidebar lesson={lesson} lab={lab} onNavigate={() => setMenuOpen(false)} />
         </aside>
         {/* a lab page uses the full width so its scene and step panel sit side by side */}
-        <main id="main" className={`min-w-0 w-full mx-auto lg:mx-0 ${labSlug ? '' : 'max-w-[56rem]'}`}>
+        <main id="main" className="min-w-0 w-full">
           <ErrorBoundary resetKey={loc.pathname}>
             <Outlet context={{ toast: showToast }} />
           </ErrorBoundary>
