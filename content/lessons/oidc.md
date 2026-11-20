@@ -99,6 +99,8 @@ Libraries (Spring Security, Nimbus) do this when configured correctly. Never jus
 
 Scopes control which claims you may receive: `openid` (just `sub`), `profile` (name, picture, locale), `email` (`email`, `email_verified`), `phone`, `address`. Claims can be in the ID token or fetched from the **userinfo endpoint** by calling it with the access token. Keep the ID token small and fetch extra data from userinfo. Always check **`email_verified`** before trusting an email address, and never use the email as the primary key.
 
+Try it in the lab: [Logging Alice in with OpenID Connect](lab:oidc-login).
+
 ## Using OIDC {#using}
 
 ### Discovery and endpoints {#discovery}
@@ -127,6 +129,8 @@ New systems choose OIDC; SAML remains where legacy enterprise applications requi
 ### Federation and social login {#federation}
 
 An identity provider can itself delegate to others (Google, a corporate Active Directory or another SAML IdP), so apps talk to one OIDC provider while users sign in with their existing accounts. This is **identity federation**. Authenticate once with the trusted source, then map the stable `sub` (and issuer) to a local user record rather than creating separate passwords.
+
+Try it in the lab: [Two tokens, two audiences](lab:oidc-two-tokens), [Log in once, use two apps](lab:oidc-sso).
 
 ## In Spring Boot {#spring}
 

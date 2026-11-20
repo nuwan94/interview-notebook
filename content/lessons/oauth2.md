@@ -121,6 +121,8 @@ Best practice is **refresh token rotation**: each use returns a new refresh toke
 | TV, CLI, device without a browser | device code |
 | Service acting for a user downstream | token exchange |
 
+Try it in the lab: [A print app asks for Alice's photos: code flow with PKCE](lab:oauth-code-pkce), [A nightly job calls the billing API: client credentials](lab:oauth-client-credentials).
+
 ## Tokens and validation {#tokens}
 
 ### Scopes and audience {#scopes}
@@ -144,6 +146,8 @@ For a JWT access token the API verifies, in this order of concern:
 ### Discovery and JWKS {#discovery}
 
 An AS publishes its configuration at `/.well-known/oauth-authorization-server` (OAuth) or `/.well-known/openid-configuration` (OIDC): endpoint URLs, supported grants, and the `jwks_uri` with the public signing keys. Clients and resource servers read it instead of hard-coding URLs, and key rotation works because tokens carry a key id (`kid`) that selects the right key. See [signatures](lesson:cryptography#signatures) for why verifying only needs the public key.
+
+Try it in the lab: [Short access tokens and refresh token rotation](lab:oauth-refresh-tokens).
 
 ## Security best practices {#security}
 

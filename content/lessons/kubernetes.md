@@ -54,6 +54,8 @@ Everything works as a **reconciliation loop**: observe current state, compare wi
 
 Objects are connected by **labels** and **selectors**: a Service selects pods with `app: payments`; a Deployment manages pods with its selector.
 
+Try it in the lab: [From a bare pod to a Deployment, Service and Ingress](lab:k8s-objects).
+
 ## A Spring Boot Deployment and Service {#yaml}
 
 ```yaml
@@ -125,6 +127,8 @@ Every Service gets a DNS name: `payments` inside its namespace, `payments.bank` 
 
 Keep one image for every environment and inject configuration: **ConfigMap** for ordinary settings, **Secret** for credentials, as environment variables (`envFrom`) or mounted files. Spring Boot maps `SPRING_DATASOURCE_URL` to `spring.datasource.url`. A Secret is only **base64-encoded**, not encrypted: restrict it with RBAC, enable etcd encryption at rest, and prefer an external manager (Vault, cloud KMS, External Secrets). Environment variables are fixed at container start, so changing a ConfigMap needs `kubectl rollout restart` (mounted files update in place).
 
+Try it in the lab: [Configuration and secrets outside the image](lab:k8s-config-secrets).
+
 ## Probes and graceful shutdown {#probes}
 
 | Probe | Question | On failure |
@@ -137,6 +141,8 @@ Spring Boot: `management.endpoint.health.probes.enabled=true` exposes `/actuator
 
 Shutdown: Kubernetes removes the pod from endpoints and sends `SIGTERM`; if the app is still running after `terminationGracePeriodSeconds` (default 30) it sends `SIGKILL`. Use `server.shutdown=graceful` with `spring.lifecycle.timeout-per-shutdown-phase` below the grace period, and a short `preStop` sleep so load balancers stop sending new requests first.
 
+Try it in the lab: [Probes: restart, remove from traffic, or wait](lab:k8s-probes).
+
 ## Resources and scaling {#resources}
 
 - **requests**: what the scheduler reserves; **limits**: the ceiling. Above its **CPU** limit a container is **throttled**; above its **memory** limit it is **OOMKilled** (exit 137).
@@ -145,9 +151,13 @@ Shutdown: Kubernetes removes the pod from endpoints and sends `SIGTERM`; if the 
 - **HPA** (Horizontal Pod Autoscaler) scales replicas by CPU, memory or custom metrics; **VPA** adjusts requests; the **cluster autoscaler** adds nodes when pods cannot be scheduled.
 - A **PodDisruptionBudget** keeps a minimum number of pods available during drains and upgrades. Use several replicas and spread them over nodes and zones (anti-affinity, topology spread constraints).
 
+Try it in the lab: [Requests, limits, autoscaling and disruption budgets](lab:k8s-resources).
+
 ## Rolling updates and releases {#rollouts}
 
 A Deployment update creates a new ReplicaSet and shifts pods gradually. `maxSurge` is how many extra pods may exist, `maxUnavailable` how many may be missing; with `maxUnavailable: 0` capacity never drops, provided readiness probes are correct. `kubectl rollout status`, `kubectl rollout undo deployment/payments` and `kubectl rollout history` manage it. **Blue-green** runs two full environments and flips the Service selector or the ingress; **canary** sends a small share of traffic to the new version (ingress weights or a service mesh). Database changes must be backward compatible so old and new pods can run together ([Saga](lesson:saga), expand and contract migrations).
+
+Try it in the lab: [A rolling update from 1.4 to 1.5 with no downtime](lab:k8s-rolling-update).
 
 ## Storage {#storage}
 

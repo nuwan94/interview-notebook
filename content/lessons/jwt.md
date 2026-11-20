@@ -60,6 +60,8 @@ A **JWK** is a key in JSON form; a **JWKS** is a set of them, published by the i
 
 These are the **registered claims**. Anything else is a **public** or **private** claim (`role`, `scope`, `tenant`, `email`). Keep the payload small: it travels with every request, and a bigger token costs bandwidth and header space (many proxies limit headers to 8 KB).
 
+Try it in the lab: [Issuing and verifying a JWT](lab:jwt-sign-verify).
+
 ## Signing algorithms {#algorithms}
 
 ### Choosing an algorithm {#choosing}
@@ -78,6 +80,8 @@ These are the **registered claims**. Anything else is a **public** or **private*
 ### Key ids and rotation {#kid}
 
 The header `kid` names the key that signed the token. The issuer publishes several public keys in its JWKS; verifiers pick the right one by `kid`, cache the set, and refetch when they meet an unknown `kid`. This lets the issuer **rotate keys** without downtime: publish the new key, start signing with it, keep the old public key until old tokens expire, then remove it.
+
+Try it in the lab: [HS256 or RS256: who can forge a token?](lab:jwt-hs-vs-rs).
 
 ## Validating a token {#validation}
 
@@ -120,6 +124,8 @@ Do not skip any step, and do not trust the payload before the signature is verif
 ### Revocation {#revocation}
 
 Self-contained tokens are valid until they expire, which is both their strength (no lookup) and their weakness (cannot be cancelled simply). Options: keep access tokens **short-lived** (5 to 15 minutes) and revoke the **refresh token** so no new ones are issued; keep a **deny list** of `jti` ids (or a per-user "valid after" timestamp) that services check, which reintroduces some state; or use **opaque tokens** with introspection for the most sensitive APIs. Details and trade-offs are in [OAuth token revocation](lesson:oauth2#q-revoke-q).
+
+Try it in the lab: [Three ways to attack a JWT verifier](lab:jwt-attacks).
 
 ## Using JWTs {#using}
 
