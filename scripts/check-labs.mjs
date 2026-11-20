@@ -3,14 +3,17 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { normalizeLab } from '../src/labs/normalize.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const labsDir = join(root, 'src', 'labs');
 const kindSrc = readFileSync(join(root, 'src', 'components', 'lab', 'IsoScene.jsx'), 'utf8');
 const KINDS = new Set([...kindSrc.matchAll(/^\s{2}(\w+):\s*\{\s*shape:/gm)].map((m) => m[1]));
+const COLORS = new Set(['orange', 'green', 'blue', 'yellow', 'purple', 'teal', 'red']);
 const STEP_KINDS = new Set(['setup', 'problem', 'technique', 'case', 'recap', 'try']);
 const TONES = new Set(['ok', 'bad', 'warn', 'new', 'none']);
 const FLOW_TONES = new Set(['req', 'res', 'bad', 'msg', 'data']);
+const PILL_KINDS = new Set(['database', 'storage', 'cache', 'queue', 'users']);
 const BOX_KINDS = new Set(['idea', 'tip', 'warn']);
 
 // every topic path a lesson uses, so a lab lands in an existing sub-topic
@@ -24,11 +27,12 @@ const lessonTopics = new Set(
 
 let errors = 0;
 let warnings = 0;
-const files = readdirSync(labsDir).filter((f) => f.endsWith('.js') && f !== 'index.js');
+const files = readdirSync(labsDir).filter((f) => f.endsWith('.js') && f !== 'index.js' && f !== 'normalize.js');
 
 for (const file of files) {
   const slug = file.slice(0, -3);
-  const lab = (await import(pathToFileURL(join(labsDir, file)).href)).default;
+  const raw = (await import(pathToFileURL(join(labsDir, file)).href)).default;
+  const lab = normalizeLab(raw);
   const err = (msg) => (errors++, console.log(`  ✗ ${slug}: ${msg}`));
   const warn = (msg) => (warnings++, console.log(`  ! ${slug}: ${msg}`));
 
@@ -38,23 +42,27 @@ for (const file of files) {
   if (!lab.nodes || !lab.steps) continue;
   if (lab.lesson && !readdirSync(join(root, 'content', 'lessons')).includes(`${lab.lesson}.md`)) err(`lesson ${lab.lesson} not found`);
 
-  // nodes: known kind, a grid position, no two on one tile
-  const tiles = new Map();
+  // nodes: known kind, a position, and no two close enough on screen for their labels to collide
+  const screen = new Map();
   for (const [id, n] of Object.entries(lab.nodes)) {
     if (!KINDS.has(n.kind)) err(`node ${id}: unknown kind "${n.kind}" (known: ${[...KINDS].join(', ')})`);
-    if (!Array.isArray(n.at) || n.at.length !== 2 || !n.at.every(Number.isFinite)) err(`node ${id}: "at" must be [gx, gy]`);
+    if (!Array.isArray(n.at) || !n.at.every(Number.isFinite)) err(`node ${id}: needs "col" and "row" (or "at": [gx, gy])`);
     else {
-      const t = n.at.join(',');
-      if (tiles.has(t)) err(`nodes ${tiles.get(t)} and ${id} share tile [${t}]`);
-      tiles.set(t, id);
+      const sx = (n.at[0] - n.at[1]) * 64;
+      const sy = (n.at[0] + n.at[1]) * 32;
+      screen.set(id, [sx, sy]);
     }
-    if ((n.label ?? id).length > 18) warn(`node ${id}: label longer than 18 characters`);
+    if ((n.label ?? id).length > 16) warn(`node ${id}: label "${n.label ?? id}" is longer than 16 characters`);
+    if (n.sub && n.sub.length > 22) warn(`node ${id}: sub "${n.sub}" is longer than 22 characters`);
   }
 
   const metricIds = new Set((lab.metrics ?? []).map((m) => m.id));
   const setMetrics = new Set();
   const learned = new Set();
+  const clash = new Set();
   const onStage = new Set();
+  const links = new Map();   // active links, so a line that runs through a third node can be reported
+  const passed = new Set();
   const need = (id, where) => {
     if (!lab.nodes[id]) err(`${where}: unknown node "${id}"`);
     else if (!onStage.has(id)) err(`${where}: node "${id}" is not on stage`);
@@ -67,9 +75,14 @@ for (const file of files) {
       if (!lab.nodes[id]) err(`${at} show: unknown node "${id}"`);
       onStage.add(id);
     }
-    for (const id of Object.keys(s.set ?? {})) need(id, `${at} set`);
+    for (const [id, patch] of Object.entries(s.set ?? {})) {
+      need(id, `${at} set`);
+      if (patch?.color && !COLORS.has(patch.color)) err(`${at} set ${id}: unknown color ${patch.color}`);
+    }
+    for (const [from, to] of s.unlink ?? []) links.delete(`${from}>${to}`);
     for (const l of s.link ?? []) {
       const [from, to, opts] = Array.isArray(l) ? l : [l.from, l.to, l];
+      links.set(`${from}>${to}`, [from, to]);
       need(from, `${at} link`);
       need(to, `${at} link`);
       if (opts && typeof opts === 'object' && opts.tone && !TONES.has(opts.tone)) err(`${at} link ${from}>${to}: unknown tone ${opts.tone}`);
@@ -100,6 +113,48 @@ for (const file of files) {
     if (s.box && !BOX_KINDS.has(s.box.kind ?? 'idea')) err(`${at}: unknown box kind ${s.box.kind}`);
     if (s.table && !(s.table.rows ?? []).every((r) => Array.isArray(r) && r.length === 2)) err(`${at}: table rows must be [label, value]`);
     if (onStage.size === 0) err(`${at}: nothing on stage`);
+    // a line should not run through a node that is neither of its ends
+    const segs = [...links.values(), ...(s.flows ?? []).flatMap((f) => (f.path ?? []).slice(1).map((id, k) => [f.path[k], id]))];
+    for (const [from, to] of segs) {
+      if (!screen.has(from) || !screen.has(to) || !onStage.has(from) || !onStage.has(to)) continue;
+      const [px, py] = screen.get(from);
+      const [qx, qy] = screen.get(to);
+      // distance from a point to the segment, in units of an ellipse of half sizes (rx, ry)
+      const near = (cx, cy, rx, ry) => {
+        const len2 = (qx - px) ** 2 + (qy - py) ** 2 || 1;
+        const t = Math.max(0, Math.min(1, ((cx - px) * (qx - px) + (cy - py) * (qy - py)) / len2));
+        const dx = (px + (qx - px) * t - cx) / rx;
+        const dy = (py + (qy - py) * t - cy) / ry;
+        return dx * dx + dy * dy < 1;
+      };
+      for (const id of onStage) {
+        if (id === from || id === to || !screen.has(id)) continue;
+        const [cx, cy] = screen.get(id);
+        const key = `${from}>${to}|${id}`;
+        if (near(cx, cy, 62, 44) && !passed.has(key)) {
+          passed.add(key);
+          warn(`${at}: the line ${from} > ${to} runs through ${id}`);
+        }
+        // cylinders, stacks and crowds print their name under the body
+        if (PILL_KINDS.has(lab.nodes[id].kind) && near(cx, cy + 84, 72, 22) && !passed.has(`${key}|name`)) {
+          passed.add(`${key}|name`);
+          warn(`${at}: the line ${from} > ${to} crosses the name of ${id}`);
+        }
+      }
+    }
+    // nodes shown together must not sit on top of each other
+    const ids = [...onStage].filter((id) => screen.has(id));
+    for (let a = 0; a < ids.length; a++) {
+      for (let b = a + 1; b < ids.length; b++) {
+        const [ax, ay] = screen.get(ids[a]);
+        const [bx, by] = screen.get(ids[b]);
+        const key = `${ids[a]}|${ids[b]}`;
+        if (Math.abs(ax - bx) < 150 && Math.abs(ay - by) < 110 && !clash.has(key)) {
+          clash.add(key);
+          err(`${at}: nodes ${ids[a]} and ${ids[b]} are too close on screen (use a different col or row)`);
+        }
+      }
+    }
   });
 
   for (const id of metricIds) if (!setMetrics.has(id)) warn(`metric "${id}" is never set`);

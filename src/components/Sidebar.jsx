@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LuFlaskConical } from 'react-icons/lu';
 import { Link, NavLink } from 'react-router-dom';
-import { LEVELS, topicAncestors, topicContains, topicLessonCount, topicTree } from '../lib/content.js';
+import { LEVELS, getLesson, topicAncestors, topicContains, topicLessonCount, topicTree } from '../lib/content.js';
 
 // paths of every topic (at any depth) that contains the lesson
 const ancestorsOf = (node, slug, out = []) => {
@@ -13,6 +13,18 @@ const ancestorsOf = (node, slug, out = []) => {
   }
   return out;
 };
+
+/** Labs grouped by their lesson (in lab order). A lone group needs no heading. */
+export function labGroups(list) {
+  const groups = [];
+  for (const x of list) {
+    let g = groups.find((y) => y.lesson === (x.lesson ?? null));
+    if (!g) groups.push((g = { lesson: x.lesson ?? null, heading: x.lesson ? getLesson(x.lesson)?.nav : '', labs: [] }));
+    g.labs.push(x);
+  }
+  if (groups.length === 1) groups[0].heading = '';
+  return groups;
+}
 
 /** One level of the topic tree: its lessons first, then its labs as their own group, then collapsible sub-topics (which nest the same way). */
 function TopicBranch({ node, lesson, lab, onNavigate, link, expanded, toggle }) {
@@ -35,19 +47,24 @@ function TopicBranch({ node, lesson, lab, onNavigate, link, expanded, toggle }) 
           <span className="nav-labs-title">
             <LuFlaskConical aria-hidden="true" /> Labs
           </span>
-          <ul className="list-none m-0 p-0">
-            {node.labs.map((x) => (
-              <li key={x.slug}>
-                <NavLink
-                  to={`/lab/${x.slug}`}
-                  onClick={onNavigate}
-                  className={({ isActive }) => `${link} ${isActive || lab?.slug === x.slug ? 'bg-white text-pen font-bold shadow-sm' : ''}`}
-                >
-                  {x.nav ?? x.title}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
+          {labGroups(node.labs).map((g) => (
+            <div key={g.lesson ?? 'other'}>
+              {g.heading && <span className="nav-labs-lesson">{g.heading}</span>}
+              <ul className="list-none m-0 p-0">
+                {g.labs.map((x) => (
+                  <li key={x.slug}>
+                    <NavLink
+                      to={`/lab/${x.slug}`}
+                      onClick={onNavigate}
+                      className={({ isActive }) => `${link} ${isActive || lab?.slug === x.slug ? 'bg-white text-pen font-bold shadow-sm' : ''}`}
+                    >
+                      {x.nav ?? x.title}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </li>
       )}
       {node.children.map((c) => {

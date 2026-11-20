@@ -9,6 +9,8 @@ import { useReducedMotion } from '../../lib/prefs.jsx';
 import { copyText } from '../../lib/share.js';
 import { buildStates, allPlacedNodes } from './model.js';
 import { IsoScene, iso, sceneBox } from './IsoScene.jsx';
+import '@fontsource/jetbrains-mono/600.css';
+import '@fontsource/jetbrains-mono/800.css';
 import './lab.css';
 
 const KIND_LABEL = { setup: 'Setup', problem: 'Problem', technique: 'Technique', case: 'Case', recap: 'Recap', try: 'Try it' };
@@ -129,7 +131,7 @@ export function Lab({ lab }) {
     const s = stepFromHash(lab.slug);
     if (s !== null) setIndex(clamp(s));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.key, lab.slug]);
+  }, [location.pathname, lab.slug]);
 
   // remember progress and keep the address pointing at this step (only after the reader moved)
   useEffect(() => {

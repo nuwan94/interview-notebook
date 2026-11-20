@@ -4,73 +4,155 @@ import {
 } from 'react-icons/lu';
 import { iconComponent } from '../demos/icons.jsx';
 
+// The look follows the "designed to scale" lessons: soft rounded isometric blocks with an ink outline and a gradient,
+// a blurred shadow on the floor, the name printed on the front of the block, ink arrows, white pills with a hard shadow,
+// and request / response packets with an ink outline.
+
 // Isometric grid: a tile is TW wide and TH high on screen (2:1).
 const TW = 128;
 const TH = 64;
-const FOOT = 0.74; // share of a tile a node covers
 
 /** Grid position (gx, gy) to screen position of the tile centre. */
 export const iso = (gx, gy) => [(gx - gy) * (TW / 2), (gx + gy) * (TH / 2)];
 
-// Each kind has a shape, a height and three face colours (top, left, right) plus an ink colour.
+const INK = '#1b2433';
+const PAPER = '#ffffff';
+
+// gradient pairs for the top face and the side faces, plus the outline / icon colour of each family
+const PALETTE = {
+  orange: { top: ['#fff0ec', '#fde3dc'], side: ['#f4b7a6', '#e79a86'], ink: '#a3402a' },
+  green:  { top: ['#eef8e6', '#e0f0d2'], side: ['#c3e3ae', '#a6cf8c'], ink: '#3d6e22' },
+  blue:   { top: ['#e8effc', '#d6e2fa'], side: ['#aec3ee', '#8ea9df'], ink: '#2c4f99' },
+  yellow: { top: ['#fff6e2', '#fdefd3'], side: ['#f3d08e', '#e4b866'], ink: '#8a5a07' },
+  purple: { top: ['#f2eefc', '#e6dffa'], side: ['#c8b9ef', '#ab97e0'], ink: '#5a43a8' },
+  teal:   { top: ['#e6f6f4', '#d3eeea'], side: ['#a3dbd4', '#82c8bf'], ink: '#1d6d64' },
+  red:    { top: ['#fdeceb', '#fbe0de'], side: ['#f2b3ae', '#e68f89'], ink: '#b4332f' },
+  slab:   { top: ['#f6f8fa', '#eef1f5'], side: ['#d3d9e1', '#bcc4cf'], ink: '#46505e' },
+};
+
+// Each kind has a shape, a colour and a height. The shape list is read by `pnpm check:labs`.
 const KINDS = {
-  client:   { shape: 'device',   h: 12, c: ['#eef1f5', '#d3d9e1', '#bcc4cf'], ink: '#46505e', icon: LuLaptop },
-  mobile:   { shape: 'device',   h: 12, c: ['#eef1f5', '#d3d9e1', '#bcc4cf'], ink: '#46505e', icon: LuSmartphone },
-  users:    { shape: 'pad',      h: 6,  c: ['#eef1f5', '#d3d9e1', '#bcc4cf'], ink: '#46505e', icon: LuUsers },
-  service:  { shape: 'block',    h: 42, c: ['#dbe6fb', '#aec3ee', '#8ea9df'], ink: '#2c4f99', icon: LuServer },
-  worker:   { shape: 'block',    h: 34, c: ['#dbe6fb', '#aec3ee', '#8ea9df'], ink: '#2c4f99', icon: LuCog },
-  database: { shape: 'cylinder', h: 44, c: ['#ebe5fb', '#c8b9ef', '#ab97e0'], ink: '#5a43a8', icon: LuDatabase },
-  storage:  { shape: 'block',    h: 30, c: ['#ebe5fb', '#c8b9ef', '#ab97e0'], ink: '#5a43a8', icon: LuHardDrive },
-  cache:    { shape: 'block',    h: 26, c: ['#fde3dc', '#f4b7a6', '#e79a86'], ink: '#a3402a', icon: LuZap },
-  queue:    { shape: 'stack',    h: 36, c: ['#fdefd3', '#f3d08e', '#e4b866'], ink: '#8a5a07', icon: LuInbox },
-  lb:       { shape: 'block',    h: 20, c: ['#d7f1ee', '#a3dbd4', '#82c8bf'], ink: '#1d6d64', icon: LuNetwork },
-  gateway:  { shape: 'block',    h: 24, c: ['#d7f1ee', '#a3dbd4', '#82c8bf'], ink: '#1d6d64', icon: LuDoorOpen },
-  security: { shape: 'block',    h: 24, c: ['#d7f1ee', '#a3dbd4', '#82c8bf'], ink: '#1d6d64', icon: LuShield },
-  external: { shape: 'block',    h: 32, c: ['#e5f3dc', '#c3e3ae', '#a6cf8c'], ink: '#3d6e22', icon: LuGlobe, dashed: true },
+  client:   { shape: 'crowd',    people: 1, h: 6,  icon: LuLaptop },
+  mobile:   { shape: 'crowd',    people: 1, h: 6,  icon: LuSmartphone },
+  users:    { shape: 'crowd',    people: 3, h: 6,  icon: LuUsers },
+  service:  { shape: 'prism',    color: 'blue',   h: 46, icon: LuServer },
+  worker:   { shape: 'prism',    color: 'blue',   h: 42, icon: LuCog },
+  database: { shape: 'cylinder', color: 'purple', h: 40, icon: LuDatabase },
+  storage:  { shape: 'cylinder', color: 'purple', h: 30, icon: LuHardDrive },
+  cache:    { shape: 'prism',    color: 'orange', h: 38, icon: LuZap },
+  queue:    { shape: 'stack',    color: 'yellow', h: 40, icon: LuInbox },
+  lb:       { shape: 'prism',    color: 'teal',   h: 36, icon: LuNetwork },
+  gateway:  { shape: 'prism',    color: 'teal',   h: 42, icon: LuDoorOpen },
+  security: { shape: 'prism',    color: 'teal',   h: 42, icon: LuShield },
+  external: { shape: 'prism',    color: 'green',  h: 42, icon: LuGlobe, dashed: true },
 };
 export const KIND_NAMES = Object.keys(KINDS);
+export const COLOR_NAMES = Object.keys(PALETTE).filter((c) => c !== 'slab');
 
+// pill tints for tones; the border is always ink
 export const TONES = {
-  ok:   { line: 'var(--color-ok)',   soft: 'var(--color-ok-soft)' },
-  bad:  { line: 'var(--color-bad)',  soft: 'var(--color-bad-soft)' },
-  warn: { line: 'var(--color-warn)', soft: 'var(--color-warn-soft)' },
-  new:  { line: 'var(--color-pen)',  soft: 'var(--color-pen-soft)' },
-  none: { line: '#5b6676',           soft: '#ffffff' },
+  ok:   { fill: '#dff3e6', line: '#2f7d4f' },
+  bad:  { fill: '#fbe0de', line: '#b4332f' },
+  warn: { fill: '#fdeccd', line: '#a65b0a' },
+  new:  { fill: '#e3eafa', line: '#23408f' },
+  none: { fill: PAPER, line: INK },
 };
-const FLOW_COLOR = { req: '#d9822b', res: '#2f9e5a', bad: '#c0392b', msg: '#7b5cc4', data: '#2b6cb0' };
-const SPEED = 230;      // flow dot speed, px per second
+// packet looks: circle or square, fill, outline
+const PACKET = {
+  req:  { shape: 'circle', fill: '#f0a24a', stroke: INK, sw: 1.4 },
+  res:  { shape: 'circle', fill: '#6cc48a', stroke: INK, sw: 1.4 },
+  bad:  { shape: 'circle', fill: '#fbe0de', stroke: '#b4332f', sw: 2.1 },
+  msg:  { shape: 'square', fill: '#9a82dc', stroke: INK, sw: 1.4 },
+  data: { shape: 'square', fill: '#4f8fd6', stroke: INK, sw: 1.4 },
+};
+const LINK_COLOR = { none: '#4a5568', ok: '#2f7d4f', bad: '#b4332f', warn: '#a65b0a', new: '#23408f', faint: '#9aa6b6' };
+const SPEED = 230;      // packet speed, px per second
 const GAP = 650;        // pause after the last flow of a cycle, ms
 
 const kindOf = (n) => KINDS[n.kind] ?? KINDS.service;
-const A = (TW / 2) * FOOT;
-const B = (TH / 2) * FOOT;
-
-/** Height of the top surface above the ground point, used for anchors and badges. */
-const topOf = (n) => {
-  const k = kindOf(n);
-  return k.shape === 'cylinder' ? k.h + B * 0.55 : k.h;
-};
-const anchor = (n) => {
-  const [x, y] = iso(...n.at);
-  return [x, y - topOf(n) * 0.45];
-};
+const colorOf = (n) => n.color ?? kindOf(n).color ?? 'blue';
+const inkOf = (n) => PALETTE[colorOf(n)]?.ink ?? INK;
 
 /** Approximate text width in the mono font. */
-const textW = (s, fs) => String(s).length * fs * 0.61;
+const textW = (s, fs) => String(s).length * fs * 0.6;
 
-function Pill({ x, y, text, fs, tone = 'none', bold = true, sub, fill }) {
+/** Footprint of a node: half width a, half height b of its floor diamond, its height h, and how far it reaches above and below the tile centre. */
+function geomOf(n) {
+  const k = kindOf(n);
+  if (k.shape === 'crowd') return { a: 74, b: 37, h: k.h, top: 44, bottom: 37, pill: true };
+  if (k.shape === 'cylinder') {
+    const rx = 56 * 0.67;
+    const ry = rx / 2;
+    return { a: 56, b: ry, h: k.h, top: k.h + ry, bottom: ry, pill: true, rx, ry };
+  }
+  if (k.shape === 'stack') return { a: 56, b: 28, h: 10, top: 28 + 28 + 10, bottom: 28, pill: true };
+  // a block: wide enough for its name, which is printed on the front; tall enough that the text stays inside the front faces
+  const t = blockText(n);
+  const a = t.width / 2;
+  const b = a / 2;
+  const h = Math.max(k.h, t.need);
+  return { a, b, h, top: h + b, bottom: b, pill: false, text: t };
+}
+/** Font sizes and the height a block needs for its name (and second line). Text is level, the faces slope, so wider text needs more height. */
+function blockText(n) {
+  const label = String(n.label ?? n.id);
+  const sub = n.sub ? String(n.sub) : '';
+  const width = Math.min(168, Math.max(112, textW(label, 13.5) + 26, sub ? textW(sub, 9.5) + 26 : 0));
+  const room = width - 18;
+  const nameFs = Math.min(13.5, room / (label.length * 0.6));
+  const subFs = sub ? Math.min(9.5, room / (sub.length * 0.6)) : 0;
+  const nameW = textW(label, nameFs);
+  const subW = sub ? textW(sub, subFs) : 0;
+  const textH = nameFs * 1.2 + (sub ? subFs * 1.45 : 0);
+  // the lowest line must clear the bottom edge, which rises by a quarter of the line's width towards both ends
+  const need = Math.ceil(10 + textH + (sub ? subW : nameW) / 4);
+  return { width, nameFs, subFs, textH, need };
+}
+/** The point lines attach to: the middle of the node's drawn body. */
+const anchor = (n) => {
+  const [x, y] = iso(...n.at);
+  const g = geomOf(n);
+  return [x, y - (g.top - g.bottom) / 2];
+};
+
+/** A closed path through the points with rounded corners (quadratic curves with the corner as control point). */
+function roundedPoly(pts, r) {
+  const n = pts.length;
+  const out = [];
+  pts.forEach((v, i) => {
+    const p = pts[(i + n - 1) % n];
+    const q = pts[(i + 1) % n];
+    const d1 = [p[0] - v[0], p[1] - v[1]];
+    const d2 = [q[0] - v[0], q[1] - v[1]];
+    const l1 = Math.hypot(...d1) || 1;
+    const l2 = Math.hypot(...d2) || 1;
+    const rr = Math.min(r, l1 / 2, l2 / 2);
+    const a = [v[0] + (d1[0] / l1) * rr, v[1] + (d1[1] / l1) * rr];
+    const b = [v[0] + (d2[0] / l2) * rr, v[1] + (d2[1] / l2) * rr];
+    out.push(`${i ? 'L' : 'M'}${a[0].toFixed(2)},${a[1].toFixed(2)} Q${v[0].toFixed(2)},${v[1].toFixed(2)} ${b[0].toFixed(2)},${b[1].toFixed(2)}`);
+  });
+  return `${out.join(' ')} Z`;
+}
+
+/** Pill: a white rounded label with an ink border and a hard shadow. */
+function Pill({ x, y, text, fs, tone = 'none', icon: Icon, bold = true, sub }) {
   const t = TONES[tone] ?? TONES.none;
-  const w = Math.max(textW(text, fs), sub ? textW(sub, fs * 0.85) : 0) + fs * 1.3;
-  const h = sub ? fs * 2.65 : fs * 1.75;
+  const h = fs * 2;
+  const w = textW(text, fs) + (Icon ? fs * 2.5 : fs * 1.7);
   return (
     <g className="lab-pill">
-      <rect x={x - w / 2 + 2} y={y - h / 2 + 2.5} width={w} height={h} rx={h / 2.6} fill="rgba(27,36,51,0.18)" />
-      <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={h / 2.6} fill={fill ?? (tone === 'none' ? '#fff' : t.soft)} stroke={t.line} strokeWidth={1.3} />
-      <text x={x} y={sub ? y - fs * 0.32 : y + fs * 0.36} textAnchor="middle" fontSize={fs} fontWeight={bold ? 700 : 500} fill={tone === 'none' ? 'var(--color-ink)' : t.line}>
+      <rect x={x - w / 2} y={y - h / 2 + fs * 0.2} width={w} height={h} rx={h / 2} fill={INK} />
+      <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={h / 2} fill={t.fill} stroke={INK} strokeWidth={fs * 0.125} />
+      {Icon && (
+        <g transform={`translate(${x - w / 2 + fs * 0.85},${y - fs * 0.55})`}>
+          <Icon size={fs * 1.1} color={INK} aria-hidden="true" focusable="false" />
+        </g>
+      )}
+      <text x={x + (Icon ? fs * 0.85 : 0)} y={y + fs * 0.36} textAnchor="middle" fontSize={fs} fontWeight={bold ? 700 : 600} fill={INK}>
         {text}
       </text>
       {sub && (
-        <text x={x} y={y + fs * 0.92} textAnchor="middle" fontSize={fs * 0.85} fill="var(--color-soft)">
+        <text x={x} y={y + h / 2 + fs * 1.15} textAnchor="middle" fontSize={fs * 0.8} fill="#5b6676">
           {sub}
         </text>
       )}
@@ -78,86 +160,168 @@ function Pill({ x, y, text, fs, tone = 'none', bold = true, sub, fill }) {
   );
 }
 
-function Body({ n }) {
-  const k = kindOf(n);
-  const [x, y] = iso(...n.at);
-  const [top, left, right] = k.c;
-  const stroke = k.ink;
-  const dash = k.dashed ? '5 4' : undefined;
-  const sw = 1.4;
-  const block = (h, a = A, b = B, oy = 0) => (
-    <>
-      <path d={`M${x - a},${y - h - oy} L${x},${y - h + b - oy} L${x},${y + b - oy} L${x - a},${y - oy} Z`} fill={left} stroke={stroke} strokeWidth={sw} strokeDasharray={dash} strokeLinejoin="round" />
-      <path d={`M${x},${y - h + b - oy} L${x + a},${y - h - oy} L${x + a},${y - oy} L${x},${y + b - oy} Z`} fill={right} stroke={stroke} strokeWidth={sw} strokeDasharray={dash} strokeLinejoin="round" />
-      <path d={`M${x},${y - h - b - oy} L${x + a},${y - h - oy} L${x},${y - h + b - oy} L${x - a},${y - h - oy} Z`} fill={top} stroke={stroke} strokeWidth={sw} strokeDasharray={dash} strokeLinejoin="round" />
-    </>
-  );
-
-  let shape;
-  if (k.shape === 'cylinder') {
-    const rx = A * 0.8;
-    const ry = rx * 0.5;
-    const h = k.h;
-    shape = (
-      <>
-        <path d={`M${x - rx},${y - h} L${x - rx},${y} A${rx},${ry} 0 0 0 ${x + rx},${y} L${x + rx},${y - h} Z`} fill={left} stroke={stroke} strokeWidth={sw} />
-        <path d={`M${x},${y + ry} A${rx},${ry} 0 0 0 ${x + rx},${y} L${x + rx},${y - h} L${x},${y - h + ry} Z`} fill={right} opacity={0.55} />
-        {[0.36, 0.7].map((f) => (
-          <path key={f} d={`M${x - rx},${y - h * f} A${rx},${ry} 0 0 0 ${x + rx},${y - h * f}`} fill="none" stroke={stroke} strokeWidth={1} opacity={0.45} />
-        ))}
-        <ellipse cx={x} cy={y - h} rx={rx} ry={ry} fill={top} stroke={stroke} strokeWidth={sw} />
-      </>
-    );
-  } else if (k.shape === 'stack') {
-    shape = <>{[0, 1, 2].map((i) => <g key={i}>{block(9, A, B, i * 13)}</g>)}</>;
-  } else if (k.shape === 'pad' || k.shape === 'device') {
-    shape = block(k.h, A * 1.05, B * 1.05);
-  } else {
-    shape = block(k.h);
-  }
-
-  // the icon: from the node's own icon name, its label, or the kind default
-  const Icon = (n.icon && iconComponent(n.icon)) || iconComponent(n.label ?? '') || k.icon;
-  const tall = k.shape === 'pad' || k.shape === 'device';
-  const size = tall ? 34 : 26;
-  const iy = tall ? y - k.h - size - 2 : k.shape === 'cylinder' ? y - k.h - size / 2 : k.shape === 'stack' ? y - 26 - 9 - size / 2 : y - k.h - size / 2;
+/** The rounded isometric block (also the thin slabs of a stack and a crowd's floor). */
+function Prism({ x, y, a, h, color, ink = INK, uid, dash, sheen = true }) {
+  const b = a / 2;
+  const T = [x, y - h - b];
+  const R = [x + a, y - h];
+  const C = [x, y - h + b];
+  const L = [x - a, y - h];
+  const R2 = [x + a, y];
+  const B2 = [x, y + b];
+  const L2 = [x - a, y];
+  const sil = roundedPoly([T, R, R2, B2, L2, L], 9);
+  const top = roundedPoly([T, R, C, L], 9);
+  const right = roundedPoly([C, R, R2, B2], 6);
+  const glow = roundedPoly([[x, y - h - b + 5], [x + a - 12, y - h], [x, y - h + b - 5], [x - a + 12, y - h]], 6);
+  const edge = `M${L[0]},${L[1]} L${C[0]},${C[1]} L${R[0]},${R[1]}`;
   return (
     <g>
-      {shape}
-      <g transform={`translate(${x - size / 2},${iy})`}>
-        <Icon size={size} color={stroke} aria-hidden="true" focusable="false" />
-      </g>
+      <path d={sil} transform="translate(0 9)" fill="#2a3550" opacity="0.2" filter={`url(#lab-blur-lg-${uid})`} />
+      <path d={sil} fill={`url(#lab-${color}-side-${uid})`} />
+      {h > 12 && <path d={right} fill="#1b2433" opacity="0.05" />}
+      <path d={top} fill={`url(#lab-${color}-top-${uid})`} />
+      {sheen && <path d={glow} fill="#fff" opacity="0.22" filter={`url(#lab-blur-sm-${uid})`} />}
+      <path d={edge} transform="translate(0 1.4)" fill="none" stroke="#fff" strokeOpacity="0.75" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={edge} transform="translate(0 3.4)" fill="none" stroke="#1b2433" strokeOpacity="0.07" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={sil} fill="none" stroke={ink} strokeWidth="1.9" strokeLinejoin="round" strokeDasharray={dash} />
     </g>
   );
 }
 
-function Pad({ n }) {
-  const [x, y] = iso(...n.at);
-  const t = TONES[n.tone] ?? null;
-  const a = (TW / 2) * 0.98;
-  const b = (TH / 2) * 0.98;
+/** A little person standing on a crowd slab. */
+function Person({ x, y, fill }) {
   return (
-    <path
-      d={`M${x},${y - b} L${x + a},${y} L${x},${y + b} L${x - a},${y} Z`}
-      fill={t ? t.soft : 'rgba(27,36,51,0.05)'}
-      stroke={t ? t.line : 'rgba(27,36,51,0.12)'}
-      strokeWidth={t ? 2 : 1}
-      strokeDasharray={t ? '7 5' : undefined}
-      opacity={t ? 0.9 : 1}
-    />
+    <g transform={`translate(${x} ${y}) scale(1.3)`}>
+      <ellipse cx="0" cy="0" rx="5.6" ry="2.8" fill="#2a3550" opacity="0.16" />
+      <path d="M-5.2,0 V-9 A5.2,5.2 0 0 1 5.2,-9 V0 A5.2,2.4 0 0 1 -5.2,0 Z" fill={fill} stroke={INK} strokeWidth="1.25" />
+      <circle cx="0" cy="-17.6" r="4.3" fill="#fff" stroke={INK} strokeWidth="1.25" />
+    </g>
+  );
+}
+const PEOPLE = [['#b3d79f', -14, 3], ['#f3b47f', 4, -5], ['#a9c5e8', 18, 7]];
+
+function Body({ n, uid, compact }) {
+  const k = kindOf(n);
+  const g = geomOf(n);
+  const [x, y] = iso(...n.at);
+  const color = colorOf(n);
+  const ink = inkOf(n);
+  const dash = k.dashed ? '5 4' : undefined;
+  const Icon = (n.icon && iconComponent(n.icon)) || iconComponent(n.label ?? '') || k.icon;
+
+  if (k.shape === 'cylinder') {
+    const { rx, ry, h } = g;
+    const side = `M${x - rx},${y - h} V${y} A${rx},${ry} 0 0 0 ${x + rx},${y} V${y - h} Z`;
+    return (
+      <g>
+        <ellipse cx={x} cy={y + 4} rx={rx * 1.08} ry={ry * 1.05} fill="#2a3550" opacity="0.2" filter={`url(#lab-blur-md-${uid})`} />
+        <path d={side} fill={`url(#lab-${color}-side-${uid})`} />
+        <path d={side} fill={`url(#lab-sheen-${uid})`} />
+        <ellipse cx={x} cy={y - h} rx={rx} ry={ry} fill={`url(#lab-${color}-top-${uid})`} />
+        <path d={`M${x - rx + 3},${y - h + 2.5} A${rx - 3},${ry - 2} 0 0 0 ${x + rx - 3},${y - h + 2.5}`} fill="none" stroke="#fff" strokeOpacity="0.7" strokeWidth="1.4" />
+        <path d={`M${x - rx},${y - h} V${y} A${rx},${ry} 0 0 0 ${x + rx},${y} V${y - h}`} fill="none" stroke={ink} strokeWidth="1.9" strokeLinejoin="round" />
+        <ellipse cx={x} cy={y - h} rx={rx} ry={ry} fill="none" stroke={ink} strokeWidth="1.9" />
+        <g transform={`translate(${x - 9.5},${y - h * 0.5 - 8})`}>
+          <Icon size={19} color={ink} aria-hidden="true" focusable="false" />
+        </g>
+      </g>
+    );
+  }
+
+  if (k.shape === 'stack') {
+    return (
+      <g>
+        {[0, 1, 2].map((i) => (
+          <Prism key={i} x={x} y={y - i * 14} a={g.a} h={10} color={color} ink={ink} uid={uid} dash={dash} sheen={i === 2} />
+        ))}
+        <g transform={`translate(${x - 11},${y - 2 * 14 - 10 - 13})`}>
+          <Icon size={22} color={ink} aria-hidden="true" focusable="false" />
+        </g>
+      </g>
+    );
+  }
+
+  if (k.shape === 'crowd') {
+    const people = k.people === 1 ? [['#a9c5e8', 0, 2]] : PEOPLE.slice(0, k.people);
+    const cy = y - g.h;
+    return (
+      <g>
+        <Prism x={x} y={y} a={g.a} h={g.h} color="slab" ink={PALETTE.slab.ink} uid={uid} />
+        {people.map(([fill, dx, dy], i) => (
+          <Person key={i} x={x + dx} y={cy + dy} fill={fill} />
+        ))}
+      </g>
+    );
+  }
+
+  // block: icon on the top face, the name on the front, inside the faces
+  const label = String(n.label ?? n.id);
+  const { nameFs, subFs, textH } = g.text;
+  const top = y - g.h + g.b + 4;                       // below the front edge at the middle of the block
+  const nameY = top + nameFs * 0.95;
+  return (
+    <g>
+      <Prism x={x} y={y} a={g.a} h={g.h} color={color} ink={ink} uid={uid} dash={dash} />
+      <g transform={`translate(${x - 11},${y - g.h - 12})`}>
+        <Icon size={22} color={ink} aria-hidden="true" focusable="false" />
+      </g>
+      <text x={x} y={nameY} textAnchor="middle" fontSize={nameFs} fontWeight="800" fill={INK}>
+        {label}
+      </text>
+      {n.sub && !compact && (
+        <text x={x} y={top + textH - subFs * 0.2} textAnchor="middle" fontSize={subFs} fontWeight="600" fill="#4a5568">
+          {n.sub}
+        </text>
+      )}
+    </g>
   );
 }
 
-/** Points along a polyline of node anchors, trimmed so lines start and end at the node edges. */
-function routeOf(ids, byId, trim = 36) {
-  const pts = ids.map((id) => byId.get(id)).filter(Boolean).map(anchor);
+/** A tinted dashed diamond on the floor under a node (used for a node's tone). */
+function Pad({ n }) {
+  const t = TONES[n.tone];
+  if (!t) return null;
+  const [x, y] = iso(...n.at);
+  const g = geomOf(n);
+  const a = g.a + 20;
+  const b = a / 2;
+  return <path d={roundedPoly([[x, y - b], [x + a, y], [x, y + b], [x - a, y]], 10)} fill={t.fill} fillOpacity="0.55" stroke={INK} strokeOpacity="0.55" strokeWidth="1.5" strokeDasharray="6 5" />;
+}
+
+/**
+ * Points along a polyline of node anchors, trimmed at both ends. `trim` is a number of pixels, or 'edge' to stop at the
+ * edge of each node's body (used for links, so the arrowhead is not hidden behind the box).
+ */
+function routeOf(ids, byId, trim = 36, fs = 12) {
+  const nodes = ids.map((id) => byId.get(id)).filter(Boolean);
+  const pts = nodes.map(anchor);
   if (pts.length < 2) return null;
   const cut = (p, q, d) => {
     const len = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
     return [p[0] + ((q[0] - p[0]) * d) / len, p[1] + ((q[1] - p[1]) * d) / len];
   };
-  pts[0] = cut(pts[0], pts[1], trim);
-  pts[pts.length - 1] = cut(pts[pts.length - 1], pts[pts.length - 2], trim);
+  const dist = (i, j) => {
+    if (trim !== 'edge') return trim;
+    const len = Math.hypot(pts[j][0] - pts[i][0], pts[j][1] - pts[i][1]) || 1;
+    const ux = (pts[j][0] - pts[i][0]) / len;
+    const uy = (pts[j][1] - pts[i][1]) / len;
+    const g = geomOf(nodes[i]);
+    const rx = g.a + 6;
+    const ry = (g.top + g.bottom) / 2 + 6;
+    const edge = 1 / Math.sqrt((ux / rx) ** 2 + (uy / ry) ** 2);
+    // a line leaving straight down would end behind the node's name pill: stop below the pill instead
+    if (g.pill && uy > 0.5 && Math.abs(ux) < 0.4) {
+      const below = g.bottom + fs * 3.6 + (g.top - g.bottom) / 2;
+      return Math.max(edge, below / uy);
+    }
+    return edge;
+  };
+  const last = pts.length - 1;
+  const a = cut(pts[0], pts[1], dist(0, 1));
+  const z = cut(pts[last], pts[last - 1], dist(last, last - 1));
+  pts[0] = a;
+  pts[last] = z;
   let total = 0;
   const segs = [];
   for (let i = 1; i < pts.length; i++) {
@@ -173,46 +337,174 @@ const pointAt = (route, d) => {
   return [s.from[0] + (s.to[0] - s.from[0]) * f, s.from[1] + (s.to[1] - s.from[1]) * f];
 };
 
+/* ---------- label placement: pick a spot for each link label that covers nothing ---------- */
+const rectOf = (cx, cy, w, h) => ({ x0: cx - w / 2, y0: cy - h / 2, x1: cx + w / 2, y1: cy + h / 2 });
+const grow = (r, d) => ({ x0: r.x0 - d, y0: r.y0 - d, x1: r.x1 + d, y1: r.y1 + d });
+const overlap = (r, s) => Math.max(0, Math.min(r.x1, s.x1) - Math.max(r.x0, s.x0)) * Math.max(0, Math.min(r.y1, s.y1) - Math.max(r.y0, s.y0));
+const lineHits = (r, a, b) => {
+  const n = Math.max(2, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 5));
+  let c = 0;
+  for (let i = 0; i <= n; i++) {
+    const x = a[0] + ((b[0] - a[0]) * i) / n;
+    const y = a[1] + ((b[1] - a[1]) * i) / n;
+    if (x > r.x0 && x < r.x1 && y > r.y0 && y < r.y1) c++;
+  }
+  return c;
+};
+
+/** Where a note pill goes (also used as an obstacle for link labels). */
+function noteSpot(note, n, nf, box) {
+  const [x, y] = iso(...n.at);
+  const g = geomOf(n);
+  const side = note.side ?? 'right';
+  const w = textW(note.text, nf) + nf * 1.7;
+  const nx = side === 'left' ? x - g.a - 14 - w / 2 : side === 'right' ? x + g.a + 14 + w / 2 : x;
+  const ny = side === 'top' ? y - g.top - nf * 4.4 : side === 'bottom' ? y + g.bottom + nf * 3.2 : y - (g.top - g.bottom) / 2;
+  const cx = Math.min(box.x + box.w - w / 2 - 6, Math.max(box.x + w / 2 + 6, nx + (note.dx ?? 0)));
+  return { x: cx, y: ny + (note.dy ?? 0), w, h: nf * 2 };
+}
+
+/** Routes for every link, plus a collision-free spot for each link label. */
+function layoutLinks(state, byId, pf, box, compact) {
+  const routes = new Map();
+  for (const l of state.links) {
+    const r = routeOf([l.from, l.to], byId, 'edge', pf);
+    if (r) routes.set(l.key, r);
+  }
+  const labels = [];
+  if (compact) return { routes, labels };
+
+  // things a label must stay clear of
+  const solid = [];
+  for (const n of state.nodes) {
+    const [x, y] = iso(...n.at);
+    const g = geomOf(n);
+    solid.push(rectOf(x, y - (g.top - g.bottom) / 2, g.a * 1.7, g.top + g.bottom));
+    if (g.pill) {
+      const pw = textW(n.label ?? n.id, pf) + pf * 2.5;
+      const py = y + g.bottom + pf * 1.7;
+      solid.push(rectOf(x, py, pw, pf * 2.2));
+      if (n.sub) solid.push(rectOf(x, py + pf * 1.9, textW(n.sub, pf * 0.8), pf));
+    }
+    if (n.badge) {
+      const bf = pf * 0.95;
+      solid.push(rectOf(x, y - g.top - pf * 1.5, textW(n.badge, bf) + bf * 1.7, bf * 2.2));
+    }
+  }
+  for (const [i, note] of (state.step.notes ?? []).entries()) {
+    const n = byId.get(note.at);
+    if (!n) continue;
+    const sp = noteSpot(note, n, pf * 0.95, box);
+    solid.push(rectOf(sp.x, sp.y, sp.w, sp.h * 1.1));
+  }
+  const lines = [...routes.values()].map((r) => r.pts);
+
+  const lf = pf * 0.9;
+  for (const l of state.links) {
+    if (!l.label) continue;
+    const r = routes.get(l.key);
+    if (!r) continue;
+    const [a, b] = r.pts;
+    const w = textW(l.label, lf) + lf * 1.7;
+    const h = lf * 2.1;
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const ux = (b[0] - a[0]) / len;
+    const uy = (b[1] - a[1]) / len;
+    let nx = -uy;
+    let ny = ux;
+    if (ny > 0.001 || (Math.abs(ny) <= 0.001 && nx < 0)) { nx = -nx; ny = -ny; }   // the side that points up (or right for a vertical line)
+    const gap = (Math.abs(nx) * w) / 2 + (Math.abs(ny) * h) / 2 + 4;
+    const fracs = [...new Set([l.at ?? 0.5, 0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74, 0.18, 0.82])];
+    let best = null;
+    for (const [fi, f] of fracs.entries()) {
+      for (const [si, side] of [1, -1].entries()) {
+        for (const extra of [0, 9, 20, 32]) {
+          const cx = a[0] + (b[0] - a[0]) * f + nx * (gap + extra) * side + (l.labelDx ?? 0);
+          const cy = a[1] + (b[1] - a[1]) * f + ny * (gap + extra) * side + (l.labelDy ?? 0);
+          const rect = rectOf(cx, cy, w, h);
+          let cost = fi * 2 + si * 3 + extra * 0.3;
+          for (const o of solid) cost += overlap(grow(o, 2), rect) > 0 ? 200 + overlap(o, rect) / 20 : 0;
+          for (const ln of lines) cost += lineHits(grow(rect, 2), ln[0], ln[1]) * 14;
+          for (const p of labels) cost += overlap(grow(p.rect, 3), rect) > 0 ? 200 : 0;
+          if (rect.x0 < box.x + 4 || rect.x1 > box.x + box.w - 4 || rect.y0 < box.y + 4 || rect.y1 > box.y + box.h - 4) cost += 150;
+          if (!best || cost < best.cost) best = { cost, cx, cy, rect };
+        }
+      }
+    }
+    labels.push({ key: l.key, text: l.label, tone: l.tone ?? 'none', x: best.cx, y: best.cy, rect: best.rect, lf });
+  }
+  return { routes, labels };
+}
+
 /** The scene's fixed size: the bounds of every node of the lab, so the layout never moves between steps. */
 export function sceneBox(allNodes) {
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   for (const n of allNodes) {
     const [x, y] = iso(...n.at);
-    const k = kindOf(n);
-    x0 = Math.min(x0, x - TW * 0.75);
-    x1 = Math.max(x1, x + TW * 0.75);
-    y0 = Math.min(y0, y - k.h - 78);
-    y1 = Math.max(y1, y + TH / 2 + 62);
+    const g = geomOf(n);
+    x0 = Math.min(x0, x - Math.max(g.a, 70) - 36);
+    x1 = Math.max(x1, x + Math.max(g.a, 70) + 36);
+    y0 = Math.min(y0, y - g.top - 62);
+    y1 = Math.max(y1, y + g.bottom + 70);
   }
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
 
-function Grid({ box, clip }) {
-  // a faint diamond lattice behind the scene
-  const lines = [];
-  const span = 14;
-  for (let i = -span; i <= span; i++) {
-    const [ax, ay] = iso(i, -span);
-    const [bx, by] = iso(i, span);
-    const [cx, cy] = iso(-span, i);
-    const [dx, dy] = iso(span, i);
-    lines.push(<line key={`a${i}`} x1={ax} y1={ay} x2={bx} y2={by} />, <line key={`b${i}`} x1={cx} y1={cy} x2={dx} y2={dy} />);
-  }
+function Defs({ uid, box }) {
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h / 2;
   return (
-    <g className="lab-grid" clipPath={`url(#${clip})`} stroke="#d6dfe9" strokeWidth={1}>
-      <rect x={box.x} y={box.y} width={box.w} height={box.h} fill="none" stroke="none" />
-      {lines}
-    </g>
+    <defs>
+      {Object.entries(PALETTE).flatMap(([name, p]) => [
+        <linearGradient key={`${name}-t`} id={`lab-${name}-top-${uid}`} x1="0" y1="0" x2="0.35" y2="1">
+          <stop offset="0" stopColor={p.top[0]} />
+          <stop offset="1" stopColor={p.top[1]} />
+        </linearGradient>,
+        <linearGradient key={`${name}-s`} id={`lab-${name}-side-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={p.side[0]} />
+          <stop offset="1" stopColor={p.side[1]} />
+        </linearGradient>,
+      ])}
+      <linearGradient id={`lab-sheen-${uid}`} x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stopColor="#fff" stopOpacity="0" />
+        <stop offset="0.3" stopColor="#fff" stopOpacity="0.35" />
+        <stop offset="0.55" stopColor="#fff" stopOpacity="0.05" />
+        <stop offset="1" stopColor="#1b2433" stopOpacity="0.07" />
+      </linearGradient>
+      <filter id={`lab-blur-sm-${uid}`} x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2" /></filter>
+      <filter id={`lab-blur-md-${uid}`} x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4" /></filter>
+      <filter id={`lab-blur-lg-${uid}`} x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6.5" /></filter>
+      {Object.entries(LINK_COLOR).map(([name, color]) => (
+        <marker key={name} id={`lab-arrow-${uid}-${name}`} viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="5.2" markerHeight="5.2" orient="auto-start-reverse" markerUnits="strokeWidth">
+          <path d="M1,1.2 L9,5 L1,8.8 Z" fill={color} stroke={color} strokeWidth="1" strokeLinejoin="round" />
+        </marker>
+      ))}
+      <pattern id={`lab-grid-${uid}`} patternUnits="userSpaceOnUse" x="0" y="-8" width="32" height="16">
+        <path d="M0 8 L16 0 L32 8 L16 16 Z" fill="none" stroke="#8a97ab" strokeOpacity="0.28" strokeWidth="0.8" />
+      </pattern>
+      <radialGradient id={`lab-fade-${uid}`} gradientUnits="userSpaceOnUse" cx={cx} cy={cy} r={Math.max(box.w, box.h * 1.6) * 0.62} gradientTransform={`translate(${cx} ${cy}) scale(1 0.6) translate(${-cx} ${-cy})`}>
+        <stop offset="0" stopColor="#fff" />
+        <stop offset="0.42" stopColor="#fff" stopOpacity="0.92" />
+        <stop offset="0.78" stopColor="#fff" stopOpacity="0.35" />
+        <stop offset="1" stopColor="#fff" stopOpacity="0" />
+      </radialGradient>
+      <mask id={`lab-mask-${uid}`} maskUnits="userSpaceOnUse" x={box.x - 200} y={box.y - 200} width={box.w + 400} height={box.h + 400}>
+        <rect x={box.x - 200} y={box.y - 200} width={box.w + 400} height={box.h + 400} fill={`url(#lab-fade-${uid})`} />
+      </mask>
+    </defs>
   );
 }
 
 /**
- * The isometric stage: pads, links, nodes, labels, badges, notes and animated flow dots.
- * `fs` is the label font size in scene units (bigger on narrow screens so text stays readable).
+ * The isometric stage: floor, links, packets, nodes, pills and notes.
+ * `fs` is the label size in scene units (bigger on narrow screens so text stays readable).
  */
 export function IsoScene({ state, box, fs = 12, paused = false, reduced = false, replayKey = 0, compact = false, label }) {
   const byId = useMemo(() => new Map(state.nodes.map((n) => [n.id, n])), [state.nodes]);
   const order = useMemo(() => [...state.nodes].sort((p, q) => p.at[0] + p.at[1] - (q.at[0] + q.at[1])), [state.nodes]);
+  const pf = Math.min(15, Math.max(10.5, fs * 0.88));          // pill font in scene units
+  
+  const layout = useMemo(() => layoutLinks(state, byId, pf, box, compact), [state, byId, pf, box, compact]);
 
   // flows run one after another (or together with `with: true`) in a repeating cycle
   const flows = useMemo(() => {
@@ -259,8 +551,7 @@ export function IsoScene({ state, box, fs = 12, paused = false, reduced = false,
             dist = (local / f.dur) * f.route.total;
           }
           const [x, y] = pointAt(f.route, dist);
-          el.setAttribute('cx', x.toFixed(1));
-          el.setAttribute('cy', y.toFixed(1));
+          el.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
           el.setAttribute('opacity', '1');
         }
       }
@@ -284,47 +575,38 @@ export function IsoScene({ state, box, fs = 12, paused = false, reduced = false,
   }, [flows, paused, reduced]);
 
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const clip = `lab-clip-${uid}`;
   const arrow = (tone) => `url(#lab-arrow-${uid}-${tone ?? 'none'})`;
-  const markers = Object.entries(TONES);
   let dotIndex = 0;
 
   return (
     <svg className="lab-svg" viewBox={`${box.x} ${box.y} ${box.w} ${box.h}`} role="img" aria-label={label} style={{ fontFamily: 'var(--font-mono)' }}>
-      <defs>
-        <clipPath id={clip}>
-          <rect x={box.x} y={box.y} width={box.w} height={box.h} />
-        </clipPath>
-        {markers.map(([name, t]) => (
-          <marker key={name} id={`lab-arrow-${uid}-${name}`} viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M0,0 L10,5 L0,10 z" fill={t.line} />
-          </marker>
-        ))}
-      </defs>
-      <Grid box={box} clip={clip} />
+      <Defs uid={uid} box={box} />
+      <g className="lab-grid" mask={`url(#lab-mask-${uid})`}>
+        <rect x={box.x - 200} y={box.y - 200} width={box.w + 400} height={box.h + 400} fill={`url(#lab-grid-${uid})`} />
+      </g>
 
       {order.map((n) => (
-        <g key={`pad-${n.id}`} className={state.changedNodes.has(n.id) ? 'lab-fade' : undefined} opacity={n.dim ? 0.35 : 1}>
+        <g key={`pad-${n.id}`} className={state.changedNodes.has(n.id) ? 'lab-fade' : undefined} opacity={n.dim ? 0.4 : 1}>
           <Pad n={n} />
         </g>
       ))}
 
       {state.links.map((l) => {
-        const r = routeOf([l.from, l.to], byId, 40);
+        const r = layout.routes.get(l.key);
         if (!r) return null;
-        const t = TONES[l.tone] ?? TONES.none;
+        const tone = l.faint ? 'faint' : l.tone ?? 'none';
         const fresh = state.newLinks.has(l.key);
         const [a, b] = r.pts;
         return (
           <line
             key={l.key}
             x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]}
-            stroke={t.line}
-            strokeWidth={fresh ? 2.6 : 1.8}
-            strokeDasharray={l.dashed ? '6 5' : undefined}
-            opacity={l.faint ? 0.4 : 1}
-            markerEnd={l.arrow === false ? undefined : arrow(l.tone)}
-            markerStart={l.both ? arrow(l.tone) : undefined}
+            stroke={LINK_COLOR[tone] ?? INK}
+            strokeWidth={l.faint ? 1.6 : fresh ? 2.3 : 1.9}
+            strokeLinecap="round"
+            strokeDasharray={l.faint ? '4 5' : l.dashed ? '5 4.5' : undefined}
+            markerEnd={l.arrow === false ? undefined : arrow(tone)}
+            markerStart={l.both ? arrow(tone) : undefined}
           />
         );
       })}
@@ -332,42 +614,38 @@ export function IsoScene({ state, box, fs = 12, paused = false, reduced = false,
       {flows.map((f) =>
         Array.from({ length: f.dots }, (_, d) => {
           const i = dotIndex++;
+          const p = PACKET[f.tone ?? 'req'] ?? PACKET.req;
           return (
-            <circle
-              key={`${f.path.join('-')}-${i}`}
-              ref={(el) => { dotRefs.current[i] = el; }}
-              r={6.5}
-              fill={FLOW_COLOR[f.tone ?? 'req'] ?? FLOW_COLOR.req}
-              stroke="#fff"
-              strokeWidth={2}
-              opacity={0}
-            />
+            <g key={`${f.path.join('-')}-${i}`} ref={(el) => { dotRefs.current[i] = el; }} opacity="0">
+              {p.shape === 'circle' ? (
+                <circle r="4.6" fill={p.fill} stroke={p.stroke} strokeWidth={p.sw} />
+              ) : (
+                <rect x="-4.4" y="-4.4" width="8.8" height="8.8" rx="2" fill={p.fill} stroke={p.stroke} strokeWidth={p.sw} />
+              )}
+            </g>
           );
         }),
       )}
 
       {order.map((n) => (
-        <g key={n.id} className={state.changedNodes.has(n.id) ? 'lab-pop' : undefined} opacity={n.dim ? 0.35 : 1}>
-          <Body n={n} />
+        <g key={n.id} className={state.changedNodes.has(n.id) ? 'lab-pop' : undefined} opacity={n.dim ? 0.45 : 1}>
+          <Body n={n} uid={uid} compact={compact} />
         </g>
       ))}
 
-      {!compact &&
-        state.links.map((l) => {
-          if (!l.label) return null;
-          const r = routeOf([l.from, l.to], byId, 40);
-          if (!r) return null;
-          const [a, b] = r.pts;
-          return <Pill key={`lbl-${l.key}`} x={(a[0] + b[0]) / 2} y={(a[1] + b[1]) / 2 + (l.labelDy ?? 0)} text={l.label} fs={fs * 0.9} tone={l.tone ?? 'none'} bold={false} />;
-        })}
+      {layout.labels.map((p) => (
+        <Pill key={`lbl-${p.key}`} x={p.x} y={p.y} text={p.text} fs={p.lf} tone={p.tone} bold={false} />
+      ))}
 
       {state.nodes.map((n) => {
         const [x, y] = iso(...n.at);
+        const g = geomOf(n);
         const k = kindOf(n);
+        const Icon = (n.icon && iconComponent(n.icon)) || iconComponent(n.label ?? '') || k.icon;
         return (
-          <g key={`lab-${n.id}`} opacity={n.dim ? 0.45 : 1}>
-            <Pill x={x} y={y + TH / 2 * FOOT + fs * 1.6} text={n.label ?? n.id} sub={compact ? undefined : n.sub} fs={fs} />
-            {n.badge && <Pill x={x} y={y - topOf(n) - B - fs * 1.4 - (k.shape === 'pad' || k.shape === 'device' ? 30 : 0)} text={n.badge} fs={fs * 0.92} tone={n.tone ?? 'new'} />}
+          <g key={`lab-${n.id}`} opacity={n.dim ? 0.5 : 1}>
+            {g.pill && <Pill x={x} y={y + g.bottom + pf * 1.7} text={n.label ?? n.id} sub={compact ? undefined : n.sub} icon={Icon} fs={pf} />}
+            {n.badge && <Pill x={x} y={y - g.top - pf * 1.5} text={n.badge} fs={pf * 0.95} tone={n.tone ?? 'new'} />}
           </g>
         );
       })}
@@ -375,14 +653,8 @@ export function IsoScene({ state, box, fs = 12, paused = false, reduced = false,
       {(state.step.notes ?? []).map((note, i) => {
         const n = byId.get(note.at);
         if (!n) return null;
-        const [x, y] = iso(...n.at);
-        const side = note.side ?? 'right';
-        const w = textW(note.text, fs * 0.9) + fs * 1.3;
-        const nx = side === 'left' ? x - A - 14 - w / 2 : side === 'right' ? x + A + 14 + w / 2 : x;
-        const ny = side === 'top' ? y - topOf(n) - B - fs * 3.4 : side === 'bottom' ? y + fs * 4.6 : y - topOf(n) * 0.5;
-        // keep the note inside the scene
-        const cx = Math.min(box.x + box.w - w / 2 - 6, Math.max(box.x + w / 2 + 6, nx + (note.dx ?? 0)));
-        return <Pill key={`note-${i}`} x={cx} y={ny + (note.dy ?? 0)} text={note.text} fs={fs * 0.9} tone={note.tone ?? 'warn'} />;
+        const sp = noteSpot(note, n, pf * 0.95, box);
+        return <Pill key={`note-${i}`} x={sp.x} y={sp.y} text={note.text} fs={pf * 0.95} tone={note.tone ?? 'warn'} />;
       })}
     </svg>
   );

@@ -1797,3 +1797,16 @@ a.lab-link {
   margin-right: 0.2em;
   vertical-align: -0.12em;
 }
+.nav-labs-lesson {
+  display: block;
+  margin: 0.3rem 0 0;
+  padding: 0 0.5rem;
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-pen);
+}
+.prose-nb h3.lab-group-title {
+  margin: 0.6rem 0 0;
+  font-size: 1.05rem;
+}

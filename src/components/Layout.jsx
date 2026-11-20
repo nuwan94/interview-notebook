@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { LuGithub, LuMenu, LuSearch } from 'react-icons/lu';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { usePrefs } from '../lib/prefs.jsx';
@@ -46,8 +46,14 @@ export function Layout() {
   }, [zoom]);
 
   // plain page navigations (not in-lesson anchors) start at the top
+  // (inside a lab, moving between steps keeps the scroll, but opening another lab starts at the top)
+  const lastLab = useRef(null);
   useEffect(() => {
-    if (!/^\/(lessons|lab)\/[^/]+\/./.test(loc.pathname)) window.scrollTo({ top: 0, behavior: 'auto' });
+    const lab = loc.pathname.match(/^\/lab\/([^/]+)/)?.[1] ?? null;
+    const sameLab = lab !== null && lab === lastLab.current;
+    lastLab.current = lab;
+    if (sameLab) return;
+    if (lab || !/^\/lessons\/[^/]+\/./.test(loc.pathname)) window.scrollTo({ top: 0, behavior: lab ? 'instant' : 'auto' });
   }, [loc.pathname]);
 
   return (

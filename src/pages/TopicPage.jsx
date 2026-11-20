@@ -4,6 +4,7 @@ import { findTopic, topicLabs, topicLessonCount, topicLessons, topicPath, topicQ
 import { topicBlurb, topicIcon } from '../lib/topics.js';
 import { Holes } from '../components/Holes.jsx';
 import { QuizButton } from '../components/Quiz.jsx';
+import { labGroups } from '../components/Sidebar.jsx';
 import { TopicCard } from '../components/TopicCard.jsx';
 import { NotFound } from './LessonPage.jsx';
 
@@ -74,28 +75,33 @@ export function TopicPage() {
           <h2>
             <LuFlaskConical aria-hidden="true" className="inline-icon" /> {node.children.length > 0 ? `Labs in ${node.name}` : 'Labs'}
           </h2>
-          <ul className="lesson-list">
-            {labs.map((x) => (
-              <li key={x.slug} className="lesson-item">
-                <div className="flex-1 min-w-0">
-                  <Link to={`/lab/${x.slug}`} className="font-hand font-bold text-xl no-underline">
-                    {x.title}
-                  </Link>
-                  <br />
-                  <span className="text-soft">{x.subtitle}</span>
-                  <br />
-                  <span className="text-sm font-bold text-pen">
-                    {x.steps.length} steps{x.minutes ? ` · ${x.minutes} min` : ''}
-                    {x.level ? ` · ${x.level}` : ''}
-                    {x.topic.join(' / ') !== node.path ? ` · ${x.topic.at(-1)}` : ''}
-                  </span>
-                </div>
-                <Link to={`/lab/${x.slug}`} className="btn primary !min-h-9 shrink-0 no-underline">
-                  Open lab
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {labGroups(labs).map((g) => (
+            <div key={g.lesson ?? 'other'}>
+              {g.heading && <h3 className="lab-group-title">{g.heading}</h3>}
+              <ul className="lesson-list">
+                {g.labs.map((x) => (
+                  <li key={x.slug} className="lesson-item">
+                    <div className="flex-1 min-w-0">
+                      <Link to={`/lab/${x.slug}`} className="font-hand font-bold text-xl no-underline">
+                        {x.title}
+                      </Link>
+                      <br />
+                      <span className="text-soft">{x.subtitle}</span>
+                      <br />
+                      <span className="text-sm font-bold text-pen">
+                        {x.steps.length} steps{x.minutes ? ` · ${x.minutes} min` : ''}
+                        {x.level ? ` · ${x.level}` : ''}
+                        {x.topic.join(' / ') !== node.path ? ` · ${x.topic.at(-1)}` : ''}
+                      </span>
+                    </div>
+                    <Link to={`/lab/${x.slug}`} className="btn primary !min-h-9 shrink-0 no-underline">
+                      Open lab
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </>
       )}
 
