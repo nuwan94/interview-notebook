@@ -281,6 +281,8 @@ Java keeps keys and certificates in **key stores**: a **keystore** holds your ow
 
 A large quantum computer would break RSA, Diffie-Hellman and elliptic curves (Shor's algorithm), while symmetric ciphers and hashes are only weakened (Grover's algorithm), which is why AES-256 and SHA-256 or larger remain acceptable. Attackers can already **harvest now, decrypt later**: record traffic today and decrypt it when quantum computers exist. Standards for quantum-resistant algorithms exist (ML-KEM for key exchange, ML-DSA for signatures); Java added them in [Java 24](lesson:java-version-history#java-24) on top of its KEM API from [Java 21](lesson:java-version-history#java-21), and hybrid post-quantum key exchange for TLS 1.3 is announced for [Java 27](lesson:java-version-history#java-27).
 
+Try it in the lab: [Hash, encrypt, sign: three tools, three guarantees](lab:crypto-hash-encrypt-sign).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Use |

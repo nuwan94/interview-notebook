@@ -140,6 +140,8 @@ Each of these has its own lesson (links turn on as the lessons are added):
 - [JWT](lesson:jwt): structure, signing algorithms, validation and common pitfalls.
 - [Spring Security](lesson:spring-security): the filter chain, method security, resource server and password encoding in Spring Boot.
 
+Try it in the lab: [Login, session cookie, role check, logout](lab:authn-session-cookie).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Use |
