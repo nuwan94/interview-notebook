@@ -1,0 +1,379 @@
+{
+ "questions": [
+  {
+   "t": "Transitive",
+   "v": [
+    {
+     "q": "What is a transitive dependency?",
+     "o": [
+      "A library that one of your direct dependencies needs, which comes along automatically",
+      "A library declared twice in the same pom with two different versions",
+      "A library that is only used by the test classes of your project",
+      "A library that the build downloads but never puts on a classpath"
+     ],
+     "w": "You did not declare it, but it is on the classpath because a library you did declare depends on it."
+    },
+    {
+     "q": "A fat jar contains log4j-core, yet the pom never mentions it. What is the most likely reason?",
+     "o": [
+      "It arrived as a transitive dependency of another library",
+      "The compiler plugin adds it to every project by default",
+      "The jar plugin copies it from the local repository",
+      "The JVM supplies it at run time for all applications"
+     ],
+     "w": "Most libraries in a service are transitive. The dependency tree shows which direct dependency brought it."
+    }
+   ]
+  },
+  {
+   "t": "Inspecting",
+   "v": [
+    {
+     "q": "Which command shows every path to a library, including versions that lost a conflict, in Maven?",
+     "o": [
+      "mvn dependency:tree -Dverbose",
+      "mvn help:effective-pom",
+      "mvn versions:display-plugin-updates",
+      "mvn compile -X"
+     ],
+     "w": "dependency:tree with -Dverbose lists the omitted versions and why they were omitted."
+    },
+    {
+     "q": "Which Gradle command explains why a version of a library was chosen?",
+     "o": [
+      "./gradlew dependencyInsight --dependency <name>",
+      "./gradlew tasks --all",
+      "./gradlew build --scan-off",
+      "./gradlew wrapper --gradle-version"
+     ],
+     "w": "dependencyInsight shows the selected version and the paths and rules that led to it."
+    }
+   ]
+  },
+  {
+   "t": "BOM",
+   "v": [
+    {
+     "q": "What does importing a BOM do?",
+     "o": [
+      "It supplies tested versions, so dependencies can be declared without a version",
+      "It downloads every library listed in it into the project",
+      "It removes all transitive dependencies from the build",
+      "It signs each dependency with a trusted key"
+     ],
+     "w": "A BOM only manages versions. A library is on the classpath only when you declare it."
+    },
+    {
+     "q": "Why do Spring Boot starters usually have no version in the pom?",
+     "o": [
+      "The Boot parent or BOM manages the versions",
+      "Maven always picks the latest release when no version is given",
+      "Starters are built into the JDK",
+      "The version is read from the settings.xml of each developer"
+     ],
+     "w": "spring-boot-dependencies is a BOM, imported by the Boot parent, so versions come from it."
+    }
+   ]
+  },
+  {
+   "t": "Maven conflicts",
+   "v": [
+    {
+     "q": "Two libraries need different versions of Jackson at the same depth. Which does Maven choose?",
+     "o": [
+      "The one declared first in the pom",
+      "The highest version number",
+      "The lowest version number",
+      "The one with the smaller jar file"
+     ],
+     "w": "Maven chooses the nearest, and on a tie the first declaration. It does not choose the newest."
+    },
+    {
+     "q": "How do you make a version win in Maven regardless of what the libraries want?",
+     "o": [
+      "Declare it directly or manage it in dependencyManagement",
+      "Rename the library in the local repository",
+      "Delete the other version from ~/.m2",
+      "Run the build with the -o flag"
+     ],
+     "w": "A direct declaration is nearest, and dependencyManagement fixes the version for the whole tree."
+    }
+   ]
+  },
+  {
+   "t": "Gradle conflicts",
+   "v": [
+    {
+     "q": "Two paths request Jackson 2.12 and 2.15 in Gradle. Which version does it select by default?",
+     "o": [
+      "2.15, the highest requested",
+      "2.12, the first one found",
+      "Neither, the build always fails",
+      "Whichever is smaller on disk"
+     ],
+     "w": "Gradle picks the highest requested version unless a constraint or strict version says otherwise."
+    },
+    {
+     "q": "How can a Gradle build fail instead of silently choosing a version?",
+     "o": [
+      "resolutionStrategy.failOnVersionConflict()",
+      "org.gradle.parallel=true",
+      "tasks.register(\"fail\")",
+      "Using the wrapper"
+     ],
+     "w": "failOnVersionConflict turns a disagreement in the tree into a build failure."
+    }
+   ]
+  },
+  {
+   "t": "NoSuchMethodError",
+   "v": [
+    {
+     "q": "After adding a library the service throws NoSuchMethodError. What is the usual cause?",
+     "o": [
+      "An older version of a library won the conflict than the caller was built for",
+      "The JVM is too new for the bytecode",
+      "A test class was packaged into the jar",
+      "The pom has a duplicate plugin entry"
+     ],
+     "w": "The class loaded at run time lacks a method the calling library expects, so the wrong version won."
+    },
+    {
+     "q": "Why does a version conflict often pass the build and fail later?",
+     "o": [
+      "Both jars compile, and the missing method is only hit at run time",
+      "Maven does not read transitive dependencies during compile",
+      "Gradle hides compile errors in the build cache",
+      "The compiler ignores classes from a repository"
+     ],
+     "w": "Compilation succeeds against whichever version is on the classpath, and the failure appears on the code path that needs the other one."
+    }
+   ]
+  },
+  {
+   "t": "Enforcer",
+   "v": [
+    {
+     "q": "What does the Maven Enforcer dependencyConvergence rule do?",
+     "o": [
+      "Fails the build when the tree has different versions of one library",
+      "Downloads the newest version of every library",
+      "Removes unused libraries from the pom",
+      "Signs the artifacts before upload"
+     ],
+     "w": "It makes disagreement explicit so the team decides the version instead of the tool guessing."
+    },
+    {
+     "q": "Which Enforcer rule keeps an unwanted library such as commons-logging out of the build?",
+     "o": [
+      "bannedDependencies",
+      "requireJavaVersion",
+      "requireReleaseDeps",
+      "dependencyConvergence"
+     ],
+     "w": "bannedDependencies fails the build if a listed library appears anywhere in the tree."
+    }
+   ]
+  },
+  {
+   "t": "Pinning",
+   "v": [
+    {
+     "q": "Why are SNAPSHOT versions a problem for a release build?",
+     "o": [
+      "Their content can change under the same version",
+      "They cannot be downloaded from Nexus",
+      "They are always larger than release jars",
+      "They are only valid for Gradle"
+     ],
+     "w": "A snapshot is replaced in place, so you cannot say exactly what code shipped."
+    },
+    {
+     "q": "Which of these makes a build least reproducible?",
+     "o": [
+      "A version range such as [1.0,2.0) or 1.+",
+      "A fixed version in dependencyManagement",
+      "A pinned plugin version",
+      "A checked-in Gradle wrapper"
+     ],
+     "w": "A range resolves to whatever has been published most recently, so the same commit can build differently."
+    }
+   ]
+  },
+  {
+   "t": "Locking",
+   "v": [
+    {
+     "q": "What does a Gradle lock file record?",
+     "o": [
+      "The exact resolved version of every library in the tree",
+      "Only the versions of the direct dependencies",
+      "The time of the last build",
+      "The list of tasks that ran"
+     ],
+     "w": "Locking records the full resolved graph, so the same commit resolves the same libraries."
+    },
+    {
+     "q": "What does Gradle dependency verification add?",
+     "o": [
+      "A checksum check of every downloaded artifact",
+      "Faster downloads from the build cache",
+      "A second copy of the dependency tree",
+      "Automatic upgrades to the latest version"
+     ],
+     "w": "verification-metadata.xml stores a SHA-256 (and optional key) per artifact, and the build fails if the bytes differ."
+    }
+   ]
+  },
+  {
+   "t": "CVE and CVSS",
+   "v": [
+    {
+     "q": "What is a CVE?",
+     "o": [
+      "A public identifier for one known vulnerability",
+      "A score from 0 to 10 for a project's code quality",
+      "A build plugin that scans containers",
+      "A licence type for open source"
+     ],
+     "w": "For example CVE-2021-44228. The score that rates its severity is the CVSS."
+    },
+    {
+     "q": "A CVE has a CVSS score of 9.8. How is it classed?",
+     "o": [
+      "Critical",
+      "Low",
+      "Informational",
+      "Not exploitable"
+     ],
+     "w": "A score from 9.0 to 10.0 is critical. Many gates fail the build at 7 or above."
+    }
+   ]
+  },
+  {
+   "t": "Scanning",
+   "v": [
+    {
+     "q": "What does a dependency scan in CI compare?",
+     "o": [
+      "The resolved dependency tree against a database of known vulnerabilities",
+      "The source code against a style guide",
+      "The test coverage against the last build",
+      "The jar size against a limit"
+     ],
+     "w": "Tools such as OWASP Dependency-Check match names and versions in the tree with CVE data."
+    },
+    {
+     "q": "A scan reports a false positive. What is the right way to handle it?",
+     "o": [
+      "Add a reviewed suppression with a reason and an expiry date",
+      "Lower the failing threshold to 10",
+      "Delete the scan plugin from the pom",
+      "Disable the scan for the whole module"
+     ],
+     "w": "A narrow, documented, time-limited suppression keeps the gate meaningful."
+    }
+   ]
+  },
+  {
+   "t": "Log4Shell",
+   "v": [
+    {
+     "q": "What made Log4Shell (CVE-2021-44228) so hard to deal with in large organisations?",
+     "o": [
+      "The library was often a transitive dependency inside jars nobody had listed",
+      "It only affected applications written in Kotlin",
+      "It could only be fixed by changing the JVM version",
+      "It was found in the Maven build itself"
+     ],
+     "w": "The hard part was finding where log4j-core was, not applying the fix."
+    },
+    {
+     "q": "How can you fix a vulnerable library that you only use transitively?",
+     "o": [
+      "Force a fixed version with a constraint or dependencyManagement entry",
+      "Wait for the library to be removed from Maven Central",
+      "Rename the package in your own source code",
+      "Add the vulnerable version as a runtime dependency"
+     ],
+     "w": "Managing the version in your own build overrides what the transitive chain asks for."
+    }
+   ]
+  },
+  {
+   "t": "SBOM",
+   "v": [
+    {
+     "q": "What is an SBOM?",
+     "o": [
+      "A machine-readable list of every component in a build with versions and hashes",
+      "A signed archive of the source code",
+      "A report of failed tests",
+      "A configuration file for the repository manager"
+     ],
+     "w": "CycloneDX and SPDX are common formats. It answers whether a release contains a vulnerable component."
+    },
+    {
+     "q": "When a new CVE is announced, how does an SBOM help?",
+     "o": [
+      "You search the stored SBOMs to find affected services without opening jars",
+      "It automatically upgrades the library everywhere",
+      "It blocks the build for all teams",
+      "It removes the vulnerable class from running JVMs"
+     ],
+     "w": "It turns the question into a query over inventory data."
+    }
+   ]
+  },
+  {
+   "t": "Repository manager",
+   "v": [
+    {
+     "q": "What does a repository manager such as Nexus do for a build?",
+     "o": [
+      "Proxies and caches public libraries, hosts internal ones and gives one URL",
+      "Compiles the code on behalf of the developer",
+      "Runs the unit tests in parallel",
+      "Replaces the version control server"
+     ],
+     "w": "Builds depend on one trusted source, which is fast, auditable and can block bad components."
+    },
+    {
+     "q": "Why must a released version in a hosted repository be immutable?",
+     "o": [
+      "So the same version always means the same bytes",
+      "Because Maven cannot read a changed file",
+      "To save disk space on the server",
+      "Because Gradle does not support updates"
+     ],
+     "w": "If a release can be overwritten, you cannot know what a given version contains."
+    }
+   ]
+  },
+  {
+   "t": "Dependency confusion",
+   "v": [
+    {
+     "q": "What is dependency confusion?",
+     "o": [
+      "A public package with an internal name and a higher version replaces the internal one",
+      "Two modules in the same build using the same artifactId",
+      "A library with a licence that conflicts with another",
+      "A build that fails because of a missing parent pom"
+     ],
+     "w": "The build asks several repositories for one name and takes the highest version, which the attacker controls."
+    },
+    {
+     "q": "Which defence stops a public repository from serving your internal group id?",
+     "o": [
+      "A routing rule that blocks that group id on the public proxy",
+      "Using a longer version number",
+      "Running the build offline once a week",
+      "Adding a sleep to the pipeline"
+     ],
+     "w": "Routing rules make internal names resolvable only from the hosted repository."
+    }
+   ]
+  }
+ ]
+}
