@@ -235,6 +235,8 @@ public record Point(int x, int y) {}
 | `Hashtable` | none | no | yes, one big lock | O(1) |
 | `ConcurrentHashMap` | none | no | yes, fine-grained | O(1) |
 
+Try it in the lab: [Inside HashMap.put: hash, bucket, collision, resize](lab:hashmap-put-resize).
+
 ## Cheat sheet {#cheatsheet}
 
 - `index = (n - 1) & (h ^ (h >>> 16))`; `n` is a power of two.

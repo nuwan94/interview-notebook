@@ -113,6 +113,8 @@ The simplest thread-safe collection is one nobody changes: build it, make it imm
 | shared counter | `AtomicLong` or `LongAdder` |
 | a set | `ConcurrentHashMap.newKeySet()` |
 
+Try it in the lab: [ConcurrentHashMap: check-then-act and atomic compute](lab:concurrent-map-atomic).
+
 ## Cheat sheet {#cheatsheet}
 
 | Plain | Thread-safe replacement |

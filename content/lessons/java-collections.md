@@ -160,6 +160,8 @@ Java 21 added `SequencedCollection` (implemented by `List`, `Deque`, `LinkedHash
 
 `Collections.sort`, `reverse`, `shuffle`, `binarySearch` (the list must be sorted), `max`, `min`, `frequency`, `nCopies`, `emptyList`, `unmodifiable*`, `synchronized*` (wrappers, rarely the right tool). `Arrays.asList`, `Arrays.sort`, `Arrays.stream`, `Arrays.fill`. Bulk operations: `addAll`, `removeAll`, `retainAll`, `containsAll`.
 
+Try it in the lab: [Choosing a collection by what you do with it](lab:collections-choose).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Use |

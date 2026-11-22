@@ -364,6 +364,8 @@ Document the thread-safety of your classes (`@ThreadSafe`, `@Immutable`, or a se
 | [24](lesson:java-version-history#java-24) | `synchronized` no longer pins virtual threads |
 | [25](lesson:java-version-history#java-25) | scoped values final |
 
+Try it in the lab: [A lost update: two threads, one counter](lab:java-race-condition).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Use |

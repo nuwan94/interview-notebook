@@ -138,6 +138,8 @@ A **raw type** (`List` with no argument) turns off generic checking and exists o
 - **Result or Either types:** `Result<T, E>` for error handling without exceptions.
 - **Type tokens:** `Map<Class<?>, Object>` to store one value per type safely.
 
+Try it in the lab: [Generics: invariance, wildcards and PECS](lab:generics-erasure-pecs).
+
 ## Cheat sheet {#cheatsheet}
 
 | Situation | Use |

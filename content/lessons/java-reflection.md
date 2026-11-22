@@ -225,6 +225,8 @@ A useful way to answer *"how does X work?"*: say **which annotation is read, by 
 
 GraalVM compiles a Java program ahead of time under a **closed-world assumption**: anything not reachable at build time is dropped. Reflection breaks this, because a class named in a string cannot be seen. So reflective access must be declared in **reachability metadata**. Spring Boot 3 does much of it automatically at build time and lets you add hints with `@RegisterReflectionForBinding`, `@ImportRuntimeHints` and `RuntimeHints`. Frameworks that avoid run-time reflection (Micronaut, Quarkus, Spring AOT) fit this model best.
 
+Try it in the lab: [How a framework wires beans with reflection](lab:reflection-di-container).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Code |

@@ -67,6 +67,8 @@ Function<String, Integer> length = String::length;
 Function<String, Integer> trimmedLength = trim.andThen(length);
 ```
 
+Try it in the lab: [Predicate, Function, Consumer, Supplier](lab:fp-functional-interfaces).
+
 ## Method references {#method-refs}
 
 A method reference is a lambda that only calls an existing method.
@@ -102,6 +104,8 @@ list.forEach(t -> count++);                           // compile error
 
 Instance and static fields are not captured copies; a lambda reads them through `this`, so they can change (and need normal thread safety).
 
+Try it in the lab: [A lambda captures a value, not a variable](lab:fp-lambda-capture).
+
 ## Optional {#optional}
 
 `Optional<T>` is a container that holds one value or is empty. Its purpose is to make "this may not return anything" visible in a **return type**.
@@ -128,6 +132,8 @@ String email = find(id)
 | `isPresent()` / `isEmpty()` | avoid; prefer the functional methods |
 
 Guidelines: use it for **return values** only; do not use it for fields, parameters or collection elements; never return `null` from a method that returns `Optional`; return an empty collection (not `Optional<List>`) for "no results"; do not call `get()` without checking.
+
+Try it in the lab: [Optional: empty, present and the lazy fallback](lab:fp-optional).
 
 ## Cheat sheet {#cheatsheet}
 

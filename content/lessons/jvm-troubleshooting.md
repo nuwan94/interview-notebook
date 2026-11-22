@@ -257,6 +257,8 @@ A minimal ("distroless") image has only a JRE and no `jcmd`. Options: use an ima
 - remove an instance from the load balancer before a heap dump, and take the dump from one instance, not all of them;
 - write a short runbook: symptom, command, what to look for and who to call.
 
+Try it in the lab: [Hunting a memory leak from latency spikes](lab:jvm-memory-leak-hunt).
+
 ## Cheat sheet {#cheatsheet}
 
 | Situation | Do this |

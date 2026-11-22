@@ -35,6 +35,8 @@ BigDecimal totalDebits = transactions.stream()          // source
 
 Key properties: **lazy** (nothing runs without a terminal operation), **one element at a time** through the whole pipeline (so `limit` and `findFirst` can stop early), **single use** (a second terminal call throws `IllegalStateException`) and **non-interfering** (do not modify the source while streaming).
 
+Try it in the lab: [A stream does nothing until a terminal operation](lab:stream-lazy-pipeline).
+
 ## Common intermediate operations {#intermediate}
 
 | Operation | Purpose | Stateful? |
@@ -98,6 +100,8 @@ Set<String> words = lines.stream()
         .collect(Collectors.toSet());
 ```
 
+Try it in the lab: [map, flatMap and groupingBy](lab:stream-flatmap-collect).
+
 ## reduce {#reduce}
 
 `reduce` combines all elements into one value with an associative function.
@@ -124,6 +128,8 @@ Money should stay in `BigDecimal` (or minor units in `long`), not `double`.
 ## Parallel streams {#parallel}
 
 `list.parallelStream()` or `.parallel()` splits the work over the common `ForkJoinPool`. It helps only for **large, CPU-bound, stateless** pipelines on easily split sources (`ArrayList`, arrays, `IntStream.range`). Do not use it for blocking I/O, for small data, with shared mutable state, or inside a request-handling service where it competes for the JVM-wide common pool. Always measure.
+
+Try it in the lab: [Parallel streams: when they help and when they hurt](lab:stream-parallel).
 
 ## Streams versus loops {#vs-loops}
 

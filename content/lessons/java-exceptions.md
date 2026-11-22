@@ -186,6 +186,8 @@ Since [Java 14](lesson:java-version-history#java-14) a `NullPointerException` me
 - **Retry only what can succeed later.** A timeout or a `503` is transient and worth a retry with backoff; `InsufficientFundsException` or a validation error will fail every time. Retry only [idempotent operations](lesson:microservice-resilience#retries), with a limit.
 - **Do not leak internals.** The message to the client says what the client can do, and the log carries the technical detail.
 
+Try it in the lab: [try-with-resources and the exception that wins](lab:exceptions-try-with-resources).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Code or rule |

@@ -339,6 +339,8 @@ Without `volatile`, the assignment can be reordered so that another thread sees 
 
 Reads and writes of `long` and `double` that are not `volatile` may be split into two 32-bit operations on some JVMs. In practice 64-bit JVMs do not tear them, but the specification allows it, and `volatile` guarantees atomicity for them.
 
+Try it in the lab: [Visibility: why a thread never sees the flag change](lab:jmm-visibility).
+
 ## Cheat sheet {#cheatsheet}
 
 | Question | Answer |

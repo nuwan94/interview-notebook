@@ -222,6 +222,8 @@ In the example, the last line is the problem: a **1.8 second full GC that freed 
 | A pause exactly every N minutes | something calls `System.gc()` (often a library or RMI) | `-XX:+DisableExplicitGC` while you find the caller |
 | Container killed with a healthy heap | native memory (Metaspace, stacks, direct buffers) plus heap is above the limit | lower `-Xmx` or raise the limit |
 
+Try it in the lab: [Generational GC: eden, survivor, old](lab:gc-generations).
+
 ## Cheat sheet {#cheatsheet}
 
 | Question | Answer |

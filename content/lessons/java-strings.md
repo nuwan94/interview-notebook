@@ -141,6 +141,8 @@ public record Money(BigDecimal amount, String currency) {          // records: f
 
 Benefits: thread-safe without locks, safe as map keys and set elements, easy to reason about and cache, and no defensive copying for callers. `final` on a reference does **not** make the object immutable (`final List<String> x` can still be added to). Prefer `java.time` types (`LocalDate`, `Instant`) over `Date`, and `BigDecimal` for money: both are immutable. `BigDecimal.equals` compares scale too (`2.0` is not equal to `2.00`); use `compareTo` for numeric comparison.
 
+Try it in the lab: [Strings: the pool, immutability and StringBuilder](lab:string-pool-builder).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Do |

@@ -467,6 +467,8 @@ Many changes above belong to a named OpenJDK project. Knowing the names helps yo
 | Structured concurrency, primitive patterns, lazy constants | still preview in 27 |
 | String templates | withdrawn after previews in 21 and 22 |
 
+Try it in the lab: [From Java 8 to 21: what each release removed](lab:java-modern-features).
+
 ## Interview questions {#questions}
 
 ### [basic] What are the LTS versions of Java, and what does LTS mean? {#lts}
