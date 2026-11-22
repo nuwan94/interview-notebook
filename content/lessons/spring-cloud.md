@@ -159,6 +159,8 @@ The annotations are **AOP proxies** ([AOP and proxies](lesson:spring-aop)), so s
 - **Spring Cloud Kubernetes**, **Spring Cloud Vault**, **Spring Cloud Task** for short-lived jobs.
 - **Service mesh (Istio, Linkerd)** moves retries, mTLS, traffic shifting and observability out of application code; evaluate it against library-based resilience rather than using both for the same job.
 
+Try it in the lab: [The Spring Cloud stack around one request](lab:spring-cloud-stack).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

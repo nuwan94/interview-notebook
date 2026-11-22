@@ -176,6 +176,8 @@ Extend `OncePerRequestFilter` for a filter that runs once per request, implement
 - **API documentation** with springdoc-openapi (OpenAPI/Swagger) and **clients** with `RestClient` or `WebClient`.
 - **Testing:** `@WebMvcTest(AccountController.class)` with `MockMvc` loads only the web layer, services are `@MockitoBean` mocks.
 
+Try it in the lab: [A request through DispatcherServlet](lab:mvc-dispatcher-flow).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

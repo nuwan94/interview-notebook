@@ -173,6 +173,8 @@ Embedded H2 differs from production (SQL dialect, types, JSON, locking, sequence
 - **Architecture tests:** ArchUnit rules (no controller calls a repository, packages free of cycles).
 - **Coverage is a guide, not a goal:** mutation testing (PIT) shows whether tests really detect changes.
 
+Try it in the lab: [Test slices: load only what you need](lab:testing-slices-cost).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

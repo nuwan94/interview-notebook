@@ -118,6 +118,8 @@ This is [optimistic locking](lesson:acid-base#lost-update) exposed over HTTP.
 | Caching | HTTP caching works | harder (single endpoint) | not HTTP-cache friendly |
 | Costs | over- and under-fetching | complexity, N+1 resolvers, query cost limits | browser support, tooling |
 
+Try it in the lab: [ETags: 304 Not Modified and lost-update protection](lab:rest-conditional-requests).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

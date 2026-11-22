@@ -124,6 +124,8 @@ What to know:
 
 Guidance: **start with MVC; turn on virtual threads** for I/O-heavy services on Java 21+; choose **WebFlux** when you need streaming with backpressure (event streams, SSE, WebSockets), an end-to-end reactive pipeline already exists, or you compose many concurrent calls elegantly (gateways such as Spring Cloud Gateway are WebFlux for this reason). Do not mix styles carelessly: calling blocking JPA from WebFlux handlers is the classic mistake.
 
+Try it in the lab: [Thread-per-request versus the event loop](lab:reactive-event-loop).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

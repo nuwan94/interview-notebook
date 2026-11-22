@@ -168,6 +168,8 @@ Details: [Spring testing](lesson:spring-testing).
 | route, secure and limit calls across services | Spring Cloud Gateway, Resilience4j |
 | watch health and metrics | Actuator and Micrometer |
 
+Try it in the lab: [Where a Spring property value comes from](lab:spring-profiles-config).
+
 ## Interview questions {#questions}
 
 ### [basic] What is the difference between Spring, Spring Boot and Spring MVC? {#spring-boot-mvc-q}

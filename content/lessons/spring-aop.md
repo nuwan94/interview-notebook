@@ -177,6 +177,8 @@ Fixes: move the method to **another bean** and inject it (the usual answer), inj
 - **Exceptions swallowed** inside a `@Transactional` method are invisible to the advice, so the transaction commits.
 - **Equality and type:** the injected object is a proxy; `bean.getClass()` is a generated class, so use `AopUtils.getTargetClass(bean)` and `AopUtils.isAopProxy(bean)` when debugging.
 
+Try it in the lab: [AOP proxies and the self-invocation trap](lab:aop-proxy-self-call).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

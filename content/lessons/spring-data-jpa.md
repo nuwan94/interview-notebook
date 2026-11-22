@@ -216,6 +216,8 @@ Put `@Transactional` on **service** methods (the unit of business work), not on 
 - **When not to use JPA:** reporting and heavy set-based SQL are clearer with native SQL, `JdbcTemplate` or jOOQ. JPA suits aggregates read and written as objects.
 - **Test with a real database** (Testcontainers) rather than H2 when you use vendor features.
 
+Try it in the lab: [The N+1 queries problem](lab:jpa-n-plus-one).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

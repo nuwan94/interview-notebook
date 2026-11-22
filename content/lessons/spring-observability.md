@@ -132,6 +132,8 @@ The **Observation API** (Spring Framework 6) unifies this: instrument an operati
 - Business metrics matter: payments completed per minute, settlement lag, reconciliation breaks, dead-letter queue size.
 - Include **synthetic checks** and dependency metrics (circuit breaker state, pool saturation, consumer lag).
 
+Try it in the lab: [One request, three signals: logs, metrics, traces](lab:observability-trace-flow).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

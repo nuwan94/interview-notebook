@@ -113,6 +113,8 @@ The **Observation API** (Micrometer) instruments code once and produces metrics,
 9. **Move step by step** (3.0, then each minor), keep a rollback, deploy to a staging environment, compare performance and memory.
 10. **Then adopt new features** deliberately: `RestClient`, `ProblemDetail`, virtual threads, structured logging, `@ServiceConnection`.
 
+Try it in the lab: [Migrating a service from Boot 2.7 to Boot 3](lab:boot3-jakarta-migration).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

@@ -256,6 +256,8 @@ class ReportControllerTest {
 | Leaking details in 401/403 messages | generic errors, log the detail |
 | Using the deprecated `WebSecurityConfigurerAdapter` or `antMatchers` | `SecurityFilterChain` and `requestMatchers` |
 
+Try it in the lab: [A request through the Spring Security filter chain](lab:security-filter-chain).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Use |

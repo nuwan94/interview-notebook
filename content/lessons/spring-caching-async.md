@@ -148,6 +148,8 @@ class StatementJob {
 
 In-process pub/sub decouples beans (`ApplicationEventPublisher`, `@EventListener`). Listeners run **synchronously on the publisher's thread and transaction** by default; add `@Async` to a listener to move it off-thread, and `@TransactionalEventListener(AFTER_COMMIT)` to react only after a commit ([after commit](lesson:spring-transactions#events)). Events are not durable and not distributed: use a broker for cross-service events ([messaging with Spring](lesson:spring-messaging)).
 
+Try it in the lab: [@Cacheable and @Async: what the proxy does](lab:spring-cacheable-async).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

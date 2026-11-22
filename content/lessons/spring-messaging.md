@@ -155,6 +155,8 @@ Kafka also offers **transactions** (exactly-once within Kafka: consume-process-p
 
 Use **Testcontainers** (`KafkaContainer`, `RabbitMQContainer`) with `@ServiceConnection`, or `@EmbeddedKafka` for quick tests; publish a message and assert the effect with **Awaitility** (no sleeps). Test the failure paths: a poison message lands in the DLT, a transient failure is retried, and **delivering the same message twice has one effect** ([testing Spring apps](lesson:spring-testing#testcontainers)).
 
+Try it in the lab: [Spring Kafka: partitions, offsets, retry and dead letters](lab:spring-kafka-listener).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

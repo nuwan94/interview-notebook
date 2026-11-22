@@ -197,6 +197,8 @@ record TransferCompleted(long transferId) {}
 
 Events decouple beans and break circular dependencies. They are in-process and synchronous by default, not a replacement for a message broker ([messaging](lesson:messaging)).
 
+Try it in the lab: [A bean from definition to destruction](lab:spring-bean-lifecycle).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

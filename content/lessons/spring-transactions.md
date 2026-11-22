@@ -148,6 +148,8 @@ Publishing a message or event **inside** a transaction is risky: consumers may r
 - **Across services** a local transaction cannot span them: use [sagas](lesson:saga), idempotency and the outbox, not distributed (XA) transactions.
 - **Tests:** `@Transactional` on a test rolls back after each test, which can hide flush problems (nothing is flushed) and differs from production; use `@Commit`, call `flush()` and `clear()`, or test the transaction boundary with the real service call.
 
+Try it in the lab: [@Transactional: rollback rules and propagation](lab:tx-propagation-rollback).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

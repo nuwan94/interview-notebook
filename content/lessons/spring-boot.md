@@ -174,6 +174,8 @@ For containers prefer **layered jars** (dependencies, snapshot dependencies, app
 - **Testing:** `@SpringBootTest`, slice tests such as `@WebMvcTest` and `@DataJpaTest` (a later lesson).
 - **Configuration processor:** `spring-boot-configuration-processor` generates IDE metadata for your properties.
 
+Try it in the lab: [How auto-configuration decides what to create](lab:boot-autoconfiguration).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |
