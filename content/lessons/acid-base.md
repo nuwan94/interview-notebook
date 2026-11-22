@@ -230,6 +230,8 @@ Eventual consistency is safe only if the design accounts for it:
 
 A single database gives ACID; a business transaction across several services does not. Options: **two-phase commit** (atomic but blocking and coupled, see [2PC](lesson:distributed-systems#two-pc)), **sagas** (a sequence of local ACID transactions with compensation, eventual consistency between services), or a **distributed SQL** database. In microservices the usual answer is local ACID transactions plus sagas and the outbox.
 
+Try it in the lab: [Isolation anomalies: dirty, non-repeatable, phantom](lab:acid-isolation-anomalies).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

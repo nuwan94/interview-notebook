@@ -199,6 +199,8 @@ public void update(long id, UpdateCustomer cmd) { ... }
 
 Spring Data gives one repository style across stores (`JpaRepository`, `MongoRepository`, `CassandraRepository`, `RedisTemplate`) but the models differ, so the abstraction does not make them interchangeable. Beware ORM traps in the relational case: **N+1 queries** (use `join fetch` or entity graphs), eager loading, and large transactions.
 
+Try it in the lab: [The same data in SQL and in a document store](lab:sql-vs-nosql-modeling).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |

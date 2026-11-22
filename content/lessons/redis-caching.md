@@ -212,6 +212,8 @@ class BranchService {
 - `StringRedisTemplate` is the low-level API for counters, locks and sets. **Redisson** adds distributed locks, semaphores and rate limiters. A single-node `SET NX PX` lock is fine for efficiency (avoid duplicate work); for correctness under failures the Redlock debate applies, and you need a **fencing token** or a database constraint as the final guard (see the [distributed scheduler](lesson:distributed-scheduler) lesson).
 - Prefix keys by service and version (`payments:v2:account:42`) so deployments with a changed format do not read each other's data.
 
+Try it in the lab: [Cache-aside with Redis, and the stampede](lab:redis-cache-stampede).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Do |

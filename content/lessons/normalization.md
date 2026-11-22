@@ -213,6 +213,8 @@ class Transfer {
 
 Points: use `LAZY` on `@ManyToOne` (the default is eager) and `join fetch` or projections where you need the data, to avoid the **N+1 problem**; a composite key is mapped with `@EmbeddedId` and an `@Embeddable` class; read-only denormalised views can map to a **DTO projection** or a database view instead of duplicating columns in the entity. Schema changes belong in migrations (Flyway or Liquibase), not `ddl-auto=update`.
 
+Try it in the lab: [Normalization: from one wide table to three](lab:normalization-anomalies).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Key point |
