@@ -178,6 +178,8 @@ A regulated bank has extra requirements, and a good pipeline can *meet* them rat
 
 The result is often **continuous delivery with an approval gate**, an automated path that is the *same* for every change, and releases that are frequent but controlled.
 
+Try it in the lab: [A pipeline from commit to production](lab:cicd-pipeline-stages).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Rule |

@@ -250,6 +250,8 @@ Beyond the pipeline engine, GitLab includes a **container registry** (images tag
 - **Separation of runners.** Build runners with no production access, and protected deploy runners that run only protected-branch jobs, with credentials from a vault or by OIDC.
 - **Pinned and signed.** Pinned template versions, base images from an internal registry, signed images and an SBOM per release.
 
+Try it in the lab: [A GitLab CI pipeline: jobs, runners, cache and artifacts](lab:gitlab-ci-pipeline).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

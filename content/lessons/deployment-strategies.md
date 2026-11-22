@@ -156,6 +156,8 @@ A strategy is only as good as the signal that tells you it is working:
 - **Evidence.** Each step, the metrics and the decision to promote or roll back are recorded for audit.
 - **Data first.** Schema and message changes follow expand and contract, because regulatory data cannot simply be lost or reshaped.
 
+Try it in the lab: [Blue-green and canary releases](lab:deploy-canary-bluegreen).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Use |

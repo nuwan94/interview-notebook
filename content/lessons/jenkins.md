@@ -219,6 +219,8 @@ Plugins give Jenkins its reach (Git, Pipeline, Kubernetes, Credentials, JUnit, S
 
 The tool matters less than the practice: pipeline as code, build once, quality gates and fast feedback apply to all of them.
 
+Try it in the lab: [A Jenkins pipeline: controller, agents, credentials](lab:jenkins-pipeline-agents).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |
