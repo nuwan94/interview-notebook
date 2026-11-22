@@ -99,6 +99,8 @@ mvn dependency:tree -Dincludes=com.fasterxml.jackson.core
 
 Unit tests belong to `test` (Surefire, classes named `*Test`), and integration tests to `integration-test` and `verify` (Failsafe, classes named `*IT`), so a flaky database test does not block `package`.
 
+Try it in the lab: [mvn package runs every phase before it](lab:maven-lifecycle).
+
 ## Dependencies {#dependencies}
 
 ```xml
@@ -122,6 +124,8 @@ Unit tests belong to `test` (Surefire, classes named `*Test`), and integration t
 - **Exclusions** remove an unwanted transitive dependency: `<exclusions><exclusion>…</exclusion></exclusions>`.
 - **Optional** dependencies are not passed on to projects that depend on you.
 - **Directly declared beats transitive.** If you need to control a version, declare it yourself (or manage it).
+
+Try it in the lab: [Two libraries, two Jackson versions](lab:maven-dependency-conflict).
 
 ### dependencyManagement and BOMs {#bom}
 
@@ -204,6 +208,8 @@ A parent pom with `<packaging>pom</packaging>` lists modules:
 - **Useful options:** `-pl app -am` (build app and what it needs), `-pl service -amd` (also make dependents), `-rf :service` (resume from a module), `-T 1C` (one thread per core, in parallel).
 - **Versions:** use one version for all modules (`${project.version}`), or the CI-friendly `${revision}` property with the flatten plugin so a release does not need many edits.
 - A **BOM module** or a **parent with dependencyManagement** keeps third-party versions the same across modules.
+
+Try it in the lab: [The reactor orders a multi-module build](lab:maven-reactor).
 
 ## Plugins and profiles {#plugins}
 

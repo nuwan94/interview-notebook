@@ -85,6 +85,8 @@ tasks.register("printVersion") {
 
 Prefer `tasks.register` (lazy: the task is created only if needed) over `tasks.create` (eager), and use providers (`layout.buildDirectory`, `providers.gradleProperty`) so that values are read when they are needed.
 
+Try it in the lab: [Initialization, configuration, execution](lab:gradle-build-phases).
+
 ## Tasks, inputs and outputs {#tasks}
 
 A **task** is a unit of work with a name, optional dependencies, actions, and, importantly, declared **inputs** and **outputs**:
@@ -114,6 +116,8 @@ tasks.register<GenerateReport>("report") {
 - **Incremental compilation:** `compileJava` recompiles only the classes affected by a change.
 
 Task outcomes you see in the console: `EXECUTED` (no label), `UP-TO-DATE`, `FROM-CACHE`, `SKIPPED` (it was disabled or `onlyIf` was false) and `NO-SOURCE` (no input files).
+
+Try it in the lab: [Why the second Gradle build is faster](lab:gradle-up-to-date).
 
 ## Why Gradle is fast {#speed}
 
@@ -145,6 +149,8 @@ A **configuration** is a named bucket of dependencies with a purpose. For the `j
 - **Conflict resolution:** unlike Maven, Gradle picks the **highest** version requested by any path. Use `constraints { }`, a platform (BOM) or `strictly` to control it.
 - **BOMs:** `implementation(platform("org.springframework.boot:spring-boot-dependencies:3.3.0"))` imports managed versions, like Maven's `import` scope.
 - **Dynamic versions** (`1.+`, `latest.release`) and `-SNAPSHOT`/`changing` modules make builds unrepeatable; use fixed versions and **dependency locking** if you need to pin the whole tree.
+
+Try it in the lab: [api versus implementation](lab:gradle-api-vs-implementation).
 
 ### Version catalogs {#catalog}
 
