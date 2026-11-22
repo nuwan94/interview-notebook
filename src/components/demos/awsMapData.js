@@ -18,7 +18,7 @@ export const AWS_MAP = [
     ],
   },
   {
-    id: 'storage', title: 'Storage', color: '#2f7d4f',
+    id: 'storage', title: 'Storage', color: '#1b6b3a',
     services: [
       s('s3', 'S3', 'objects and files'),
       s('glacier', 'S3 Glacier', 'cheap archive'),
@@ -29,7 +29,7 @@ export const AWS_MAP = [
     ],
   },
   {
-    id: 'databases', title: 'Databases', color: '#23408f',
+    id: 'databases', title: 'Databases', color: '#0d5c63',
     services: [
       s('rds', 'RDS', 'managed relational databases'),
       s('aurora', 'Aurora', 'fast MySQL and PostgreSQL'),
@@ -70,7 +70,7 @@ export const AWS_MAP = [
     ],
   },
   {
-    id: 'integration', title: 'Integration and messaging', color: '#a65b0a',
+    id: 'integration', title: 'Integration and messaging', color: '#8a4b00',
     services: [
       s('sqs', 'SQS', 'message queue'),
       s('sns', 'SNS', 'publish and subscribe'),
