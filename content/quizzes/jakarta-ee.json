@@ -1,0 +1,354 @@
+{
+ "questions": [
+  {
+   "t": "Servlet",
+   "v": [
+    {
+     "q": "What is a servlet?",
+     "o": [
+      "A Java class run by a servlet container that handles HTTP requests",
+      "A thread that the JVM creates for every HTTP connection",
+      "A build plugin that packages a web application into a WAR",
+      "A database driver that sends SQL over HTTP"
+     ],
+     "w": "A servlet is a class written against the Servlet API. The container calls it for matching requests on its own pooled threads."
+    },
+    {
+     "q": "Which statement about a servlet in a container is true?",
+     "o": [
+      "One instance serves all requests, so it must be thread-safe",
+      "A new instance is created for every request",
+      "It is single threaded by default",
+      "It is destroyed after each response"
+     ],
+     "w": "The container normally keeps one instance and calls service() concurrently from many threads, so per-request data must not live in fields."
+    }
+   ]
+  },
+  {
+   "t": "Lifecycle",
+   "v": [
+    {
+     "q": "Which order describes the servlet lifecycle?",
+     "o": [
+      "init once, service for each request, destroy once",
+      "service once, init for each request, destroy once",
+      "init for each request, service once, destroy for each request",
+      "construct, doGet, doPost, finalize"
+     ],
+     "w": "The container calls init() once, then service() for every request, and destroy() once when the servlet is taken out of service."
+    },
+    {
+     "q": "When is a servlet normally instantiated if loadOnStartup is not set?",
+     "o": [
+      "On the first request that needs it",
+      "When the JVM starts",
+      "On every request",
+      "When the WAR is built"
+     ],
+     "w": "Without loadOnStartup the container creates the servlet lazily on the first request. loadOnStartup makes it start with the application."
+    }
+   ]
+  },
+  {
+   "t": "Container and server",
+   "v": [
+    {
+     "q": "What is the difference between Tomcat and WildFly?",
+     "o": [
+      "Tomcat is a servlet container; WildFly is a full application server with CDI, EJB, JTA and JMS",
+      "Tomcat is a full application server; WildFly is only a servlet container",
+      "Tomcat runs only JSP; WildFly runs only EJB",
+      "There is none: both implement the same specifications"
+     ],
+     "w": "Tomcat implements the web specifications (Servlet, JSP, WebSocket). WildFly implements the whole platform including EJB, JTA and JMS."
+    },
+    {
+     "q": "Which of these is a servlet container but not a full Jakarta EE application server?",
+     "o": [
+      "Apache Tomcat",
+      "WebLogic",
+      "Payara",
+      "WildFly"
+     ],
+     "w": "Tomcat (like Jetty and Undertow) covers the web tier only. WebLogic, Payara and WildFly implement the full platform."
+    }
+   ]
+  },
+  {
+   "t": "Java EE and Jakarta EE",
+   "v": [
+    {
+     "q": "How is Jakarta EE related to Java EE?",
+     "o": [
+      "It is the same platform moved to the Eclipse Foundation, with packages renamed from javax to jakarta from version 9",
+      "It is an unrelated replacement written from scratch",
+      "It is only the name of the Spring integration for Java EE",
+      "It is Java EE restricted to the Web Profile"
+     ],
+     "w": "Oracle donated Java EE to the Eclipse Foundation. Jakarta EE 8 was identical, and Jakarta EE 9 renamed the packages."
+    },
+    {
+     "q": "Which Jakarta EE release introduced the jakarta package names?",
+     "o": [
+      "Jakarta EE 9",
+      "Jakarta EE 8",
+      "Java EE 7",
+      "Jakarta EE 11"
+     ],
+     "w": "Jakarta EE 8 still used javax. The jakarta namespace arrived with Jakarta EE 9."
+    }
+   ]
+  },
+  {
+   "t": "The rename",
+   "v": [
+    {
+     "q": "Why does a JAR compiled against javax.servlet fail on Tomcat 10?",
+     "o": [
+      "Tomcat 10 implements jakarta.servlet, so the javax classes it expects do not exist",
+      "Tomcat 10 removed the Servlet API",
+      "javax.servlet is only for JSP",
+      "Tomcat 10 needs Java 8"
+     ],
+     "w": "The rename is binary incompatible. Libraries must be rebuilt or transformed for jakarta, which is also why Spring Boot 3 needs jakarta."
+    },
+    {
+     "q": "Which package was NOT renamed from javax to jakarta?",
+     "o": [
+      "javax.sql",
+      "javax.servlet",
+      "javax.persistence",
+      "javax.validation"
+     ],
+     "w": "javax.sql belongs to the JDK, not to Jakarta EE, so it keeps its name. Servlet, persistence and validation moved."
+    }
+   ]
+  },
+  {
+   "t": "JSP",
+   "v": [
+    {
+     "q": "What does the container do with a JSP file?",
+     "o": [
+      "Compiles it into a servlet the first time it is requested",
+      "Interprets it line by line on every request without compiling",
+      "Converts it to a static HTML file at build time",
+      "Sends it unchanged to the browser"
+     ],
+     "w": "A JSP is translated into a servlet class, compiled and loaded. After that it runs like any servlet."
+    },
+    {
+     "q": "What is the recommended way to use JSP in an MVC design?",
+     "o": [
+      "A servlet or controller prepares the model and forwards to the JSP for rendering",
+      "Put the business logic in scriptlets inside the JSP",
+      "Let the JSP read request parameters and call the database",
+      "Redirect the browser to the JSP file directly"
+     ],
+     "w": "In Model 2 MVC the servlet is the controller and the JSP is only the view. Scriptlets with logic are considered bad practice."
+    }
+   ]
+  },
+  {
+   "t": "Filters",
+   "v": [
+    {
+     "q": "What is a servlet filter?",
+     "o": [
+      "A component that wraps requests before and after the servlet and can modify or block them",
+      "A servlet that serves only static files",
+      "A JSP tag that removes HTML",
+      "A listener for session events"
+     ],
+     "w": "Filters form a chain around the servlet. They are used for security, encoding, compression and logging."
+    },
+    {
+     "q": "How do you control the order of filters declared with @WebFilter?",
+     "o": [
+      "Declare the order in web.xml (the annotation does not define it)",
+      "By the alphabetical order of the class names, always",
+      "With the @Order annotation of the Servlet API",
+      "It is always the order of the Java files on disk"
+     ],
+     "w": "The Servlet API does not define an order for annotated filters. Use web.xml or register them in code."
+    }
+   ]
+  },
+  {
+   "t": "Forward and redirect",
+   "v": [
+    {
+     "q": "What is the difference between forward and sendRedirect?",
+     "o": [
+      "Forward stays inside the server with the same URL; redirect sends a 302 and the browser makes a new request",
+      "Forward changes the browser URL; redirect does not",
+      "Both create a new request but redirect is faster",
+      "Forward only works for POST requests"
+     ],
+     "w": "A forward is internal and keeps the request. A redirect makes the browser issue another request to a new URL."
+    },
+    {
+     "q": "Why use post, redirect, get after a form submission?",
+     "o": [
+      "A refresh then repeats a harmless GET instead of resubmitting the form",
+      "It encrypts the form data",
+      "It is required by the HTTP specification",
+      "It keeps the session alive"
+     ],
+     "w": "Redirecting after the POST means a browser refresh repeats the GET, so the payment is not submitted twice."
+    }
+   ]
+  },
+  {
+   "t": "Sessions",
+   "v": [
+    {
+     "q": "How does a servlet container track an HttpSession?",
+     "o": [
+      "A session id in a cookie (JSESSIONID) points to state in server memory",
+      "The whole session is stored in the cookie",
+      "The IP address of the client is the session id",
+      "The session is stored in the browser local storage"
+     ],
+     "w": "The container keeps the data on the server and sends only the session id in the JSESSIONID cookie."
+    },
+    {
+     "q": "Which call protects against session fixation after login?",
+     "o": [
+      "request.changeSessionId()",
+      "session.setMaxInactiveInterval(0)",
+      "response.setHeader(\"Set-Cookie\", \"\")",
+      "session.getAttribute(\"user\")"
+     ],
+     "w": "Giving the user a new session id at login means an id an attacker planted before login becomes useless."
+    }
+   ]
+  },
+  {
+   "t": "CDI and EJB",
+   "v": [
+    {
+     "q": "Which CDI scope gives one instance for the whole application?",
+     "o": [
+      "@ApplicationScoped",
+      "@RequestScoped",
+      "@Dependent",
+      "@SessionScoped"
+     ],
+     "w": "@ApplicationScoped is the singleton scope. @Dependent, the default, creates a new instance for each injection point."
+    },
+    {
+     "q": "What is the default scope of a CDI bean with no scope annotation?",
+     "o": [
+      "@Dependent",
+      "@ApplicationScoped",
+      "@RequestScoped",
+      "@Singleton"
+     ],
+     "w": "A bean with no scope is @Dependent: a new instance is created for every injection point, like a prototype."
+    }
+   ]
+  },
+  {
+   "t": "Transactions",
+   "v": [
+    {
+     "q": "What does JTA add beyond a local database transaction?",
+     "o": [
+      "A global (XA) transaction across several resources such as two databases and a queue",
+      "Faster commits on a single database",
+      "Automatic retry of failed SQL",
+      "Caching of query results"
+     ],
+     "w": "JTA coordinates a two-phase commit across resources. It is slow and rarely used across microservices, where sagas are preferred."
+    },
+    {
+     "q": "In an EJB or a CDI bean with @Transactional, which exception rolls the transaction back by default?",
+     "o": [
+      "A runtime (unchecked) exception",
+      "Every checked exception",
+      "Only an Error",
+      "None: you must always call rollback manually"
+     ],
+     "w": "By default unchecked exceptions mark the transaction for rollback and checked exceptions do not, as in Spring."
+    }
+   ]
+  },
+  {
+   "t": "REST and JNDI",
+   "v": [
+    {
+     "q": "Which annotations declare a JAX-RS endpoint that reads an id from the URL?",
+     "o": [
+      "@Path(\"/{id}\"), @GET and @PathParam(\"id\")",
+      "@RequestMapping and @PathVariable",
+      "@WebServlet and @RequestParam",
+      "@Inject and @Named"
+     ],
+     "w": "JAX-RS uses @Path, @GET and @PathParam. @RequestMapping and @PathVariable are Spring MVC."
+    },
+    {
+     "q": "What is JNDI used for in an application server?",
+     "o": [
+      "Looking up server-managed resources such as a DataSource by name",
+      "Encrypting session cookies",
+      "Compiling JSP pages",
+      "Scheduling batch jobs"
+     ],
+     "w": "JNDI publishes resources by name, for example java:comp/env/jdbc/BankDS. The app injects them with @Resource."
+    }
+   ]
+  },
+  {
+   "t": "Packaging",
+   "v": [
+    {
+     "q": "Which directory of a WAR is never served directly to a browser?",
+     "o": [
+      "WEB-INF",
+      "css",
+      "META-INF/resources",
+      "The root of the WAR"
+     ],
+     "w": "Everything under WEB-INF, including web.xml, classes and lib, is hidden from direct requests."
+    },
+    {
+     "q": "How should the Jakarta EE API dependencies be declared in Maven when deploying a WAR to an application server?",
+     "o": [
+      "With provided scope, because the server supplies them",
+      "With compile scope, always bundled in the WAR",
+      "With test scope",
+      "They must not appear in the pom"
+     ],
+     "w": "The server already provides the API and its implementation, so bundling them risks class loader conflicts. Use provided scope."
+    }
+   ]
+  },
+  {
+   "t": "Spring and EE",
+   "v": [
+    {
+     "q": "How does Spring MVC relate to the Servlet API?",
+     "o": [
+      "It is built on it: the DispatcherServlet is a servlet running in a container such as embedded Tomcat",
+      "It replaces the Servlet API entirely",
+      "It runs only on Netty",
+      "It needs a full Jakarta EE application server"
+     ],
+     "w": "Spring MVC runs on servlets. Only WebFlux can run without the Servlet API, on Netty by default."
+    },
+    {
+     "q": "Which Spring annotation corresponds to the CDI @Inject?",
+     "o": [
+      "@Autowired",
+      "@Bean",
+      "@Component",
+      "@Configuration"
+     ],
+     "w": "@Autowired injects a dependency like @Inject. Spring also supports @Inject itself."
+    }
+   ]
+  }
+ ]
+}

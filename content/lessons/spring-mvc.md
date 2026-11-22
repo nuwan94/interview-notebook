@@ -10,7 +10,7 @@ updated: 2026-11-13
 subnav: true
 ---
 
-For a Spring Boot role the web layer questions are guaranteed: *walk me through what happens to an HTTP request, what is the `DispatcherServlet`, `@Controller` versus `@RestController`, how do you validate input and handle errors globally, what is the difference between a filter and an interceptor, and how do you design a REST API?* It sits on [Spring Boot](lesson:spring-boot) (embedded Tomcat, Jackson), the [core container](lesson:spring-core) and is secured by [Spring Security](lesson:spring-security) (a filter chain). Idempotency and API contract design are explored further in a later REST lesson. Play the three scenes: the request flow, validation and errors, and filter versus interceptor versus advice.
+For a Spring Boot role the web layer questions are guaranteed: *walk me through what happens to an HTTP request, what is the `DispatcherServlet`, `@Controller` versus `@RestController`, how do you validate input and handle errors globally, what is the difference between a filter and an interceptor, and how do you design a REST API?* It sits on [Spring Boot](lesson:spring-boot) (embedded Tomcat, Jackson), the [core container](lesson:spring-core) and is secured by [Spring Security](lesson:spring-security) (a filter chain). The Servlet API underneath (container, servlet, session, JSP) is explained in [Jakarta EE and servlets](lesson:jakarta-ee). Idempotency and API contract design are explored further in a later REST lesson. Play the three scenes: the request flow, validation and errors, and filter versus interceptor versus advice.
 
 ```demo
 name: spring-mvc-walk
