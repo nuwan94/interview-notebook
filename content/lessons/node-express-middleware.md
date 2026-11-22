@@ -498,6 +498,8 @@ Test the **order-sensitive** behaviour with the real `createApp()` ([supertest](
 | `ContentCachingRequestWrapper` for the raw body | `express.raw` or the `verify` option |
 | `chain.doFilter` not called short-circuits | not calling `next()` ends the chain |
 
+Try it in the lab: [The Express middleware chain and why order matters](lab:express-middleware-chain).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

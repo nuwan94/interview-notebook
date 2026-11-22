@@ -355,6 +355,8 @@ Playwright auto-waits for elements, runs in parallel across browsers and records
 | Testcontainers or Selenium end-to-end | Playwright or Cypress |
 | test pyramid | the same pyramid |
 
+Try it in the lab: [Why a child re-renders, and when memo helps](lab:react-memo-rerender).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

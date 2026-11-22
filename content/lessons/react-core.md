@@ -245,6 +245,8 @@ function Transfer() {
 | compile-time types (Java) | TypeScript props and state, erased at run time |
 | Swing or JavaFX listeners | callback props and event handlers |
 
+Try it in the lab: [How React turns a state change into a screen change](lab:react-render-commit).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

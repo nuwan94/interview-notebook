@@ -432,6 +432,8 @@ test('batch groups items and flushes the remainder', async () => {
 | WebFlux `DataBuffer` streaming | Buffer chunks |
 | Kafka or Reactor for unbounded data | streams for bytes, message queues for events |
 
+Try it in the lab: [Streams and backpressure on a 2 GB file](lab:node-stream-backpressure).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

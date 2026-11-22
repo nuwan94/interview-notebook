@@ -513,6 +513,8 @@ test('the session cookie has the security flags', async () => {
 | `SecurityContextHolder` (thread-bound) | `req.user` and `AsyncLocalStorage` |
 | Keycloak, Okta | the same, via OIDC |
 
+Try it in the lab: [Node API login: hashed password, access and refresh tokens](lab:node-auth-tokens).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

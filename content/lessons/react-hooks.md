@@ -245,6 +245,8 @@ useEffect(() => {
 | `Future.cancel` | `AbortController` in the cleanup |
 | a thread-safe immutable value | a stable reference kept with `useMemo` |
 
+Try it in the lab: [useEffect: dependencies, cleanup and stale values](lab:react-effect-deps).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

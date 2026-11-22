@@ -426,6 +426,8 @@ Keep most tests inside each service and use contracts at the edges ([testing Nod
 | thread pools as bulkheads | concurrency limiters per dependency |
 | Spring Boot starter and parent POM as the paved road | a service template repository and shared CI configuration |
 
+Try it in the lab: [A Node service calling another service safely](lab:node-service-calls).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

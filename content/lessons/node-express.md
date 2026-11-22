@@ -401,6 +401,8 @@ Test layers separately: services as plain unit tests, the HTTP layer with supert
 | `MockMvc` | supertest |
 | one thread per request | one event loop, never block it |
 
+Try it in the lab: [Express: routes, async handlers and errors](lab:express-routing-errors).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

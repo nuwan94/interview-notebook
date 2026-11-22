@@ -580,6 +580,8 @@ Run on every pull request: lint, unit tests, integration tests (with Docker), th
 
 See [Spring testing](lesson:spring-testing#pyramid) for the Java side of the same pyramid.
 
+Try it in the lab: [Testing a Node service in layers](lab:node-testing-layers).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

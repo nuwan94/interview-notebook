@@ -362,6 +362,8 @@ Run migrations as a separate pipeline step before the new code, and never as an 
 
 If the back end stays in Spring Boot, the React part is the same: generate a typed client from OpenAPI and keep the BFF or cookie rules.
 
+Try it in the lab: [React to API across origins: CORS and preflight](lab:fullstack-cors-preflight).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

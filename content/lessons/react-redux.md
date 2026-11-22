@@ -439,6 +439,8 @@ export function makeStore(preloadedState?: Partial<RootState>) {
 | `@Cacheable` plus eviction on update | RTK Query tags and invalidation |
 | a read model projected from events | derived data from `createSelector` |
 
+Try it in the lab: [Redux: dispatch, reducer, store, selector](lab:redux-data-flow).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

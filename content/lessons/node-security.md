@@ -516,6 +516,8 @@ Write **abuse-case tests** next to the happy path: user B cannot read user A's a
 | SecurityManager (removed), container isolation | permission model, containers, non-root |
 | Spring Security as the default framework | assembling libraries (`helmet`, schema validator, auth library), so the discipline is yours |
 
+Try it in the lab: [Defending a Node API in layers](lab:node-security-layers).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

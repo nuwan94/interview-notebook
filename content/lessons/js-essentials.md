@@ -214,6 +214,8 @@ Interviewers like short function-writing tasks that test closures and `this`: **
 | Maven, Gradle, JARs | npm, pnpm, `package.json`, ES modules |
 | `equals`, `hashCode` | `===` compares references for objects |
 
+Try it in the lab: [Closures: the var loop bug and a lost this](lab:js-closure-loop).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

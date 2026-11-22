@@ -338,6 +338,8 @@ test('interest is calculated per day', () => {
 | JFR and heap dumps | `--inspect`, heap snapshots, `clinic` |
 | Actuator health | a `/health` route, `pino` logs, OpenTelemetry |
 
+Try it in the lab: [Node.js: one JS thread, libuv and the thread pool](lab:node-libuv-threadpool).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

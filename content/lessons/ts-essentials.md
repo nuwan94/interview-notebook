@@ -266,6 +266,8 @@ const payment = Payment.parse(await res.json());   // throws a ZodError if the s
 | Jackson validates and binds JSON to a class | `JSON.parse` gives `any`, validate with zod |
 | Maven, JDK | npm or pnpm, `tsc`, a bundler |
 
+Try it in the lab: [TypeScript: checked at compile time, gone at run time](lab:ts-types-erased).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

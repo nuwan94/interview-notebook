@@ -483,6 +483,8 @@ kubectl top pod                             # CPU and memory in use
 | Micrometer and Actuator metrics | `prom-client` and OpenTelemetry |
 | Flyway, Liquibase | `node-pg-migrate`, Prisma Migrate, Flyway also works |
 
+Try it in the lab: [Graceful shutdown of a Node service](lab:node-graceful-shutdown).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

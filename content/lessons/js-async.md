@@ -199,6 +199,8 @@ const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(5000)]); 
 | reactive streams (Reactor) | async iterators, streams, RxJS |
 | virtual threads make blocking code cheap | `async`/`await` makes waiting code read as blocking code |
 
+Try it in the lab: [The event loop: why Promise runs before setTimeout](lab:js-event-loop).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

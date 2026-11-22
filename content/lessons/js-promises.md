@@ -372,6 +372,8 @@ A common interview exercise. The essentials: state, a handler list, **async** ha
 | `CompletionException` wrapping | the rejection reason itself |
 | a stage may run on a different thread | always the same thread |
 
+Try it in the lab: [Promise.all, allSettled, race and any](lab:js-promise-combinators).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |
