@@ -146,6 +146,8 @@ Set the **RTO and RPO** with the business, choose the cheapest design that meets
 - **Change control:** schema changes through a pipeline with approvals and backward-compatible migrations, Blue/Green Deployments for upgrades, and no direct production changes by individuals.
 - **Residency and exit:** the region choice follows data residency rules, and an exit plan covers how the data would be exported and the dependency on engine-specific features.
 
+Try it in the lab: [RDS: Multi-AZ failover and read replicas](lab:aws-rds-multi-az).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

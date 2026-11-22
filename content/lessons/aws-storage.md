@@ -143,6 +143,8 @@ The most common real-world incidents are a **public bucket**, an **over-broad ro
 - **Classification and discovery.** Macie scans for personal data, and tags drive the retention, the access and the backup plan.
 - **Evidence.** Data events and access logs go to a protected log account, and backup and restore tests are recorded for audit.
 
+Try it in the lab: [S3: private by default, presigned URLs and lifecycle](lab:aws-s3-presigned-lifecycle).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

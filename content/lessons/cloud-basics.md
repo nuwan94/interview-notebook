@@ -179,6 +179,8 @@ AWS, Azure and Google each publish a "well-architected framework" with similar p
 - **Resilience.** A documented RTO and RPO per service, tested failover, an **exit plan** that says how to leave the provider, and concentration-risk awareness: depending on one provider for many critical services.
 - **Audit.** Central, immutable logs of every administrative action, and separation of duties between those who build and those who can approve or change production.
 
+Try it in the lab: [Regions, availability zones and failure](lab:cloud-regions-azs).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

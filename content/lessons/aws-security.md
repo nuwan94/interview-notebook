@@ -217,6 +217,8 @@ A response runbook should be tested: **isolate** the resource (swap its security
 - **Compliance evidence:** the controls above map to the bank's frameworks (PCI DSS, MAS TRM in Singapore, ISO 27001, SOC 2). **AWS Artifact** gives AWS's own compliance reports for the audit.
 - **Change and review:** every IAM and SCP change goes through code review and an approval pipeline, and **access reviews** remove unused permissions every quarter.
 
+Try it in the lab: [How IAM decides: deny by default, explicit deny wins](lab:aws-iam-evaluation).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |

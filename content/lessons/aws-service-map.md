@@ -207,6 +207,8 @@ Most services bill along some of these dimensions: **compute time** (per second)
 - **Resilience.** Multi-AZ by default, tested failover, a documented region-level DR plan with RTO and RPO, and backups in a separate account.
 - **Concentration and exit.** Regulators expect a view of the dependency on one provider, an exit strategy, and a clear division of responsibility ([shared responsibility](lesson:cloud-basics#responsibility)).
 
+Try it in the lab: [A request through a typical AWS three-tier app](lab:aws-three-tier-map).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Service |

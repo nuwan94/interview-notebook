@@ -161,6 +161,8 @@ A Java handler for an SQS trigger is in the coding questions below.
 - **Resilience.** At least two AZs, tested failover, capacity for N+1, and a plan for loss of a region ([availability](lesson:cloud-basics#availability)).
 - **Compliance and tenancy.** Dedicated tenancy or hosts where licensing or policy demand it, an approved list of instance and runtime options, and tagging for ownership and cost.
 
+Try it in the lab: [Auto Scaling behind a load balancer](lab:aws-autoscaling-alb).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Choice |

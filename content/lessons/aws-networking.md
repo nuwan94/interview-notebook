@@ -153,6 +153,8 @@ A managed front door for APIs:
 - **Resilience:** three zones, a tested regional failover (Route 53 or Global Accelerator), health checks that reflect real readiness, and capacity for a zone loss.
 - **Compliance:** documented network diagrams, IP plan, change control through code review of the infrastructure templates ([infrastructure as code](lesson:aws-service-map#operations)), and region choices that respect data residency.
 
+Try it in the lab: [Inside a VPC: public and private subnets](lab:aws-vpc-request-path).
+
 ## Cheat sheet {#cheatsheet}
 
 | Topic | Remember |
