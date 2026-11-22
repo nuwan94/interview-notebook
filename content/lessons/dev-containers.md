@@ -215,6 +215,8 @@ They combine well: the dev container provides the toolchain, Compose provides se
 | Docker commands fail inside | add the `docker-in-docker` or `docker-outside-of-docker` Feature |
 | works locally but not behind the corporate proxy | pass proxy variables through `containerEnv` and build args, and add the company CA certificate |
 
+Try it in the lab: [Dev containers: a new developer in minutes](lab:devcontainer-onboarding).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Do |

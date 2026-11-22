@@ -164,6 +164,8 @@ All three are real Kubernetes and none is for production. Choose by the job: min
 5. Reach it with `minikube service payments --url` or the ingress host; watch `kubectl top pods` and try a `HorizontalPodAutoscaler`.
 6. For dependencies (PostgreSQL, Kafka, Redis) install Helm charts or operators in the same cluster, or run them in [Docker Compose](lesson:docker-compose) outside it and point the Service at `host.minikube.internal`, the name that resolves to your host from inside the cluster.
 
+Try it in the lab: [minikube: driver, add-ons and reaching a service](lab:minikube-addons-tunnel).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Do |

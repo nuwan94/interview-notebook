@@ -190,6 +190,8 @@ Use Compose to run what you need locally; use [Kubernetes](lesson:kubernetes) (w
 | bind mount permission denied | user ID mismatch between host and container; set `user:` or fix ownership |
 | services cannot reach each other | different networks; put them on a shared network |
 
+Try it in the lab: [Docker Compose: start order, health and data](lab:compose-startup-order).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Do |

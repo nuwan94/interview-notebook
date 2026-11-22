@@ -172,6 +172,8 @@ Rule of thumb: **kind for CI and for testing cluster behaviour (multi-node, roll
 4. `kubectl port-forward` or an Ingress to call it; `kubectl rollout restart` after each new image.
 5. Use more nodes and `kubectl drain` to see how your service survives a node loss and how a `PodDisruptionBudget` behaves.
 
+Try it in the lab: [kind: a Kubernetes cluster inside Docker](lab:kind-cluster-lifecycle).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Do |

@@ -164,6 +164,8 @@ volumes:
 - Scan images for vulnerabilities in CI (Trivy, Grype) and rebuild regularly.
 - Use multi-stage builds so compilers and source are not shipped.
 
+Try it in the lab: [Dockerfile layers, the build cache and multi-stage builds](lab:docker-layers-cache).
+
 ## Cheat sheet {#cheatsheet}
 
 | Task | Command |

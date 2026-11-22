@@ -238,6 +238,8 @@ spec:
 - **Graceful shutdown**: `server.shutdown=graceful` and a `terminationGracePeriodSeconds` longer than the longest request.
 - **Metrics**: Micrometer with a Prometheus endpoint; the platform's monitoring stack scrapes it through a `ServiceMonitor`.
 
+Try it in the lab: [OpenShift: from source to a running route](lab:openshift-s2i-route).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Command or object |
