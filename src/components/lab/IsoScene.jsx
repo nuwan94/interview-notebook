@@ -16,18 +16,18 @@ const TH = 64;
 /** Grid position (gx, gy) to screen position of the tile centre. */
 export const iso = (gx, gy) => [(gx - gy) * (TW / 2), (gx + gy) * (TH / 2)];
 
-const INK = '#1b2433';
+const INK = '#14171c';
 const PAPER = '#ffffff';
 
 // gradient pairs for the top face and the side faces, plus the outline / icon colour of each family
 const PALETTE = {
-  orange: { top: ['#fff0ec', '#fde3dc'], side: ['#f4b7a6', '#e79a86'], ink: '#a3402a' },
-  green:  { top: ['#eef8e6', '#e0f0d2'], side: ['#c3e3ae', '#a6cf8c'], ink: '#3d6e22' },
-  blue:   { top: ['#e8effc', '#d6e2fa'], side: ['#aec3ee', '#8ea9df'], ink: '#2c4f99' },
-  yellow: { top: ['#fff6e2', '#fdefd3'], side: ['#f3d08e', '#e4b866'], ink: '#8a5a07' },
-  purple: { top: ['#f2eefc', '#e6dffa'], side: ['#c8b9ef', '#ab97e0'], ink: '#5a43a8' },
-  teal:   { top: ['#e6f6f4', '#d3eeea'], side: ['#a3dbd4', '#82c8bf'], ink: '#1d6d64' },
-  red:    { top: ['#fdeceb', '#fbe0de'], side: ['#f2b3ae', '#e68f89'], ink: '#b4332f' },
+  orange: { top: ['#ffe3d6', '#fdd0bc'], side: ['#f2a98f', '#e48a6d'], ink: '#8f2f17' },
+  green:  { top: ['#e3f3d3', '#d2e9ba'], side: ['#a9d68a', '#8cc468'], ink: '#2c5a14' },
+  blue:   { top: ['#dbe6fb', '#c4d5f7'], side: ['#8fadea', '#6f93dd'], ink: '#1d3c85' },
+  yellow: { top: ['#fff0c7', '#fde5a3'], side: ['#f0c15f', '#e0a93a'], ink: '#6e4500' },
+  purple: { top: ['#ebe4fb', '#dcd0f6'], side: ['#b9a5ec', '#9c82dc'], ink: '#46308f' },
+  teal:   { top: ['#d4f0ec', '#bce6e0'], side: ['#85cfc6', '#62bbb0'], ink: '#0d5c63' },
+  red:    { top: ['#fbd9d6', '#f7c2bd'], side: ['#ee9a93', '#e0766e'], ink: '#8f1f19' },
   slab:   { top: ['#f6f8fa', '#eef1f5'], side: ['#d3d9e1', '#bcc4cf'], ink: '#46505e' },
 };
 
@@ -52,21 +52,21 @@ export const COLOR_NAMES = Object.keys(PALETTE).filter((c) => c !== 'slab');
 
 // pill tints for tones; the border is always ink
 export const TONES = {
-  ok:   { fill: '#dff3e6', line: '#2f7d4f' },
-  bad:  { fill: '#fbe0de', line: '#b4332f' },
-  warn: { fill: '#fdeccd', line: '#a65b0a' },
-  new:  { fill: '#e3eafa', line: '#23408f' },
+  ok:   { fill: '#dff3e6', line: '#1b6b3a' },
+  bad:  { fill: '#fbe0de', line: '#a8271f' },
+  warn: { fill: '#fdeccd', line: '#8a4b00' },
+  new:  { fill: '#d8eeee', line: '#0d5c63' },
   none: { fill: PAPER, line: INK },
 };
 // packet looks: circle or square, fill, outline
 const PACKET = {
   req:  { shape: 'circle', fill: '#f0a24a', stroke: INK, sw: 1.4 },
   res:  { shape: 'circle', fill: '#6cc48a', stroke: INK, sw: 1.4 },
-  bad:  { shape: 'circle', fill: '#fbe0de', stroke: '#b4332f', sw: 2.1 },
+  bad:  { shape: 'circle', fill: '#fbe0de', stroke: '#a8271f', sw: 2.1 },
   msg:  { shape: 'square', fill: '#9a82dc', stroke: INK, sw: 1.4 },
   data: { shape: 'square', fill: '#4f8fd6', stroke: INK, sw: 1.4 },
 };
-const LINK_COLOR = { none: '#4a5568', ok: '#2f7d4f', bad: '#b4332f', warn: '#a65b0a', new: '#23408f', faint: '#9aa6b6' };
+const LINK_COLOR = { none: '#3a414c', ok: '#1b6b3a', bad: '#a8271f', warn: '#8a4b00', new: '#0d5c63', faint: '#9aa6b6' };
 const SPEED = 230;      // packet speed, px per second
 const GAP = 650;        // pause after the last flow of a cycle, ms
 
@@ -100,8 +100,8 @@ function blockText(n) {
   const sub = n.sub ? String(n.sub) : '';
   const width = Math.min(168, Math.max(112, textW(label, 14.5) + 26, sub ? textW(sub, 10.5) + 26 : 0));
   const room = width - 18;
-  const nameFs = Math.min(14.5, room / (label.length * 0.6));
-  const subFs = sub ? Math.min(10.5, room / (sub.length * 0.6)) : 0;
+  const nameFs = Math.min(13.5, room / (label.length * 0.6));
+  const subFs = sub ? Math.min(9.8, room / (sub.length * 0.6)) : 0;
   const nameW = textW(label, nameFs);
   const subW = sub ? textW(sub, subFs) : 0;
   const textH = nameFs * 1.2 + (sub ? subFs * 1.45 : 0);
@@ -153,7 +153,7 @@ function Pill({ x, y, text, fs, tone = 'none', icon: Icon, bold = true, sub }) {
         {text}
       </text>
       {sub && (
-        <text x={x} y={y + h / 2 + fs * 1.15} textAnchor="middle" fontSize={fs * 0.8} fill="#5b6676">
+        <text x={x} y={y + h / 2 + fs * 1.15} textAnchor="middle" fontSize={fs * 0.8} fill="#4a515c">
           {sub}
         </text>
       )}
@@ -178,13 +178,13 @@ function Prism({ x, y, a, h, color, ink = INK, uid, dash, sheen = true }) {
   const edge = `M${L[0]},${L[1]} L${C[0]},${C[1]} L${R[0]},${R[1]}`;
   return (
     <g>
-      <path d={sil} transform="translate(0 9)" fill="#2a3550" opacity="0.2" filter={`url(#lab-blur-lg-${uid})`} />
+      <path d={sil} transform="translate(0 9)" fill="#2a2f38" opacity="0.2" filter={`url(#lab-blur-lg-${uid})`} />
       <path d={sil} fill={`url(#lab-${color}-side-${uid})`} />
-      {h > 12 && <path d={right} fill="#1b2433" opacity="0.05" />}
+      {h > 12 && <path d={right} fill="#14171c" opacity="0.05" />}
       <path d={top} fill={`url(#lab-${color}-top-${uid})`} />
       {sheen && <path d={glow} fill="#fff" opacity="0.22" filter={`url(#lab-blur-sm-${uid})`} />}
       <path d={edge} transform="translate(0 1.4)" fill="none" stroke="#fff" strokeOpacity="0.75" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d={edge} transform="translate(0 3.4)" fill="none" stroke="#1b2433" strokeOpacity="0.07" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={edge} transform="translate(0 3.4)" fill="none" stroke="#14171c" strokeOpacity="0.07" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
       <path d={sil} fill="none" stroke={ink} strokeWidth="1.9" strokeLinejoin="round" strokeDasharray={dash} />
     </g>
   );
@@ -194,7 +194,7 @@ function Prism({ x, y, a, h, color, ink = INK, uid, dash, sheen = true }) {
 function Person({ x, y, fill }) {
   return (
     <g transform={`translate(${x} ${y}) scale(1.3)`}>
-      <ellipse cx="0" cy="0" rx="5.6" ry="2.8" fill="#2a3550" opacity="0.16" />
+      <ellipse cx="0" cy="0" rx="5.6" ry="2.8" fill="#2a2f38" opacity="0.16" />
       <path d="M-5.2,0 V-9 A5.2,5.2 0 0 1 5.2,-9 V0 A5.2,2.4 0 0 1 -5.2,0 Z" fill={fill} stroke={INK} strokeWidth="1.25" />
       <circle cx="0" cy="-17.6" r="4.3" fill="#fff" stroke={INK} strokeWidth="1.25" />
     </g>
@@ -216,7 +216,7 @@ function Body({ n, uid, compact }) {
     const side = `M${x - rx},${y - h} V${y} A${rx},${ry} 0 0 0 ${x + rx},${y} V${y - h} Z`;
     return (
       <g>
-        <ellipse cx={x} cy={y + 4} rx={rx * 1.08} ry={ry * 1.05} fill="#2a3550" opacity="0.2" filter={`url(#lab-blur-md-${uid})`} />
+        <ellipse cx={x} cy={y + 4} rx={rx * 1.08} ry={ry * 1.05} fill="#2a2f38" opacity="0.2" filter={`url(#lab-blur-md-${uid})`} />
         <path d={side} fill={`url(#lab-${color}-side-${uid})`} />
         <path d={side} fill={`url(#lab-sheen-${uid})`} />
         <ellipse cx={x} cy={y - h} rx={rx} ry={ry} fill={`url(#lab-${color}-top-${uid})`} />
@@ -271,7 +271,7 @@ function Body({ n, uid, compact }) {
         {label}
       </text>
       {n.sub && !compact && (
-        <text x={x} y={top + textH - subFs * 0.2} textAnchor="middle" fontSize={subFs} fontWeight="600" fill="#4a5568">
+        <text x={x} y={top + textH - subFs * 0.2} textAnchor="middle" fontSize={subFs} fontWeight="600" fill="#3a414c">
           {n.sub}
         </text>
       )}
@@ -488,8 +488,8 @@ export function sceneBox(allNodes) {
   for (const n of allNodes) {
     const [x, y] = iso(...n.at);
     const g = geomOf(n);
-    x0 = Math.min(x0, x - Math.max(g.a, 70) - 36);
-    x1 = Math.max(x1, x + Math.max(g.a, 70) + 36);
+    x0 = Math.min(x0, x - Math.max(g.a, 70) - 96);
+    x1 = Math.max(x1, x + Math.max(g.a, 70) + 96);
     y0 = Math.min(y0, y - g.top - 62);
     y1 = Math.max(y1, y + g.bottom + 70);
   }
@@ -515,7 +515,7 @@ function Defs({ uid, box }) {
         <stop offset="0" stopColor="#fff" stopOpacity="0" />
         <stop offset="0.3" stopColor="#fff" stopOpacity="0.35" />
         <stop offset="0.55" stopColor="#fff" stopOpacity="0.05" />
-        <stop offset="1" stopColor="#1b2433" stopOpacity="0.07" />
+        <stop offset="1" stopColor="#14171c" stopOpacity="0.07" />
       </linearGradient>
       <filter id={`lab-blur-sm-${uid}`} x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2" /></filter>
       <filter id={`lab-blur-md-${uid}`} x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4" /></filter>
@@ -545,12 +545,12 @@ function Defs({ uid, box }) {
  * The isometric stage: floor, links, packets, nodes, pills and notes.
  * `fs` is the label size in scene units (bigger on narrow screens so text stays readable).
  */
-export function IsoScene({ state, box, view, fs = 12, paused = false, reduced = false, replayKey = 0, compact = false, label }) {
+export function IsoScene({ state, box, bounds, view, fs = 12, paused = false, reduced = false, replayKey = 0, compact = false, label }) {
   const byId = useMemo(() => new Map(state.nodes.map((n) => [n.id, n])), [state.nodes]);
   const order = useMemo(() => [...state.nodes].sort((p, q) => p.at[0] + p.at[1] - (q.at[0] + q.at[1])), [state.nodes]);
   const pf = Math.min(16, Math.max(11.5, fs * 0.92));          // pill font in scene units
   
-  const layout = useMemo(() => layoutLinks(state, byId, pf, box, compact), [state, byId, pf, box, compact]);
+  const layout = useMemo(() => layoutLinks(state, byId, pf, bounds ?? box, compact), [state, byId, pf, bounds, box, compact]);
 
   // flows run one after another (or together with `with: true`) in a repeating cycle
   const flows = useMemo(() => {
@@ -700,7 +700,7 @@ export function IsoScene({ state, box, view, fs = 12, paused = false, reduced = 
       {(state.step.notes ?? []).map((note, i) => {
         const n = byId.get(note.at);
         if (!n) return null;
-        const sp = noteSpot(note, n, pf * 0.95, box);
+        const sp = noteSpot(note, n, pf * 0.95, bounds ?? box);
         return <Pill key={`note-${i}`} x={sp.x} y={sp.y} text={note.text} fs={pf * 0.95} tone={note.tone ?? 'warn'} />;
       })}
     </svg>

@@ -68,6 +68,29 @@ function useSize(ref) {
   return size;
 }
 
+const FIT_MEDIA = '(min-width: 1200px) and (min-height: 540px)';
+
+/** The part of the scene to show for the blocks on stage: their bounds with room around, in the shape of the whole scene. */
+function frameOf(nodes, box) {
+  if (!nodes.length) return box;
+  const b = sceneBox(nodes);
+  let w = b.w + 40;
+  let h = b.h + 60;
+  const ratio = box.w / box.h;
+  if (w / h < ratio) w = h * ratio;
+  else h = w / ratio;
+  w = Math.min(box.w, Math.max(w, box.w * 0.42));
+  h = w / ratio;
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  return {
+    x: Math.min(box.x + box.w - w, Math.max(box.x, cx - w / 2)),
+    y: Math.min(box.y + box.h - h, Math.max(box.y, cy - h / 2)),
+    w,
+    h,
+  };
+}
+
 /**
  * An interactive lab: one isometric scene that changes step by step, with metrics, a step panel,
  * a "what changed" list, a learning checklist, a timeline, keyboard control, step links and a focus mode.
@@ -92,25 +115,55 @@ export function Lab({ lab }) {
   const touched = useRef(false);
   const { w: width, h: height } = useSize(sceneRef);
 
-  // zoom and move inside the scene: the camera is a zoom level k and an offset of its centre from the scene's centre
+  // the camera frames the blocks on stage: close on the first few, pulling back as more arrive (only where the lab fits the window)
+  const [fits, setFits] = useState(() => window.matchMedia(FIT_MEDIA).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(FIT_MEDIA);
+    const on = () => setFits(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  const target = useMemo(() => (fits ? frameOf(states[clamp(index)].nodes, box) : box), [fits, states, index, box]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [frame, setFrame] = useState(target);
+  const frameRef = useRef(frame);
+  frameRef.current = frame;
+
+  // zoom and move inside the scene: the camera is a zoom level k and an offset of its centre from the frame's centre
   const [cam, setCam] = useState({ k: 1, x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const camRef = useRef(cam);
   camRef.current = cam;
-  const clampCam = useCallback(
-    (c) => {
-      const k = Math.min(4, Math.max(1, c.k));
-      const mx = (box.w / 2) * (1 - 1 / k) + box.w * 0.04;
-      const my = (box.h / 2) * (1 - 1 / k) + box.h * 0.04;
-      return { k, x: k === 1 ? 0 : Math.min(mx, Math.max(-mx, c.x)), y: k === 1 ? 0 : Math.min(my, Math.max(-my, c.y)) };
-    },
-    [box],
-  );
+  useEffect(() => {
+    setCam({ k: 1, x: 0, y: 0 });
+    const from = frameRef.current;
+    if (reduced) {
+      setFrame(target);
+      return undefined;
+    }
+    const t0 = performance.now();
+    let raf;
+    const tick = (t) => {
+      const p = Math.min(1, (t - t0) / 550);
+      const e = 1 - (1 - p) ** 3;
+      setFrame({ x: from.x + (target.x - from.x) * e, y: from.y + (target.y - from.y) * e, w: from.w + (target.w - from.w) * e, h: from.h + (target.h - from.h) * e });
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, reduced]);
+  const clampCam = useCallback((c) => {
+    const f = frameRef.current;
+    const k = Math.min(4, Math.max(1, c.k));
+    const mx = (f.w / 2) * (1 - 1 / k) + f.w * 0.04;
+    const my = (f.h / 2) * (1 - 1 / k) + f.h * 0.04;
+    return { k, x: k === 1 ? 0 : Math.min(mx, Math.max(-mx, c.x)), y: k === 1 ? 0 : Math.min(my, Math.max(-my, c.y)) };
+  }, []);
   /** Zoom by a factor, keeping the point under (clientX, clientY) where it is. Without a point it zooms about the centre. */
   const zoomBy = useCallback(
     (factor, clientX, clientY) => {
       const svg = sceneRef.current?.querySelector('svg');
       const cur = camRef.current;
+      const f = frameRef.current;
       const k2 = Math.min(4, Math.max(1, cur.k * factor));
       if (k2 === cur.k) return;
       if (!svg || clientX === undefined) {
@@ -119,19 +172,19 @@ export function Lab({ lab }) {
       }
       const ctm = svg.getScreenCTM();
       const rect = svg.getBoundingClientRect();
-      const s = ctm.a;
+      const sc = ctm.a;
       const pt = new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse());
       const dx = clientX - (rect.left + rect.width / 2);
       const dy = clientY - (rect.top + rect.height / 2);
-      const s2 = (s * k2) / cur.k;
-      setCam(clampCam({ k: k2, x: pt.x - dx / s2 - (box.x + box.w / 2), y: pt.y - dy / s2 - (box.y + box.h / 2) }));
+      const s2 = (sc * k2) / cur.k;
+      setCam(clampCam({ k: k2, x: pt.x - dx / s2 - (f.x + f.w / 2), y: pt.y - dy / s2 - (f.y + f.h / 2) }));
     },
-    [box, clampCam],
+    [clampCam],
   );
   const resetCam = useCallback(() => setCam({ k: 1, x: 0, y: 0 }), []);
   const view = useMemo(
-    () => ({ w: box.w / cam.k, h: box.h / cam.k, x: box.x + box.w / 2 + cam.x - box.w / (2 * cam.k), y: box.y + box.h / 2 + cam.y - box.h / (2 * cam.k) }),
-    [box, cam],
+    () => ({ w: frame.w / cam.k, h: frame.h / cam.k, x: frame.x + frame.w / 2 + cam.x - frame.w / (2 * cam.k), y: frame.y + frame.h / 2 + cam.y - frame.h / (2 * cam.k) }),
+    [frame, cam],
   );
 
   // the mouse wheel zooms (in a window that fits the lab; otherwise Ctrl + wheel, so the page can still scroll) and dragging moves
@@ -139,8 +192,7 @@ export function Lab({ lab }) {
     const el = sceneRef.current;
     if (!el) return undefined;
     const onWheel = (e) => {
-      const fits = window.matchMedia('(min-width: 1200px) and (min-height: 540px)').matches;
-      if (!fits && !e.ctrlKey && !e.metaKey) return;
+      if (!window.matchMedia(FIT_MEDIA).matches && !e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       zoomBy(Math.exp(-e.deltaY * 0.0016), e.clientX, e.clientY);
     };
@@ -360,7 +412,7 @@ export function Lab({ lab }) {
               onPointerCancel={onPointerUp}
               onDoubleClick={resetCam}
             >
-              <IsoScene state={st} box={box} view={view} fs={fs} paused={paused} reduced={reduced} replayKey={replayKey} compact={compact} label={sceneLabel} />
+              <IsoScene state={st} box={box} bounds={target} view={view} fs={fs} paused={paused} reduced={reduced} replayKey={replayKey} compact={compact} label={sceneLabel} />
             </div>
             {step.table && (
               <div className="lab-table">
