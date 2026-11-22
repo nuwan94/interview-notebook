@@ -38,6 +38,19 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  notify:
+    if: always()
+    needs: [build, deploy]
+    uses: nuwan94/workflows/.github/workflows/slack-notify.yml@v1
+    with:
+      result: ${{ needs.deploy.result == 'success' && 'success' || (contains(needs.*.result, 'cancelled') && 'cancelled' || 'failure') }}
+      environment: GitHub Pages
+      url: ${{ needs.deploy.outputs.url }}
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
