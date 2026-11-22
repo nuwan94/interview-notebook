@@ -321,6 +321,8 @@ Start from the **problem**, not the pattern:
 | behaviour that depends on a lifecycle status | State |
 | pass a request through ordered handlers | Chain of responsibility |
 
+Try it in the lab: [Strategy and Factory replace an if-else chain](lab:pattern-strategy-factory).
+
 ## Cheat sheet {#cheatsheet}
 
 | Pattern | Category | One line | JDK or Spring example |

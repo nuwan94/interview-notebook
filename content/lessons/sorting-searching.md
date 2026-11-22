@@ -104,6 +104,8 @@ Sorting everything to find the largest few is wasteful (O(n log n)). Better:
 - **External sorting:** data larger than memory is sorted in chunks, each chunk sorted and written out, then merged (a multi-way merge sort). Databases do this for `ORDER BY` without an index.
 - **Indexes:** a database index is a sorted structure (a B-tree) that turns a scan into a binary-search-like lookup; see [SQL vs NoSQL](lesson:sql-vs-nosql).
 
+Try it in the lab: [Binary search: halve the range each time](lab:binary-search-halving).
+
 ## Cheat sheet {#cheatsheet}
 
 | Need | Use |

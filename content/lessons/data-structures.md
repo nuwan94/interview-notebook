@@ -112,6 +112,8 @@ Always keep a **visited** set, otherwise cycles cause infinite loops. Other grap
 | relationships and paths | graph | `Map<Node, List<Node>>` | BFS or DFS O(V + E) |
 | membership test on huge data, a few false positives allowed | Bloom filter | Guava | O(1), tiny memory |
 
+Try it in the lab: [An LRU cache: hash map plus linked list](lab:ds-lru-cache).
+
 ## Cheat sheet {#cheatsheet}
 
 | Structure | Access | Search | Insert | Delete | Notes |

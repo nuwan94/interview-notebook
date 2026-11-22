@@ -108,6 +108,8 @@ A **greedy** algorithm makes the locally best choice at each step and never reco
 - **Edge cases:** empty input, a single element, all equal elements, duplicates, negative numbers, the maximum size, integer overflow (`long` or `Math.addExact`), a target that does not exist.
 - Prefer clear names and small helper methods; interviewers read your code. Do not optimise before the correct solution works.
 
+Try it in the lab: [Sliding window: one pass instead of two loops](lab:sliding-window).
+
 ## Cheat sheet {#cheatsheet}
 
 | Pattern | Time | Space | Typical problem |

@@ -220,6 +220,8 @@ The commonest mistake is not ignoring SOLID, it is **over-applying** it: an inte
 
 Good design is choosing the right amount of structure for the expected change.
 
+Try it in the lab: [SOLID in practice: splitting a god class](lab:solid-refactor).
+
 ## Cheat sheet {#cheatsheet}
 
 | Letter | Principle | One-line test |

@@ -326,6 +326,8 @@ Prefer a static nested class unless you truly need the outer instance.
 | God class | one class doing everything | split by responsibility |
 | Inheritance for code reuse only | no real is-a relationship | composition |
 
+Try it in the lab: [Polymorphism: which method actually runs?](lab:oop-dynamic-dispatch).
+
 ## Cheat sheet {#cheatsheet}
 
 | Question | Short answer |
