@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LuFlaskConical } from 'react-icons/lu';
 import { Link, NavLink } from 'react-router-dom';
-import { LEVELS, getLesson, topicAncestors, topicContains, topicLessonCount, topicTree } from '../lib/content.js';
+import { LEVELS, getLesson, topicAncestors, topicContains, topicLabs, topicLessonCount, topicTree } from '../lib/content.js';
 
 // paths of every topic (at any depth) that contains the lesson
 const ancestorsOf = (node, slug, out = []) => {
@@ -26,27 +26,30 @@ export function labGroups(list) {
   return groups;
 }
 
-/** One level of the topic tree: its lessons first, then its labs as their own group, then collapsible sub-topics (which nest the same way). */
-function TopicBranch({ node, lesson, lab, onNavigate, link, expanded, toggle }) {
+/**
+ * One level of the topic tree. In "lessons" mode it lists the lessons of the topic and its sub-topics; in "labs" mode the same tree lists only labs,
+ * grouped by lesson. Keeping them apart keeps the lesson order clean, and the labs tree is collapsed until asked for.
+ */
+function TopicBranch({ node, mode, lesson, lab, onNavigate, link, expanded, toggle }) {
+  const labsMode = mode === 'labs';
+  const children = node.children.filter((c) => (labsMode ? topicLabs(c).length : topicLessonCount(c)) > 0);
   return (
     <>
-      {node.lessons.map((l) => (
-        <li key={l.slug}>
-          <NavLink
-            to={`/lessons/${l.slug}`}
-            onClick={onNavigate}
-            end
-            className={({ isActive }) => `${link} font-bold ${isActive || lesson?.slug === l.slug ? 'bg-white text-pen shadow-sm' : ''}`}
-          >
-            {l.nav}
-          </NavLink>
-        </li>
-      ))}
-      {node.labs?.length > 0 && (
+      {!labsMode &&
+        node.lessons.map((l) => (
+          <li key={l.slug}>
+            <NavLink
+              to={`/lessons/${l.slug}`}
+              onClick={onNavigate}
+              end
+              className={({ isActive }) => `${link} font-bold ${isActive || lesson?.slug === l.slug ? 'bg-white text-pen shadow-sm' : ''}`}
+            >
+              {l.nav}
+            </NavLink>
+          </li>
+        ))}
+      {labsMode && node.labs?.length > 0 && (
         <li className="nav-labs">
-          <span className="nav-labs-title">
-            <LuFlaskConical aria-hidden="true" /> Labs
-          </span>
           {labGroups(node.labs).map((g) => (
             <div key={g.lesson ?? 'other'}>
               {g.heading && <span className="nav-labs-lesson">{g.heading}</span>}
@@ -67,7 +70,7 @@ function TopicBranch({ node, lesson, lab, onNavigate, link, expanded, toggle }) 
           ))}
         </li>
       )}
-      {node.children.map((c) => {
+      {children.map((c) => {
         const open = expanded.has(c.path);
         return (
           <li key={c.path}>
@@ -81,11 +84,11 @@ function TopicBranch({ node, lesson, lab, onNavigate, link, expanded, toggle }) 
                 ▶
               </span>
               <span className="flex-1">{c.name}</span>
-              <span className="text-xs font-sans font-normal text-soft">{topicLessonCount(c)}</span>
+              <span className="text-xs font-sans font-normal text-soft">{labsMode ? topicLabs(c).length : topicLessonCount(c)}</span>
             </button>
             {open && (
               <ul className="list-none m-0 ml-2 pl-2 border-l-2 border-slate-300">
-                <TopicBranch node={c} lesson={lesson} lab={lab} onNavigate={onNavigate} link={link} expanded={expanded} toggle={toggle} />
+                <TopicBranch node={c} mode={mode} lesson={lesson} lab={lab} onNavigate={onNavigate} link={link} expanded={expanded} toggle={toggle} />
               </ul>
             )}
           </li>
@@ -95,33 +98,41 @@ function TopicBranch({ node, lesson, lab, onNavigate, link, expanded, toggle }) 
   );
 }
 
+// accordion toggle for a set of open topic paths: opening a topic closes its siblings (and everything inside them), except the ones in `keep`
+const parentOf = (p) => p.slice(0, Math.max(p.lastIndexOf('/'), 0));
+const inside = (p, root) => p === root || p.startsWith(root + '/');
+const toggled = (s, path, keep) => {
+  if (s.has(path)) return new Set([...s].filter((p) => !inside(p, path)));
+  const siblings = [...s].filter((p) => p !== path && parentOf(p) === parentOf(path) && !keep.includes(p));
+  return new Set([...s].filter((p) => !siblings.some((x) => inside(p, x))).concat(path));
+};
+const samePath = (s, path) => s.size === path.length && path.every((p) => s.has(p));
+
 /** Index tabs: all lessons grouped by topic, plus "on this page" navigation (sections and questions) for the open lesson. */
 export function Sidebar({ lesson, lab, onNavigate }) {
   const [active, setActive] = useState('');
-  const [expanded, setExpanded] = useState(() => new Set()); // topic paths the reader opened; everything starts collapsed
-  // accordion: opening a topic closes its siblings (and everything inside them), except the topics holding the open lesson, which stay open until you navigate elsewhere
-  const toggle = (path) =>
-    setExpanded((s) => {
-      const parentOf = (p) => p.slice(0, Math.max(p.lastIndexOf('/'), 0));
-      const inside = (p, root) => p === root || p.startsWith(root + '/');
-      if (s.has(path)) return new Set([...s].filter((p) => !inside(p, path)));
-      const keep = lesson ? ancestorsOf(topicTree, lesson.slug) : lab ? topicAncestors(lab.topic) : [];
-      const siblings = [...s].filter((p) => p !== path && parentOf(p) === parentOf(path) && !keep.includes(p));
-      return new Set([...s].filter((p) => !siblings.some((x) => inside(p, x))).concat(path));
-    });
+  const [expanded, setExpanded] = useState(() => new Set()); // lesson topics the reader opened; everything starts collapsed
+  const [labsOpen, setLabsOpen] = useState(() => Boolean(lab)); // the Labs section is collapsed until asked for (or a lab is open)
+  const [labExpanded, setLabExpanded] = useState(() => new Set());
+  const toggle = (path) => setExpanded((s) => toggled(s, path, lesson ? ancestorsOf(topicTree, lesson.slug) : []));
+  const toggleLab = (path) => setLabExpanded((s) => toggled(s, path, lab ? topicAncestors(lab.topic) : []));
 
   // opening a lesson (link, search, deep link) shows only the path to it and closes the rest
   useEffect(() => {
     if (!lesson) return;
     const path = ancestorsOf(topicTree, lesson.slug);
-    setExpanded((s) => (s.size === path.length && path.every((p) => s.has(p)) ? s : new Set(path)));
+    setExpanded((s) => (samePath(s, path) ? s : new Set(path)));
   }, [lesson]);
 
-  // the same for a lab page: open the sub-topic that holds the lab
+  // a lab page opens the Labs section on the sub-topic that holds the lab
   useEffect(() => {
     if (!lab) return;
+    setLabsOpen(true);
+    setExpanded((s) => (s.size ? new Set() : s)); // fold the lesson tree so the Labs section is in view
     const path = topicAncestors(lab.topic);
-    setExpanded((s) => (s.size === path.length && path.every((p) => s.has(p)) ? s : new Set(path)));
+    setLabExpanded((s) => (samePath(s, path) ? s : new Set(path)));
+    const t = setTimeout(() => document.querySelector('nav[aria-label="Notebook navigation"] a[aria-current="page"]')?.scrollIntoView({ block: 'nearest' }), 50);
+    return () => clearTimeout(t);
   }, [lab]);
 
   useEffect(() => {
@@ -149,11 +160,31 @@ export function Sidebar({ lesson, lab, onNavigate }) {
             Home
           </NavLink>
         </li>
-        <TopicBranch node={topicTree} lesson={lesson} lab={lab} onNavigate={onNavigate} link={link} expanded={expanded} toggle={toggle} />
+        <TopicBranch node={topicTree} mode="lessons" lesson={lesson} lab={lab} onNavigate={onNavigate} link={link} expanded={expanded} toggle={toggle} />
         <li>
           <NavLink to="/glossary" onClick={onNavigate} className={({ isActive }) => `${link} ${isActive ? 'bg-white text-pen font-bold shadow-sm' : ''}`}>
             Glossary
           </NavLink>
+        </li>
+        <li className="nav-labs-section">
+          <button
+            type="button"
+            onClick={() => setLabsOpen((o) => !o)}
+            aria-expanded={labsOpen}
+            className="flex w-full items-center gap-1 rounded px-1 py-1 text-left font-hand font-bold text-[1.05rem] text-pen hover:bg-white/70 cursor-pointer"
+          >
+            <span aria-hidden="true" className="inline-block w-4 text-xs transition-transform" style={{ transform: labsOpen ? 'rotate(90deg)' : 'none' }}>
+              ▶
+            </span>
+            <LuFlaskConical aria-hidden="true" className="text-base" />
+            <span className="flex-1">Labs</span>
+            <span className="text-xs font-sans font-normal text-soft">{topicLabs(topicTree).length}</span>
+          </button>
+          {labsOpen && (
+            <ul className="list-none m-0 ml-2 pl-2 border-l-2 border-slate-300">
+              <TopicBranch node={topicTree} mode="labs" lesson={lesson} lab={lab} onNavigate={onNavigate} link={link} expanded={labExpanded} toggle={toggleLab} />
+            </ul>
+          )}
         </li>
       </ul>
 
