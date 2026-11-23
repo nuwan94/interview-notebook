@@ -1,0 +1,379 @@
+{
+ "questions": [
+  {
+   "t": "Purpose",
+   "v": [
+    {
+     "q": "What does a Resilience4j decorator do?",
+     "o": [
+      "Wraps a call and adds one behaviour such as a breaker, retry or limit",
+      "Rewrites the called service so it never fails",
+      "Replaces the HTTP client with a faster one",
+      "Moves the call to a message queue automatically"
+     ],
+     "w": "Each decorator is independent and small, and they can be stacked."
+    },
+    {
+     "q": "Why does each dependency get its own named instance?",
+     "o": [
+      "So one failing dependency never trips the breaker or fills the bulkhead of another",
+      "Because names are required by the JVM",
+      "Because instances share one global failure count by design",
+      "To make the YAML shorter"
+     ],
+     "w": "State lives per instance in a registry, for example cardService and ledger."
+    }
+   ]
+  },
+  {
+   "t": "Breaker states",
+   "v": [
+    {
+     "q": "Which exception does an open circuit breaker throw?",
+     "o": [
+      "CallNotPermittedException",
+      "BulkheadFullException",
+      "RequestNotPermitted",
+      "TimeoutException"
+     ],
+     "w": "The call is rejected at once without reaching the dependency."
+    },
+    {
+     "q": "What happens in the HALF_OPEN state?",
+     "o": [
+      "A limited number of trial calls decide whether to close or open again",
+      "All calls are rejected until restart",
+      "Every call is retried three times",
+      "The breaker is disabled and records nothing"
+     ],
+     "w": "Enough successes close it, failures open it again."
+    }
+   ]
+  },
+  {
+   "t": "Minimum calls",
+   "v": [
+    {
+     "q": "A low-traffic service never opens its breaker with default settings. What is the likely reason?",
+     "o": [
+      "minimumNumberOfCalls defaults to 100, so the failure rate is not evaluated earlier",
+      "failureRateThreshold defaults to 100 percent",
+      "Breakers only work with thread-pool bulkheads",
+      "The sliding window is time based by default"
+     ],
+     "w": "Set a realistic minimum, for example 10 with a window of 20."
+    },
+    {
+     "q": "What does minimumNumberOfCalls control?",
+     "o": [
+      "How many calls must be recorded before the failure rate is evaluated",
+      "How many retries are allowed",
+      "How many calls may run at once",
+      "How long the breaker stays open"
+     ],
+     "w": "Without enough calls the rate would be meaningless."
+    }
+   ]
+  },
+  {
+   "t": "Sliding window",
+   "v": [
+    {
+     "q": "What is the difference between COUNT_BASED and TIME_BASED windows?",
+     "o": [
+      "Count based keeps the last N calls, time based keeps the calls of the last N seconds",
+      "Count based is for retries, time based for bulkheads",
+      "Time based ignores slow calls",
+      "There is no difference apart from the name"
+     ],
+     "w": "Time based lets old failures age out, which suits bursty traffic."
+    },
+    {
+     "q": "Which window setting suits steady traffic where each call matters equally?",
+     "o": [
+      "Count based",
+      "Time based with a one second window",
+      "Neither: windows are for retries only",
+      "A window of size one"
+     ],
+     "w": "Count based reacts to the number of calls, not their age."
+    }
+   ]
+  },
+  {
+   "t": "Failures",
+   "v": [
+    {
+     "q": "Which outcome should normally NOT count as a breaker failure?",
+     "o": [
+      "A business exception such as InsufficientFundsException",
+      "A connection timeout",
+      "A 503 response",
+      "A connection reset"
+     ],
+     "w": "The dependency answered correctly. Use ignoreExceptions."
+    },
+    {
+     "q": "A dependency answers every call after 8 seconds and never errors. Which setting opens the breaker?",
+     "o": [
+      "slowCallDurationThreshold with slowCallRateThreshold",
+      "failureRateThreshold alone",
+      "waitDurationInOpenState",
+      "maxConcurrentCalls"
+     ],
+     "w": "Slow calls count even when they succeed."
+    }
+   ]
+  },
+  {
+   "t": "Retry attempts",
+   "v": [
+    {
+     "q": "What does maxAttempts: 3 mean?",
+     "o": [
+      "Three calls in total: the first and two retries",
+      "Three retries after the first call",
+      "Three parallel calls",
+      "Three seconds of waiting"
+     ],
+     "w": "The first call counts as an attempt."
+    },
+    {
+     "q": "Which operations are safe to retry?",
+     "o": [
+      "Idempotent ones, or ones sent with an idempotency key",
+      "Any POST that changes money",
+      "Only calls that returned a 400",
+      "Only calls made inside a transaction"
+     ],
+     "w": "A retried payment without an idempotency key can charge twice."
+    }
+   ]
+  },
+  {
+   "t": "Backoff and jitter",
+   "v": [
+    {
+     "q": "Why add randomized wait (jitter) to retries?",
+     "o": [
+      "So many callers do not retry at the same moments and cause a retry storm",
+      "To make each retry faster",
+      "To skip the circuit breaker",
+      "To avoid logging the failure"
+     ],
+     "w": "Exponential backoff spreads attempts out and jitter desynchronises them."
+    },
+    {
+     "q": "What should Retry not retry when the breaker is open?",
+     "o": [
+      "CallNotPermittedException",
+      "IOException",
+      "A timeout",
+      "A 503 from the dependency"
+     ],
+     "w": "The next attempt would be rejected immediately too, so add it to ignore-exceptions."
+    }
+   ]
+  },
+  {
+   "t": "Decorator order",
+   "v": [
+    {
+     "q": "What is the default order of the annotations, outermost first?",
+     "o": [
+      "Retry, CircuitBreaker, RateLimiter, TimeLimiter, Bulkhead",
+      "Bulkhead, TimeLimiter, RateLimiter, CircuitBreaker, Retry",
+      "CircuitBreaker, Retry, Bulkhead, TimeLimiter, RateLimiter",
+      "RateLimiter, Retry, Bulkhead, CircuitBreaker, TimeLimiter"
+     ],
+     "w": "Retry wraps the breaker so every attempt is recorded."
+    },
+    {
+     "q": "In the Decorators builder, which decorator is outermost?",
+     "o": [
+      "The one added last",
+      "The one added first",
+      "The one with the shortest name",
+      "The circuit breaker, always"
+     ],
+     "w": "Each with... call wraps what exists so far."
+    }
+   ]
+  },
+  {
+   "t": "Bulkhead types",
+   "v": [
+    {
+     "q": "Which bulkhead keeps ThreadLocal data such as MDC and the security context?",
+     "o": [
+      "The semaphore bulkhead, which runs on the caller's thread",
+      "The thread-pool bulkhead",
+      "Neither, both copy it",
+      "Only the rate limiter"
+     ],
+     "w": "A thread-pool bulkhead hops threads, so context must be propagated."
+    },
+    {
+     "q": "What does a full semaphore bulkhead do by default?",
+     "o": [
+      "Rejects the call at once with BulkheadFullException",
+      "Queues the call forever",
+      "Runs it on another thread",
+      "Closes the circuit breaker"
+     ],
+     "w": "maxWaitDuration defaults to zero."
+    }
+   ]
+  },
+  {
+   "t": "TimeLimiter",
+   "v": [
+    {
+     "q": "Why does @TimeLimiter not stop a blocking method on the calling thread?",
+     "o": [
+      "It works on asynchronous types and cannot interrupt a blocking call",
+      "It only works in the test profile",
+      "It requires the circuit breaker to be open",
+      "It only works with the rate limiter"
+     ],
+     "w": "Use the HTTP client's own connect and read timeouts for blocking code."
+    },
+    {
+     "q": "What can a TimeLimiter do when the time runs out?",
+     "o": [
+      "Throw TimeoutException and cancel the running future",
+      "Open the breaker permanently",
+      "Retry the call on a new thread",
+      "Kill the JVM thread pool"
+     ],
+     "w": "cancelRunningFuture controls the cancel."
+    }
+   ]
+  },
+  {
+   "t": "RateLimiter",
+   "v": [
+    {
+     "q": "A rate limiter allows 50 calls per second and you run 10 pods. What is the real limit?",
+     "o": [
+      "About 500 per second, because each instance has its own limiter",
+      "50 per second, shared automatically",
+      "10 per second",
+      "Unlimited"
+     ],
+     "w": "A fleet-wide limit needs a gateway or a distributed limiter."
+    },
+    {
+     "q": "Which exception signals that a rate limit was exceeded?",
+     "o": [
+      "RequestNotPermitted",
+      "CallNotPermittedException",
+      "BulkheadFullException",
+      "MaxRetriesExceededException"
+     ],
+     "w": "Each decorator has its own rejection exception."
+    }
+   ]
+  },
+  {
+   "t": "Proxy pitfalls",
+   "v": [
+    {
+     "q": "A method calls another @CircuitBreaker method of the same class and the breaker never applies. Why?",
+     "o": [
+      "The call bypasses the Spring AOP proxy (self-invocation)",
+      "Circuit breakers only work on interfaces",
+      "The method must be private",
+      "The fallback is missing"
+     ],
+     "w": "Move the protected call to another bean, or use the programmatic API."
+    },
+    {
+     "q": "What else stops the annotations from working?",
+     "o": [
+      "The bean being created with new instead of by Spring",
+      "Using constructor injection",
+      "Naming the instance in YAML",
+      "Running on Java 17"
+     ],
+     "w": "Only calls through the proxy are advised."
+    }
+   ]
+  },
+  {
+   "t": "Fallback",
+   "v": [
+    {
+     "q": "What does a fallback method signature look like?",
+     "o": [
+      "Same return type and parameters as the protected method, plus the exception as the last parameter",
+      "No parameters at all",
+      "A void method that logs the error",
+      "A static method returning Object"
+     ],
+     "w": "The most specific matching exception type wins."
+    },
+    {
+     "q": "What should a fallback return?",
+     "o": [
+      "A safe result such as a conservative default or cached value",
+      "An optimistic default that looks like success",
+      "null in every case",
+      "The exception message as data"
+     ],
+     "w": "An optimistic default presents wrong data as right."
+    }
+   ]
+  },
+  {
+   "t": "Observability",
+   "v": [
+    {
+     "q": "Which Actuator endpoint shows the state of circuit breakers?",
+     "o": [
+      "/actuator/circuitbreakers",
+      "/actuator/threaddump",
+      "/actuator/beans",
+      "/actuator/loggers"
+     ],
+     "w": "Also /actuator/circuitbreakerevents, and a health indicator when registered."
+    },
+    {
+     "q": "Which signal is the best early alert for a struggling dependency?",
+     "o": [
+      "An open breaker or a rising count of not-permitted calls",
+      "The number of Spring beans",
+      "Heap usage of the gateway",
+      "The JVM version"
+     ],
+     "w": "Also watch fallback rates and slow-call rates."
+    }
+   ]
+  },
+  {
+   "t": "Multiplying retries",
+   "v": [
+    {
+     "q": "The client, the gateway and the service each retry three times. What is the worst case for one request?",
+     "o": [
+      "27 calls to the dependency",
+      "9 calls",
+      "6 calls",
+      "3 calls"
+     ],
+     "w": "Retry at one layer, and keep the total within the caller's deadline."
+    },
+    {
+     "q": "Where should you usually retry?",
+     "o": [
+      "At one layer, close to the call, with backoff and jitter",
+      "At every layer to be safe",
+      "Only in the browser",
+      "Inside a database transaction"
+     ],
+     "w": "Other layers should fail fast."
+    }
+   ]
+  }
+ ]
+}

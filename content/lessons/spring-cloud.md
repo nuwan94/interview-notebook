@@ -96,6 +96,8 @@ Cautions: the config server becomes a startup dependency (make it highly availab
 
 ## Resilience4j {#resilience}
 
+This is the overview; the full library (settings, decorator order, proxy pitfalls, testing) is in the [Resilience4j lesson](lesson:resilience4j).
+
 ### The decorators {#decorators}
 
 | Decorator | Protects against | Key settings |

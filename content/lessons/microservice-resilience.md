@@ -123,7 +123,7 @@ Resilience that is never tested does not work. Test in layers: unit tests of fal
 
 ## Resilience4j in Spring Boot {#resilience4j}
 
-Resilience4j provides circuit breaker, retry, rate limiter, bulkhead and time limiter, as annotations or by composition, with Spring Boot configuration and Micrometer metrics.
+Resilience4j provides circuit breaker, retry, rate limiter, bulkhead and time limiter, as annotations or by composition, with Spring Boot configuration and Micrometer metrics. The [Resilience4j lesson](lesson:resilience4j) covers the library in depth, with labs.
 
 ```yaml
 resilience4j:
