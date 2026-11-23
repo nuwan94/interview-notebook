@@ -118,7 +118,7 @@ The **Observation API** (Spring Framework 6) unifies this: instrument an operati
 
 ## Logging {#logging}
 
-- **SLF4J** API with **Logback** (Boot default). Use parameterised messages (`log.info("Transfer {} done", id)`), appropriate levels, and never log secrets, full card numbers or personal data (mask them).
+- **SLF4J** API with **Logback** (Boot default; the [logging lesson](lesson:java-logging) covers levels, MDC, JSON logs and Log4j 2 in depth). Use parameterised messages (`log.info("Transfer {} done", id)`), appropriate levels, and never log secrets, full card numbers or personal data (mask them).
 - **Structured logging** (JSON; Boot 3.4 supports it natively with `logging.structured.format.console=ecs`) so fields are searchable: `traceId`, `userId`, `accountId`, `outcome`.
 - **Correlation id:** a filter puts an id in the MDC (and returns it in a response header), or the tracing id does it; services propagate it downstream ([filter example](lesson:spring-mvc#q-coding-filter)).
 - **Levels at runtime:** change with `POST /actuator/loggers/com.bank` while investigating, then revert; avoid DEBUG in production by default.

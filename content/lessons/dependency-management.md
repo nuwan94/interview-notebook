@@ -155,6 +155,8 @@ A scan has **false positives** (the flaw is in a part you do not use, or the CVE
 
 ### Case study: Log4Shell {#log4shell}
 
+How the vulnerability works inside the logger is in the [logging lesson](lesson:java-logging#log4shell).
+
 In December 2021, `CVE-2021-44228` (CVSS 10) in **log4j-core** 2.0 to 2.14.1 let an attacker run code by sending a string such as `${jndi:ldap://...}` that the application merely **logged**. The painful part was not the fix (upgrade to 2.17.1 or later) but **finding where the library was**:
 
 - teams had `log4j-core` only as a **transitive** dependency, inside a fat jar they did not know contained it;

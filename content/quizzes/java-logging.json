@@ -1,0 +1,379 @@
+{
+ "questions": [
+  {
+   "t": "Facade",
+   "v": [
+    {
+     "q": "What is SLF4J?",
+     "o": [
+      "A logging facade: an API that delegates to an implementation such as Logback or Log4j 2",
+      "A logging implementation that writes files itself",
+      "A log shipping agent for Kubernetes",
+      "The JDK's built-in logger"
+     ],
+     "w": "Code uses the API and the implementation is chosen at deployment."
+    },
+    {
+     "q": "Which is the Spring Boot default logging implementation?",
+     "o": [
+      "Logback",
+      "Log4j 2",
+      "java.util.logging",
+      "Commons Logging"
+     ],
+     "w": "spring-boot-starter-logging brings Logback plus bridges."
+    }
+   ]
+  },
+  {
+   "t": "Bindings",
+   "v": [
+    {
+     "q": "The log shows 'Class path contains multiple SLF4J providers'. What does it mean?",
+     "o": [
+      "Two implementations are on the classpath, so exclude one",
+      "The log level is wrong",
+      "The disk is full",
+      "SLF4J is too old to run"
+     ],
+     "w": "Use the dependency tree to find which library brought the second one."
+    },
+    {
+     "q": "Which setup creates a logging loop?",
+     "o": [
+      "A bridge together with its opposite, for example log4j-over-slf4j with slf4j-log4j12",
+      "Using slf4j-api with Logback",
+      "Using jul-to-slf4j with Logback",
+      "Using Lombok @Slf4j"
+     ],
+     "w": "Each routes events to the other forever."
+    }
+   ]
+  },
+  {
+   "t": "Levels",
+   "v": [
+    {
+     "q": "Which level fits 'a retry succeeded after the first attempt failed'?",
+     "o": [
+      "WARN",
+      "TRACE",
+      "ERROR",
+      "FATAL"
+     ],
+     "w": "A handled surprise: WARN. ERROR is for failures needing action."
+    },
+    {
+     "q": "A logger has no level of its own. How is its effective level decided?",
+     "o": [
+      "It inherits the nearest ancestor's level, up to the root",
+      "It always uses TRACE",
+      "It always uses ERROR",
+      "It logs nothing"
+     ],
+     "w": "com.bank.payments.X inherits from com.bank.payments, then com.bank, then root."
+    }
+   ]
+  },
+  {
+   "t": "Placeholders",
+   "v": [
+    {
+     "q": "Why prefer log.debug(\"x {}\", value) over log.debug(\"x \" + value)?",
+     "o": [
+      "The message is formatted only when DEBUG is enabled",
+      "Concatenation is not allowed in Java",
+      "Placeholders are encrypted",
+      "Placeholders write to a different file"
+     ],
+     "w": "Concatenation builds the string even when the level is off."
+    },
+    {
+     "q": "An argument calls an expensive method. How do you avoid running it when DEBUG is off?",
+     "o": [
+      "Use an isDebugEnabled guard, a supplier or the fluent API",
+      "Use more placeholders",
+      "Log it at INFO",
+      "Catch the exception"
+     ],
+     "w": "Arguments are evaluated before the call, so placeholders alone do not help."
+    }
+   ]
+  },
+  {
+   "t": "Exceptions",
+   "v": [
+    {
+     "q": "What is the correct way to log an exception?",
+     "o": [
+      "log.error(\"Transfer {} failed\", id, ex) with the exception last",
+      "log.error(ex.getMessage())",
+      "ex.printStackTrace()",
+      "log.error(\"failed: \" + ex.toString())"
+     ],
+     "w": "The last argument is logged with its stack trace."
+    },
+    {
+     "q": "Why is log-and-rethrow an anti-pattern?",
+     "o": [
+      "The same failure is logged again at every layer",
+      "It makes the exception checked",
+      "It disables the logger",
+      "It changes the stack trace"
+     ],
+     "w": "Log once, where the error is finally handled."
+    }
+   ]
+  },
+  {
+   "t": "Rolling files",
+   "v": [
+    {
+     "q": "Which settings stop log files from filling the disk?",
+     "o": [
+      "A rolling policy with maxHistory and totalSizeCap",
+      "A larger pattern",
+      "More appenders",
+      "A higher root level only"
+     ],
+     "w": "Roll by size and time, compress, and cap the total."
+    },
+    {
+     "q": "Why is logback-spring.xml preferred over logback.xml in Spring Boot?",
+     "o": [
+      "It supports springProfile and springProperty and starts at the right time",
+      "It is faster at run time",
+      "It is the only name Logback reads",
+      "It disables JSON output"
+     ],
+     "w": "Boot processes it with its own extensions."
+    }
+   ]
+  },
+  {
+   "t": "Async",
+   "v": [
+    {
+     "q": "What is the trade-off of an async appender?",
+     "o": [
+      "A bounded queue must block or discard when full, and queued events can be lost in a crash",
+      "It makes logs encrypted",
+      "It disables levels",
+      "It always loses all events"
+     ],
+     "w": "Choose the full-queue policy deliberately."
+    },
+    {
+     "q": "What does Logback's AsyncAppender discard by default when the queue is 80 percent full?",
+     "o": [
+      "TRACE, DEBUG and INFO events",
+      "Only ERROR events",
+      "All events",
+      "Nothing, it always blocks"
+     ],
+     "w": "Set discardingThreshold to 0 to keep everything."
+    }
+   ]
+  },
+  {
+   "t": "Log4j 2 async",
+   "v": [
+    {
+     "q": "What makes Log4j 2 async loggers fast?",
+     "o": [
+      "A lock-free LMAX Disruptor ring buffer",
+      "Writing to memory only",
+      "Skipping the layout",
+      "Using UDP"
+     ],
+     "w": "Add com.lmax:disruptor and the async context selector."
+    },
+    {
+     "q": "Which is a feature Log4j 2 has that Logback does not?",
+     "o": [
+      "Garbage-free logging on many paths",
+      "Rolling files",
+      "Pattern layouts",
+      "Log levels"
+     ],
+     "w": "Useful for latency-sensitive services."
+    }
+   ]
+  },
+  {
+   "t": "Runtime level",
+   "v": [
+    {
+     "q": "How do you change a level in production without a restart in Spring Boot?",
+     "o": [
+      "POST to /actuator/loggers/<logger> with a configuredLevel",
+      "Edit the jar",
+      "Restart with a new image only",
+      "Delete the log file"
+     ],
+     "w": "Secure the endpoint and set it temporarily."
+    },
+    {
+     "q": "How do you reset a logger level set through Actuator?",
+     "o": [
+      "Post configuredLevel as null",
+      "Delete the logger",
+      "Reboot the node",
+      "Set it to OFF"
+     ],
+     "w": "The logger then inherits again."
+    }
+   ]
+  },
+  {
+   "t": "MDC",
+   "v": [
+    {
+     "q": "What is the MDC?",
+     "o": [
+      "A per-thread map of values that the layout prints on each line",
+      "A database of log files",
+      "A JVM flag",
+      "A Kubernetes object"
+     ],
+     "w": "Used for correlation IDs: %X{correlationId}."
+    },
+    {
+     "q": "Why is MDC.clear() called in a finally block?",
+     "o": [
+      "Pooled threads are reused and would leak the previous request's data",
+      "To free heap memory",
+      "To flush the file",
+      "To close the socket"
+     ],
+     "w": "Leaked context mislabels the next request's lines."
+    }
+   ]
+  },
+  {
+   "t": "MDC and threads",
+   "v": [
+    {
+     "q": "Work runs in an @Async method and its log lines have no correlation ID. Why?",
+     "o": [
+      "MDC is a ThreadLocal, so the new thread starts with an empty context",
+      "@Async disables logging",
+      "The level is too low",
+      "SLF4J does not support threads"
+     ],
+     "w": "Copy the MDC with a TaskDecorator or context propagation."
+    },
+    {
+     "q": "What does a TaskDecorator do for MDC?",
+     "o": [
+      "Captures the caller's MDC and restores it on the pool thread for the task",
+      "Encrypts the MDC",
+      "Creates a new logger",
+      "Rolls the log file"
+     ],
+     "w": "It must also restore the thread's previous state afterwards."
+    }
+   ]
+  },
+  {
+   "t": "Structured logs",
+   "v": [
+    {
+     "q": "What is the main benefit of JSON log lines?",
+     "o": [
+      "Fields can be indexed and queried, and a stack trace stays in one event",
+      "They are shorter than text",
+      "They need no collector",
+      "They disable levels"
+     ],
+     "w": "One event per line, with fields."
+    },
+    {
+     "q": "In Kubernetes, where should a service write its logs?",
+     "o": [
+      "To stdout, in JSON",
+      "To a file inside the container",
+      "To a local database",
+      "To the node's /etc"
+     ],
+     "w": "The runtime and a collector take it from there."
+    }
+   ]
+  },
+  {
+   "t": "What not to log",
+   "v": [
+    {
+     "q": "Which value must never appear in a log line?",
+     "o": [
+      "A full card number (PAN) or CVV",
+      "A transfer ID",
+      "A request duration",
+      "A service version"
+     ],
+     "w": "Log identifiers, not the sensitive data behind them."
+    },
+    {
+     "q": "What is the best protection against sensitive data in logs?",
+     "o": [
+      "Mask at the source and exclude sensitive fields from toString and DTOs",
+      "Rely on a regex over the final text only",
+      "Log at DEBUG only",
+      "Compress the files"
+     ],
+     "w": "Defence in depth, with tests that assert masking."
+    }
+   ]
+  },
+  {
+   "t": "Log injection",
+   "v": [
+    {
+     "q": "What is log injection?",
+     "o": [
+      "User input with line breaks forges extra log lines",
+      "Injecting SQL through the logger",
+      "A faster appender",
+      "A way to change levels"
+     ],
+     "w": "JSON layouts escape the characters."
+    },
+    {
+     "q": "Which layout choice reduces log injection?",
+     "o": [
+      "A JSON layout that escapes control characters",
+      "A longer pattern",
+      "A bigger queue",
+      "Caller data"
+     ],
+     "w": "Text layouts need sanitising of logged user input."
+    }
+   ]
+  },
+  {
+   "t": "Log4Shell",
+   "v": [
+    {
+     "q": "Which versions did CVE-2021-44228 affect?",
+     "o": [
+      "Log4j 2 from 2.0-beta9 to 2.14.1",
+      "Logback 1.2 only",
+      "All SLF4J versions",
+      "Log4j 1.x only"
+     ],
+     "w": "Fixed by upgrading to 2.17.1 or later."
+    },
+    {
+     "q": "Why was a default Spring Boot application not vulnerable?",
+     "o": [
+      "It uses Logback, and the log4j-to-slf4j bridge has no log4j-core",
+      "Spring blocks JNDI",
+      "Java 17 removed JNDI",
+      "Boot encrypts log messages"
+     ],
+     "w": "Applications using starter-log4j2 or a bundled log4j-core jar were vulnerable."
+    }
+   ]
+  }
+ ]
+}
