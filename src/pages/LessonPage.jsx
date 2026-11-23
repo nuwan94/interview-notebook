@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LuLink, LuSquare, LuVolume2 } from 'react-icons/lu';
-import { Link, useLocation, useOutletContext, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { getLesson } from '../lib/content.js';
 import { copyText, lessonUrl } from '../lib/share.js';
 import { ReaderProvider, useReader } from '../lib/reader.jsx';
@@ -57,7 +57,15 @@ function ShareButton({ slug, anchor, label, toast, className = 'btn' }) {
 
 function LessonView({ lesson, anchor }) {
   const { toast } = useOutletContext();
-  const { key: navKey } = useLocation(); // changes on every navigation, even to the same link
+  const { key: navKey, search, pathname } = useLocation(); // key changes on every navigation, even to the same link
+  const navigate = useNavigate();
+  const [quizSignal, setQuizSignal] = useState(0);
+  // a search result for a quiz question links to ?quiz=1: open this lesson's quiz, then drop the parameter so a refresh does not reopen it
+  useEffect(() => {
+    if (!new URLSearchParams(search).has('quiz')) return;
+    setQuizSignal((n) => n + 1);
+    navigate(pathname, { replace: true });
+  }, [navKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const articleRef = useRef(null);
   const reader = useReader(articleRef);
 
@@ -101,7 +109,7 @@ function LessonView({ lesson, anchor }) {
                 )}
               </button>
             )}
-            <QuizButton slug={lesson.slug} />
+            <QuizButton slug={lesson.slug} openSignal={quizSignal} />
             <ShareButton slug={lesson.slug} label="Share this lesson" toast={toast} />
             <span className="text-sm text-soft self-center">
               {lesson.questions.length} interview questions · {lesson.sections.length} sections

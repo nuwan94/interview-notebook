@@ -27,8 +27,11 @@ const fmt = (ms) => {
  * Button that opens a quiz. `slug` = one lesson's quiz. `slugs` = a topic or mixed quiz drawn from several lessons;
  * `scoreKey` names where its best score is kept and `title` what the quiz is about. Renders nothing without quizzes.
  */
-export function QuizButton({ slug, slugs, title, scoreKey, className = 'btn primary', label = 'Take the quiz', onClosed }) {
+export function QuizButton({ slug, slugs, title, scoreKey, className = 'btn primary', label = 'Take the quiz', onClosed, openSignal }) {
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (openSignal) setOpen(true); // e.g. a search result for a quiz question
+  }, [openSignal]);
   const [, bump] = useState(0);
   const opener = useRef(null);
   const ids = slugs || [slug];

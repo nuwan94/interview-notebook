@@ -23,6 +23,12 @@ const areasOf = (slug, quiz) =>
 
 export const loadQuiz = async (slug) => ({ questions: areasOf(slug, await loaders[path(slug)]()) });
 
+/** Every quiz file as { slug, questions } (raw file entries), for the search index. Loads all of them, so call it only when needed. */
+export const loadEveryQuiz = () =>
+  Promise.all(
+    Object.entries(loaders).map(async ([p, load]) => ({ slug: /([^/]+)\.json$/.exec(p)[1], questions: (await load()).questions })),
+  );
+
 /** Areas of several lessons in one list (each remembers its lesson in `from`), for topic and mixed quizzes. */
 export async function loadMany(slugs) {
   const parts = await Promise.all(slugs.filter(hasQuiz).map((slug) => loadQuiz(slug)));

@@ -1,7 +1,8 @@
 import MiniSearch from 'minisearch';
-import { lessons, plainText } from './content.js';
+import { getLesson, lessons, plainText } from './content.js';
 import { glossary } from './glossary.js';
 import { labs } from '../labs/index.js';
+import { loadEveryQuiz } from './quiz.js';
 
 const docs = [];
 for (const l of lessons) {
@@ -70,7 +71,7 @@ for (const g of glossary) {
 
 const index = new MiniSearch({
   fields: ['title', 'text', 'lessonTitle'],
-  storeFields: ['title', 'type', 'url', 'lessonTitle', 'level', 'text'],
+  storeFields: ['title', 'type', 'url', 'lessonTitle', 'level', 'text', 'answer'],
   searchOptions: {
     boost: { title: 6, lessonTitle: 0.5 },
     prefix: true,
@@ -81,20 +82,72 @@ const index = new MiniSearch({
 });
 index.addAll(docs);
 
-const ORDER = { lesson: 0, lab: 1, question: 2, section: 3, term: 4 };
+/** Quiz questions are loaded on demand (about 0.8 MB of JSON) the first time search is opened, then added to the same index. */
+let quizLoad;
+export function loadQuizIndex() {
+  quizLoad ??= loadEveryQuiz()
+    .then((files) => {
+      const quizDocs = [];
+      for (const { slug, questions } of files) {
+        const label = getLesson(slug)?.nav ?? slug;
+        questions.forEach((area, ai) => {
+          (Array.isArray(area.v) ? area.v : [area]).forEach((v, vi) => {
+            quizDocs.push({
+              id: `quiz:${slug}:${ai}:${vi}`,
+              type: 'quiz',
+              title: v.q,
+              text: `${v.o.join(' ')} ${v.w ?? ''} ${area.t ?? ''}`,
+              answer: `${v.o[0]}${v.w ? `. ${v.w}` : ''}`,
+              url: `/lessons/${slug}?quiz=1`,
+              lessonTitle: `Quiz · ${label}`,
+            });
+          });
+        });
+      }
+      index.addAll(quizDocs);
+      return quizDocs.length;
+    })
+    .catch(() => {
+      quizLoad = undefined; // allow a retry the next time search opens
+      return 0;
+    });
+  return quizLoad;
+}
 
-export function search(query, limit = 14) {
+/** The result groups, in display order. Each result type belongs to exactly one group. */
+export const GROUPS = [
+  { id: 'lessons', label: 'Lessons', types: ['lesson', 'section'] },
+  { id: 'labs', label: 'Labs', types: ['lab'] },
+  { id: 'questions', label: 'Questions', types: ['question'] },
+  { id: 'quiz', label: 'Quiz', types: ['quiz'] },
+  { id: 'glossary', label: 'Glossary', types: ['term'] },
+];
+const GROUP_OF = Object.fromEntries(GROUPS.flatMap((g) => g.types.map((t) => [t, g.id])));
+const PER_GROUP = 60;
+
+/** Results for a query as { lessons: [], labs: [], questions: [], quiz: [], glossary: [] }, best first inside each group. */
+export function search(query) {
+  const out = Object.fromEntries(GROUPS.map((g) => [g.id, []]));
   const q = query.trim();
-  if (!q) return [];
+  if (!q) return out;
   let hits = index.search(q, { combineWith: 'AND' });
   if (!hits.length) hits = index.search(q, { combineWith: 'OR' });
   const words = q.toLowerCase().split(/\s+/);
-  return hits.slice(0, limit * 2).map((h) => {
-    const text = h.text || '';
-    const low = text.toLowerCase();
-    const at = words.map((w) => low.indexOf(w)).filter((i) => i >= 0).sort((a, b) => a - b)[0];
-    const excerpt =
-      at === undefined ? text.slice(0, 110) : `${at > 40 ? '…' : ''}${text.slice(Math.max(0, at - 40), at + 90)}…`;
-    return { ...h, excerpt };
-  }).sort((a, b) => b.score - a.score || ORDER[a.type] - ORDER[b.type]).slice(0, limit);
+  for (const h of hits) {
+    const list = out[GROUP_OF[h.type]];
+    if (list.length >= PER_GROUP) continue;
+    let excerpt;
+    if (h.type === 'quiz') {
+      excerpt = `Answer: ${h.answer}`;
+    } else {
+      const text = h.text || '';
+      const low = text.toLowerCase();
+      const at = words.map((w) => low.indexOf(w)).filter((i) => i >= 0).sort((a, b) => a - b)[0];
+      excerpt = at === undefined ? text.slice(0, 110) : `${at > 40 ? '…' : ''}${text.slice(Math.max(0, at - 40), at + 90)}…`;
+    }
+    list.push({ ...h, excerpt });
+  }
+  // a lesson match comes before the sections of lessons; the rest keep their score order
+  out.lessons.sort((a, b) => (a.type === 'lesson' ? 0 : 1) - (b.type === 'lesson' ? 0 : 1) || b.score - a.score);
+  return out;
 }
