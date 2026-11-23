@@ -209,7 +209,7 @@ Put `@Transactional` on **service** methods (the unit of business work), not on 
 
 ## Practical points {#practical}
 
-- **Schema management:** use **Flyway** or **Liquibase** migrations, `spring.jpa.hibernate.ddl-auto=validate` (or `none`) in production, never `update` or `create`.
+- **Schema management:** use **Flyway** or **Liquibase** migrations ([lesson](lesson:flyway-liquibase)), `spring.jpa.hibernate.ddl-auto=validate` (or `none`) in production, never `update` or `create`.
 - **Batching inserts:** `spring.jpa.properties.hibernate.jdbc.batch_size=50`, `order_inserts=true`, and a `SEQUENCE` id strategy; `IDENTITY` disables batching. For millions of rows use `JdbcTemplate` batch, `COPY` or Spring Batch.
 - **Auditing:** `@EnableJpaAuditing` with `@CreatedDate`, `@LastModifiedDate`, `@CreatedBy` on a `@MappedSuperclass`.
 - **Soft delete, multi-tenancy, specifications** (`JpaSpecificationExecutor`) for dynamic filters, and **Querydsl** or **jOOQ** when queries get complex.

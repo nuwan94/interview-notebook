@@ -121,7 +121,7 @@ The hardest part of any strategy. In a rolling update, canary or blue-green rele
 3. **Switch reads:** when the data is complete and verified, the code uses only the new structure.
 4. **Contract:** in a **later** release, when no old version can come back, drop the old column.
 
-Rules of thumb: never rename or drop a column in the same release that stops using it, make new columns **nullable or with a default**, add indexes concurrently on big tables, run migrations as a separate, earlier pipeline step with Flyway or Liquibase, and test them on production-sized data. The same compatibility rule applies to **APIs and messages**: add fields, do not remove or change them, and tolerate unknown ones (see [microservice communication](lesson:microservice-communication)).
+Rules of thumb: never rename or drop a column in the same release that stops using it, make new columns **nullable or with a default**, add indexes concurrently on big tables, run migrations as a separate, earlier pipeline step with [Flyway or Liquibase](lesson:flyway-liquibase), and test them on production-sized data. The same compatibility rule applies to **APIs and messages**: add fields, do not remove or change them, and tolerate unknown ones (see [microservice communication](lesson:microservice-communication)).
 
 ## Health checks, verification and automatic rollback {#verification}
 

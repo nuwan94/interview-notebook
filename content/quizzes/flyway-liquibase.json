@@ -1,0 +1,379 @@
+{
+ "questions": [
+  {
+   "t": "Why migrations",
+   "v": [
+    {
+     "q": "Why is `spring.jpa.hibernate.ddl-auto=update` a poor way to manage a production schema?",
+     "o": [
+      "It guesses the difference at start-up, never drops or renames, cannot change data and differs per environment",
+      "It is slower than any migration tool because it scans every table on each request",
+      "It only works with H2 and is ignored by PostgreSQL",
+      "It stores the schema in the application jar instead of the database"
+     ],
+     "w": "Explicit, reviewed, ordered scripts are repeatable and auditable. update only guesses a diff."
+    },
+    {
+     "q": "What do you gain from keeping schema changes as migrations in Git?",
+     "o": [
+      "The same ordered changes reach every environment, each applied once, and reviewable in a pull request",
+      "The database no longer needs backups because the scripts can rebuild the data",
+      "Queries run faster because the optimizer reads the scripts",
+      "The application no longer needs a database connection pool"
+     ],
+     "w": "Repeatability, an audit trail and a gate in the pipeline. Data still needs backups."
+    }
+   ]
+  },
+  {
+   "t": "Naming",
+   "v": [
+    {
+     "q": "Which file name is a valid Flyway versioned migration?",
+     "o": [
+      "V3__add_status.sql",
+      "V3_add_status.sql",
+      "add_status_V3.sql",
+      "3-add-status.sql"
+     ],
+     "w": "V, the version, two underscores, then the description."
+    },
+    {
+     "q": "Which Flyway migration is re-applied whenever its content changes?",
+     "o": [
+      "R__account_summary_view.sql",
+      "V1__account_summary_view.sql",
+      "U1__account_summary_view.sql",
+      "B1__account_summary_view.sql"
+     ],
+     "w": "Repeatable migrations start with R__ and run again when their checksum changes, after the versioned ones."
+    }
+   ]
+  },
+  {
+   "t": "History table",
+   "v": [
+    {
+     "q": "What is the purpose of the flyway_schema_history table?",
+     "o": [
+      "It records which migrations were applied to this database, with checksums, so only the missing ones run",
+      "It stores a copy of every row that each migration changed",
+      "It holds the application's audit log of user actions",
+      "It caches the compiled SQL so migrations start faster"
+     ],
+     "w": "One row per migration: version, description, checksum, time and result."
+    },
+    {
+     "q": "Which tables does Liquibase create in your database?",
+     "o": [
+      "DATABASECHANGELOG and DATABASECHANGELOGLOCK",
+      "LIQUIBASE_HISTORY and LIQUIBASE_USERS",
+      "SCHEMA_VERSION only",
+      "CHANGESET_LOG and MIGRATION_QUEUE"
+     ],
+     "w": "The first lists applied changesets with checksums, the second holds the lock row."
+    }
+   ]
+  },
+  {
+   "t": "Checksum",
+   "v": [
+    {
+     "q": "A developer edits V2__add_status.sql after it ran in production. What happens at the next deploy?",
+     "o": [
+      "Validation fails on the checksum mismatch and the application does not start",
+      "Flyway silently applies the new content again",
+      "Flyway ignores the file because its version is already recorded",
+      "Flyway deletes the old row and runs the file as a new migration"
+     ],
+     "w": "The recorded checksum no longer matches. Revert the edit and add a new migration."
+    },
+    {
+     "q": "What is the correct fix for an edited, already applied migration?",
+     "o": [
+      "Revert the edit and put the change in a new migration",
+      "Run clean so the schema is rebuilt",
+      "Delete the row from the history table and redeploy",
+      "Rename the file so the version changes"
+     ],
+     "w": "clean destroys data and is disabled by default. Editing history is exactly what the tool prevents."
+    }
+   ]
+  },
+  {
+   "t": "Repeatable",
+   "v": [
+    {
+     "q": "Which kind of object suits a repeatable migration?",
+     "o": [
+      "A view or function that is replaced as a whole",
+      "A table creation that must run only once",
+      "A column rename",
+      "A foreign key added to existing data"
+     ],
+     "w": "Repeatable migrations re-run when they change, so they must be safe to apply again."
+    },
+    {
+     "q": "When does a repeatable migration run relative to versioned ones?",
+     "o": [
+      "After all pending versioned migrations",
+      "Before any versioned migration",
+      "Only on a fresh empty database",
+      "Only when the application runs in the dev profile"
+     ],
+     "w": "Repeatable ones always run last, in description order."
+    }
+   ]
+  },
+  {
+   "t": "Changeset identity",
+   "v": [
+    {
+     "q": "How does Liquibase identify a changeset?",
+     "o": [
+      "By id, author and file path together",
+      "By the file name only",
+      "By the checksum alone",
+      "By its position in the master changelog"
+     ],
+     "w": "Moving or renaming a file changes the identity unless logicalFilePath is set."
+    },
+    {
+     "q": "What is the risk of renaming a changelog file that holds already applied changesets?",
+     "o": [
+      "The path is part of the identity, so Liquibase may treat them as new and run them again",
+      "The history table is dropped",
+      "Nothing, the file name is not recorded",
+      "The database locks until the file is renamed back"
+     ],
+     "w": "Use logicalFilePath to keep the old identity when a file must move."
+    }
+   ]
+  },
+  {
+   "t": "Lock",
+   "v": [
+    {
+     "q": "Two pods start at once and both have Flyway enabled. What prevents the same migration running twice?",
+     "o": [
+      "A database lock: one instance migrates and the other waits",
+      "The load balancer sends only one pod to start",
+      "Each pod migrates a different half of the scripts",
+      "Kubernetes starts pods one at a time by default"
+     ],
+     "w": "Both tools lock the database first. A separate migration step avoids the race altogether."
+    },
+    {
+     "q": "Liquibase waits for a lock that nobody holds, after a crashed run. What clears it?",
+     "o": [
+      "release-locks, after checking that no migration is running",
+      "clear-checksums",
+      "rollback-count 1",
+      "Dropping the DATABASECHANGELOG table"
+     ],
+     "w": "The DATABASECHANGELOGLOCK row stayed locked by the killed process."
+    }
+   ]
+  },
+  {
+   "t": "Where to run",
+   "v": [
+    {
+     "q": "Why do many banks run migrations as a pipeline step instead of at application start?",
+     "o": [
+      "A failure stops the release before traffic moves, and the application account needs no DDL rights",
+      "Migrations are not allowed to run inside Java",
+      "Spring Boot cannot run Flyway at start-up",
+      "It makes each migration run in parallel on every pod"
+     ],
+     "w": "Also one runner, one log, and slow migrations do not fail readiness probes."
+    },
+    {
+     "q": "Which account should the running application use in production?",
+     "o": [
+      "A least-privilege account without DDL rights, while a schema-owner account runs the migrations",
+      "The schema owner, so it can fix problems itself",
+      "The database administrator account",
+      "A shared account named after the environment"
+     ],
+     "w": "Separating the two limits what a compromised service can do."
+    }
+   ]
+  },
+  {
+   "t": "Baseline",
+   "v": [
+    {
+     "q": "You add Flyway to a database that already has tables. What does baselining do?",
+     "o": [
+      "Records the existing schema as already at version N, so only later migrations run",
+      "Drops the tables and recreates them from the scripts",
+      "Copies the data into a new schema",
+      "Disables checksum validation permanently"
+     ],
+     "w": "Without a baseline the tool would try to create tables that already exist."
+    },
+    {
+     "q": "Which Liquibase commands adopt an existing database?",
+     "o": [
+      "generate-changelog, then changelog-sync",
+      "update, then rollback",
+      "diff, then clean",
+      "tag, then release-locks"
+     ],
+     "w": "The first captures the schema, the second marks it as already applied."
+    }
+   ]
+  },
+  {
+   "t": "Rollback",
+   "v": [
+    {
+     "q": "What is the usual way to undo a bad migration in production?",
+     "o": [
+      "Roll forward with a new migration",
+      "Edit the old migration and redeploy",
+      "Run clean and rebuild",
+      "Delete the history row and run it again"
+     ],
+     "w": "A fix-forward migration is tested and recorded like any other change."
+    },
+    {
+     "q": "Why is a rollback script not a full safety net?",
+     "o": [
+      "It restores structure, but data that was dropped or overwritten is gone",
+      "It can only run on an empty database",
+      "It always locks the table forever",
+      "It is not recorded in the history table"
+     ],
+     "w": "That is why changes are made backward compatible and destructive steps come later."
+    }
+   ]
+  },
+  {
+   "t": "Compatibility",
+   "v": [
+    {
+     "q": "Why must a migration work with the previous application version?",
+     "o": [
+      "During a rolling release or a rollback the old code runs against the new schema",
+      "Flyway only supports the previous version",
+      "The old version reads the migration files at start-up",
+      "Liquibase refuses to run if the code changed"
+     ],
+     "w": "Hence expand and contract: add first, remove in a later release."
+    },
+    {
+     "q": "Which change is safe to ship in the same release as the code that stops using the column?",
+     "o": [
+      "Adding a new nullable column",
+      "Dropping the old column",
+      "Renaming the old column",
+      "Changing the column type in place"
+     ],
+     "w": "Drop and rename must wait until no old version can return."
+    }
+   ]
+  },
+  {
+   "t": "ddl-auto",
+   "v": [
+    {
+     "q": "Which ddl-auto value fits production when Flyway owns the schema?",
+     "o": [
+      "validate (or none)",
+      "update",
+      "create",
+      "create-drop"
+     ],
+     "w": "validate makes the application fail fast if the schema and entities disagree, without changing anything."
+    },
+    {
+     "q": "An entity gets a new field but no migration. With ddl-auto=validate, what happens?",
+     "o": [
+      "The application fails at start-up with a schema-validation error",
+      "Hibernate adds the column automatically",
+      "The field is ignored silently",
+      "Flyway generates the migration at run time"
+     ],
+     "w": "That is the safety net. Add the migration, never switch to update."
+    }
+   ]
+  },
+  {
+   "t": "Failed migration",
+   "v": [
+    {
+     "q": "A multi-statement migration fails halfway on MySQL. Why is this worse than on PostgreSQL?",
+     "o": [
+      "MySQL commits DDL implicitly, so the earlier statements stay applied",
+      "MySQL cannot run SQL migrations",
+      "PostgreSQL ignores errors in migrations",
+      "MySQL deletes the history table on failure"
+     ],
+     "w": "PostgreSQL runs DDL in a transaction, so the script rolls back whole."
+    },
+    {
+     "q": "How do you reduce the damage of a half-applied migration?",
+     "o": [
+      "One logical change per file, rehearsed on a production-sized copy",
+      "Put every change of a release into one big file",
+      "Disable the history table",
+      "Run it twice to be sure"
+     ],
+     "w": "Small files fail small and are easy to repair."
+    }
+   ]
+  },
+  {
+   "t": "Big table",
+   "v": [
+    {
+     "q": "How do you add a NOT NULL constraint to a huge table without a long lock?",
+     "o": [
+      "Add the column nullable, backfill in batches, then add the constraint as NOT VALID and validate it",
+      "Add it with NOT NULL and no default and let it run",
+      "Stop the application and run one UPDATE for all rows",
+      "Recreate the table from a dump during business hours"
+     ],
+     "w": "Each step holds locks briefly, and a short lock_timeout makes a blocked statement fail rather than queue."
+    },
+    {
+     "q": "Why set a short lock_timeout on a migration statement?",
+     "o": [
+      "So it fails fast instead of queuing behind a long query and blocking everything behind it",
+      "So the statement runs faster once it has the lock",
+      "So the checksum is calculated sooner",
+      "So the history table is not written"
+     ],
+     "w": "A waiting ALTER TABLE blocks new queries on that table while it waits."
+    }
+   ]
+  },
+  {
+   "t": "Version conflict",
+   "v": [
+    {
+     "q": "Two branches each add V5__something.sql and both merge. What happens?",
+     "o": [
+      "Flyway fails with a duplicate-version error",
+      "Both run, in alphabetical order, without a message",
+      "The newer file silently replaces the older one",
+      "Flyway renumbers one of them automatically"
+     ],
+     "w": "Catch it in CI, renumber before merging, or use timestamp versions."
+    },
+    {
+     "q": "Which versioning style makes version clashes between branches much less likely?",
+     "o": [
+      "Timestamp based versions such as V20261123_1030",
+      "Using the same number for every file",
+      "Using only repeatable migrations",
+      "Skipping descriptions in file names"
+     ],
+     "w": "Timestamps rarely collide, though they can then arrive out of order."
+    }
+   ]
+  }
+ ]
+}
