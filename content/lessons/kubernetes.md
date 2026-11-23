@@ -141,7 +141,7 @@ Spring Boot: `management.endpoint.health.probes.enabled=true` exposes `/actuator
 
 Shutdown: Kubernetes removes the pod from endpoints and sends `SIGTERM`; if the app is still running after `terminationGracePeriodSeconds` (default 30) it sends `SIGKILL`. Use `server.shutdown=graceful` with `spring.lifecycle.timeout-per-shutdown-phase` below the grace period, and a short `preStop` sleep so load balancers stop sending new requests first.
 
-Try it in the lab: [Probes: restart, remove from traffic, or wait](lab:k8s-probes).
+Try it in the lab: [Probes: restart, remove from traffic, or wait](lab:k8s-probes). The [probes and pod lifecycle lesson](lesson:kubernetes-probes) goes through every setting, rollouts, tuning and failure modes in detail.
 
 ## Resources and scaling {#resources}
 

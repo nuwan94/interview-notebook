@@ -1,0 +1,404 @@
+{
+ "questions": [
+  {
+   "t": "Probe purpose",
+   "v": [
+    {
+     "q": "Which probe decides whether a pod receives traffic from a Service?",
+     "o": [
+      "Readiness",
+      "Liveness",
+      "Startup",
+      "None: the Service always uses every running pod"
+     ],
+     "w": "A failing readiness probe removes the pod from the Service endpoints without restarting it."
+    },
+    {
+     "q": "What happens when a liveness probe fails enough times?",
+     "o": [
+      "The container is restarted",
+      "The pod is removed from the Service but kept running",
+      "The Deployment is rolled back",
+      "The node is drained"
+     ],
+     "w": "The pod stays; its container is killed and started again."
+    }
+   ]
+  },
+  {
+   "t": "Handlers",
+   "v": [
+    {
+     "q": "Which HTTP status codes count as a successful httpGet probe?",
+     "o": [
+      "200 to 399",
+      "Only 200",
+      "200 to 299 and 401",
+      "Any response at all"
+     ],
+     "w": "401, 404, 500 and 503 are failures."
+    },
+    {
+     "q": "What does a tcpSocket probe prove?",
+     "o": [
+      "Only that something accepts connections on the port",
+      "That the application can reach its database",
+      "That the HTTP health endpoint returns 200",
+      "That the container has enough memory"
+     ],
+     "w": "It says nothing about the health of the application."
+    }
+   ]
+  },
+  {
+   "t": "Defaults",
+   "v": [
+    {
+     "q": "With default settings, about how long until a hung container fails liveness?",
+     "o": [
+      "About 30 seconds (3 failures at a 10 second period)",
+      "1 second",
+      "About 3 minutes",
+      "Immediately on the first failure"
+     ],
+     "w": "periodSeconds 10 and failureThreshold 3."
+    },
+    {
+     "q": "What is the default timeoutSeconds, and why is it often raised?",
+     "o": [
+      "1 second; a GC pause or CPU throttling can easily exceed it",
+      "30 seconds; it is too slow",
+      "0, meaning no timeout",
+      "10 seconds; it is the same as the period"
+     ],
+     "w": "A timeout counts as a failure."
+    }
+   ]
+  },
+  {
+   "t": "Startup probe",
+   "v": [
+    {
+     "q": "What do liveness and readiness do while the startup probe has not succeeded yet?",
+     "o": [
+      "They are not run",
+      "They run with doubled thresholds",
+      "They run but their failures are ignored",
+      "They run once per minute"
+     ],
+     "w": "Startup protects slow starts from the liveness probe."
+    },
+    {
+     "q": "A JVM needs up to 120 seconds to start. Which startup probe settings fit?",
+     "o": [
+      "periodSeconds 5 and failureThreshold 30 (up to 150 s)",
+      "periodSeconds 10 and failureThreshold 3",
+      "periodSeconds 1 and failureThreshold 1",
+      "successThreshold 120"
+     ],
+     "w": "The budget is failureThreshold times periodSeconds."
+    }
+   ]
+  },
+  {
+   "t": "Startup vs delay",
+   "v": [
+    {
+     "q": "Why is a startup probe better than a large initialDelaySeconds on liveness?",
+     "o": [
+      "A fast start continues as soon as it succeeds, while a slow start still gets its full budget",
+      "initialDelaySeconds is not allowed on liveness",
+      "A startup probe also restarts the node",
+      "There is no difference"
+     ],
+     "w": "A fixed delay always waits the whole time."
+    },
+    {
+     "q": "What happens if the startup probe never succeeds within its budget?",
+     "o": [
+      "The container is killed and restarted",
+      "The pod is deleted permanently",
+      "Readiness is marked true anyway",
+      "The probe is ignored"
+     ],
+     "w": "restartPolicy then applies."
+    }
+   ]
+  },
+  {
+   "t": "Liveness content",
+   "v": [
+    {
+     "q": "Why must a liveness probe not check the database?",
+     "o": [
+      "A database outage would fail liveness on every pod and restart them all",
+      "Liveness probes cannot open connections",
+      "The database would be restarted",
+      "It makes the probe return 401"
+     ],
+     "w": "A restart does not fix the database and removes capacity."
+    },
+    {
+     "q": "Which check suits a liveness endpoint?",
+     "o": [
+      "A fast local check that the process can still answer",
+      "A full end-to-end transaction",
+      "A query joining three tables",
+      "A call to every downstream service"
+     ],
+     "w": "Liveness is about this process only."
+    }
+   ]
+  },
+  {
+   "t": "Readiness effects",
+   "v": [
+    {
+     "q": "What changes when a readiness probe fails?",
+     "o": [
+      "The pod's address is marked not ready in the EndpointSlice and receives no new connections",
+      "The container is restarted",
+      "The pod is deleted and rescheduled",
+      "The Deployment scales down"
+     ],
+     "w": "The container keeps running and keeps being probed."
+    },
+    {
+     "q": "What else treats a not-ready pod as unavailable?",
+     "o": [
+      "A Deployment rollout and a PodDisruptionBudget",
+      "Only the kubelet",
+      "Only the scheduler",
+      "Nothing else"
+     ],
+     "w": "Readiness gates releases and disruption budgets."
+    }
+   ]
+  },
+  {
+   "t": "Readiness dependencies",
+   "v": [
+    {
+     "q": "The database is down and your readiness probe checks it. What happens?",
+     "o": [
+      "Every pod becomes unready, the Service has no endpoints, and all requests fail",
+      "Only one pod is affected",
+      "The pods restart and recover the database",
+      "Kubernetes ignores the probe"
+     ],
+     "w": "Use a circuit breaker and a fallback for dependency failures."
+    },
+    {
+     "q": "What should readiness mostly reflect?",
+     "o": [
+      "This pod's own ability to serve, including being warmed up",
+      "The health of every other service",
+      "The cluster's overall CPU use",
+      "Whether the image is the latest"
+     ],
+     "w": "Shared dependencies make all pods fail together."
+    }
+   ]
+  },
+  {
+   "t": "Spring Boot",
+   "v": [
+    {
+     "q": "Which Spring Boot endpoints back the Kubernetes probes?",
+     "o": [
+      "/actuator/health/liveness and /actuator/health/readiness",
+      "/actuator/metrics and /actuator/env",
+      "/health/up and /health/down",
+      "/actuator/info only"
+     ],
+     "w": "Backed by LivenessState and ReadinessState."
+    },
+    {
+     "q": "What is the readiness state while graceful shutdown begins?",
+     "o": [
+      "REFUSING_TRAFFIC",
+      "ACCEPTING_TRAFFIC",
+      "BROKEN",
+      "CORRECT"
+     ],
+     "w": "Readiness drops first so the pod stops getting new requests."
+    }
+   ]
+  },
+  {
+   "t": "Probe endpoint security",
+   "v": [
+    {
+     "q": "A health endpoint behind Spring Security returns 401 to the kubelet. What is the result?",
+     "o": [
+      "The probe fails",
+      "The probe passes because 401 means the app is up",
+      "The kubelet logs in automatically",
+      "The probe is skipped"
+     ],
+     "w": "Only 200 to 399 count as success."
+    },
+    {
+     "q": "Why can a separate management port help?",
+     "o": [
+      "Probes keep working when the request thread pool is saturated",
+      "It makes probes encrypted by default",
+      "It removes the need for any timeout",
+      "It disables readiness"
+     ],
+     "w": "The trade-off: the main port could be stuck while the probe still passes."
+    }
+   ]
+  },
+  {
+   "t": "Rollouts",
+   "v": [
+    {
+     "q": "With maxUnavailable 0, when is an old pod removed during a rolling update?",
+     "o": [
+      "After a new pod is available, meaning Ready",
+      "As soon as the new container starts",
+      "After the new image is pulled",
+      "Immediately, before the new pod exists"
+     ],
+     "w": "Readiness gates the release."
+    },
+    {
+     "q": "A new version never becomes ready. What happens?",
+     "o": [
+      "The rollout stalls and the old pods keep serving until someone rolls back",
+      "Kubernetes rolls back automatically at once",
+      "All old pods are removed anyway",
+      "The Service is deleted"
+     ],
+     "w": "After progressDeadlineSeconds the Deployment shows ProgressDeadlineExceeded; it does not undo itself."
+    }
+   ]
+  },
+  {
+   "t": "minReadySeconds",
+   "v": [
+    {
+     "q": "What does minReadySeconds add?",
+     "o": [
+      "A pod must stay Ready for that long before it counts as available",
+      "A delay before the container starts",
+      "The time between probes",
+      "The grace period for shutdown"
+     ],
+     "w": "It stops a pod that is ready and then crashes from passing the gate."
+    },
+    {
+     "q": "What if a Deployment has no readiness probe at all?",
+     "o": [
+      "A pod is ready when its container starts, so a broken version can take traffic",
+      "Pods are never ready",
+      "The rollout is slower",
+      "Kubernetes adds a default probe"
+     ],
+     "w": "Always define readiness for services."
+    }
+   ]
+  },
+  {
+   "t": "Shutdown order",
+   "v": [
+    {
+     "q": "What is the shutdown order for a deleted pod?",
+     "o": [
+      "preStop, then SIGTERM, then SIGKILL after the grace period",
+      "SIGKILL, then SIGTERM, then preStop",
+      "SIGTERM, then preStop, then restart",
+      "preStop only"
+     ],
+     "w": "Endpoint removal runs at the same time but is not coordinated with it."
+    },
+    {
+     "q": "What is the default terminationGracePeriodSeconds?",
+     "o": [
+      "30",
+      "5",
+      "300",
+      "0"
+     ],
+     "w": "The grace period must cover preStop plus the application's shutdown."
+    }
+   ]
+  },
+  {
+   "t": "preStop sleep",
+   "v": [
+    {
+     "q": "Why add a preStop sleep of a few seconds?",
+     "o": [
+      "Endpoint removal takes time to reach every node, so the app keeps serving meanwhile",
+      "To make the pod start faster",
+      "To let the database finish its backup",
+      "To renew the TLS certificate"
+     ],
+     "w": "Otherwise some requests hit a pod that already exited."
+    },
+    {
+     "q": "Which condition must hold for the grace period?",
+     "o": [
+      "It is larger than preStop plus the application's shutdown timeout",
+      "It equals the probe period",
+      "It is smaller than preStop",
+      "It is zero"
+     ],
+     "w": "For example 10 + 25 is less than 45."
+    }
+   ]
+  },
+  {
+   "t": "Restart loops",
+   "v": [
+    {
+     "q": "Pods restart at peak traffic and it gets worse. What is a likely cause?",
+     "o": [
+      "Liveness timeouts under load that restart the pods carrying the traffic",
+      "The Service has too many endpoints",
+      "The image is too small",
+      "The namespace has a quota"
+     ],
+     "w": "Keep liveness cheap and independent of load, and raise the timeout."
+    },
+    {
+     "q": "Which event text points to a liveness probe as the cause?",
+     "o": [
+      "Liveness probe failed ... container will be restarted",
+      "Successfully pulled image",
+      "Scheduled to node",
+      "Created container"
+     ],
+     "w": "Look in kubectl describe pod."
+    }
+   ]
+  },
+  {
+   "t": "Debugging",
+   "v": [
+    {
+     "q": "Which command shows which pod IPs are currently ready for a Service?",
+     "o": [
+      "kubectl get endpointslices for the Service",
+      "kubectl top node",
+      "kubectl get namespaces",
+      "kubectl version"
+     ],
+     "w": "kubectl get endpoints also works on older clusters."
+    },
+    {
+     "q": "Exit code 137 with OOMKilled points to what?",
+     "o": [
+      "The container exceeded its memory limit",
+      "A failed readiness probe",
+      "A bad image tag",
+      "A missing ConfigMap"
+     ],
+     "w": "Not a probe problem: raise or fix memory."
+    }
+   ]
+  }
+ ]
+}

@@ -70,7 +70,7 @@ class LedgerHealthIndicator implements HealthIndicator {
 
 - **Liveness** (`/actuator/health/liveness`): the process is running; if it fails the platform **restarts** the container. Keep it simple: no external dependencies in it, or a database outage restarts every pod.
 - **Readiness** (`/actuator/health/readiness`): the instance can take traffic; if it fails the platform **stops routing** to it without restarting. It can include dependencies it cannot work without, and it goes DOWN first on graceful shutdown (`server.shutdown=graceful`).
-- A **startup probe** covers slow starts. Custom indicators check dependencies; keep them fast and cached. Group them with `management.endpoint.health.group.readiness.include=readinessState,db`.
+- A **startup probe** covers slow starts (the details, tuning and failure modes are in [Kubernetes probes](lesson:kubernetes-probes)). Custom indicators check dependencies; keep them fast and cached. Group them with `management.endpoint.health.group.readiness.include=readinessState,db`.
 
 ## Metrics with Micrometer {#metrics}
 
