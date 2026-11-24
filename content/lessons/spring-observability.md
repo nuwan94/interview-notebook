@@ -111,6 +111,7 @@ A **trace** is the whole journey of one request; it is a tree of **spans** (one 
 
 - The trace context travels in the **W3C `traceparent`** header on HTTP calls and in message headers for Kafka and RabbitMQ; instrumented clients (`RestClient`, `WebClient`, JDBC, messaging) add and read it automatically.
 - Trace and span ids are put into the **MDC**, so every log line carries `traceId` and `spanId`: from a slow trace you jump straight to the logs of that request.
+- The full picture (span model, propagation, OpenTelemetry Collector, tail sampling, reading a waterfall) is in the [distributed tracing lesson](lesson:distributed-tracing).
 - **Sampling** limits cost: trace a percentage (`management.tracing.sampling.probability=0.1`) plus all errors and slow requests (tail-based sampling in the collector).
 - Add business context as span tags (low cardinality), propagate through async boundaries (executors need context propagation), and keep baggage small.
 

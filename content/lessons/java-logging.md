@@ -219,7 +219,7 @@ class CorrelationFilter extends OncePerRequestFilter {
 - **Lost context:** work handed to another thread (`@Async`, an executor, `CompletableFuture.supplyAsync`, a scheduled task) starts with an **empty** MDC, so those lines have no correlation ID. Copy it with a `TaskDecorator` (`MDC.getCopyOfContextMap()` into the task) or use **Micrometer context propagation**. In Reactor, use the Reactor `Context` and enable automatic context propagation.
 - **Leaked context:** a pooled thread that is not cleared in `finally` keeps the **previous request's** ID and logs the next request's lines with it.
 
-With **Micrometer Tracing** (see [observability](lesson:spring-observability)) `traceId` and `spanId` are put in the MDC for you and propagated between services in the `traceparent` header, so a log line links to its trace.
+With **Micrometer Tracing** (see [distributed tracing](lesson:distributed-tracing) and [observability](lesson:spring-observability)) `traceId` and `spanId` are put in the MDC for you and propagated between services in the `traceparent` header, so a log line links to its trace.
 
 Try it in the lab: [The correlation ID that disappears](lab:log-mdc-async).
 

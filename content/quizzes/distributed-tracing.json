@@ -1,0 +1,429 @@
+{
+ "questions": [
+  {
+   "t": "Purpose",
+   "v": [
+    {
+     "q": "Which question does distributed tracing answer that metrics and logs alone do not?",
+     "o": [
+      "Where did the time go in this one request across all services?",
+      "How many requests per second does the cluster handle?",
+      "What is the heap size of each pod?",
+      "Which version is deployed?"
+     ],
+     "w": "Metrics aggregate and logs are per service; a trace follows one request end to end."
+    },
+    {
+     "q": "Which chain of signals is the usual way to investigate a slowdown?",
+     "o": [
+      "Metric alert, example trace, slow span, logs of that span",
+      "Logs, then a restart, then metrics",
+      "Trace, then a redeploy, then logs",
+      "Metrics only"
+     ],
+     "w": "The trace ID links the signals."
+    }
+   ]
+  },
+  {
+   "t": "Terms",
+   "v": [
+    {
+     "q": "What is a span?",
+     "o": [
+      "One timed operation with a name, start, end, status and attributes",
+      "The whole journey of one request",
+      "A header that carries the context",
+      "A sampling policy"
+     ],
+     "w": "A trace is the tree of spans of one request."
+    },
+    {
+     "q": "What do all spans of one trace share?",
+     "o": [
+      "The trace ID",
+      "The span ID",
+      "The parent span ID",
+      "The service name"
+     ],
+     "w": "Each span has its own span ID and points to its parent."
+    }
+   ]
+  },
+  {
+   "t": "Span kinds",
+   "v": [
+    {
+     "q": "A service calls another over HTTP. Which spans are created?",
+     "o": [
+      "A CLIENT span in the caller and a SERVER span in the callee",
+      "Only one INTERNAL span",
+      "Two SERVER spans",
+      "A PRODUCER and a CONSUMER span"
+     ],
+     "w": "The gap between them is network and queueing time."
+    },
+    {
+     "q": "Which span kinds describe sending and receiving a message?",
+     "o": [
+      "PRODUCER and CONSUMER",
+      "CLIENT and SERVER",
+      "INTERNAL only",
+      "ROOT and LEAF"
+     ],
+     "w": "They continue the trace across a broker."
+    }
+   ]
+  },
+  {
+   "t": "traceparent",
+   "v": [
+    {
+     "q": "What does the W3C traceparent header contain?",
+     "o": [
+      "Version, trace ID, parent span ID and flags",
+      "User ID and session ID",
+      "Service name and host",
+      "Timestamp and sample rate"
+     ],
+     "w": "For example 00-<32 hex trace id>-<16 hex span id>-01."
+    },
+    {
+     "q": "What does the flags field 01 in traceparent mean?",
+     "o": [
+      "The trace is sampled",
+      "The trace is an error",
+      "The trace is encrypted",
+      "The trace is the first of the day"
+     ],
+     "w": "The head-sampling decision travels downstream with it."
+    }
+   ]
+  },
+  {
+   "t": "Baggage",
+   "v": [
+    {
+     "q": "What is baggage?",
+     "o": [
+      "Your own key-values propagated to every service in the trace",
+      "A cache of finished spans",
+      "The size limit of a span",
+      "A Collector processor"
+     ],
+     "w": "It is sent in headers to every callee."
+    },
+    {
+     "q": "Why must baggage never carry secrets or personal data?",
+     "o": [
+      "It is sent in headers to every service called, including third parties",
+      "It is limited to 8 bytes",
+      "It is deleted after one hop",
+      "It is only stored in logs"
+     ],
+     "w": "Use identifiers only."
+    }
+   ]
+  },
+  {
+   "t": "Propagation breaks",
+   "v": [
+    {
+     "q": "A trace stops at one service and the rest is a separate trace. What is a likely cause?",
+     "o": [
+      "The HTTP client was built with new RestTemplate(), so no traceparent header was sent",
+      "The trace ID is too long",
+      "The database is slow",
+      "The sample rate is 100 percent"
+     ],
+     "w": "Use the auto-configured builders so the client is instrumented."
+    },
+    {
+     "q": "Which hop commonly loses the context?",
+     "o": [
+      "A thread pool or reactive chain without context propagation",
+      "A DNS lookup",
+      "A TLS handshake",
+      "A static file"
+     ],
+     "w": "The same problem as the MDC."
+    }
+   ]
+  },
+  {
+   "t": "OpenTelemetry",
+   "v": [
+    {
+     "q": "What does OpenTelemetry provide?",
+     "o": [
+      "Vendor-neutral APIs, SDKs, the OTLP protocol, semantic conventions and the Collector",
+      "A tracing backend with a UI",
+      "A Kubernetes scheduler",
+      "A replacement for Kafka"
+     ],
+     "w": "Backends such as Jaeger or Tempo store and show the data."
+    },
+    {
+     "q": "Which resource attribute identifies the service in every span?",
+     "o": [
+      "service.name",
+      "host.id",
+      "span.kind",
+      "trace.flags"
+     ],
+     "w": "Without it spans appear as unknown_service."
+    }
+   ]
+  },
+  {
+   "t": "Collector",
+   "v": [
+    {
+     "q": "What are the stages of an OpenTelemetry Collector pipeline?",
+     "o": [
+      "Receivers, processors and exporters",
+      "Producers, brokers and consumers",
+      "Agents, masters and workers",
+      "Inputs, filters and outputs of the JVM"
+     ],
+     "w": "Applications send OTLP to the receiver."
+    },
+    {
+     "q": "Why put a Collector between services and the backend?",
+     "o": [
+      "It batches, retries, samples, scrubs and routes, so the backend can change without redeploying services",
+      "It makes spans smaller than one byte",
+      "It replaces the SDK in every service",
+      "It removes the need for sampling"
+     ],
+     "w": "It also centralises sampling and attribute scrubbing."
+    }
+   ]
+  },
+  {
+   "t": "Spring Boot setup",
+   "v": [
+    {
+     "q": "Which dependencies give a Spring Boot 3 service OpenTelemetry tracing over OTLP?",
+     "o": [
+      "micrometer-tracing-bridge-otel and opentelemetry-exporter-otlp",
+      "spring-cloud-starter-sleuth",
+      "spring-boot-starter-batch",
+      "micrometer-registry-prometheus only"
+     ],
+     "w": "Sleuth ended with Spring Boot 2."
+    },
+    {
+     "q": "Which property sets the share of traces sampled in Spring Boot?",
+     "o": [
+      "management.tracing.sampling.probability",
+      "logging.level.root",
+      "spring.sleuth.sampler.rate",
+      "server.tracing.rate"
+     ],
+     "w": "The default is 0.1."
+    }
+   ]
+  },
+  {
+   "t": "Instrumented clients",
+   "v": [
+    {
+     "q": "Which HTTP client is instrumented automatically in Spring Boot 3?",
+     "o": [
+      "One created from RestClient.Builder or RestTemplateBuilder",
+      "new RestTemplate()",
+      "A raw java.net.http.HttpClient built by hand",
+      "A client created with a static factory"
+     ],
+     "w": "Only clients built from the auto-configured builders get the observation."
+    },
+    {
+     "q": "Which settings turn on tracing for Kafka in Spring Boot?",
+     "o": [
+      "spring.kafka.template.observation-enabled and spring.kafka.listener.observation-enabled",
+      "spring.kafka.tracing=true",
+      "management.kafka.enabled",
+      "logging.kafka=trace"
+     ],
+     "w": "The context travels in record headers."
+    }
+   ]
+  },
+  {
+   "t": "Agent or Micrometer",
+   "v": [
+    {
+     "q": "What is an advantage of the OpenTelemetry Java agent?",
+     "o": [
+      "Zero-code instrumentation of many libraries, useful for legacy services",
+      "It replaces the JVM",
+      "It removes the need for a backend",
+      "It works only with Spring"
+     ],
+     "w": "Run it with -javaagent."
+    },
+    {
+     "q": "What is wrong with running the Java agent and Micrometer Tracing in one service?",
+     "o": [
+      "Spans are duplicated",
+      "The JVM refuses to start",
+      "Traces become encrypted",
+      "Sampling is disabled"
+     ],
+     "w": "Choose one."
+    }
+   ]
+  },
+  {
+   "t": "Head sampling",
+   "v": [
+    {
+     "q": "What is the weakness of head-based sampling?",
+     "o": [
+      "It decides before the outcome is known, so rare errors and slow traces may be dropped",
+      "It needs a lot of memory in the Collector",
+      "It cannot sample at all",
+      "It breaks propagation"
+     ],
+     "w": "At 1 percent, 99 percent of failing requests are dropped too."
+    },
+    {
+     "q": "How does a downstream service learn the head-sampling decision?",
+     "o": [
+      "From the sampled flag in traceparent",
+      "From a database",
+      "From the service name",
+      "From the log level"
+     ],
+     "w": "That keeps a trace whole or absent."
+    }
+   ]
+  },
+  {
+   "t": "Tail sampling",
+   "v": [
+    {
+     "q": "What does tail-based sampling need that head-based does not?",
+     "o": [
+      "Buffering whole traces and sending all spans of a trace to the same Collector",
+      "A larger trace ID",
+      "A different protocol",
+      "A special HTTP header"
+     ],
+     "w": "Use a load-balancing exporter keyed by trace ID."
+    },
+    {
+     "q": "Which tail policies keep the valuable traces?",
+     "o": [
+      "Keep all errors, all slow traces, and a small baseline of the rest",
+      "Keep only traces that start on Monday",
+      "Keep the shortest traces",
+      "Keep one trace per host"
+     ],
+     "w": "The status_code, latency and probabilistic policies."
+    }
+   ]
+  },
+  {
+   "t": "Reading a trace",
+   "v": [
+    {
+     "q": "In a waterfall, 40 identical SELECT spans in a row point to what?",
+     "o": [
+      "An N+1 query problem",
+      "A network partition",
+      "A slow DNS server",
+      "A missing index on traces"
+     ],
+     "w": "Visible mainly in traces."
+    },
+    {
+     "q": "A big gap between a CLIENT span and its SERVER span means what?",
+     "o": [
+      "Network or queueing delay, not the callee's own code",
+      "The callee has a bug in its SQL",
+      "The trace is corrupt",
+      "The clock is exactly right"
+     ],
+     "w": "Look at thread pools and connection queues."
+    }
+   ]
+  },
+  {
+   "t": "Logs and metrics",
+   "v": [
+    {
+     "q": "How does a log line connect to a trace?",
+     "o": [
+      "The trace ID and span ID are put in the MDC and printed on every line",
+      "The log file is named after the trace",
+      "Logs are stored inside the span",
+      "The logger calls the trace backend"
+     ],
+     "w": "%X{traceId} in the pattern."
+    },
+    {
+     "q": "What is an exemplar?",
+     "o": [
+      "A trace ID attached to a metric bucket so a spike links to a real trace",
+      "A copy of a log file",
+      "A type of sampling processor",
+      "A header name"
+     ],
+     "w": "It closes the loop from metric to trace."
+    }
+   ]
+  },
+  {
+   "t": "Privacy and cardinality",
+   "v": [
+    {
+     "q": "Which span name has the right cardinality?",
+     "o": [
+      "GET /accounts/{id}",
+      "GET /accounts/12345",
+      "GET /accounts/12345?token=abc",
+      "GET /accounts/ for user alice"
+     ],
+     "w": "Use route templates, never real identifiers."
+    },
+    {
+     "q": "Which must never be stored in a span attribute?",
+     "o": [
+      "A password, token or full card number",
+      "The route template",
+      "The status code",
+      "The database system"
+     ],
+     "w": "Spans go to a shared backend readable by many people."
+    }
+   ]
+  },
+  {
+   "t": "Clock skew",
+   "v": [
+    {
+     "q": "A child span seems to start before its parent. What is the likely cause?",
+     "o": [
+      "Clock skew between hosts",
+      "A bug in the trace ID",
+      "Tail sampling",
+      "A missing baggage item"
+     ],
+     "w": "Run NTP or chrony on every node."
+    },
+    {
+     "q": "How should you read durations across hosts?",
+     "o": [
+      "Trust durations inside one service and the parent-child structure more than absolute cross-host timestamps",
+      "Trust only wall-clock times",
+      "Ignore durations",
+      "Average the clocks"
+     ],
+     "w": "Small cross-host differences are noise."
+    }
+   ]
+  }
+ ]
+}
