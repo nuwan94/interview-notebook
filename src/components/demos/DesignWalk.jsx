@@ -151,7 +151,10 @@ export function Walk({ scenes, ariaLabel, icons = false, graph = false, arrays =
     <figure ref={rootRef} className="demo" data-noread aria-label={ariaLabel}>
       <DemoHeader title={scene.title} scenes={scenes} sceneId={sceneId} onPick={pick} />
 
-      {arrays ? (
+      {typeof scene.stage === 'function' ? (
+        // a scene can bring its own picture: stage is a component taking { frames, index, label, reduced }
+        <scene.stage key={scene.id} frames={scene.frames} index={p.index} label={ariaLabel} reduced={reduced} />
+      ) : arrays ? (
         <ArrayStage key={scene.id} frames={scene.frames} index={p.index} label={ariaLabel} />
       ) : graph ? (
         <GraphStage key={scene.id} frames={scene.frames} index={p.index} reduced={reduced} label={ariaLabel} />
