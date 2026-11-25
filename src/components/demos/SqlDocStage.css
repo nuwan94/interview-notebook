@@ -1,0 +1,22 @@
+/* SqlDocStage: the same customer as linked tables and as one document. Classes start with sqldoc-. */
+.sqldoc-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.sqldoc-line { font: 700 0.9rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff8d6; border: 1px solid #e8d77a; border-radius: 0.35rem; padding: 0.15rem 0.5rem; overflow-wrap: anywhere; }
+.sqldoc-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+.sqldoc-panel { fill: rgba(255, 255, 255, 0.88); stroke: #c3cfdd; stroke-width: 1.5; transition: opacity 0.3s; }
+.sqldoc-panel-title { font: 700 15px var(--font-hand, cursive); fill: var(--color-pen); }
+.sqldoc-tname { font: 700 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #3d4a5c; }
+.sqldoc-head { fill: #eef2f7; stroke: #8d9bb0; stroke-width: 1; }
+.sqldoc-cell { fill: #fff; stroke: #b9c7d9; stroke-width: 1; transition: fill 0.3s; }
+.sqldoc-cell.is-hit { fill: var(--color-pen-soft); }
+.sqldoc-cell.is-ok { fill: var(--color-ok-soft); }
+.sqldoc-cell.is-warn { fill: var(--color-warn-soft); }
+.sqldoc-htext { font: 700 11.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #3d4a5c; }
+.sqldoc-ctext { font: 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.sqldoc-frame { fill: none; stroke: var(--color-pen); stroke-width: 2.5; }
+.sqldoc-doc { fill: #fff; stroke: #8d9bb0; stroke-width: 1.5; transition: fill 0.3s, stroke 0.3s; }
+.sqldoc-doc.is-hit { fill: var(--color-ok-soft); stroke: var(--color-ok); stroke-width: 2.5; }
+.sqldoc-doc.is-warn { fill: var(--color-warn-soft); stroke: var(--color-warn); stroke-width: 2; }
+.sqldoc-json { font: 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); white-space: pre; }
+.sqldoc-json.is-mark { font-weight: 700; fill: var(--color-warn); }
+.sqldoc-mark { fill: var(--color-warn-soft); stroke: var(--color-warn); stroke-width: 1; }
+.sqldoc-fk { font: 700 11px system-ui, sans-serif; fill: #556070; }

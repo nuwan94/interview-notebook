@@ -6,23 +6,34 @@ summary: Why one wide table goes wrong (update, insert and delete anomalies), fu
 tags: [Database, SQL, Normalization, Schema Design, Modelling]
 order: 24
 topic: Databases / Fundamentals
-updated: 2026-11-13
+updated: 2026-11-24
 subnav: true
 ---
 
-Normalization is the standard schema-design question in relational interviews: *what is it, what are 1NF, 2NF and 3NF, what anomalies does it prevent, and when would you denormalize?* The honest short answer is "store each fact in one place so the database cannot contradict itself, and break that rule on purpose only for measured read performance". It sits next to [SQL vs NoSQL](lesson:sql-vs-nosql) (normalise or embed) and [ACID and BASE](lesson:acid-base) (constraints keep data consistent). Play the animated tables below: the anomalies of one wide table, splitting it, the normal forms, and denormalizing on purpose.
+Normalization is the standard schema design question in relational database interviews. Expect these questions:
+
+- What is normalization?
+- What are 1NF, 2NF and 3NF?
+- Which problems (anomalies) does it prevent?
+- When would you denormalize?
+
+The short answer: store each fact in one place, so the database cannot contradict itself. Break that rule on purpose only when you have measured that reads are too slow.
+
+Related lessons: [SQL vs NoSQL](lesson:sql-vs-nosql) (normalise or embed) and [ACID and BASE](lesson:acid-base) (constraints keep data consistent).
+
+The animation has four scenes: the problems of one wide table, splitting it, the normal forms, and denormalizing on purpose.
 
 ```demo
 name: normalize-walk
 ```
 
-> **One sentence to remember:** *every non-key column must depend on the key, the whole key, and nothing but the key (so help me Codd).*
+> **One sentence to remember:** *Every non-key column must depend on the key, the whole key, and nothing but the key.*
 
 ## The problem {#problem}
 
 ### One wide table {#wide}
 
-The tempting design is one table with everything about an event:
+The tempting design is one table that holds everything about an event:
 
 | txn_id | customer | email | branch | branch_city | amount |
 | --- | --- | --- | --- | --- | --- |
@@ -31,35 +42,42 @@ The tempting design is one table with everything about an event:
 | 3 | Bob | bob@mail.com | Orchard | Singapore | 80 |
 | 4 | Carol | carol@mail.com | Marina | Singapore | 300 |
 
-It works for the first query, and then **the same fact is stored many times**: Alice's email on every Alice row, the city on every Orchard row. That redundancy wastes space, but the real damage is to correctness.
+It works for the first query. But **the same fact is stored many times**. Alice's email is on every Alice row, and the city is on every Orchard row. This repetition is called **redundancy**. It wastes space, but the real damage is to correctness.
 
 ### The three anomalies {#anomalies}
 
-| Anomaly | What happens | Example above |
-| --- | --- | --- |
-| **Update** | a fact stored in many rows is changed in some and not others, leaving contradictions | Alice's new email is written to one row, the other keeps the old one |
-| **Insert** | you cannot record one fact without another that does not exist yet | a new branch with no transfers cannot be added without blank (NULL) columns |
-| **Delete** | deleting a row destroys unrelated facts that shared it | removing Carol's only transfer also loses her email and the Marina branch |
+An **anomaly** is an error that the table design makes possible.
 
-**Normalization** is the process of restructuring tables, by a series of rules called normal forms, so that each fact lives in exactly one place and these anomalies cannot occur.
+| Anomaly | What happens | Example from the table above |
+| --- | --- | --- |
+| **Update** | A fact is stored in many rows, and a change reaches only some of them, so the rows contradict each other. | Alice's new email is written to one row, and the other row keeps the old one. |
+| **Insert** | You cannot record one fact without another fact that does not exist yet. | A new branch with no transfers cannot be added without empty (NULL) columns. |
+| **Delete** | Deleting a row also destroys other facts that shared it. | Removing Carol's only transfer also loses her email and the Marina branch. |
+
+**Normalization** fixes this. It restructures the tables, following a series of rules called **normal forms**, so that each fact lives in exactly one place. Then these anomalies cannot happen.
 
 ## Keys and dependencies {#theory}
 
 ### Keys {#keys}
 
-- **Superkey:** a set of columns that uniquely identifies a row.
-- **Candidate key:** a minimal superkey (remove any column and it stops being unique). A table can have several.
-- **Primary key (PK):** the candidate key you choose; not null, unique.
-- **Composite key:** a key of two or more columns (for example `account_id, fund_id`).
-- **Foreign key (FK):** a column that references a key in another table; the database enforces that it points at an existing row.
-- **Prime attribute:** a column that is part of some candidate key. A **non-key attribute** is not.
+- A **superkey** is a set of columns that identifies each row uniquely.
+- A **candidate key** is a minimal superkey: if you remove any column, it is no longer unique. A table can have several.
+- The **primary key (PK)** is the candidate key you choose as the main identifier. It must be unique and not null.
+- A **composite key** is a key made of two or more columns, for example `account_id, fund_id`.
+- A **foreign key (FK)** is a column that refers to a key in another table. The database makes sure it points at a row that exists.
+- A **prime attribute** is a column that is part of some candidate key. A **non-key attribute** is a column that is not.
 
 ### Functional dependency {#fd}
 
-**A → B** ("A determines B") means that whenever two rows have the same A, they have the same B. `customer_id → email` holds: a customer has one email. `branch_id → branch_city` holds. Normal forms are rules about which dependencies are allowed in a table:
+**A → B** means "A determines B". Whenever two rows have the same A, they also have the same B.
 
-- a **partial dependency** is a non-key column depending on **part** of a composite key;
-- a **transitive dependency** is a non-key column depending on **another non-key column** (A → B and B → C, so A → C through B).
+- `customer_id → email` holds, because a customer has one email.
+- `branch_id → branch_city` holds, because a branch is in one city.
+
+The normal forms are rules about which dependencies are allowed in a table. Two kinds cause trouble:
+
+- A **partial dependency** is a non-key column that depends on only **part** of a composite key.
+- A **transitive dependency** is a non-key column that depends on **another non-key column**. If A → B and B → C, then A → C goes through B.
 
 ## The normal forms {#forms}
 
@@ -71,46 +89,63 @@ flowchart TD
   f3 --> bc["BCNF: every determinant is a key"]
 ```
 
-Each form includes the previous ones: a table in 3NF is also in 2NF and 1NF.
+Each form includes the ones before it. A table in 3NF is also in 2NF and 1NF.
 
 ### First normal form (1NF) {#nf1}
 
-**Every column holds a single atomic value, there are no repeating groups, and rows are uniquely identifiable.**
+**The rule:** every column holds one **atomic** (single, indivisible) value, there are no repeating groups, and every row can be identified uniquely.
 
-Violation: a `phones` cell containing `6123 4567, 9123 4567`, or columns `phone1, phone2, phone3`. You cannot index, search or constrain one number, and the count of phones is capped by the table shape.
+**A violation:** a `phones` cell that holds `6123 4567, 9123 4567`, or three columns `phone1, phone2, phone3`. You cannot index, search or constrain one number. The number of phones is also limited by the shape of the table.
 
-Fix: move the repeating group to its own table, one row per value, linked by a foreign key (`customer_phone(customer_id, phone)`).
+**The fix:** move the repeating group to its own table, with one row per value, linked by a foreign key: `customer_phone(customer_id, phone)`.
 
 ### Second normal form (2NF) {#nf2}
 
-**1NF, and every non-key column depends on the whole primary key, not just part of it.** It only matters for **composite keys**; a table with a single-column key is automatically in 2NF if it is in 1NF.
+**The rule:** the table is in 1NF, and every non-key column depends on the **whole** primary key, not just part of it.
 
-Violation: `holding(account_id, fund_id, units, fund_name)` with key `(account_id, fund_id)`. `units` depends on both, but `fund_name` depends only on `fund_id`. "Global Equity" repeats on every holding of that fund, and renaming the fund needs many updates.
+2NF only matters for **composite keys**. A table in 1NF with a single-column key is automatically in 2NF.
 
-Fix: split into `fund(fund_id, fund_name)` and `holding(account_id, fund_id, units)`.
+**A violation:** `holding(account_id, fund_id, units, fund_name)`, with the key `(account_id, fund_id)`.
+
+- `units` depends on both columns of the key, which is correct.
+- `fund_name` depends only on `fund_id`, which is a partial dependency.
+
+As a result, "Global Equity" repeats on every holding of that fund, and renaming the fund needs many updates.
+
+**The fix:** split it into `fund(fund_id, fund_name)` and `holding(account_id, fund_id, units)`.
 
 ### Third normal form (3NF) {#nf3}
 
-**2NF, and no non-key column depends on another non-key column (no transitive dependencies).**
+**The rule:** the table is in 2NF, and no non-key column depends on another non-key column. In other words, there are no transitive dependencies.
 
-Violation: `account(account_id, owner, branch_id, branch_city)`. `branch_city` depends on `branch_id`, which is not the key; the chain `account_id → branch_id → branch_city` repeats the city on every account of that branch.
+**A violation:** `account(account_id, owner, branch_id, branch_city)`. Here `branch_city` depends on `branch_id`, which is not the key. The chain is `account_id → branch_id → branch_city`. So the city repeats on every account of that branch.
 
-Fix: `branch(branch_id, city)` and `account(account_id, owner, branch_id)`.
+**The fix:** split it into `branch(branch_id, city)` and `account(account_id, owner, branch_id)`.
 
 ### BCNF (Boyce-Codd) {#bcnf}
 
-**For every non-trivial dependency A → B, A must be a superkey.** It is a slightly stricter 3NF. It differs only when a table has several overlapping candidate keys and a non-key column determines part of a key. Example: `tutor_slot(student, subject, tutor)` where each tutor teaches one subject (`tutor → subject`) but `tutor` is not a key. 3NF allows it (subject is a prime attribute); BCNF splits it into `tutor(tutor, subject)` and `assignment(student, tutor)`. In practice 3NF design usually reaches BCNF.
+**The rule:** for every non-trivial dependency A → B, A must be a superkey. A **determinant** is the A side of a dependency, so the short form is "every determinant is a key".
+
+BCNF is a slightly stricter 3NF. It differs from 3NF only when a table has several candidate keys that overlap, and a non-key column determines part of a key.
+
+**An example:** `tutor_slot(student, subject, tutor)`, where each tutor teaches one subject.
+
+- The dependency `tutor → subject` holds, but `tutor` is not a key.
+- 3NF allows this, because `subject` is a prime attribute.
+- BCNF does not allow it. It splits the table into `tutor(tutor, subject)` and `assignment(student, tutor)`.
+
+In practice, a 3NF design usually reaches BCNF as well.
 
 ### Higher forms {#higher}
 
-- **4NF:** no independent multi-valued facts about a key in one table (a person's skills and languages in a single table force a cross product of rows; split them).
-- **5NF:** no table that can be rebuilt only by joining three or more pieces in a way the key does not imply.
+- **4NF:** a table must not hold two independent lists of facts about the same key. For example, a person's skills and languages in one table force a row for every skill-language pair (a cross product). Split them into two tables.
+- **5NF:** a table must not be one that can only be rebuilt by joining three or more pieces in a way the key does not imply.
 
-Interviews rarely go beyond BCNF; mention 4NF and 5NF exist, and what multi-valued dependencies are.
+Interviews rarely go beyond BCNF. It is enough to mention that 4NF and 5NF exist, and to explain what a multi-valued dependency is: one key with several independent lists of values.
 
 ### Worked result {#result}
 
-Splitting the wide table gives one table per kind of thing, linked by keys:
+Splitting the wide table gives one table for each kind of thing, linked by keys:
 
 ```mermaid
 erDiagram
@@ -134,7 +169,7 @@ erDiagram
   }
 ```
 
-Alice's email is now one cell, a new branch is one row in `branch`, and deleting a transfer leaves customers and branches alone. The original wide view is recovered by a `JOIN`.
+Now Alice's email is one cell. A new branch is one row in `branch`. Deleting a transfer leaves customers and branches untouched. A `JOIN` rebuilds the original wide view when you need it.
 
 ```sql
 CREATE TABLE customer (
@@ -160,28 +195,32 @@ CREATE INDEX idx_transfer_customer ON transfer(customer_id);     -- foreign keys
 
 ### When and how {#when}
 
-**Denormalization** deliberately adds redundancy to make reads cheaper. Normalise first, measure, then denormalise only the hot paths. Common forms:
+**Denormalization** adds redundancy on purpose to make reads cheaper. Normalise first, measure, and then denormalise only the busiest read paths.
 
-- **Derived columns** (an order `total`, an account `balance` kept alongside the ledger entries it summarises).
-- **Copied columns** (the customer name stored on a statement row).
-- **Summary or reporting tables** and **materialised views**, refreshed on a schedule or by events.
+Common forms:
+
+- **Derived columns**, such as an order `total`, or an account `balance` kept next to the ledger entries it adds up.
+- **Copied columns**, such as the customer name stored on a statement row.
+- **Summary or reporting tables** and **materialised views** (a stored query result), refreshed on a schedule or by events.
 - **Caches and search documents** built from the source of truth.
 - **Embedding** in document stores ([embed or reference](lesson:sql-vs-nosql#embed)).
 
 ### Costs {#costs}
 
-The anomalies come back unless something keeps copies in sync: triggers, application code, scheduled refreshes, events ([CQRS read models](lesson:microservice-patterns#cqrs)), or a reconciliation job. Writes get slower and more complex, and storage grows. Keep a single **source of truth** (the normalised tables) and treat copies as rebuildable.
+The anomalies come back unless something keeps the copies in sync. The options are triggers, application code, scheduled refreshes, events ([CQRS read models](lesson:microservice-patterns#cqrs)) or a reconciliation job that compares and repairs data.
+
+Writes also get slower and more complex, and storage grows. Keep one **source of truth** (the normalised tables), and treat every copy as something you can rebuild.
 
 | | Normalised | Denormalised |
 | --- | --- | --- |
-| Redundancy | minimal | deliberate |
-| Writes | simple, one place | must update every copy |
-| Reads | joins | fewer or no joins, faster |
-| Consistency | enforced by structure | maintained by code |
-| Flexibility for new queries | high | tuned to the known queries |
-| Typical fit | transactional systems (OLTP) | reporting, analytics, read-heavy paths, NoSQL |
+| Redundancy | It is kept to a minimum. | It is added on purpose. |
+| Writes | They are simple, because each fact is in one place. | They must update every copy. |
+| Reads | They need joins. | They need fewer joins or none, so they are faster. |
+| Consistency | The table structure enforces it. | Code must maintain it. |
+| Flexibility for new queries | It is high. | It is tuned to the known queries. |
+| Typical fit | Transactional systems (OLTP). | Reporting, analytics, read-heavy paths and NoSQL. |
 
-Transactional (OLTP) systems favour normalisation; analytical (OLAP) systems favour denormalised **star schemas** (a central fact table joined to dimension tables).
+**OLTP** (online transaction processing) systems handle many small transactions, and they favour normalisation. **OLAP** (online analytical processing) systems run big analytical queries, and they favour denormalised **star schemas**. A star schema has a central fact table joined to several dimension tables.
 
 ## In Java and JPA {#jpa}
 
@@ -211,7 +250,12 @@ class Transfer {
 }
 ```
 
-Points: use `LAZY` on `@ManyToOne` (the default is eager) and `join fetch` or projections where you need the data, to avoid the **N+1 problem**; a composite key is mapped with `@EmbeddedId` and an `@Embeddable` class; read-only denormalised views can map to a **DTO projection** or a database view instead of duplicating columns in the entity. Schema changes belong in migrations (Flyway or Liquibase), not `ddl-auto=update`.
+Points to know:
+
+- Use `LAZY` on `@ManyToOne`, because the default is eager. Use `join fetch` or projections where you need the data. This avoids the **N+1 problem**, where loading a list runs one extra query for every item.
+- Map a composite key with `@EmbeddedId` and an `@Embeddable` class.
+- A read-only denormalised view can map to a **DTO projection** or a database view. Do not copy its columns into the entity.
+- Schema changes belong in migrations (Flyway or Liquibase), not in `ddl-auto=update`.
 
 Try it in the lab: [Normalization: from one wide table to three](lab:normalization-anomalies).
 
@@ -219,74 +263,155 @@ Try it in the lab: [Normalization: from one wide table to three](lab:normalizati
 
 | Topic | Key point |
 | --- | --- |
-| Goal | each fact stored once; no update, insert or delete anomalies |
-| Functional dependency | A → B: the same A always means the same B |
-| 1NF | atomic values, no repeating groups |
-| 2NF | 1NF + no partial dependency on part of a composite key |
-| 3NF | 2NF + no transitive dependency (non-key on non-key) |
-| BCNF | every determinant is a superkey; stricter 3NF |
-| Mnemonic | the key, the whole key, and nothing but the key |
-| Cost | more tables and joins; reads slower |
-| Denormalise | derived or copied data, summary tables, caches; keep a source of truth |
-| OLTP vs OLAP | normalised for transactions, denormalised star schemas for analytics |
+| Goal | Store each fact once, so there are no update, insert or delete anomalies. |
+| Functional dependency | A → B means the same A always gives the same B. |
+| 1NF | Atomic values and no repeating groups. |
+| 2NF | 1NF, and no column depends on only part of a composite key. |
+| 3NF | 2NF, and no non-key column depends on another non-key column. |
+| BCNF | Every determinant is a superkey. It is a stricter 3NF. |
+| Mnemonic | The key, the whole key, and nothing but the key, "so help me Codd" (Edgar Codd invented the relational model). |
+| Cost | More tables and joins, so reads are slower. |
+| Denormalise | Add derived or copied data, summary tables or caches, and keep one source of truth. |
+| OLTP vs OLAP | Normalise for transactions, and use denormalised star schemas for analytics. |
 
 ## Interview questions {#questions}
 
 ### [basic] What is normalization and why do we do it? {#what-q}
 
-Organising a relational schema into tables so that each fact is stored once, using rules called normal forms. It prevents update, insert and delete anomalies, reduces redundancy and storage, and makes integrity easier to enforce with keys and constraints. The cost is more tables and joins.
+It is organising a relational schema so that each fact is stored once. The rules for doing this are called normal forms.
+
+Why we do it:
+
+1. It prevents update, insert and delete anomalies.
+2. It reduces redundancy and storage.
+3. It makes integrity easier to enforce with keys and constraints.
+
+The cost is more tables and more joins.
 
 ### [basic] What are the update, insert and delete anomalies? {#anomalies-q}
 
-They are problems caused by redundant data in one table. Update: a repeated fact is changed in some rows but not others, producing contradictions. Insert: a fact cannot be recorded without another unrelated fact (a branch with no transfers needs blank columns). Delete: removing a row also destroys unrelated facts that shared it (deleting a customer's last order loses the customer).
+They are errors caused by repeated data in one table.
+
+- **Update anomaly:** a repeated fact is changed in some rows but not in others, so the rows contradict each other.
+- **Insert anomaly:** you cannot record a fact without another unrelated fact. For example, a branch with no transfers needs empty columns.
+- **Delete anomaly:** removing a row also destroys other facts that shared it. For example, deleting a customer's last order loses the customer.
 
 ### [basic] Explain 1NF, 2NF and 3NF. {#forms-q}
 
-1NF: atomic values in every cell, no repeating groups. 2NF: in 1NF and every non-key column depends on the whole composite key, not part of it. 3NF: in 2NF and no non-key column depends on another non-key column (no transitive dependency). Summarised: every non-key column depends on the key, the whole key and nothing but the key.
+Each form adds one rule to the one before it:
+
+1. **1NF:** every cell holds one atomic value, and there are no repeating groups.
+2. **2NF:** the table is in 1NF, and every non-key column depends on the whole composite key, not just part of it.
+3. **3NF:** the table is in 2NF, and no non-key column depends on another non-key column (no transitive dependency).
+
+In one line: every non-key column depends on the key, the whole key and nothing but the key.
 
 ### [basic] What is a primary key, candidate key and foreign key? {#keys-q}
 
-A candidate key is a minimal set of columns that uniquely identifies a row; a table may have several. The primary key is the candidate key chosen as the main identifier (unique and not null). A foreign key is a column that references a key in another table and is enforced by the database to point at an existing row (or be null).
+- A **candidate key** is a minimal set of columns that identifies each row uniquely. A table may have several.
+- The **primary key** is the candidate key chosen as the main identifier. It is unique and not null.
+- A **foreign key** is a column that refers to a key in another table. The database makes sure it points at a row that exists, or is null.
 
 ### [basic] What is a functional dependency? {#fd-q}
 
-A → B means that rows with the same value of A always have the same value of B: customer_id determines email. Normal forms restrict which dependencies may exist in a table: partial dependencies (on part of a key) and transitive ones (through a non-key column) are removed by 2NF and 3NF.
+**A → B** means that rows with the same value of A always have the same value of B. For example, `customer_id` determines `email`.
+
+The normal forms limit which dependencies may exist in a table. 2NF removes partial dependencies (on part of a key). 3NF removes transitive ones (through a non-key column).
 
 ### [intermediate] What is a partial dependency and a transitive dependency? {#partial-q}
 
-A partial dependency is a non-key column depending on only part of a composite key (fund_name depends on fund_id inside key account_id plus fund_id). A transitive dependency is a non-key column depending on another non-key column (account_id determines branch_id, which determines branch_city). Removing the first gives 2NF, the second 3NF.
+Both are dependencies that the normal forms remove.
+
+- A **partial dependency** is a non-key column that depends on only part of a composite key. Example: `fund_name` depends on `fund_id`, inside the key `account_id` plus `fund_id`. Removing it gives 2NF.
+- A **transitive dependency** is a non-key column that depends on another non-key column. Example: `account_id` determines `branch_id`, and `branch_id` determines `branch_city`. Removing it gives 3NF.
 
 ### [intermediate] What is the difference between 3NF and BCNF? {#bcnf-q}
 
-3NF allows a dependency A → B if B is a prime attribute (part of some candidate key) even when A is not a key. BCNF requires every determinant to be a superkey. They differ only for tables with several overlapping candidate keys; BCNF decomposition can occasionally lose the ability to enforce a dependency with a simple constraint, which is why 3NF is the usual practical target.
+BCNF is stricter.
+
+- **3NF** allows a dependency A → B when B is a prime attribute (part of some candidate key), even if A is not a key.
+- **BCNF** requires every determinant to be a superkey.
+
+They differ only for tables with several candidate keys that overlap. A BCNF split can sometimes make a dependency impossible to enforce with a simple constraint. That is why 3NF is the usual practical target.
 
 ### [intermediate] Is a table with a single-column primary key always in 2NF? {#single-key-q}
 
-Yes, if it is in 1NF. Partial dependencies need a composite key to exist, because a column cannot depend on part of a single-column key. A table can still violate 3NF through a transitive dependency.
+**Yes, if it is in 1NF.** A partial dependency needs a composite key, because a column cannot depend on part of a single-column key.
+
+The table can still break 3NF through a transitive dependency.
 
 ### [intermediate] What is denormalization and when is it justified? {#denormalize-q}
 
-Deliberately introducing redundancy to speed reads: derived columns, copied columns, summary tables, materialised views, caches. It is justified when measurements show joins or aggregations are a bottleneck on a hot read path, or for analytics. It must be paired with a mechanism to keep copies consistent, and the normalised data stays the source of truth.
+It is adding redundancy on purpose to make reads faster. Examples are derived columns, copied columns, summary tables, materialised views and caches.
+
+It is justified in two cases:
+
+1. Measurements show that joins or totals are a bottleneck on a busy read path.
+2. The data is used for analytics.
+
+It always needs a way to keep the copies consistent, and the normalised data stays the source of truth.
 
 ### [intermediate] Normalised or denormalised for an OLTP system and for a data warehouse? {#oltp-q}
 
-OLTP (many small concurrent transactions) favours normalisation: small writes touch one place and constraints guarantee integrity. Data warehouses (OLAP) favour denormalised star schemas, with a large fact table of measurements joined to wide dimension tables, because they are read-heavy and scan or aggregate huge volumes.
+Normalised for OLTP, and denormalised for a data warehouse.
+
+- **OLTP** systems run many small transactions at the same time. Normalisation means each small write touches one place, and constraints guarantee integrity.
+- **Data warehouses (OLAP)** read and total huge volumes of data. They use denormalised star schemas: a large fact table of measurements joined to wide dimension tables.
 
 ### [intermediate] How does normalization relate to NoSQL data modelling? {#nosql-q}
 
-Relational design models the data and normalises it, then joins answer queries. Document and wide-column stores usually model the queries and denormalise: embed or duplicate data so one read serves a query. The trade is the same one: faster reads and easier scaling against duplicated data that the application must keep in sync ([SQL vs NoSQL](lesson:sql-vs-nosql#modelling)).
+They solve the same problem from opposite ends.
+
+- **Relational design** models the data and normalises it. Joins then answer the queries.
+- **Document and wide-column stores** usually model the queries and denormalise. They embed or duplicate data so one read answers a query.
+
+The trade is the same: faster reads and easier scaling, in exchange for duplicate data that the application must keep in sync ([SQL vs NoSQL](lesson:sql-vs-nosql#modelling)).
 
 ### [intermediate] Should foreign keys be indexed? {#fk-index-q}
 
-Usually yes. PostgreSQL and Oracle do not index the referencing column automatically (MySQL InnoDB does), and without an index, joins on it and checks when a parent row is deleted or its key updated scan the child table. Add an index on the foreign key column for the queries and deletes you run.
+**Usually yes.**
+
+PostgreSQL and Oracle do not index the foreign key column automatically. MySQL InnoDB does.
+
+Without an index, two things scan the whole child table:
+
+1. Joins on the foreign key.
+2. The checks that run when a parent row is deleted or its key changes.
+
+Add an index on the foreign key column for the queries and deletes you run.
 
 ### [deep] Is it ever right to store a derived value such as an account balance? {#derived-q}
 
-Yes, when recomputing it is too slow, but treat it carefully: the ledger entries remain the source of truth, the stored balance is updated in the same transaction as the entry (or recomputed by a job), protected by constraints and tested by reconciliation that compares the balance with the sum of entries. Concurrent updates need locking or atomic updates ([ACID and BASE](lesson:acid-base#lost-update)).
+**Yes, when recalculating it is too slow.** But handle it carefully:
+
+1. The ledger entries stay the source of truth.
+2. Update the stored balance in the same transaction as the entry, or recalculate it with a job.
+3. Protect it with constraints.
+4. Run reconciliation that compares the balance with the sum of the entries.
+
+Concurrent updates need locking or atomic updates ([ACID and BASE](lesson:acid-base#lost-update)).
 
 ### [deep] Normalise this table: orders(order_id, customer_id, customer_name, customer_city, product_id, product_name, quantity). {#normalise-q}
 
-Identify dependencies: order_id → customer_id; customer_id → customer_name, customer_city; product_id → product_name; an order can have many products, so a line is identified by (order_id, product_id) with quantity depending on both. Result: `customer(customer_id, name, city)`, `product(product_id, name)`, `orders(order_id, customer_id)`, `order_line(order_id, product_id, quantity)`. Customer details moved out (transitive), product name moved out (partial), and the repeating products became rows.
+Start by finding the dependencies:
+
+- `order_id → customer_id`.
+- `customer_id → customer_name, customer_city`.
+- `product_id → product_name`.
+- An order can have many products. So an order line is identified by `(order_id, product_id)`, and `quantity` depends on both.
+
+The result has four tables:
+
+- `customer(customer_id, name, city)`
+- `product(product_id, name)`
+- `orders(order_id, customer_id)`
+- `order_line(order_id, product_id, quantity)`
+
+What moved and why:
+
+- The customer details moved out, because they were a transitive dependency.
+- The product name moved out, because it was a partial dependency.
+- The repeating products became rows in `order_line`.
 
 ### [coding] Find the normal form violations in this table and fix them. {#coding-violations}
 
@@ -296,7 +421,10 @@ employee(emp_id, name, dept_id, dept_name, skills)
    dept_id      -> dept_name
 ```
 
-`skills` holding a list violates 1NF; `dept_name` depends on `dept_id`, a non-key column, which is a transitive dependency violating 3NF.
+There are two violations:
+
+1. `skills` holds a list, which breaks 1NF.
+2. `dept_name` depends on `dept_id`, a non-key column. That is a transitive dependency, which breaks 3NF.
 
 ```sql
 CREATE TABLE department (dept_id BIGINT PRIMARY KEY, dept_name VARCHAR(100) NOT NULL);
@@ -329,7 +457,11 @@ JOIN branch   b ON b.branch_id   = t.branch_id;
 REFRESH MATERIALIZED VIEW CONCURRENTLY statement_view;      -- needs a unique index on the view
 ```
 
-Explain that the join recreates the wide table at query time, the materialised view stores the result for fast reads, and the cost is staleness until refreshed (so the source tables stay the source of truth).
+How it works:
+
+- The join rebuilds the wide table when the query runs.
+- The materialised view stores that result, so reads are fast.
+- The cost is that the view is stale until it is refreshed. So the source tables stay the source of truth.
 
 ### [coding] Map a table with a composite key in JPA. {#coding-composite}
 
@@ -347,4 +479,8 @@ class Holding {
 }
 ```
 
-Explain that the key class needs `equals`, `hashCode` and `Serializable`, that `@MapsId` ties the association to the key part, and that fund attributes stay in their own table so the holding holds only what depends on the whole key.
+How it works:
+
+- The key class needs `equals`, `hashCode` and `Serializable`. A record gives you `equals` and `hashCode`.
+- `@MapsId` ties the `fund` association to the `fundId` part of the key.
+- The fund's details stay in their own table. The holding keeps only what depends on the whole key, which is the number of units.

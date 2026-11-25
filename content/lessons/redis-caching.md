@@ -6,41 +6,66 @@ summary: Why and how to cache with Redis: cache-aside, read-through, write-throu
 tags: [Redis, Caching, Eviction, TTL, Cache-aside, Cluster, Spring]
 order: 26
 topic: Databases / Consistency and caching
-updated: 2026-11-13
+updated: 2026-11-24
 subnav: true
 ---
 
-"Our balance page is slow, so we added Redis" is the start of many interview questions. Interviewers then ask *which caching pattern did you use, what happens when the cache and the database disagree, what happens when a hot key expires, what do you do when Redis is down, and how does Redis decide what to throw away?* This lesson covers the patterns, Redis itself, and the failure modes. It builds on [Spring caching](lesson:spring-caching-async) (the annotations), relates to [SQL vs NoSQL](lesson:sql-vs-nosql) and [ACID vs BASE](lesson:acid-base) (a cache is eventually consistent), and uses [messaging](lesson:messaging) and the [saga](lesson:saga) outbox idea for invalidation across services. Play the five scenes: the four patterns, expiry and eviction, invalidation, failure modes, and replication and cluster.
+Many interview questions start with "Our balance page was slow, so we added Redis". Then the interviewer asks:
+
+- Which caching pattern did you use?
+- What happens when the cache and the database disagree?
+- What happens when a popular key expires?
+- What do you do when Redis is down?
+- How does Redis decide what to throw away when memory is full?
+
+This lesson covers the caching patterns, how Redis itself works, and the ways a cache can fail.
+
+Related lessons: [Spring caching](lesson:spring-caching-async) (the annotations), [SQL vs NoSQL](lesson:sql-vs-nosql) and [ACID vs BASE](lesson:acid-base) (a cache is eventually consistent), and [messaging](lesson:messaging) and the [saga](lesson:saga) outbox idea (clearing caches across services).
+
+The animation has five scenes: the four patterns, expiry and eviction, invalidation, failure modes, and replication and cluster.
 
 ```demo
 name: redis-walk
 ```
 
-> **One sentence to remember:** *a cache is a fast, disposable copy of data: put the database first for correctness, give every key a TTL, decide in advance what happens on a miss, a stampede and an outage, and never let a cached value make a decision that must be exactly right.*
+> **One sentence to remember:** *A cache is a fast, throw-away copy, so give every key a TTL and never decide anything important from it.*
 
 ## Why cache, and what to cache {#why}
 
-A cache stores the result of expensive work close to the caller so that the next request skips the work. It helps when data is **read much more often than it changes**, is **expensive to compute or fetch**, and **tolerates being slightly stale**.
+A **cache** keeps the result of slow work close to the caller, so the next request can skip the work.
+
+A cache helps when the data has three properties:
+
+- It is **read much more often than it changes**.
+- It is **slow or expensive to compute or fetch**.
+- It is fine if it is **a little out of date** (slightly stale).
 
 | Good candidates | Poor candidates |
 | --- | --- |
-| reference data: exchange rates, branch lists, product catalogue | an account balance used to approve a payment |
-| results of heavy queries and aggregations | data that changes on every request |
-| session and token data | rarely repeated requests (low hit ratio) |
-| rate-limit counters, idempotency keys | large objects read once |
-| authorisation lookups with a short TTL | anything that must be strongly consistent |
+| Reference data, such as exchange rates, branch lists and a product catalogue. | An account balance used to approve a payment. |
+| Results of heavy queries and totals. | Data that changes on every request. |
+| Session and token data. | Requests that rarely repeat, so the cache is rarely hit (a low hit ratio). |
+| Rate-limit counters and idempotency keys. | Large objects that are read only once. |
+| Permission lookups, with a short TTL. | Anything that must always be exactly up to date (strongly consistent). |
 
-Two numbers decide whether a cache is worth it: the **hit ratio** (hits divided by hits plus misses) and the **cost of a miss**. A cache with a 60 percent hit ratio still means 40 percent of traffic reaches the database.
+Two numbers decide whether a cache is worth it:
+
+- The **hit ratio**: hits divided by (hits plus misses). A **hit** means the value was in the cache. A **miss** means it was not.
+- The **cost of a miss**: how slow the work is when the cache cannot help.
+
+A hit ratio of 60 percent sounds good, but it still means 40 percent of the traffic reaches the database.
 
 ## Caching patterns {#patterns}
 
-| Pattern | Who talks to the database | Read path | Write path | Trade-off |
+A **TTL** (time to live) is how long a key may stay in the cache before Redis removes it.
+
+| Pattern | Who talks to the database | Reading | Writing | Trade-off |
 | --- | --- | --- | --- | --- |
-| **Cache-aside** (lazy loading) | the application | check cache, on a miss load and store | write the database, delete the key | simple and the default; first read is slow; stale window |
-| **Read-through** | the cache layer | the cache loads on a miss | as above | the application only knows the cache; needs a loader |
-| **Write-through** | the cache layer, synchronously | always fresh | write cache and database together | slower writes; caches data nobody reads |
-| **Write-behind** (write-back) | a background flusher | fast | write the cache, flush later in batches | very fast writes; **data loss if the cache dies before the flush** |
-| **Refresh-ahead** | a background refresher | hot keys never expire | reload before the TTL ends | avoids stampedes; wasted work for keys that go cold |
+| **Cache-aside** (lazy loading) | The application. | Check the cache. On a miss, load from the database and store the result. | Write the database, then delete the key. | It is simple and the usual default. The first read is slow, and there is a short time when the cache can be out of date. |
+| **Read-through** | The cache layer. | The cache loads the value itself on a miss. | The same as cache-aside. | The application only talks to the cache. You must give the cache a loader. |
+| **Write-through** | The cache layer, in the same call. | Always fresh. | Write the cache and the database together. | Writes are slower, and you cache data that nobody may read. |
+| **Write-behind** (write-back) | A background job. | Fast. | Write the cache now, and copy to the database later in batches. | Writes are very fast, but **data is lost if the cache dies before the copy**. |
+| **Refresh-ahead** | A background job. | Popular keys never expire. | Reload a key before its TTL ends. | It avoids stampedes, but wastes work on keys that are no longer used. |
 
 ```java
 // cache-aside with Redis (the pattern behind most @Cacheable use)
@@ -60,46 +85,56 @@ public void update(Account account) {
 }
 ```
 
-Spring's `@Cacheable` is cache-aside implemented by a [proxy](lesson:spring-aop); to your code it looks like read-through. Write-behind fits counters, view counts and analytics, and does not fit money.
+Spring's `@Cacheable` is cache-aside, run for you by a [proxy](lesson:spring-aop). To your code it looks like read-through.
+
+Write-behind suits counters, view counts and analytics. It does not suit money.
 
 ## Redis data structures and what they are for {#structures}
 
-Redis is an in-memory data structure server, not just a key-value cache. The structure you choose decides how well it fits.
+Redis is more than a key-value cache. It is an in-memory server for **data structures**: lists, sets, hashes and more. Pick the structure that matches how you read and write the data.
 
 | Structure | Typical use | Key commands |
 | --- | --- | --- |
-| **String** | cached JSON, counters, flags, locks | `SET k v EX 60`, `GET`, `INCR`, `SET k v NX PX 30000` |
-| **Hash** | an object with fields, partial updates | `HSET`, `HGET`, `HGETALL` |
-| **List** | simple queue, recent items | `LPUSH`, `RPOP`, `BRPOP` |
-| **Set** | unique members, tags, set maths | `SADD`, `SISMEMBER`, `SINTER` |
-| **Sorted set** | leaderboards, time-ordered indexes, rate-limit windows | `ZADD`, `ZRANGE`, `ZRANGEBYSCORE` |
-| **Bitmap / HyperLogLog** | daily active flags, approximate unique counts | `SETBIT`, `PFADD`, `PFCOUNT` |
-| **Stream** | append-only log with consumer groups | `XADD`, `XREADGROUP` |
-| **Pub/Sub** | fire-and-forget broadcast (messages are not stored) | `PUBLISH`, `SUBSCRIBE` |
+| **String** | Cached JSON, counters, flags and locks. | `SET k v EX 60`, `GET`, `INCR`, `SET k v NX PX 30000` |
+| **Hash** | An object with fields, when you update only some fields. | `HSET`, `HGET`, `HGETALL` |
+| **List** | A simple queue, or the most recent items. | `LPUSH`, `RPOP`, `BRPOP` |
+| **Set** | Unique members, tags and set maths (union, intersection). | `SADD`, `SISMEMBER`, `SINTER` |
+| **Sorted set** | Leaderboards, items ordered by time, and rate-limit windows. | `ZADD`, `ZRANGE`, `ZRANGEBYSCORE` |
+| **Bitmap / HyperLogLog** | Daily "was active" flags, and approximate counts of unique items. | `SETBIT`, `PFADD`, `PFCOUNT` |
+| **Stream** | A log you only add to, read by consumer groups. | `XADD`, `XREADGROUP` |
+| **Pub/Sub** | Fire-and-forget broadcast. Messages are not stored. | `PUBLISH`, `SUBSCRIBE` |
 
 Common recipes:
 
-- **Rate limiter**: `INCR rate:user42:12:01` then `EXPIRE` on the first increment (or a sorted set for a sliding window).
-- **Session store**: a hash per session with a TTL refreshed on use.
-- **Distributed lock**: `SET lock:job1 token NX PX 30000`, released with a script that deletes only if the token still matches.
-- **Idempotency key**: `SET idem:abc 1 NX EX 86400`; if it already exists, the request is a duplicate.
+- **Rate limiter.** Run `INCR rate:user42:12:01`, and call `EXPIRE` after the first increment. For a sliding window, use a sorted set.
+- **Session store.** Keep one hash per session, with a TTL that is renewed each time the session is used.
+- **Distributed lock.** Take it with `SET lock:job1 token NX PX 30000`. Release it with a script that deletes the key only if the token still matches.
+- **Idempotency key.** Run `SET idem:abc 1 NX EX 86400`. If the key already exists, the request is a duplicate.
 
 ## TTL, expiry and eviction {#eviction}
 
-Two different mechanisms remove keys, and they are often confused:
+Redis removes keys for two different reasons, and people often mix them up.
 
-- **Expiry** removes a key because its **TTL ended**. Redis does it lazily (when a client touches an expired key) and actively (a background sampler checks random keys that have a TTL). Expired keys may sit in memory briefly before they are reclaimed.
-- **Eviction** removes a key that is **still valid** because the memory limit `maxmemory` was reached. The `maxmemory-policy` setting decides which key goes.
+- **Expiry** removes a key because its **TTL has ended**. Redis does this in two ways:
+  - **Lazily**: when a client touches an expired key, Redis deletes it.
+  - **Actively**: a background task checks random keys that have a TTL.
+
+  So an expired key may stay in memory for a short time before it is cleaned up.
+- **Eviction** removes a key that is **still valid**, because memory has reached the limit set by `maxmemory`. The `maxmemory-policy` setting decides which key goes.
 
 | Policy | Meaning |
 | --- | --- |
-| `noeviction` (default) | refuse writes with an out-of-memory error; reads still work |
-| `allkeys-lru` | evict the least recently used key from all keys; the usual cache choice |
-| `allkeys-lfu` | evict the least frequently used key; better when a few keys are very hot |
-| `volatile-lru`, `volatile-lfu`, `volatile-ttl` | consider only keys that have a TTL (`volatile-ttl` evicts the nearest expiry) |
-| `allkeys-random`, `volatile-random` | random victim |
+| `noeviction` (default) | Refuse writes with an out-of-memory error. Reads still work. |
+| `allkeys-lru` | Evict the least recently used key, from all keys. This is the usual choice for a cache. |
+| `allkeys-lfu` | Evict the least frequently used key. This is better when a few keys are very popular. |
+| `volatile-lru`, `volatile-lfu`, `volatile-ttl` | Look only at keys that have a TTL. `volatile-ttl` evicts the key that will expire soonest. |
+| `allkeys-random`, `volatile-random` | Evict a random key. |
 
-LRU and LFU in Redis are **approximate**: Redis samples a few keys (`maxmemory-samples`, default 5) and evicts the best candidate, which saves memory and CPU. If the same Redis holds both a cache and data that must not disappear (sessions, locks), `allkeys-*` policies can delete the important data; use a `volatile-*` policy and give only cache keys a TTL, or run separate instances.
+**LRU** means "least recently used". **LFU** means "least frequently used".
+
+In Redis, LRU and LFU are **approximate**. Redis looks at a small sample of keys (`maxmemory-samples`, default 5) and evicts the best one from that sample. This saves memory and CPU.
+
+Be careful when one Redis holds both cache data and data that must not disappear, such as sessions and locks. An `allkeys-*` policy can delete the important data. Either use a `volatile-*` policy and give a TTL only to cache keys, or run separate Redis instances.
 
 ```
 # redis.conf for a pure cache
@@ -107,34 +142,49 @@ maxmemory 2gb
 maxmemory-policy allkeys-lfu
 ```
 
-Watch `INFO stats`: `keyspace_hits` and `keyspace_misses` (hit ratio), `evicted_keys` (rising means the working set does not fit), `expired_keys`, and `INFO memory` (`used_memory`, `mem_fragmentation_ratio`).
+What to watch:
+
+- `INFO stats` shows `keyspace_hits` and `keyspace_misses`, which give the hit ratio.
+- `evicted_keys` in the same output. If it keeps rising, the data you use often (the working set) does not fit in memory.
+- `expired_keys`, the number of keys removed by TTL.
+- `INFO memory` shows `used_memory` and `mem_fragmentation_ratio`.
 
 ## Invalidation and staleness {#invalidation}
 
 > "There are only two hard things in computer science: cache invalidation and naming things."
 
-The cached copy becomes wrong the moment the source changes. Your options, from simplest:
+**Invalidation** means removing or replacing a cached value because the source has changed. The cached copy becomes wrong (**stale**) the moment the source changes.
 
-1. **TTL only**: accept staleness up to the TTL. Simple, and always add it as a safety net.
-2. **Delete on write**: update the database, then `DEL` the key; the next read reloads. Preferred over updating the cache in place because two concurrent writers could leave the older value in the cache.
-3. **Event-driven**: the writing service publishes an event after commit (through an outbox, [Kafka](lesson:messaging) or change data capture) and cache owners delete or refresh keys.
-4. **Versioned keys**: include a version in the key (`account:42:v7`); a new version makes the old key unreachable and it ages out.
-5. **Write-through**: update both together, accepting the cost.
+Your options, from the simplest:
 
-Even delete-on-write has a **race**: reader A misses and reads the old value, writer B updates the database and deletes the key, then reader A stores its stale value. The cache is wrong until the TTL ends. It is rare, so the usual answer is a **short TTL** plus a delete, or a delayed second delete. If it is unacceptable, do not cache that data, or read the authoritative source before acting on it.
+1. **TTL only.** Accept that a value can be stale for up to the TTL. It is simple, and you should always add a TTL as a safety net.
+2. **Delete on write.** Update the database, then `DEL` the key. The next read loads the fresh value. This is better than updating the cached value directly, because two writers at the same time could leave the older value in the cache.
+3. **Event-driven.** After the commit, the writing service publishes an event (through an outbox, [Kafka](lesson:messaging) or change data capture). The services that own caches then delete or refresh their keys.
+4. **Versioned keys.** Put a version number in the key, such as `account:42:v7`. A new version makes the old key unreachable, and it expires by itself later.
+5. **Write-through.** Update the cache and the database together, and accept the slower writes.
 
-> **Banking rule of thumb:** cache descriptions, rates and reference data freely. For balances and limits, either do not cache, or cache for display only and re-read the database inside the [transaction](lesson:spring-transactions) that makes the decision.
+Even delete on write has a **race**:
+
+1. Reader A misses the cache and reads the old value from the database.
+2. Writer B updates the database and deletes the key.
+3. Reader A stores its old value in the cache.
+
+Now the cache is wrong until the TTL ends. This is rare. The usual answer is a **short TTL** plus the delete, or a second delete a little later. If even this is not acceptable, do not cache that data, or read the source of truth before you act on it.
+
+> **Banking rule of thumb:** cache descriptions, rates and reference data freely. For balances and limits, either do not cache them, or cache them for display only and read the database again inside the [transaction](lesson:spring-transactions) that makes the decision.
 
 ## Failure modes {#failures}
 
 | Problem | What happens | Typical defences |
 | --- | --- | --- |
-| **Cache stampede** (thundering herd, dog-piling) | a hot key expires and many requests rebuild it at once | single-flight lock (`sync = true`, `SET NX`), refresh-ahead, serve stale while one request refreshes |
-| **Cache avalanche** | many keys expire together, or Redis restarts empty | TTL jitter, warm-up, rate limiting and circuit breaker in front of the database, replicas |
-| **Cache penetration** | requests for keys that do not exist always miss and hit the database | cache a short-lived null marker, validate input, Bloom filter of valid ids |
-| **Hot key** | one key gets so much traffic it overloads a node | local in-process cache in front, replicate the key under several names |
-| **Big key** | a huge value or collection blocks the single thread | split it, use `UNLINK` (async delete) instead of `DEL`, avoid unbounded collections |
-| **Redis outage** | calls time out | short timeout, circuit breaker, fallback to the database or to stale data, never block the request thread for seconds |
+| **Cache stampede** (also called thundering herd or dog-piling) | A popular key expires, and many requests try to rebuild it at the same time. | Let only one request rebuild it, with a lock (`sync = true`, `SET NX`). Refresh it ahead of time. Serve the old value while one request refreshes. |
+| **Cache avalanche** | Many keys expire at the same moment, or Redis restarts empty. | Add random jitter to TTLs. Warm up the cache. Put rate limiting and a circuit breaker in front of the database. Keep replicas. |
+| **Cache penetration** | Requests for keys that do not exist always miss, so they always reach the database. | Cache a short-lived "not found" marker. Validate the input. Use a Bloom filter of valid ids. |
+| **Hot key** | One key gets so much traffic that it overloads one node. | Put a local in-process cache in front. Store copies of the key under several names. |
+| **Big key** | One huge value or collection blocks Redis's single thread. | Split it. Delete it with `UNLINK` (deletes in the background) instead of `DEL`. Avoid collections that grow without limit. |
+| **Redis outage** | Calls to Redis time out. | Use a short timeout and a circuit breaker. Fall back to the database or to stale data. Never block the request thread for seconds. |
+
+**Jitter** is a small random amount added to each TTL, so keys do not all expire at once.
 
 ```java
 // stampede protection: one request rebuilds, the rest wait or fall back
@@ -149,32 +199,45 @@ if (Boolean.TRUE.equals(got)) {
 Duration ttl = Duration.ofSeconds(600 + ThreadLocalRandom.current().nextInt(-60, 60));
 ```
 
-A **Bloom filter** answers "is this id possibly in the set?" with no false negatives and a small false-positive rate, so ids that were never created are rejected without touching Redis or the database.
+A **Bloom filter** is a small data structure that answers "could this id be in the set?". When it says no, the answer is always right. When it says yes, it is wrong a small part of the time. So ids that were never created are rejected without touching Redis or the database.
 
 ## How Redis works and how it scales {#internals}
 
-**Single-threaded command execution.** Redis runs commands one at a time on one main thread (newer versions use extra I/O threads for network work only). That makes every command **atomic** without locks and keeps latency low, but one slow command blocks everybody: avoid `KEYS *` (use `SCAN`, which iterates in small steps), huge `SMEMBERS`/`HGETALL` on large collections, and long Lua scripts.
+**Commands run on a single thread.** Redis runs commands one at a time on one main thread. Newer versions use extra threads, but only for network input and output.
+
+- The good part: every command is **atomic** (it runs completely, with nothing in between) without any locks, and latency stays low.
+- The bad part: one slow command blocks every other client. So avoid `KEYS *` (use `SCAN`, which walks the keys in small steps). Also avoid `SMEMBERS` or `HGETALL` on huge collections, and long Lua scripts.
 
 **Atomicity and batching.**
 
-- A single command is atomic. `INCR` is safe for counters without a lock.
-- **Pipelining** sends many commands without waiting for each reply, which saves round trips (not atomic).
-- `MULTI`/`EXEC` queues commands and runs them together without interleaving, but there is **no rollback**: a command that fails at run time does not undo the others. `WATCH` adds optimistic locking.
-- **Lua scripts** run atomically on the server and are the right way to do check-and-set logic, such as releasing a lock only if you still own it.
+- A single command is atomic. `INCR` is a safe counter without a lock.
+- **Pipelining** sends many commands without waiting for each reply. This saves network round trips, but it is not atomic.
+- `MULTI`/`EXEC` queues commands and runs them together, with no other client's commands in between. There is **no rollback**: if one command fails while running, the others are not undone. `WATCH` adds optimistic locking.
+- **Lua scripts** run atomically on the server. They are the right tool for check-and-set logic, such as releasing a lock only if you still own it.
 
-**Persistence.** A pure cache can run without it and rebuild from the database. Otherwise:
+**Persistence.** A pure cache can run without persistence and rebuild itself from the database. Otherwise, choose one of these:
 
 | Option | How | Trade-off |
 | --- | --- | --- |
-| **RDB** | periodic point-in-time snapshot | compact, fast restart; can lose minutes of writes |
-| **AOF** | append every write to a log (`fsync` every second or always) | more durable; larger file, rewritten in the background |
-| **Both** | RDB for fast restart, AOF for durability | common for sessions and queues |
+| **RDB** | Take a snapshot of all data at regular times. | The file is compact and restarts are fast, but you can lose minutes of writes. |
+| **AOF** | Add every write to a log file (`fsync` every second, or after every write). | It is more durable, but the file is larger and must be rewritten in the background. |
+| **Both** | RDB for a fast restart and AOF for durability. | This is common for sessions and queues. |
 
-**Replication and Sentinel.** A primary copies its writes **asynchronously** to replicas. Replicas serve reads and provide a standby. **Sentinel** monitors the primary, elects a new one when it fails and tells clients where it is. Because replication is asynchronous, a failover can lose the last few acknowledged writes.
+**Replication and Sentinel.** A **primary** node copies its writes to **replicas**. The copy is **asynchronous**: the primary does not wait for the replicas. Replicas serve reads and stand by to take over. **Sentinel** watches the primary. When it fails, Sentinel picks a new primary and tells clients where it is. Because the copy is asynchronous, a failover can lose the last few writes that were already confirmed to clients.
 
-**Redis Cluster** shards data when one node is not enough: the key space is divided into **16,384 hash slots** (`CRC16(key) mod 16384`), each served by a primary with replicas. Clients learn the slot map and go straight to the right node, following `MOVED` redirects when it changes. Multi-key commands and Lua scripts must touch keys in **one slot**; **hash tags** do this: only the part in braces is hashed, so `{user42}:cart` and `{user42}:profile` share a slot.
+**Redis Cluster** splits the data across nodes when one node is not enough. This is called **sharding**.
 
-**Security.** Never expose Redis to the internet. Bind to a private network, enable `AUTH` and **ACLs** (a user per application with only the commands it needs), use TLS, and disable dangerous commands such as `FLUSHALL` and `CONFIG` for applications.
+- The keys are divided into **16,384 hash slots**. A key's slot is `CRC16(key) mod 16384`.
+- Each slot is served by one primary, which has its own replicas.
+- Clients learn which node owns which slot and go straight to the right node. When the map changes, Redis answers with a `MOVED` redirect.
+- Commands with several keys, and Lua scripts, must use keys in **one slot**. **Hash tags** arrange this: only the part in braces is hashed, so `{user42}:cart` and `{user42}:profile` are in the same slot.
+
+**Security.** Never expose Redis to the internet.
+
+- Bind it to a private network.
+- Turn on `AUTH` and **ACLs** (access control lists): one user per application, allowed only the commands it needs.
+- Use TLS.
+- Block dangerous commands such as `FLUSHALL` and `CONFIG` for applications.
 
 ## Redis with Spring {#spring}
 
@@ -206,11 +269,12 @@ class BranchService {
 }
 ```
 
-- **Lettuce** is the default client (non-blocking, thread-safe connections); Jedis uses a pool of blocking connections.
-- Use **JSON** or another explicit format rather than Java serialization: it is readable, smaller and does not break when a class changes. Do not cache JPA entities with lazy associations; cache DTOs.
-- Set **command and connect timeouts** (for example 100 to 300 ms) so a slow Redis does not hold request threads. Add a `CacheErrorHandler` that logs and falls through to the database, so a cache failure is not a request failure.
-- `StringRedisTemplate` is the low-level API for counters, locks and sets. **Redisson** adds distributed locks, semaphores and rate limiters. A single-node `SET NX PX` lock is fine for efficiency (avoid duplicate work); for correctness under failures the Redlock debate applies, and you need a **fencing token** or a database constraint as the final guard (see the [distributed scheduler](lesson:distributed-scheduler) lesson).
-- Prefix keys by service and version (`payments:v2:account:42`) so deployments with a changed format do not read each other's data.
+- **Lettuce** is the default client. It is non-blocking, and its connections are thread-safe. **Jedis** uses a pool of blocking connections.
+- Store values as **JSON** or another explicit format, not with Java serialization. JSON is readable and smaller, and it does not break when a class changes. Do not cache JPA entities with lazy associations. Cache DTOs (plain data objects) instead.
+- Set **command and connect timeouts**, for example 100 to 300 ms, so a slow Redis does not hold request threads. Add a `CacheErrorHandler` that logs the error and falls through to the database. Then a cache failure does not become a failed request.
+- `StringRedisTemplate` is the low-level API for counters, locks and sets. **Redisson** adds distributed locks, semaphores and rate limiters.
+- A `SET NX PX` lock on a single node is fine for efficiency, to avoid doing the same work twice. For correctness when things fail, there is a known debate about the Redlock algorithm. You need a **fencing token** or a database constraint as the final guard (see the [distributed scheduler](lesson:distributed-scheduler) lesson). A fencing token is a number that grows with each new lock, so the resource can reject an old lock holder.
+- Prefix keys with the service and a version, such as `payments:v2:account:42`. Then a deployment that changes the data format does not read the old format.
 
 Try it in the lab: [Cache-aside with Redis, and the stampede](lab:redis-cache-stampede).
 
@@ -218,129 +282,298 @@ Try it in the lab: [Cache-aside with Redis, and the stampede](lab:redis-cache-st
 
 | Need | Do |
 | --- | --- |
-| default pattern | cache-aside, TTL on every key, delete after the database write |
-| data that must be exact | do not cache it, or re-read the database in the transaction |
-| pure cache config | `maxmemory` set, `allkeys-lru` or `allkeys-lfu` |
-| sessions or locks in the same Redis | `volatile-*` policy or a separate instance |
-| hot key expiry | `sync = true` or a lock, refresh-ahead |
-| mass expiry | TTL jitter, warm-up |
-| nonexistent keys | null marker with short TTL, Bloom filter |
-| Redis down | short timeout, circuit breaker, database fallback |
-| scan keys | `SCAN`, never `KEYS *` |
-| atomic check-and-set | Lua script |
-| scaling reads | replicas |
-| scaling data size | Redis Cluster, hash tags for related keys |
-| key naming | `service:version:entity:id` |
+| Default pattern | Cache-aside, a TTL on every key, and a delete after the database write. |
+| Data that must be exact | Do not cache it, or read the database again inside the transaction. |
+| Settings for a pure cache | Set `maxmemory`, and use `allkeys-lru` or `allkeys-lfu`. |
+| Sessions or locks in the same Redis | Use a `volatile-*` policy or a separate instance. |
+| A popular key expires | Use `sync = true` or a lock, and refresh ahead. |
+| Many keys expire together | Add TTL jitter and warm up the cache. |
+| Keys that do not exist | Cache a "not found" marker with a short TTL, or use a Bloom filter. |
+| Redis is down | Use a short timeout, a circuit breaker and a database fallback. |
+| List keys | Use `SCAN`, never `KEYS *`. |
+| Atomic check-and-set | Use a Lua script. |
+| More read capacity | Add replicas. |
+| More data than one node holds | Use Redis Cluster, with hash tags for related keys. |
+| Key names | Use `service:version:entity:id`. |
 
 ## Interview questions {#questions}
 
 ### [basic] What is Redis and why is it fast? {#what-is-redis}
 
-An in-memory data structure server used as a cache, session store, message broker and counter service. It is fast because data lives in RAM, the data structures are simple and efficient, commands run on a single thread with no locking, and the protocol is lightweight. Most commands run in microseconds, so network round trips usually dominate.
+Redis is an in-memory data structure server. It is used as a cache, a session store, a message broker and a counter service.
+
+It is fast for four reasons:
+
+1. The data lives in RAM.
+2. The data structures are simple and efficient.
+3. Commands run on a single thread, so there is no locking.
+4. The network protocol is lightweight.
+
+Most commands take microseconds, so the network round trip usually costs more than the command itself.
 
 ### [basic] What is cache-aside? {#cache-aside-q}
 
-The application manages the cache: read from the cache, on a miss read the database and store the result, and on a write update the database and delete the key. It is the most common pattern because it is simple, the cache can fail without breaking correctness, and only requested data is cached. The cost is a slow first read and a window of staleness.
+A pattern where the application manages the cache itself:
+
+- To read, check the cache. On a miss, read the database and store the result in the cache.
+- To write, update the database and then delete the key.
+
+It is the most common pattern for three reasons. It is simple. If the cache fails, the results are still correct. And only data that someone asked for is cached. The costs are a slow first read and a short time when the cache can be out of date.
 
 ### [basic] What is the difference between read-through, write-through and write-behind? {#patterns-q}
 
-Read-through: the cache loads from the database on a miss. Write-through: writes go to the cache and the database together, so reads are fresh but writes are slower. Write-behind: the write goes to the cache and a background job flushes to the database later; fast, but data accepted by the cache can be lost if it fails before the flush. Cache-aside differs in that the application, not the cache, performs the loading.
+- **Read-through:** the cache loads the value from the database on a miss.
+- **Write-through:** each write goes to the cache and the database together. Reads are always fresh, but writes are slower.
+- **Write-behind:** each write goes to the cache, and a background job copies it to the database later. It is fast, but writes the cache accepted are lost if the cache fails before the copy.
+
+Cache-aside is different from all three: the application, not the cache, does the loading.
 
 ### [basic] What is a TTL and why should every cached key have one? {#ttl-q}
 
-A time to live is the lifetime of a key, after which Redis removes it. It bounds how stale a value can be and how much memory the cache can hold, and it heals mistakes such as a missed invalidation. A key without a TTL stays until evicted or deleted, which is how caches slowly fill with data nobody needs.
+A TTL (time to live) is how long a key lives. After that, Redis removes it.
+
+Every key needs one for three reasons:
+
+1. It limits how stale a value can get.
+2. It limits how much memory the cache uses.
+3. It fixes mistakes by itself, such as a missed invalidation.
+
+A key without a TTL stays until it is evicted or deleted. That is how caches slowly fill up with data nobody needs.
 
 ### [basic] What data structures does Redis support? {#structures-q}
 
-Strings, hashes, lists, sets, sorted sets, bitmaps, HyperLogLogs, streams and geospatial indexes, plus pub/sub. Choose by access pattern: strings for cached JSON and counters, hashes for objects, sorted sets for leaderboards or sliding windows, sets for membership, streams for a log with consumer groups.
+Strings, hashes, lists, sets, sorted sets, bitmaps, HyperLogLogs, streams and geospatial indexes. It also has pub/sub.
+
+Choose by how you use the data:
+
+- Strings for cached JSON and counters.
+- Hashes for objects.
+- Sorted sets for leaderboards or sliding windows.
+- Sets for "is this a member?" checks.
+- Streams for a log with consumer groups.
 
 ### [basic] What is the difference between expiry and eviction? {#expiry-vs-eviction}
 
-Expiry removes a key whose TTL ended. Eviction removes a valid key because memory reached `maxmemory`, chosen by `maxmemory-policy`. Expiry is about time and eviction is about space. The default policy `noeviction` does not evict at all and rejects writes when full.
+- **Expiry** removes a key because its TTL ended. It is about **time**.
+- **Eviction** removes a valid key because memory reached `maxmemory`. It is about **space**. The `maxmemory-policy` setting chooses the key.
+
+The default policy, `noeviction`, does not evict anything. It rejects writes when memory is full.
 
 ### [basic] How does Redis expire keys? {#how-expire}
 
-Lazily, when a client accesses an expired key it is deleted and treated as missing; and actively, by a background task that samples keys with a TTL several times per second and deletes expired ones, repeating when many are expired. A key can therefore stay in memory a little after its TTL passed, but it is never returned.
+In two ways:
+
+1. **Lazily.** When a client reads an expired key, Redis deletes it and answers as if it did not exist.
+2. **Actively.** A background task checks a sample of keys with a TTL several times per second and deletes the expired ones. If many are expired, it repeats straight away.
+
+So a key can stay in memory a little after its TTL, but Redis never returns it.
 
 ### [basic] What is the default maxmemory policy and what does it do? {#noeviction-q}
 
-`noeviction`: when memory is full, write commands fail with an out-of-memory error while reads keep working. That is safe for data stores but wrong for a cache, where you want an `allkeys-lru` or `allkeys-lfu` policy so the cache stays writable by discarding cold keys.
+The default is `noeviction`. When memory is full, write commands fail with an out-of-memory error, and reads keep working.
+
+That is safe when Redis is your data store. It is wrong for a cache. For a cache you want `allkeys-lru` or `allkeys-lfu`, so the cache stays writable by throwing away keys nobody uses.
 
 ### [intermediate] LRU or LFU: which eviction policy would you choose? {#lru-lfu-q}
 
-LRU evicts the key not used for the longest time, which suits workloads where recent use predicts future use. LFU evicts the key used least often, which suits workloads with a stable set of hot keys and protects them from a one-time scan of cold data. Both are approximate in Redis because it samples a few keys instead of keeping an exact ordering. Measure the hit ratio under both if it matters.
+It depends on how the keys are used.
+
+- **LRU** evicts the key that was not used for the longest time. It suits workloads where a recently used key is likely to be used again.
+- **LFU** evicts the key that is used least often. It suits workloads with a stable set of popular keys. It also protects them when something reads a lot of cold data once.
+
+In Redis both are approximate, because Redis samples a few keys instead of keeping an exact order. If it matters, measure the hit ratio with each.
 
 ### [intermediate] What is a cache stampede and how do you prevent it? {#stampede-q}
 
-When a popular key expires, many concurrent requests miss together and all load the same data from the database, which can overload it. Defences: let only one request rebuild (a lock or `sync = true`) while others wait or use the stale value, refresh hot keys before they expire, add TTL jitter, and rate limit the loader. The same idea is called single-flight or request coalescing.
+When a popular key expires, many requests miss at the same time. They all load the same data from the database, which can overload it.
+
+Defences:
+
+1. Let only one request rebuild the value, with a lock or `sync = true`. The others wait or use the old value. This is called single-flight or request coalescing.
+2. Refresh popular keys before they expire.
+3. Add jitter to the TTL.
+4. Rate limit the code that loads from the database.
 
 ### [intermediate] What is a cache avalanche? {#avalanche-q}
 
-A large number of keys expiring at the same moment (loaded together with the same TTL) or the cache becoming empty after a restart, so the database receives the full load at once. Add random jitter to TTLs, warm the cache before taking traffic, keep replicas for availability, and protect the database with a circuit breaker and limits.
+The database suddenly gets the full load, for one of two reasons:
+
+- Many keys expire at the same moment, because they were loaded together with the same TTL.
+- The cache is empty after a restart.
+
+Defences: add random jitter to TTLs, warm up the cache before it takes traffic, keep replicas so the cache stays available, and protect the database with a circuit breaker and limits.
 
 ### [intermediate] What is cache penetration and how do you prevent it? {#penetration-q}
 
-Requests for data that does not exist (random ids, scanning attacks) never hit the cache because there is nothing to store, so each goes to the database. Cache a short-lived null marker, validate the id format, rate limit, and put a **Bloom filter** of existing ids in front so impossible ids are rejected early. Remember the null marker needs a short TTL so a newly created record appears quickly.
+Requests for data that does not exist never find anything in the cache, because there is nothing to store. Examples are random ids or a scanning attack. So every such request reaches the database.
+
+Defences:
+
+1. Cache a short-lived "not found" marker (a null marker).
+2. Check that the id has a valid format.
+3. Rate limit.
+4. Put a **Bloom filter** of existing ids in front, so ids that cannot exist are rejected early.
+
+The null marker needs a short TTL, so a record that is created later appears quickly.
 
 ### [intermediate] How do you keep the cache consistent with the database? {#consistency-q}
 
-You usually cannot make it perfectly consistent, so you bound the inconsistency. Update the database first and then delete the key, add a TTL as a safety net, and for several services publish an event after commit (outbox or change data capture) that triggers invalidation. For data that must be exact, skip the cache or re-read the source of truth inside the transaction. Treat the cache as eventually consistent, as in [BASE](lesson:acid-base).
+You usually cannot make it perfectly consistent, so you limit how wrong it can be:
+
+1. Update the database first, then delete the key.
+2. Add a TTL as a safety net.
+3. With several services, publish an event after the commit (through an outbox or change data capture), and let it trigger the invalidation.
+4. For data that must be exact, skip the cache, or read the source of truth again inside the transaction.
+
+Treat the cache as eventually consistent, as in [BASE](lesson:acid-base).
 
 ### [intermediate] Why delete the cache entry after a write instead of updating it? {#delete-vs-update}
 
-Computing and storing the new value can interleave badly between two writers: the writer with the older value may store last and leave the wrong value cached. Deleting is idempotent and lets the next read rebuild from the source of truth. It also avoids caching values that are never read. Deleting before the database write is worse, because a reader can reload the old value in between.
+Because two writers can get in each other's way. Each one computes and stores its new value, and the writer with the older value may store last. Then the wrong value stays in the cache.
+
+Deleting is better for three reasons:
+
+1. Deleting twice has the same effect as deleting once (it is idempotent).
+2. The next read rebuilds the value from the source of truth.
+3. You do not cache values that nobody reads.
+
+Deleting **before** the database write is worse. A reader can load the old value again in the gap between the delete and the write.
 
 ### [intermediate] Describe a race that leaves stale data even with delete-on-write. {#race-q}
 
-Reader A misses and reads the old value from the database. Writer B updates the database and deletes the key. Reader A then writes its old value into the cache. Nothing deletes it again, so it stays until the TTL. Mitigations are a short TTL, versioned values (store only if the version is newer), a delayed second delete, or reading with a lock for critical keys.
+1. Reader A misses and reads the old value from the database.
+2. Writer B updates the database and deletes the key.
+3. Reader A writes its old value into the cache.
+
+Nothing deletes it again, so the old value stays until the TTL ends.
+
+Ways to reduce it:
+
+- A short TTL.
+- Versioned values: store a value only if its version is newer.
+- A second delete a little later.
+- A lock around the read, for critical keys.
 
 ### [intermediate] Local cache (Caffeine) or Redis? {#local-vs-redis}
 
-A local cache is faster (no network) and simplest, but each instance has its own copy, so they diverge and invalidation does not reach them. Redis is shared, so all instances see one value and it survives an application restart, at the cost of a network hop and an extra component to run. A common combination is a small local cache with a very short TTL in front of Redis for hot keys.
+It depends on whether the copies must agree.
+
+- **A local cache** is faster, because there is no network, and it is the simplest. But each instance has its own copy. The copies drift apart, and an invalidation on one instance does not reach the others.
+- **Redis** is shared, so all instances see one value, and the data survives an application restart. The cost is a network call and one more component to run.
+
+A common mix is a small local cache with a very short TTL in front of Redis, for the most popular keys.
 
 ### [intermediate] Is Redis single-threaded and what does that mean for you? {#single-thread-q}
 
-Command execution is single-threaded (I/O can use extra threads), so commands are atomic and need no locks, but a slow command blocks all clients. Avoid `KEYS`, very large collections returned in one call and long scripts; use `SCAN`, split big values and use pipelining to reduce round trips. To use more CPU you add shards (Cluster), not threads.
+**Yes, for running commands.** Network input and output can use extra threads.
+
+What this means:
+
+1. Each command is atomic and needs no locks.
+2. One slow command blocks all clients. So avoid `KEYS`, very large collections returned in one call, and long scripts.
+3. Use `SCAN`, split big values, and use pipelining to save round trips.
+4. To use more CPU, you add shards (Cluster), not threads.
 
 ### [intermediate] What is the difference between KEYS and SCAN? {#scan-q}
 
-`KEYS pattern` walks the whole key space in one blocking call, so on a large database it freezes Redis. `SCAN` iterates with a cursor in small batches without blocking, at the cost that it may return a key more than once and does not give a point-in-time snapshot. Use `SCAN` (or maintain an index set) in production.
+- `KEYS pattern` walks every key in one blocking call. On a large database it freezes Redis.
+- `SCAN` walks the keys in small batches with a cursor, without blocking. The cost: it may return a key more than once, and it does not give a snapshot of one moment in time.
+
+In production, use `SCAN`, or keep your own index in a set.
 
 ### [intermediate] What are RDB and AOF? {#persistence-q}
 
-RDB is a periodic snapshot of the dataset: compact and quick to restore, but changes since the last snapshot are lost on a crash. AOF logs every write operation and replays it on restart; with `fsync` every second you lose at most about a second, at the cost of a bigger file and slower restart. A cache can run with neither; sessions or queues often use AOF or both.
+Two ways Redis saves data to disk.
+
+- **RDB** is a regular snapshot of all the data. It is compact and quick to restore, but changes since the last snapshot are lost in a crash.
+- **AOF** logs every write and replays the log on restart. With `fsync` every second you lose at most about one second. The cost is a bigger file and a slower restart.
+
+A cache can run with neither. Sessions or queues often use AOF, or both.
 
 ### [intermediate] How do replication and Sentinel work, and what can go wrong? {#replication-q}
 
-A primary streams its writes asynchronously to replicas that can serve reads. Sentinel processes monitor the primary, agree it is down by quorum, promote a replica and tell clients the new address. Because replication is asynchronous, writes acknowledged by the old primary but not yet copied are lost after failover, and a network partition can briefly leave two primaries; `min-replicas-to-write` limits the damage.
+How it works:
+
+1. A primary sends its writes to replicas, without waiting for them (asynchronously). Replicas can serve reads.
+2. Sentinel processes watch the primary. When enough of them agree that it is down (a quorum), they promote a replica and tell clients the new address.
+
+What can go wrong:
+
+- Writes the old primary confirmed, but had not yet copied, are lost after the failover.
+- A network split can briefly leave two primaries. The `min-replicas-to-write` setting limits the damage.
 
 ### [intermediate] How does Redis Cluster distribute data? {#cluster-q}
 
-The key space is split into 16,384 hash slots; a key's slot is `CRC16(key) mod 16384`, and each slot belongs to one primary (with replicas for failover). Clients cache the slot map and are redirected with `MOVED` when it changes. Multi-key operations must stay in one slot, which you arrange with hash tags like `{user42}:cart`. Cluster gives capacity and availability, not cross-slot transactions.
+By hash slots:
+
+1. The keys are split into 16,384 hash slots. A key's slot is `CRC16(key) mod 16384`.
+2. Each slot belongs to one primary, which has replicas for failover.
+3. Clients keep a copy of the slot map. When it changes, Redis redirects them with `MOVED`.
+4. Operations on several keys must stay in one slot. You arrange that with hash tags, such as `{user42}:cart`.
+
+Cluster gives you more capacity and availability. It does not give you transactions across slots.
 
 ### [intermediate] How would you implement a rate limiter with Redis? {#rate-limiter-q}
 
-For a fixed window: `INCR rate:{user}:{minute}`, set `EXPIRE` when the count is 1, and reject above the limit. For a sliding window: a sorted set of request timestamps per user, removing old entries with `ZREMRANGEBYSCORE` and counting with `ZCARD`. Run the steps in a Lua script so check and update are atomic across instances, and decide whether to fail open or closed if Redis is down.
+- **Fixed window:** run `INCR rate:{user}:{minute}`. When the count is 1, set `EXPIRE`. Reject the request when the count is above the limit.
+- **Sliding window:** keep a sorted set of request times per user. Remove old entries with `ZREMRANGEBYSCORE`, and count the rest with `ZCARD`.
+
+Run the steps in a Lua script, so the check and the update are atomic across all instances. Also decide what happens if Redis is down: allow requests (fail open) or reject them (fail closed).
 
 ### [deep] How would you implement a distributed lock with Redis and is it safe? {#lock-q}
 
-Acquire with `SET lock:name token NX PX ttl` (a unique token, only if absent, with an expiry) and release with a Lua script that deletes the key only if the token still matches. It is good for efficiency (avoiding duplicate work). It is not safe for correctness by itself: if the holder pauses past the TTL (garbage collection, network), a second client acquires the lock and both act. For correctness add a **fencing token** checked by the resource, or use a database constraint; the Redlock algorithm across several nodes is debated for exactly this reason.
+How to build it:
+
+1. Take the lock with `SET lock:name token NX PX ttl`. The token is unique to you, `NX` means "only if the key does not exist", and `PX` sets an expiry.
+2. Release it with a Lua script that deletes the key only if the token still matches.
+
+**It is good for efficiency, but not safe for correctness on its own.** The holder can pause for longer than the TTL, for example during garbage collection or a network delay. Then a second client takes the lock, and both act.
+
+For correctness, add a **fencing token** that the protected resource checks, or use a database constraint. The Redlock algorithm, which uses several Redis nodes, is debated for exactly this reason.
 
 ### [deep] What happens to your service when Redis goes down? {#outage-q}
 
-It should degrade, not fail. Use short connect and command timeouts so threads are not held, a circuit breaker so you stop calling a failing Redis, a `CacheErrorHandler` that treats errors as misses, and a limit on how much load can fall through to the database (rate limit or load shed). Decide per use case: stale data, database fallback, or fail fast. Features that rely on Redis for correctness (locks, rate limits, sessions) need an explicit fail-open or fail-closed decision.
+It should get slower or less fresh, but keep working. Prepare for it:
+
+1. Use short connect and command timeouts, so threads are not held.
+2. Use a circuit breaker, so you stop calling a failing Redis.
+3. Add a `CacheErrorHandler` that treats errors as misses.
+4. Limit how much load can fall through to the database, with rate limiting or load shedding.
+
+Decide per use case: serve stale data, fall back to the database, or fail fast. Features that need Redis to be correct, such as locks, rate limits and sessions, need an explicit choice: allow requests (fail open) or reject them (fail closed).
 
 ### [deep] How do you size and monitor a Redis cache? {#monitoring-q}
 
-Estimate the working set (keys times average size plus overhead), set `maxmemory` below the host memory leaving room for fragmentation, copy-on-write during snapshots and client buffers, and pick an eviction policy. Monitor hit ratio, `evicted_keys`, `used_memory` against `maxmemory`, memory fragmentation, latency (`LATENCY`, slow log), connected clients and replication lag. Rising evictions with a falling hit ratio means the cache is too small or caching the wrong data.
+To size it:
+
+1. Estimate the working set: the number of keys times the average size, plus overhead.
+2. Set `maxmemory` below the host's memory. Leave room for fragmentation, for copy-on-write during snapshots, and for client buffers.
+3. Pick an eviction policy.
+
+To monitor it, watch:
+
+- The hit ratio and `evicted_keys`.
+- `used_memory` compared with `maxmemory`, and memory fragmentation.
+- Latency (`LATENCY` and the slow log).
+- Connected clients and replication lag.
+
+If evictions rise while the hit ratio falls, the cache is too small or it caches the wrong data.
 
 ### [deep] How do you handle a hot key or a big key? {#hot-big-key-q}
 
-A **hot key** concentrates traffic on one node: put a short-lived local cache in front, or spread the load by keeping several copies under different suffixes and reading a random one. A **big key** (a huge string, or a list or hash with millions of entries) blocks the single thread when read or deleted: split it into smaller keys, page with `SSCAN`/`HSCAN`, and delete with `UNLINK`, which frees memory in the background.
+- A **hot key** sends most of the traffic to one node. Put a short-lived local cache in front of it. Or spread the load: keep several copies under different suffixes and read a random one.
+- A **big key**, such as a huge string or a list or hash with millions of entries, blocks the single thread when it is read or deleted. Split it into smaller keys, read it in pages with `SSCAN` or `HSCAN`, and delete it with `UNLINK`, which frees the memory in the background.
 
 ### [deep] When would you not use a cache? {#not-cache-q}
 
-When the data must be strongly consistent at the moment of decision (balances, limits, inventory counts for an order), when the hit ratio would be low, when the data changes on nearly every read, or when the database is fast enough and the extra component adds more risk than it removes. A cache also adds failure modes (stampede, stale data, outage handling), so measure first with the query, index and connection pool before reaching for Redis.
+In four cases:
+
+1. The data must be exactly right at the moment of a decision, such as balances, limits or stock counts for an order.
+2. The hit ratio would be low.
+3. The data changes on almost every read.
+4. The database is already fast enough, and one more component adds more risk than it removes.
+
+A cache also brings new problems: stampedes, stale data and outages to handle. So measure first, and check the query, the indexes and the connection pool before you reach for Redis.
 
 ### [coding] Implement cache-aside with a TTL, jitter and a null marker. {#coding-cache-aside}
 
@@ -374,7 +607,13 @@ class AccountCache {
 }
 ```
 
-Explain the key prefix with a version, the jitter, the short-lived null marker against penetration, delete after the write, and that a balance used for a payment decision should be read from the database instead.
+Points to explain:
+
+- The key prefix includes a version (`v1`), so a new data format gets new keys.
+- The jitter spreads out expiry times.
+- The short-lived null marker stops penetration.
+- The key is deleted after the database write.
+- A balance used for a payment decision should be read from the database instead.
 
 ### [coding] Release a Redis lock only if you still own it. {#coding-lock}
 
@@ -396,7 +635,11 @@ void unlock(String name, String token) {
 }
 ```
 
-Explain why a plain `DEL` is wrong (it could delete another client's lock after your TTL expired), why the script makes the check and delete atomic, and that for correctness you still need a fencing token or a database guard.
+Points to explain:
+
+- A plain `DEL` is wrong. If your TTL already expired and another client took the lock, `DEL` would delete **their** lock.
+- The script makes the check and the delete one atomic step.
+- For correctness you still need a fencing token or a database guard.
 
 ### [coding] Write a fixed-window rate limiter with INCR and EXPIRE. {#coding-rate-limit}
 
@@ -411,4 +654,10 @@ boolean allow(String userId, int limitPerMinute) {
 }
 ```
 
-Explain that `INCR` is atomic, the key includes the minute so each window is separate, the TTL cleans up, and the small gap between `INCR` and `EXPIRE` is closed by doing both in a Lua script. A fixed window allows a burst at the boundary, so use a sorted set or token bucket for a sliding limit.
+Points to explain:
+
+- `INCR` is atomic.
+- The key includes the minute, so each window has its own counter.
+- The TTL cleans up old counters.
+- There is a small gap between `INCR` and `EXPIRE`. Doing both in a Lua script closes it.
+- A fixed window allows a burst at the edge between two windows. For a sliding limit, use a sorted set or a token bucket.

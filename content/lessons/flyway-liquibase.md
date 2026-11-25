@@ -6,25 +6,50 @@ summary: Why a database schema needs version control, how a migration tool works
 tags: [Database, Flyway, Liquibase, Migrations, Spring Boot, CI/CD, Schema]
 order: 27
 topic: Databases / Schema migrations
-updated: 2026-11-23
+updated: 2026-11-24
 subnav: true
 ---
 
-Application code is in Git, built by a pipeline and rolled back with a redeploy. The **schema** is the part that holds the data, so it cannot be redeployed: it must be changed **in place**, on every environment, in the same order, exactly once. Interviews ask: *how do you manage schema changes, what do Flyway and Liquibase do, what happens if someone edits an applied script, how do you roll back, how do two pods not migrate at the same time, and how do you change a column without downtime?* This lesson links to [Spring Data JPA](lesson:spring-data-jpa#practical), [deployment strategies](lesson:deployment-strategies#database) and [CI/CD](lesson:cicd-fundamentals).
+Application code lives in Git. A pipeline builds it, and you roll it back by deploying the old version again.
 
-> **One sentence to remember:** *A migration tool keeps the schema in version control as an ordered list of change scripts, records which ones each database has already run (with a checksum), applies only the missing ones in one controlled step, and refuses to continue if history was rewritten.*
+The **schema** (the tables, columns and indexes) is different, because it holds the data. You cannot just redeploy it. You must change it **in place**, on every environment, in the same order, exactly once.
+
+A **migration** is one such change, written as a script. A **migration tool** runs these scripts for you.
+
+Interviewers ask:
+
+- How do you manage schema changes?
+- What do Flyway and Liquibase do?
+- What happens if someone edits a script that has already run?
+- How do you roll back?
+- How do you stop two pods from migrating at the same time?
+- How do you change a column without downtime?
+
+Related lessons: [Spring Data JPA](lesson:spring-data-jpa#practical), [deployment strategies](lesson:deployment-strategies#database) and [CI/CD](lesson:cicd-fundamentals).
+
+> **One sentence to remember:** *A migration tool runs each change script once, in order, and stops if an old script was edited.*
 
 ## Why migrations {#why}
 
-Without a tool, schema changes are an SQL file emailed to the DBA, a developer running `ddl-auto=update` against a shared database, or a wiki page of "run these before you deploy". The result is **schema drift**: test, staging and production slowly stop matching, and nobody can say which scripts ran where.
+Without a tool, schema changes happen in messy ways:
+
+- An SQL file is emailed to the DBA.
+- A developer runs `ddl-auto=update` against a shared database.
+- A wiki page lists the scripts to "run before you deploy".
+
+The result is **schema drift**: test, staging and production slowly stop matching, and nobody can say which scripts ran where.
 
 | Approach | Problem |
 | --- | --- |
-| Hibernate `ddl-auto=update` or `create` | guesses the diff, never drops or renames, cannot do data changes, and can lock or alter production at start-up |
-| Manual scripts run by hand | forgotten, run twice, run in the wrong order, no record |
-| **Migration tool** | the same ordered scripts on every environment, each applied once, recorded, reviewable in a pull request |
+| Hibernate `ddl-auto=update` or `create` | It guesses the difference. It never drops or renames anything, and it cannot change data. It can also lock or change production tables when the application starts. |
+| Scripts run by hand | People forget them, run them twice or run them in the wrong order, and there is no record. |
+| **Migration tool** | The same ordered scripts run on every environment. Each runs once, is recorded, and can be reviewed in a pull request. |
 
-The tool gives you: **repeatability** (a new developer or a fresh test database reaches the current schema with one command), **an audit trail** (who changed what, when, in which release) and **a gate** (the release stops if a migration fails).
+A migration tool gives you three things:
+
+1. **Repeatability.** A new developer, or a fresh test database, reaches the current schema with one command.
+2. **An audit trail.** You can see who changed what, when, and in which release.
+3. **A gate.** The release stops if a migration fails.
 
 ## How a migration tool works {#how}
 
@@ -37,19 +62,21 @@ flowchart LR
   Tool -->|4. record each one| History
 ```
 
+A **checksum** is a short number calculated from the text of a script. If the script changes, even by one character, the checksum changes.
+
 Every tool does the same five things:
 
-1. **Finds** the scripts (a folder on the classpath, such as `db/migration`).
-2. **Locks** the database so only one process migrates at a time.
-3. **Reads the history table** in the same database: which changes have run, with a **checksum** of each.
-4. **Compares** the list: applied scripts must be unchanged (checksum), and only the **pending** ones, in order, are run.
-5. **Records** each success in the history table, so the next run skips it.
+1. **It finds the scripts**, usually in a folder on the classpath such as `db/migration`.
+2. **It takes a lock** on the database, so only one process migrates at a time.
+3. **It reads the history table** in the same database. This table lists the changes that have already run, with the checksum of each.
+4. **It compares.** The scripts that already ran must be unchanged (same checksum). Only the **pending** scripts, the ones that have not run yet, are run, in order.
+5. **It records** each success in the history table, so the next run skips it.
 
 Try it in the lab: [Start-up: only the pending migrations run](lab:migrate-startup).
 
 ## Flyway {#flyway}
 
-Flyway is **file based and simple**: a migration is a SQL file whose **name** carries the version.
+Flyway is **simple and based on files**. A migration is a SQL file, and the file **name** holds the version.
 
 ```text
 src/main/resources/db/migration/
@@ -61,10 +88,10 @@ src/main/resources/db/migration/
 
 | Kind | Name | Behaviour |
 | --- | --- | --- |
-| **Versioned** | `V<version>__<description>.sql` (two underscores) | runs **once**, in version order, then is frozen |
-| **Repeatable** | `R__<description>.sql` | re-runs **whenever its checksum changes**, after all versioned ones; for views, functions, reference data |
-| **Java based** | a class extending `BaseJavaMigration` | for data changes SQL cannot express, such as a backfill with logic |
-| **Undo** | `U<version>__...` | a paid-edition feature; most teams **roll forward** instead |
+| **Versioned** | `V<version>__<description>.sql` (two underscores) | It runs **once**, in version order. After that it must never change. |
+| **Repeatable** | `R__<description>.sql` | It runs again **whenever its checksum changes**, after all the versioned ones. Use it for views, functions and reference data. |
+| **Java based** | A class that extends `BaseJavaMigration` | It is for data changes that SQL cannot express, such as filling a column with logic. |
+| **Undo** | `U<version>__...` | It is only in the paid edition. Most teams **roll forward** instead (fix with a new migration). |
 
 ```sql
 -- V2__add_account_status.sql
@@ -72,7 +99,7 @@ ALTER TABLE account ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
 CREATE INDEX idx_account_status ON account (status);
 ```
 
-In **Spring Boot** you add the dependency and Flyway runs **before** the application context finishes starting (so JPA sees the finished schema):
+In **Spring Boot** you add the dependency, and Flyway runs **before** the application finishes starting. So JPA sees the finished schema.
 
 ```xml
 <dependency><groupId>org.flywaydb</groupId><artifactId>flyway-core</artifactId></dependency>
@@ -90,13 +117,24 @@ spring:
       ddl-auto: validate            # Hibernate checks the schema, it never changes it
 ```
 
-Commands (CLI, Maven, Gradle or API): `migrate`, `info` (what is applied or pending), `validate` (checksums and order), `baseline`, `repair` (fix the history table) and `clean` (drops everything: **disabled by default** and never run in production).
+You can run Flyway from the command line, Maven, Gradle or Java code. The commands:
 
-The history table is `flyway_schema_history`: one row per migration with version, description, checksum, who ran it, when and whether it succeeded.
+- `migrate` runs the pending migrations.
+- `info` shows which migrations are applied and which are pending.
+- `validate` checks the checksums and the order.
+- `baseline` marks an existing database as being at a version.
+- `repair` fixes the history table.
+- `clean` drops everything. It is **disabled by default**, and you never run it in production.
+
+The history table is called `flyway_schema_history`. It has one row per migration, with the version, description, checksum, who ran it, when, and whether it succeeded.
 
 ## Liquibase {#liquibase}
 
-Liquibase is **change-log based**. A **changelog** is a file that lists **changesets**; each changeset is identified by **id + author + file path**, not by a file name, and can be written in **YAML, XML, JSON or formatted SQL**.
+Liquibase is **based on a changelog**.
+
+- A **changelog** is a file that lists **changesets**.
+- A **changeset** is one change. It is identified by its **id + author + file path**, not by a file name.
+- You can write changesets in **YAML, XML, JSON or formatted SQL**.
 
 ```yaml
 # db/changelog/db.changelog-master.yaml
@@ -122,7 +160,7 @@ databaseChangeLog:
         - dropColumn: { tableName: account, columnName: status }
 ```
 
-The same changeset as **formatted SQL**, which many teams prefer because reviewers read plain SQL:
+Here is the same changeset as **formatted SQL**. Many teams prefer it, because reviewers can read plain SQL:
 
 ```sql
 --liquibase formatted sql
@@ -131,15 +169,20 @@ ALTER TABLE account ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
 --rollback ALTER TABLE account DROP COLUMN status;
 ```
 
-What Liquibase adds beyond running scripts once:
+Liquibase does more than run each script once:
 
-- **Database-independent change types** (`createTable`, `addColumn`, `createIndex`): the same changelog generates the right SQL for PostgreSQL, Oracle or SQL Server, and many have an **automatic rollback**.
-- **Preconditions** (`tableExists`, `sqlCheck`) with `onFail: MARK_RAN` or `HALT`, to make a change safe on databases in different states.
-- **Contexts and labels** to run a changeset only in some environments (`dev`, `test`, `prod`) or for some features.
-- **`runOnChange`** (re-run when the changeset changes, like Flyway's repeatable) and **`runAlways`**.
-- **Rollback** by count, tag or date, `diff` between two databases, `generate-changelog` from an existing database, and `status` to list what is pending.
+- **Change types that work on any database**, such as `createTable`, `addColumn` and `createIndex`. The same changelog produces the right SQL for PostgreSQL, Oracle or SQL Server. Many of these types can also be **rolled back automatically**.
+- **Preconditions**, such as `tableExists` or `sqlCheck`. They make a change safe on databases that are in different states. With `onFail: MARK_RAN` the changeset is skipped and marked as run. With `HALT` the run stops.
+- **Contexts and labels**. They run a changeset only in some environments (`dev`, `test`, `prod`) or only for some features.
+- **`runOnChange`** runs a changeset again when it changes, like Flyway's repeatable migrations. **`runAlways`** runs it every time.
+- **Other commands.** You can roll back by count, tag or date. `diff` compares two databases. `generate-changelog` creates a changelog from an existing database. `status` lists what is pending.
 
-Bookkeeping tables: **`DATABASECHANGELOG`** (one row per changeset with its checksum) and **`DATABASECHANGELOGLOCK`** (a single row that serialises concurrent runs). Spring Boot runs it at start-up when `liquibase-core` is present:
+Liquibase keeps two bookkeeping tables:
+
+- **`DATABASECHANGELOG`** has one row per changeset, with its checksum.
+- **`DATABASECHANGELOGLOCK`** has a single row. It makes runs that start at the same time wait for each other.
+
+Spring Boot runs Liquibase at start-up when `liquibase-core` is on the classpath:
 
 ```yaml
 spring:
@@ -154,31 +197,36 @@ Try it in the lab: [A Liquibase changelog with contexts and rollback](lab:migrat
 
 | | Flyway | Liquibase |
 | --- | --- | --- |
-| Unit of change | a **file** with a version in its name | a **changeset** (id, author, path) in a changelog |
-| Languages | SQL (and Java) | SQL, YAML, XML, JSON |
-| Ordering | by version number | by position in the changelog |
-| Portability across databases | write SQL per database | generic change types translate |
-| Rollback | undo scripts are a paid feature; roll forward | rollback blocks, many automatic |
-| Conditional runs | callbacks and placeholders | preconditions, contexts, labels |
-| Learning curve | very low | higher, more concepts |
-| Typical fit | one database product, SQL-minded team | several database products, strict change control and audit |
+| Unit of change | A **file** with a version in its name. | A **changeset** (id, author, path) in a changelog. |
+| Languages | SQL and Java. | SQL, YAML, XML and JSON. |
+| Order | By version number. | By position in the changelog. |
+| Different database products | You write SQL for each database. | Generic change types are translated for each database. |
+| Rollback | Undo scripts are a paid feature, so teams roll forward. | Rollback blocks, and many are automatic. |
+| Running a change only sometimes | Callbacks and placeholders. | Preconditions, contexts and labels. |
+| Learning curve | Very low. | Higher, with more concepts. |
+| Typical fit | One database product and a team that likes SQL. | Several database products, strict change control and audit. |
 
-Either is a good answer. State the **rules both enforce** (ordered, applied once, checksum, lock) and choose by the team: Flyway for simplicity, Liquibase when you need portability or rollback blocks.
+Either one is a good answer in an interview. First name the **rules both enforce**: scripts run in order, each runs once, checksums are checked, and a lock is taken. Then choose by team: Flyway for simplicity, Liquibase when you need several database products or rollback blocks.
 
 ## Applied migrations are immutable {#immutable}
 
-The most asked question: *what happens if you edit a migration that has already run?*
+**Immutable** means they must never change. The most common question is: *what happens if you edit a migration that has already run?*
 
-The history table stored the **checksum** of the script when it ran. On the next start the tool recomputes it, sees a difference and **refuses to start** (`Validate failed: Migration checksum mismatch` in Flyway, `Validation Failed: 1 changesets check sum` in Liquibase). That is deliberate: the database in production no longer matches what the file says, and the tool will not guess.
+When the script ran, the history table stored its **checksum**. On the next start, the tool calculates the checksum again and sees a difference. Then it **refuses to start**:
 
-The fix is **never** to edit the old file or to run `repair` to hide it. Revert the edit and put the change in a **new** migration:
+- Flyway says `Validate failed: Migration checksum mismatch`.
+- Liquibase says `Validation Failed: 1 changesets check sum`.
+
+This is on purpose. The production database no longer matches what the file says, and the tool will not guess.
+
+The fix is **never** to edit the old file, and never to run `repair` to hide the problem. Undo your edit, and put the change in a **new** migration:
 
 ```text
 V2__add_account_status.sql     (unchanged, already applied)
 V3__make_status_not_null.sql   (the new change)
 ```
 
-`repair` (Flyway) or `clear-checksums` (Liquibase) exists for the rare case of a harmless change, such as fixing whitespace or a comment, and the change is reviewed first.
+`repair` (Flyway) and `clear-checksums` (Liquibase) exist for rare, harmless edits, such as fixing whitespace or a comment. Even then, the change is reviewed first.
 
 Try it in the lab: [Someone edits an applied migration](lab:migrate-checksum).
 
@@ -186,50 +234,63 @@ Try it in the lab: [Someone edits an applied migration](lab:migrate-checksum).
 
 | Where | Good | Risk |
 | --- | --- | --- |
-| **At application start-up** (Spring Boot default) | nothing extra to run, fine for one instance and local work | several instances start together and race; a slow migration delays the readiness probe; the application needs **DDL rights** in production |
-| **A separate pipeline step or Kubernetes Job**, before the rollout | one runner, migration failure stops the release before any traffic moves, the application account can have **limited rights** | one more step to maintain |
+| **When the application starts** (the Spring Boot default) | There is nothing extra to run. It is fine for one instance and for local work. | Several instances start together and race. A slow migration delays the readiness probe. The application needs **DDL rights** (permission to change tables) in production. |
+| **A separate pipeline step or Kubernetes Job**, before the rollout | One process runs the migrations. A failure stops the release before any traffic moves. The application account can have **limited rights**. | There is one more step to maintain. |
 
-Both tools take a **lock** (Flyway a database-specific lock, Liquibase the `DATABASECHANGELOGLOCK` row), so two pods starting together do not apply the same change twice: one migrates and the other **waits**. A crashed run can leave the Liquibase lock held (`release-locks` frees it).
+Both tools take a **lock**, so two pods that start together do not apply the same change twice. One pod migrates and the other **waits**.
 
-For a bank the usual answer is the **separate step**: migrations run from the pipeline with a dedicated account that owns the schema, the application connects with a **least-privilege** account (select, insert, update, delete), and `spring.flyway.enabled=false` or `spring.liquibase.enabled=false` in the service.
+- Flyway uses a lock that depends on the database.
+- Liquibase uses the `DATABASECHANGELOGLOCK` row. If a run crashes, it can leave this lock held. `release-locks` frees it.
+
+For a bank, the usual answer is the **separate step**:
+
+- The pipeline runs the migrations with a dedicated account that owns the schema.
+- The application connects with a **least-privilege** account. It can only select, insert, update and delete.
+- The service sets `spring.flyway.enabled=false` or `spring.liquibase.enabled=false`.
 
 Try it in the lab: [Two pods start together](lab:migrate-concurrent-start).
 
 ## Safe changes on a live system {#safe}
 
-A migration runs while the **old version is still serving traffic** (rolling, blue/green or canary), so each one must work for both versions: the [expand and contract](lesson:deployment-strategies#expand-contract-q) pattern.
+A migration runs while the **old version of the application is still serving traffic** (during a rolling, blue/green or canary release). So each migration must work with both the old and the new version. This is the [expand and contract](lesson:deployment-strategies#expand-contract-q) pattern: first add (expand), and remove the old parts later (contract).
 
-- **Add, do not change.** A new column is `NULL` or has a default; rename and drop happen in a **later** release, when no old version can return.
-- **Mind the lock.** On a large table, `ALTER TABLE` can block reads and writes. Use the database's online options (`CREATE INDEX CONCURRENTLY` in PostgreSQL, `ALGORITHM=INPLACE` in MySQL) and add `NOT NULL` or a foreign key in steps (add as not valid, validate afterwards).
-- **Backfill in batches**, outside the DDL migration, so a long update does not hold locks or a transaction open.
-- **Set a lock timeout** (`SET lock_timeout = '5s'`) so a migration that cannot get its lock fails fast instead of queueing behind a long query and blocking everything behind it.
-- **DDL and transactions differ.** PostgreSQL and SQL Server run DDL in a transaction, so a failed script rolls back whole. **MySQL and Oracle commit DDL implicitly**, so a script that fails halfway leaves the schema half changed: keep one logical change per file.
+- **Add, do not change.** A new column allows `NULL` or has a default. Renames and drops happen in a **later** release, when no old version can come back.
+- **Watch the locks.** On a large table, `ALTER TABLE` can block reads and writes. Use the database's online options, such as `CREATE INDEX CONCURRENTLY` in PostgreSQL or `ALGORITHM=INPLACE` in MySQL. Add a `NOT NULL` rule or a foreign key in steps: add it as "not valid" first, then validate it.
+- **Backfill in batches.** To **backfill** means to fill a new column for the existing rows. Do it outside the DDL migration, so a long update does not hold locks or keep a transaction open.
+- **Set a lock timeout**, such as `SET lock_timeout = '5s'`. Then a migration that cannot get its lock fails fast. Otherwise it waits behind a long query, and everything else queues behind it.
+- **DDL and transactions work differently per database.** PostgreSQL and SQL Server run DDL inside a transaction, so a failed script is rolled back completely. **MySQL and Oracle commit DDL automatically**, so a script that fails halfway leaves the schema half changed. So keep one logical change per file.
 
 ## Adopting an existing database {#baseline}
 
-A database that already has tables has no history table, so a tool that sees scripts `V1` to `V5` would try to create tables that exist. **Baseline** tells the tool *this database is already at version N*:
+A database that already has tables has no history table. A tool that sees scripts `V1` to `V5` would try to create tables that already exist.
 
-- **Flyway:** `baseline` (or `baseline-on-migrate=true` with `baseline-version=5`) records the starting version; only later scripts run.
-- **Liquibase:** `generate-changelog` captures the current schema as a first changelog, then `changelog-sync` marks it as already applied.
+**Baseline** tells the tool: *this database is already at version N*.
 
-Baseline **production first and exactly once**, and check that a fresh database built from the scripts matches production (`liquibase diff`, or compare the schema dumps).
+- **Flyway:** run `baseline`, or set `baseline-on-migrate=true` with `baseline-version=5`. This records the starting version, and only later scripts run.
+- **Liquibase:** run `generate-changelog` to capture the current schema as a first changelog. Then run `changelog-sync` to mark it as already applied.
+
+Baseline **production first, and exactly once**. Then check that a fresh database built from the scripts matches production, with `liquibase diff` or by comparing schema dumps.
 
 ## Rollback or roll forward {#rollback}
 
 | Strategy | How | Reality |
 | --- | --- | --- |
-| **Roll forward** | write a **new** migration that fixes or undoes the change | the default in most teams: simple, tested and recorded like any change |
-| **Rollback script** | Liquibase `rollback` blocks, Flyway undo (paid) | works for structure only; **data cannot be rolled back**: a dropped column or a deleted row is gone |
-| **Restore a backup** | point-in-time restore | the last resort, and it loses everything written since |
+| **Roll forward** | Write a **new** migration that fixes or undoes the change. | This is the default in most teams. It is simple, and it is tested and recorded like any other change. |
+| **Rollback script** | Liquibase `rollback` blocks, or Flyway undo (paid). | It only works for structure. **Data cannot be rolled back**: a dropped column or a deleted row is gone. |
+| **Restore a backup** | A point-in-time restore. | It is the last resort, and it loses everything written since then. |
 
-So the real protection is **not rollback**, it is making the change **backward compatible** (expand first), testing it on a copy of production data and keeping the destructive step for a later release.
+So the real protection is **not** rollback. It is three habits:
+
+1. Make each change **backward compatible** (expand first).
+2. Test it on a copy of production data.
+3. Keep the destructive step for a later release.
 
 ## Testing migrations {#testing}
 
-- Run the **real** database engine with **Testcontainers** ([why not H2](lesson:spring-testing#testcontainers)), apply all migrations from empty, then start the Spring context with `ddl-auto=validate`: if an entity no longer matches the schema, the test fails.
-- Run the migrations in the pipeline against a **copy of production-sized data** before production, to see how long a lock or backfill takes.
-- Add **a test that two branches did not create the same version**: in Flyway two files named `V5__...` from two merged branches fail the build with a duplicate-version error.
-- Use **repeatable** migrations or a seeding step for test data, never a versioned migration that exists only in test.
+- **Use the real database engine** with **Testcontainers** ([why not H2](lesson:spring-testing#testcontainers)). Apply all migrations to an empty database, then start the Spring context with `ddl-auto=validate`. If an entity no longer matches the schema, the test fails.
+- **Run the migrations in the pipeline against a copy with production-sized data** before production. This shows how long a lock or a backfill takes.
+- **Check that two branches did not create the same version.** In Flyway, two files named `V5__...` from two merged branches fail the build with a duplicate-version error.
+- **Load test data with repeatable migrations or a seeding step.** Never use a versioned migration that exists only in test.
 
 ```java
 @SpringBootTest
@@ -246,110 +307,202 @@ class MigrationsTest {
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `Migration checksum mismatch` | an applied script was edited | revert, add a new migration |
-| `Detected resolved migration not applied` / out of order | a lower version merged after a higher one already ran | renumber, or allow `outOfOrder` deliberately |
-| `Found non-empty schema without schema history table` | an existing database with no baseline | baseline it |
-| A failed migration, then every start fails | a half-applied script (MySQL, Oracle) leaves a failed entry | fix the schema by hand, then `repair` or remove the failed row |
-| Liquibase waits forever for the lock | a previous run was killed while holding it | `release-locks` after checking nobody is migrating |
-| Application fails with `Schema-validation: missing column` | the entity changed but no migration was added | add the migration; never fix it with `ddl-auto=update` |
+| `Migration checksum mismatch` | A script that already ran was edited. | Undo the edit, and add a new migration. |
+| `Detected resolved migration not applied`, or "out of order" | A lower version was merged after a higher one had already run. | Renumber it, or allow `outOfOrder` on purpose. |
+| `Found non-empty schema without schema history table` | An existing database has no baseline. | Baseline it. |
+| A migration failed, and now every start fails | A half-applied script (on MySQL or Oracle) left a failed entry. | Fix the schema by hand, then run `repair` or remove the failed row. |
+| Liquibase waits forever for the lock | An earlier run was killed while it held the lock. | Run `release-locks`, after checking that nobody is migrating. |
+| The application fails with `Schema-validation: missing column` | The entity changed, but nobody added a migration. | Add the migration. Never fix it with `ddl-auto=update`. |
 
 ## With Hibernate {#hibernate}
 
-The tool owns the **schema**, Hibernate only **uses** it. Set `ddl-auto=validate` (or `none`) in every shared environment so the application fails fast on a mismatch. Hibernate's schema generation (`jakarta.persistence.schema-generation`) is still useful to **draft** a migration: generate the SQL, review and edit it, then commit it as a versioned file.
+The migration tool owns the **schema**. Hibernate only **uses** it.
+
+Set `ddl-auto=validate` (or `none`) in every shared environment. Then the application fails fast if the schema and the entities do not match.
+
+Hibernate's schema generation (`jakarta.persistence.schema-generation`) is still useful to **draft** a migration. Generate the SQL, review and edit it, and then commit it as a versioned file.
 
 ## A routine for a bank team {#routine}
 
-1. **Every schema change is a migration** in the same pull request as the code that needs it.
-2. **Never edit an applied migration**; fix forward with a new one.
-3. **One logical change per file**, named clearly, reviewed like code (a DBA can be a required reviewer).
-4. **Backward compatible** changes only: expand now, contract in a later release.
-5. **Migrations run as a pipeline step** with a schema-owner account; the application account has no DDL rights.
-6. **Tested** from an empty database with Testcontainers and on production-sized data before release.
-7. `ddl-auto=validate`, `clean` disabled, and a **backup** point before risky releases.
+1. **Every schema change is a migration**, in the same pull request as the code that needs it.
+2. **Never edit a migration that already ran.** Fix forward with a new one.
+3. **Put one logical change in each file.** Name it clearly, and review it like code. A DBA can be a required reviewer.
+4. **Make only backward-compatible changes.** Expand now, and contract in a later release.
+5. **Run migrations as a pipeline step** with a schema-owner account. The application account has no DDL rights.
+6. **Test** from an empty database with Testcontainers, and on production-sized data before the release.
+7. **Keep the safety settings.** Use `ddl-auto=validate`, keep `clean` disabled, and take a **backup** before risky releases.
 
 ## Cheat sheet {#cheatsheet}
 
 | Need | Flyway | Liquibase |
 | --- | --- | --- |
 | Run pending changes | `migrate` | `update` |
-| See state | `info` | `status`, `history` |
+| See the state | `info` | `status`, `history` |
 | Check checksums | `validate` | `validate` |
 | Adopt an existing database | `baseline` | `generate-changelog` + `changelog-sync` |
 | Fix the history | `repair` | `clear-checksums`, `release-locks` |
-| Roll back | roll forward (undo is paid) | `rollback`, `rollback-count`, `rollback-to-date` |
+| Roll back | Roll forward (undo is paid) | `rollback`, `rollback-count`, `rollback-to-date` |
 | History table | `flyway_schema_history` | `DATABASECHANGELOG` (+ `DATABASECHANGELOGLOCK`) |
-| Spring Boot setting | `spring.flyway.*` | `spring.liquibase.*` |
+| Spring Boot settings | `spring.flyway.*` | `spring.liquibase.*` |
 | File location | `db/migration` | `db/changelog/db.changelog-master.yaml` |
 
 ## Interview questions {#questions}
 
 ### [basic] Why use a migration tool instead of `ddl-auto=update`? {#why-q}
 
-`ddl-auto=update` guesses the difference at start-up: it never drops or renames, cannot change data, differs per environment and needs DDL rights in production. A migration tool keeps explicit, reviewed, ordered scripts in Git and applies each exactly once per database, with a record of what ran, so every environment reaches the same schema.
+**Because `ddl-auto=update` guesses, and a migration tool does exactly what you wrote.**
+
+Problems with `ddl-auto=update`:
+
+1. It works out the difference when the application starts.
+2. It never drops or renames anything, and it cannot change data.
+3. Its result can differ per environment.
+4. It needs DDL rights in production.
+
+A migration tool keeps explicit, reviewed, ordered scripts in Git. It applies each one exactly once per database and records what ran. So every environment reaches the same schema.
 
 ### [basic] What are Flyway and Liquibase? {#what-q}
 
-Two migration tools for version-controlling a database schema. Flyway uses versioned SQL files (`V3__add_status.sql`); Liquibase uses a changelog of changesets written in SQL, YAML, XML or JSON. Both record applied changes in a history table in the database and apply only the pending ones.
+Two migration tools that put a database schema under version control.
+
+- **Flyway** uses versioned SQL files, such as `V3__add_status.sql`.
+- **Liquibase** uses a changelog of changesets, written in SQL, YAML, XML or JSON.
+
+Both record the applied changes in a history table in the database, and apply only the pending ones.
 
 ### [basic] What is a schema history table? {#history-q}
 
-A table the tool creates in your database (`flyway_schema_history`, `DATABASECHANGELOG`) with one row per applied migration: its version or id, description, checksum, time and result. It is how the tool knows what has already run, so each environment applies exactly what it is missing.
+A table that the tool creates in your database: `flyway_schema_history` or `DATABASECHANGELOG`.
+
+It has one row per applied migration, with its version or id, description, checksum, time and result. This is how the tool knows what has already run, so each environment applies exactly what it is missing.
 
 ### [basic] How are Flyway migration files named? {#naming-q}
 
-`V<version>__<description>.sql` for versioned ones (`V2__add_status.sql`, two underscores), `R__<description>.sql` for repeatable ones, and `U<version>__...` for undo (paid edition). Versions are compared as numbers, so `V10` runs after `V2`.
+- Versioned: `V<version>__<description>.sql`, with two underscores, for example `V2__add_status.sql`.
+- Repeatable: `R__<description>.sql`.
+- Undo: `U<version>__...` (paid edition only).
+
+Versions are compared as numbers, so `V10` runs after `V2`.
 
 ### [intermediate] What happens if someone edits a migration that has already been applied? {#checksum-q}
 
-The stored checksum no longer matches, so on the next start the tool fails validation and the application does not start. This is intended: the database no longer matches the script. Revert the edit and add a **new** migration for the change. `repair` or `clear-checksums` is only for harmless edits such as a comment, and is reviewed first.
+**The application does not start.** The stored checksum no longer matches the file, so the tool fails validation on the next start.
+
+This is on purpose: the database no longer matches the script.
+
+The fix: undo the edit, and add a **new** migration for the change. `repair` or `clear-checksums` is only for harmless edits, such as a comment, and is reviewed first.
 
 ### [intermediate] What is the difference between versioned and repeatable migrations? {#repeatable-q}
 
-A versioned migration runs **once**, in order, and is then immutable. A repeatable one (`R__...` in Flyway, `runOnChange` in Liquibase) is **re-applied whenever its content changes**, after the versioned ones. Use repeatable for objects that are replaced as a whole, such as views, functions, stored procedures and reference data.
+- A **versioned** migration runs **once**, in order. After that it must never change.
+- A **repeatable** migration (`R__...` in Flyway, `runOnChange` in Liquibase) runs **again whenever its content changes**, after the versioned ones.
+
+Use repeatable migrations for objects that are replaced as a whole, such as views, functions, stored procedures and reference data.
 
 ### [intermediate] How is a changeset identified in Liquibase? {#changeset-q}
 
-By **id, author and file path** together, not by file name. Renaming or moving a changelog file therefore changes the identity and would run the changes again, unless `logicalFilePath` is set. Each changeset also has a checksum, and changing an applied one fails validation like in Flyway.
+**By its id, author and file path together**, not by the file name.
+
+So renaming or moving a changelog file changes the identity, and the changes would run again. Setting `logicalFilePath` prevents this.
+
+Each changeset also has a checksum. As in Flyway, changing a changeset that already ran fails validation.
 
 ### [intermediate] Two pods start at the same time. How do they not both migrate? {#lock-q}
 
-The tool takes a lock first: Flyway uses a database-specific lock, Liquibase the `DATABASECHANGELOGLOCK` row. The first instance migrates, the second waits and then sees nothing pending. Better still, run migrations as a **separate step** (a pipeline stage or Kubernetes Job) before the rollout, so start-up never depends on it.
+**The tool takes a lock first.** Flyway uses a lock that depends on the database. Liquibase uses the `DATABASECHANGELOGLOCK` row.
+
+The first pod migrates. The second waits, and then sees that nothing is pending.
+
+Better still, run the migrations as a **separate step** before the rollout, such as a pipeline stage or a Kubernetes Job. Then start-up never depends on it.
 
 ### [intermediate] Where should migrations run: at application start or in the pipeline? {#where-q}
 
-At start-up is the Spring Boot default and fine for local work and a single instance. In production, prefer a **separate step before the deploy**: a failure stops the release before traffic moves, a slow migration does not fail health checks, and the application account needs no DDL rights. It also gives one place and one log for the change.
+**In production, prefer a separate step before the deploy.** Running at start-up is the Spring Boot default, and it is fine for local work and a single instance.
+
+A separate step is better for four reasons:
+
+1. A failure stops the release before any traffic moves.
+2. A slow migration does not fail the health checks.
+3. The application account needs no DDL rights.
+4. There is one place and one log for the change.
 
 ### [intermediate] How do you adopt Flyway or Liquibase on a database that already exists? {#baseline-q}
 
-Baseline it: tell the tool the existing schema is already at version N. In Flyway, `baseline` (or `baseline-on-migrate` with `baseline-version`); in Liquibase, `generate-changelog` to capture the schema and `changelog-sync` to mark it applied. Only newer migrations then run. Verify that a fresh database built from the scripts matches production.
+**Baseline it.** This tells the tool that the existing schema is already at version N.
+
+- In Flyway, run `baseline`, or use `baseline-on-migrate` with `baseline-version`.
+- In Liquibase, run `generate-changelog` to capture the schema, then `changelog-sync` to mark it as applied.
+
+After that, only newer migrations run. Check that a fresh database built from the scripts matches production.
 
 ### [intermediate] How do you roll back a migration? {#rollback-q}
 
-Mostly you **roll forward**: write a new migration that fixes or reverses the change. Liquibase has `rollback` blocks and Flyway has undo scripts in a paid edition, but they only restore structure; data that was dropped or overwritten is gone. The real safeguard is making changes backward compatible, testing on production-like data, and keeping a backup before risky releases.
+**Usually you roll forward**: you write a new migration that fixes or reverses the change.
+
+Liquibase has `rollback` blocks, and Flyway has undo scripts in a paid edition. But they only restore the structure. Data that was dropped or overwritten is gone.
+
+The real protection is three habits: make changes backward compatible, test on production-like data, and take a backup before risky releases.
 
 ### [intermediate] Why must a migration work with the old version of the application? {#compat-q}
 
-During a rolling, blue/green or canary release the **old code keeps running against the new schema** for a while, and after a rollback it runs again. A migration that drops or renames a column in the same release breaks the old version. Use expand and contract: add first, switch the code, and remove in a later release.
+**Because the old code keeps running against the new schema for a while.** This happens during a rolling, blue/green or canary release, and again after a rollback.
+
+A migration that drops or renames a column in the same release breaks the old version.
+
+Use expand and contract: add first, switch the code, and remove in a later release.
 
 ### [intermediate] What is `ddl-auto` and what should it be in production? {#ddl-q}
 
-A Hibernate setting for schema generation: `create`, `create-drop`, `update`, `validate` and `none`. In production use `validate` (the application checks that the schema matches the entities and fails fast otherwise) or `none`, and let Flyway or Liquibase own all changes.
+`ddl-auto` is a Hibernate setting for creating the schema. Its values are `create`, `create-drop`, `update`, `validate` and `none`.
+
+In production, use `validate` or `none`. With `validate`, the application checks that the schema matches the entities and fails fast if not. Let Flyway or Liquibase own all changes.
 
 ### [deep] A migration fails halfway in production. What happens and what do you do? {#failed-q}
 
-It depends on the database. In **PostgreSQL** DDL is transactional, so the script rolls back and nothing is recorded. In **MySQL and Oracle** DDL commits implicitly, so earlier statements stay applied and the tool records a failed migration, and later starts fail. Stop the release, repair the schema to a known state by hand (or finish the change), then `repair` the history. Prevent it with one logical change per file and a rehearsal on a production-sized copy.
+**It depends on the database.**
+
+- In **PostgreSQL**, DDL runs inside a transaction. The script rolls back, and nothing is recorded.
+- In **MySQL and Oracle**, DDL commits automatically. The earlier statements stay applied, the tool records a failed migration, and later starts fail.
+
+What to do:
+
+1. Stop the release.
+2. Bring the schema to a known state by hand, or finish the change.
+3. Run `repair` on the history.
+
+To prevent it, put one logical change in each file, and rehearse on a copy with production-sized data.
 
 ### [deep] How do you add a `NOT NULL` column to a table with 200 million rows without an outage? {#bigtable-q}
 
-Expand in steps. Add the column as nullable (or with a default, which is instant on modern PostgreSQL), deploy code that writes it, **backfill in batches** from a separate job, then add the constraint in a way that does not hold a long lock (`ADD CONSTRAINT ... NOT VALID` then `VALIDATE CONSTRAINT`). Set a short `lock_timeout` on each statement so it fails rather than queues, and run it off-peak.
+**Expand in steps:**
+
+1. Add the column as nullable, or with a default. On modern PostgreSQL, adding a default is instant.
+2. Deploy code that writes the column.
+3. **Backfill in batches** from a separate job.
+4. Add the constraint without holding a long lock: `ADD CONSTRAINT ... NOT VALID`, then `VALIDATE CONSTRAINT`.
+
+Set a short `lock_timeout` on each statement, so it fails instead of waiting in a queue. Run it when traffic is low.
 
 ### [deep] Two developers each add `V5__...` on different branches. What happens, and how do you avoid it? {#conflict-q}
 
-After the merge there are two files with the same version and Flyway fails with a duplicate-version error (or, worse, one runs on a database where the other already ran). Prevent it with a CI check that fails the pull request, by rebasing and renumbering before the merge, or by timestamp-based versions such as `V20261123_1030__...`. Liquibase avoids it because ordering is the changelog list, but two changesets can still conflict in what they change.
+**After the merge, Flyway fails with a duplicate-version error.** There are two files with the same version. Worse, one of them may run on a database where the other already ran.
+
+Ways to avoid it:
+
+- A CI check that fails the pull request.
+- Rebasing and renumbering before the merge.
+- Versions based on time, such as `V20261123_1030__...`.
+
+Liquibase avoids the numbering problem, because the order is the list in the changelog. But two changesets can still conflict in what they change.
 
 ### [deep] How would you design schema changes for a bank's regulated release process? {#bank-q}
 
-Every change is a migration reviewed in a pull request (with a DBA for risky ones) and linked to a ticket. The pipeline applies it first in test and staging, with an approval gate before production, using a schema-owner account the application never has. Changes are backward compatible, destructive steps wait for a later release, the history table is the audit trail, and a backup or point-in-time restore point exists before each release.
+- Every change is a migration, reviewed in a pull request and linked to a ticket. Risky ones also need a DBA review.
+- The pipeline applies it first in test and staging. An approval gate comes before production.
+- The pipeline uses a schema-owner account. The application never has that account.
+- Changes are backward compatible, and destructive steps wait for a later release.
+- The history table is the audit trail.
+- A backup or point-in-time restore point exists before each release.
 
 ### [coding] Write the Flyway migrations to add `status` to `account` safely. {#coding-flyway}
 
@@ -363,7 +516,13 @@ ALTER TABLE account ADD CONSTRAINT account_status_nn CHECK (status IS NOT NULL) 
 ALTER TABLE account VALIDATE CONSTRAINT account_status_nn;
 ```
 
-Explain: `V7` is additive, so the old version still inserts rows without `status`; `CREATE INDEX CONCURRENTLY` must run outside a transaction, so that file needs `executeInTransaction=false` in a `V7__expand_account_status.sql.conf` file next to it; the backfill is a separate batch job; `V8` adds the constraint as `NOT VALID` (fast) and validates afterwards (no long write lock); and neither file is ever edited once applied.
+Points to explain:
+
+- `V7` only adds things, so the old version can still insert rows without `status`.
+- `CREATE INDEX CONCURRENTLY` must run outside a transaction. So that file needs `executeInTransaction=false` in a `V7__expand_account_status.sql.conf` file next to it.
+- The backfill is a separate batch job.
+- `V8` adds the constraint as `NOT VALID`, which is fast, and validates it afterwards, which avoids a long write lock.
+- Neither file is ever edited once it has run.
 
 ### [coding] Write the Liquibase changeset with a rollback and a context. {#coding-liquibase}
 
@@ -379,4 +538,9 @@ INSERT INTO account (id, status) VALUES (1, 'ACTIVE'), (2, 'CLOSED');
 --rollback DELETE FROM account WHERE id IN (1, 2);
 ```
 
-Explain: the id and author make the changeset unique; the first one runs only in `prod` and `staging`, the second only when the context is `test`, so test data never reaches production; each has an explicit `rollback` because raw SQL cannot be reversed automatically; and `spring.liquibase.contexts` selects the environment.
+Points to explain:
+
+- The id and the author make each changeset unique.
+- The first changeset runs only in `prod` and `staging`. The second runs only when the context is `test`, so test data never reaches production.
+- Each changeset has an explicit `rollback`, because Liquibase cannot reverse raw SQL automatically.
+- `spring.liquibase.contexts` chooses the environment.

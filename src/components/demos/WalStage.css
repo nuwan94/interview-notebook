@@ -1,0 +1,33 @@
+/* WalStage: a transaction's steps, memory, the write-ahead log and the data file. Classes start with wal-. */
+.wal-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.wal-line { font: 700 0.9rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff8d6; border: 1px solid #e8d77a; border-radius: 0.35rem; padding: 0.15rem 0.5rem; overflow-wrap: anywhere; }
+.wal-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+.wal-panel { fill: rgba(255, 255, 255, 0.88); stroke: #c3cfdd; stroke-width: 1.5; transition: fill 0.3s; }
+.wal-panel.is-crash { fill: var(--color-bad-soft); stroke: var(--color-bad); }
+.wal-panel-title { font: 700 15px var(--font-hand, cursive); fill: var(--color-pen); }
+.wal-sub { font: 11.5px system-ui, sans-serif; fill: #556070; }
+.wal-region { fill: #f7f9fc; stroke: #8d9bb0; stroke-width: 1.25; stroke-dasharray: 5 4; }
+.wal-region-title { font: 700 12px system-ui, sans-serif; fill: #3d4a5c; }
+.wal-step { fill: #fff; stroke: #b9c7d9; stroke-width: 1.5; transition: fill 0.3s, stroke 0.3s; }
+.wal-step.is-run { fill: var(--color-pen-soft); stroke: var(--color-pen); stroke-width: 2.5; }
+.wal-step.is-done { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.wal-step.is-skip { fill: #fff; stroke: var(--color-bad); stroke-dasharray: 5 4; }
+.wal-step.is-undone { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.wal-step-text { font: 700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.wal-step-text.is-dim { fill: #7b8697; font-weight: 400; }
+.wal-strike { stroke: var(--color-warn); stroke-width: 2; }
+.wal-card { stroke-width: 2; transition: fill 0.3s, stroke 0.3s; }
+.wal-card.is-none { fill: #fff; stroke: #8d9bb0; }
+.wal-card.is-ok { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.wal-card.is-warn { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.wal-card.is-bad { fill: var(--color-bad-soft); stroke: var(--color-bad); }
+.wal-card-text { font: 700 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.wal-rec { stroke-width: 1.5; }
+.wal-rec.is-none { fill: #fff; stroke: #b9c7d9; }
+.wal-rec.is-new { fill: var(--color-pen-soft); stroke: var(--color-pen); }
+.wal-rec.is-ok { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.wal-rec.is-warn { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.wal-rec-text { font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.wal-crash { font: 700 22px system-ui, sans-serif; fill: var(--color-bad); letter-spacing: 0.08em; }
+.wal-crash-sub { font: 12px system-ui, sans-serif; fill: var(--color-bad); }
+.wal-label { font: 700 12px system-ui, sans-serif; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }

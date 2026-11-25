@@ -6,23 +6,41 @@ summary: What ACID guarantees and how databases implement it (write-ahead log, l
 tags: [Database, Transactions, ACID, BASE, Isolation, Spring]
 order: 25
 topic: Databases / Consistency and caching
-updated: 2026-11-13
+updated: 2026-11-24
 subnav: true
 ---
 
-ACID versus BASE is a standard interview pair: *what does each letter of ACID mean, what are the isolation levels and anomalies, how do you prevent a lost update, what is the difference between ACID and BASE, and how do they relate to CAP?* The first half is the guarantee single-node databases give you, the second half is what distributed and NoSQL systems relax. It connects to [distributed systems fundamentals](lesson:distributed-systems) (CAP, consistency models), the [Saga pattern](lesson:saga) (what you use when ACID cannot span services) and [Java concurrency](lesson:java-concurrency) (the same ideas as locks and atomics). Examples use bank accounts. Play the four scenes: atomicity and durability, lost update, write skew, and BASE.
+ACID and BASE are a standard interview pair. Expect these questions:
+
+- What does each letter of ACID mean?
+- What are the isolation levels, and which problems does each one allow?
+- How do you prevent a lost update?
+- What is the difference between ACID and BASE, and how do they relate to CAP?
+
+The first half of the lesson covers ACID: the guarantees a database on one server gives you. The second half covers BASE: what distributed and NoSQL systems give up in exchange for staying available.
+
+Related lessons: [distributed systems fundamentals](lesson:distributed-systems) (CAP and consistency models), the [Saga pattern](lesson:saga) (what to use when ACID cannot span several services) and [Java concurrency](lesson:java-concurrency) (the same ideas as locks and atomic variables). The examples use bank accounts.
+
+The animation has four scenes: atomicity and durability, the lost update, write skew, and BASE.
 
 ```demo
 name: acid-walk
 ```
 
-> **One sentence to remember:** *ACID makes a transaction all-or-nothing, rule-preserving, isolated from concurrent ones and permanent; BASE gives up immediate consistency and isolation to stay available and scalable, and converges later.*
+> **One sentence to remember:** *ACID makes a transaction all or nothing, safe and permanent, while BASE stays available and lets copies agree later.*
 
 ## Transactions {#transactions}
 
 ### What a transaction is {#what}
 
-A **transaction** is a group of operations treated as **one logical unit of work**: they all take effect or none do. Classic example: a transfer debits one account and credits another. In SQL you mark it with `BEGIN` (or an implicit start), then `COMMIT` to make the changes permanent or `ROLLBACK` to undo them. `SAVEPOINT` lets you roll back part of a transaction.
+A **transaction** is a group of operations treated as **one unit of work**: either they all take effect, or none of them do. The classic example is a transfer, which takes money from one account (a debit) and adds it to another (a credit).
+
+In SQL:
+
+- `BEGIN` starts a transaction. Some databases start one automatically.
+- `COMMIT` makes the changes permanent.
+- `ROLLBACK` undoes them.
+- `SAVEPOINT` marks a point you can roll back to, so you can undo part of a transaction.
 
 ```mermaid
 stateDiagram-v2
@@ -40,45 +58,76 @@ stateDiagram-v2
 
 ### Atomicity {#atomicity}
 
-**All or nothing.** If any step fails (an exception, a constraint violation, a crash), every change made by the transaction is undone, so no half-finished state is ever visible or stored. Implemented with an **undo log** or by never overwriting committed data in place (MVCC), plus crash recovery from the **write-ahead log**. Atomicity concerns *failure*, not concurrency.
+**All or nothing.** If any step fails, every change the transaction made is undone. A step can fail because of an exception, a broken constraint or a crash. So a half-finished state is never visible and never stored.
+
+Databases implement it in two ways:
+
+- An **undo log** keeps the old values, so changes can be reversed.
+- **MVCC** never overwrites committed data in place (explained below).
+
+On top of that, crash recovery uses the **write-ahead log**. Atomicity is about *failure*, not about transactions running at the same time.
 
 ### Consistency {#consistency}
 
-**A transaction moves the database from one valid state to another**, where "valid" means all **integrity rules** hold: primary and foreign keys, unique and check constraints, triggers, and application invariants (balance is not negative, the two sides of a transfer sum to the same total). The database enforces the declared constraints; the **application** is responsible for the rest, because the database cannot know your business rules. Do not confuse this "C" with the **C in CAP**, which means *every replica returns the latest write* (linearizability), a property about replicas, not about invariants.
+**A transaction moves the database from one valid state to another valid state.** "Valid" means all **integrity rules** hold:
+
+- primary keys and foreign keys;
+- unique and check constraints;
+- triggers;
+- business rules (invariants), such as "a balance is never negative" or "the two sides of a transfer add up to the same total".
+
+The database enforces the constraints you declare. The **application** is responsible for the rest, because the database cannot know your business rules.
+
+Do not confuse this "C" with the **C in CAP**. In CAP, consistency means *every copy returns the latest write* (linearizability). That is about copies of data, not about rules.
 
 ### Isolation {#isolation}
 
-**Concurrent transactions do not interfere**: the result is as if they had run one after another (serializably). Perfect isolation is expensive, so databases offer **isolation levels** that trade correctness guarantees for concurrency (below). Isolation concerns *concurrency*.
+**Transactions running at the same time do not interfere.** The result is as if they had run one after another, which is called serializable.
+
+Perfect isolation is expensive. So databases offer **isolation levels** that give up some guarantees in exchange for more concurrency (see below). Isolation is about *concurrency*.
 
 ### Durability {#durability}
 
-**Once committed, a change survives crashes and power loss.** Implemented by the **write-ahead log (WAL)**: every change is written to a sequential log and **flushed to disk (`fsync`) before the commit is acknowledged**; data pages can be written later, and on restart recovery replays the log (redo committed work, undo uncommitted work). Replication to another node extends durability to a lost machine (synchronous replication waits for it; asynchronous can lose the last writes). Settings such as PostgreSQL's `synchronous_commit` or InnoDB's `innodb_flush_log_at_trx_commit` trade durability for speed.
+**Once a transaction is committed, its changes survive crashes and power loss.**
+
+Databases implement it with the **write-ahead log (WAL)**:
+
+1. Every change is first written to a log, one entry after another.
+2. The log is **flushed to disk (`fsync`) before the database reports that the commit succeeded**.
+3. The data pages themselves can be written to disk later.
+4. On restart, recovery reads the log. It redoes committed work and undoes work that was not committed.
+
+Replication to another server extends durability to the loss of a whole machine. Synchronous replication waits for the other server. Asynchronous replication does not wait, so it can lose the last few writes.
+
+Some settings trade durability for speed, such as PostgreSQL's `synchronous_commit` or InnoDB's `innodb_flush_log_at_trx_commit`.
 
 ### How databases implement it {#implementation}
 
-| Mechanism | Provides |
+| Mechanism | What it provides |
 | --- | --- |
-| **Write-ahead log (WAL), redo and undo** | atomicity and durability, crash recovery |
-| **Locks (shared and exclusive, row, range, table)** | isolation by blocking conflicting access; **two-phase locking** holds all locks until commit |
-| **MVCC** (multi-version concurrency control) | isolation without readers blocking writers: each transaction reads a **snapshot** of committed versions (PostgreSQL, Oracle, MySQL InnoDB) |
-| **Constraints and triggers** | consistency |
-| **Deadlock detection and timeouts** | resolves transactions waiting on each other by aborting one |
+| **Write-ahead log (WAL), with redo and undo** | It provides atomicity, durability and crash recovery. |
+| **Locks (shared and exclusive; on a row, a range or a table)** | They provide isolation by blocking conflicting access. **Two-phase locking** holds every lock until the commit. |
+| **MVCC** (multi-version concurrency control) | It provides isolation without readers blocking writers. Each transaction reads a **snapshot** of committed versions (PostgreSQL, Oracle, MySQL InnoDB). |
+| **Constraints and triggers** | They provide consistency. |
+| **Deadlock detection and timeouts** | They resolve transactions that wait on each other, by stopping one of them. |
 
-With **MVCC**, readers never block writers and writers never block readers; conflicts between writers are detected by row version or lock. **Deadlocks** (T1 holds A and wants B, T2 holds B and wants A) are detected and one transaction is aborted: take locks in a consistent order and retry the victim.
+With **MVCC**, the database keeps several versions of each row. Readers never block writers, and writers never block readers. Conflicts between two writers are still caught, by a row version or a lock.
+
+A **deadlock** happens when T1 holds A and wants B, while T2 holds B and wants A. The database detects it and aborts one transaction. To avoid deadlocks, take locks in the same order every time, and retry the aborted transaction (the "victim").
 
 ## Isolation levels {#levels}
 
 ### Anomalies {#anomalies}
 
-Problems that appear when concurrent transactions interleave:
+These problems can appear when transactions run at the same time and their steps interleave:
 
 | Anomaly | What happens |
 | --- | --- |
-| **Dirty read** | read data another transaction has written but not yet committed (it may roll back) |
-| **Non-repeatable read** | read the same row twice and get different values because another transaction committed a change in between |
-| **Phantom read** | run the same query twice and get different **sets of rows** because another transaction inserted or deleted matching rows |
-| **Lost update** | two transactions read a value, both write based on it, and one overwrites the other |
-| **Write skew** | two transactions read overlapping data, each updates a **different** row based on it, and together break an invariant (the demo's joint account) |
+| **Dirty read** | A transaction reads data that another transaction wrote but has not committed yet. That other transaction may still roll back. |
+| **Non-repeatable read** | A transaction reads the same row twice and gets different values, because another transaction committed a change in between. |
+| **Phantom read** | A transaction runs the same query twice and gets a different **set of rows**, because another transaction inserted or deleted matching rows. |
+| **Lost update** | Two transactions read a value and both write a new value based on it, so one overwrites the other. |
+| **Write skew** | Two transactions read the same data, each updates a **different** row based on it, and together they break a rule. The joint account in the demo is an example. |
 
 ### The four standard levels {#four-levels}
 
@@ -89,14 +138,23 @@ Problems that appear when concurrent transactions interleave:
 | **Repeatable read** | prevented | prevented | possible (standard) |
 | **Serializable** | prevented | prevented | prevented |
 
-Reading the table as "what is allowed" is the usual interview format. Real databases differ from the standard in important ways:
+In interviews, this table is usually read as "what each level allows". Real databases differ from the standard in important ways:
 
-- **PostgreSQL:** default **Read committed**; there is no real read uncommitted (treated as read committed); **Repeatable read is snapshot isolation** (no phantoms, but **write skew** is possible); **Serializable** uses SSI, which detects dangerous patterns and aborts a transaction with a serialization failure to retry.
-- **MySQL InnoDB:** default **Repeatable read** with a consistent snapshot for plain reads and next-key (gap) locks for locking reads, which prevents most phantoms; plain read-then-write can still lose updates.
-- **Oracle:** read committed (default) and a "serializable" that is really snapshot isolation.
-- **SQL Server:** read committed (locking) by default, snapshot isolation optional.
+- **PostgreSQL:**
+  - The default is **read committed**.
+  - There is no real read uncommitted. It is treated as read committed.
+  - **Repeatable read is snapshot isolation.** It prevents phantoms, but **write skew** is possible.
+  - **Serializable** uses SSI (serializable snapshot isolation). It detects dangerous patterns and aborts a transaction with a serialization failure, which you retry.
+- **MySQL InnoDB:**
+  - The default is **repeatable read**.
+  - Plain reads use a consistent snapshot. Locking reads use next-key (gap) locks, which prevent most phantoms.
+  - A plain read followed by a write can still lose updates.
+- **Oracle:** read committed is the default. Its "serializable" is really snapshot isolation.
+- **SQL Server:** read committed with locks is the default, and snapshot isolation is optional.
 
-Higher levels cost more (more blocking, or more aborts and retries). A common default is **read committed** with explicit locking or optimistic versioning where it matters; use **serializable** for invariants spanning several rows if the retry handling is in place. Always check your database's documentation: the names are the same, the behaviour is not.
+Higher levels cost more: more blocking, or more aborts and retries. A common choice is **read committed**, plus explicit locks or optimistic versioning where it matters. Use **serializable** for rules that span several rows, if retry handling is in place.
+
+Always check your database's documentation. The names are the same, but the behaviour is not.
 
 ### Preventing lost updates {#lost-update}
 
@@ -112,12 +170,12 @@ sequenceDiagram
   Note over D: final 50, T1's update is lost
 ```
 
-Options, from simplest:
+There are four options, from simplest to heaviest:
 
-1. **Atomic update in SQL:** `UPDATE account SET balance = balance - 30 WHERE id = 1 AND balance >= 30` does the read and write as one statement; check the affected row count.
-2. **Pessimistic locking:** `SELECT ... FOR UPDATE` locks the row until commit, so others wait. Safe under high contention, but blocks and can deadlock.
-3. **Optimistic locking:** a `version` column; update only `WHERE version = ?` and increment it; zero rows updated means someone else changed it, so retry. Best when conflicts are rare, no locks are held while the user thinks.
-4. **Higher isolation level** (repeatable read in PostgreSQL aborts the second writer; serializable detects it generally).
+1. **An atomic update in SQL.** `UPDATE account SET balance = balance - 30 WHERE id = 1 AND balance >= 30` reads and writes in one statement. Check how many rows it changed.
+2. **Pessimistic locking.** `SELECT ... FOR UPDATE` locks the row until the commit, so other transactions wait. It is safe when many transactions compete for the same row, but it blocks and can cause deadlocks.
+3. **Optimistic locking.** Add a `version` column. Update only `WHERE version = ?`, and increase the version. If zero rows change, someone else changed the row first, so retry. It is best when conflicts are rare, because no lock is held while a user is thinking.
+4. **A higher isolation level.** In PostgreSQL, repeatable read aborts the second writer. Serializable detects the conflict in general.
 
 ## In Java and Spring {#spring}
 
@@ -137,14 +195,18 @@ class TransferService {
 }
 ```
 
-Points interviewers probe:
+Points interviewers ask about:
 
-- It works through a **proxy**: calls from **another bean** go through it; a call from a method of the **same class** (self-invocation) or a `private` method **bypasses** it, so there is no transaction.
-- **Rollback rule:** by default only **unchecked exceptions** (`RuntimeException` and `Error`) roll back; a checked exception **commits** unless you set `rollbackFor = Exception.class`. Swallowing the exception in a `try/catch` inside the method also commits.
-- **Propagation:** `REQUIRED` (default: join or start), `REQUIRES_NEW` (suspend the current one and start an independent one, which commits separately), `NESTED` (savepoint), `SUPPORTS`, `MANDATORY`, `NEVER`, `NOT_SUPPORTED`.
-- **Isolation and readOnly:** `@Transactional(isolation = Isolation.SERIALIZABLE, readOnly = true, timeout = 5)`. `readOnly` is a hint (lets the driver or Hibernate skip dirty checking, may route to a replica).
-- **Scope:** keep transactions **short**; do not call remote services or wait for user input inside one (locks and connections are held). The transaction is bound to the **thread**, so work handed to another thread is outside it.
-- JPA keeps changes in the persistence context and **flushes** them at commit (or before queries); managed entities are **dirty-checked**.
+- **It works through a proxy.** A proxy is a wrapper object that Spring puts around your bean. Calls from **another bean** go through it. A call from a method in the **same class** (self-invocation), or to a `private` method, **skips** the proxy, so there is no transaction.
+- **Rollback rule.** By default, only **unchecked exceptions** (`RuntimeException` and `Error`) cause a rollback. A checked exception **commits**, unless you set `rollbackFor = Exception.class`. Catching the exception with `try/catch` inside the method also commits.
+- **Propagation** decides what happens when a transaction already exists:
+  - `REQUIRED` (the default) joins the existing transaction, or starts one.
+  - `REQUIRES_NEW` pauses the current transaction and starts an independent one, which commits on its own.
+  - `NESTED` uses a savepoint inside the current transaction.
+  - `SUPPORTS`, `MANDATORY`, `NEVER` and `NOT_SUPPORTED` cover the remaining cases.
+- **Isolation and readOnly** are set like this: `@Transactional(isolation = Isolation.SERIALIZABLE, readOnly = true, timeout = 5)`. `readOnly` is only a hint. It lets the driver or Hibernate skip dirty checking, and it may send the query to a replica.
+- **Keep transactions short.** Do not call remote services or wait for user input inside one, because locks and connections stay held. The transaction belongs to the **thread**, so work handed to another thread runs outside it.
+- **JPA keeps changes in memory first.** It holds them in the persistence context and **flushes** them to the database at commit, or before a query. It **dirty-checks** managed entities, which means it compares them with their original state to find changes.
 
 ### Optimistic and pessimistic locking in JPA {#jpa-locks}
 
@@ -191,44 +253,54 @@ try (Connection con = dataSource.getConnection()) {
 
 ### What BASE means {#base-meaning}
 
-**BASE** is the contrasting approach of many distributed and NoSQL systems (described by Eric Brewer and colleagues; "BASE: An ACID alternative", Pritchett, 2008):
+**BASE** is the opposite approach, used by many distributed and NoSQL systems. It was described by Eric Brewer and colleagues, and in "BASE: An ACID alternative" (Pritchett, 2008).
 
-- **Basically Available:** the system answers requests even when parts fail or are partitioned, perhaps with degraded or stale data, rather than refusing.
-- **Soft state:** the state of the system may change over time even without new input, as replicas catch up; data has no single instantly consistent value.
-- **Eventually consistent:** if updates stop, all replicas converge to the same state. Meanwhile reads may see stale or different values.
+- **Basically Available:** the system keeps answering requests even when parts of it fail or are cut off from each other. The answer may be degraded or stale, but the system does not refuse.
+- **Soft state:** the state can change over time even with no new input, because copies are still catching up. There is no single value that is correct everywhere at every moment.
+- **Eventually consistent:** if updates stop, all copies end up with the same state. Until then, reads may see stale or different values.
 
-It is the practical face of choosing **availability over consistency** in [CAP](lesson:distributed-systems#cap-theorem) (the AP side), and of low latency over strong consistency ([PACELC](lesson:distributed-systems#pacelc)). The name is a chemistry pun: acid versus base.
+BASE is what choosing **availability over consistency** in [CAP](lesson:distributed-systems#cap-theorem) looks like in practice (the AP side). It also means choosing low latency over strong consistency in [PACELC](lesson:distributed-systems#pacelc). The name is a chemistry joke: acid versus base.
 
 ### ACID versus BASE {#compare}
 
 | | ACID | BASE |
 | --- | --- | --- |
-| Consistency | strong, immediate | eventual |
-| Availability under partition | may refuse (CP) | stays up (AP) |
-| Isolation | transactions appear serial | none: concurrent updates, merged later |
-| Scale | vertical, or careful sharding | horizontal, partitioned and replicated |
-| Failure handling | rollback | compensation, retries, reconciliation |
-| Typical stores | PostgreSQL, MySQL, Oracle, SQL Server | Cassandra, DynamoDB (default), Riak, many caches |
-| Fits | money, inventory counts, identity, anything with hard invariants | feeds, carts, counters, analytics, search indexes, caches |
-| Developer burden | the database enforces rules | the application handles staleness and conflicts |
+| Consistency | It is strong and immediate. | It is eventual. |
+| Availability when the network splits | The system may refuse requests (CP). | The system stays up (AP). |
+| Isolation | Transactions appear to run one after another. | There is none. Concurrent updates are merged later. |
+| Scale | A bigger machine, or careful sharding. | Many machines, with data partitioned and replicated. |
+| Failure handling | Roll back. | Compensate, retry and reconcile. |
+| Typical stores | PostgreSQL, MySQL, Oracle, SQL Server. | Cassandra, DynamoDB (by default), Riak and many caches. |
+| Fits | Money, inventory counts, identity, and anything with hard rules. | Feeds, carts, counters, analytics, search indexes and caches. |
+| Work for the developer | The database enforces the rules. | The application handles stale data and conflicts. |
 
-They are two ends of a spectrum, not two camps. **Many NoSQL stores now offer ACID transactions** (MongoDB multi-document transactions, DynamoDB transactions, FoundationDB) and **distributed SQL databases** (Google Spanner, CockroachDB, YugabyteDB) provide strong consistency across nodes using consensus, at the price of latency. And relational systems with asynchronous read replicas are already BASE for reads.
+They are two ends of a range, not two separate camps:
+
+- **Many NoSQL stores now offer ACID transactions**, such as MongoDB multi-document transactions, DynamoDB transactions and FoundationDB.
+- **Distributed SQL databases**, such as Google Spanner, CockroachDB and YugabyteDB, give strong consistency across machines using consensus, at the price of latency.
+- A relational database with asynchronous read replicas is already BASE for reads.
 
 ### Living with BASE {#living}
 
-Eventual consistency is safe only if the design accounts for it:
+Eventual consistency is safe only if the design plans for it:
 
-- **Idempotent operations** and message ids so retries and duplicates are harmless ([idempotent receiver](lesson:messaging#idempotent)).
-- **Versioning and conflict resolution:** version numbers, vector clocks, CRDTs, or domain merges ([conflicts](lesson:distributed-systems#conflicts)).
-- **Session guarantees:** read-your-writes and monotonic reads by routing a user to the same replica or tracking a version.
-- **Sagas and compensation** instead of one big transaction ([Saga pattern](lesson:saga)); the **outbox** for reliable events ([outbox](lesson:microservice-patterns#outbox)).
-- **Reconciliation:** periodic jobs that compare and repair data (for example ledger totals).
-- **Show uncertainty in the UI:** "pending", "processing".
-- **Keep the core ACID:** use a strongly consistent store for the money-moving core and BASE for read models and secondary data.
+- **Idempotent operations:** repeating an operation has no extra effect. Use message ids so retries and duplicates are harmless ([idempotent receiver](lesson:messaging#idempotent)).
+- **Versioning and conflict resolution:** use version numbers, vector clocks, CRDTs (data types that merge automatically) or merges based on business rules ([conflicts](lesson:distributed-systems#conflicts)).
+- **Session guarantees:** give users read-your-writes and monotonic reads, by sending a user to the same replica or by tracking a version.
+- **Sagas and compensation** instead of one big transaction ([Saga pattern](lesson:saga)), and the **outbox** for reliable events ([outbox](lesson:microservice-patterns#outbox)).
+- **Reconciliation:** jobs that run regularly to compare and repair data, for example ledger totals.
+- **Show uncertainty in the UI**, with states such as "pending" and "processing".
+- **Keep the core ACID:** use a strongly consistent store for the part that moves money, and BASE for read models and secondary data.
 
 ### ACID across services {#distributed}
 
-A single database gives ACID; a business transaction across several services does not. Options: **two-phase commit** (atomic but blocking and coupled, see [2PC](lesson:distributed-systems#two-pc)), **sagas** (a sequence of local ACID transactions with compensation, eventual consistency between services), or a **distributed SQL** database. In microservices the usual answer is local ACID transactions plus sagas and the outbox.
+One database gives you ACID. A business transaction that spans several services does not get it. There are three options:
+
+1. **Two-phase commit** is atomic, but it blocks and ties the services together ([2PC](lesson:distributed-systems#two-pc)).
+2. **Sagas** are a sequence of local ACID transactions with compensating steps. The services are eventually consistent with each other.
+3. **A distributed SQL database** gives ACID across machines.
+
+In microservices, the usual answer is local ACID transactions plus sagas and the outbox.
 
 Try it in the lab: [Isolation anomalies: dirty, non-repeatable, phantom](lab:acid-isolation-anomalies).
 
@@ -236,96 +308,220 @@ Try it in the lab: [Isolation anomalies: dirty, non-repeatable, phantom](lab:aci
 
 | Topic | Key point |
 | --- | --- |
-| Atomicity | all or nothing; undo log, WAL, rollback |
-| Consistency | valid state to valid state; constraints plus application invariants; not the CAP "C" |
-| Isolation | concurrent transactions do not interfere; levels trade safety for concurrency |
-| Durability | committed data survives crashes; WAL flushed before commit acknowledgement |
-| Anomalies | dirty read, non-repeatable read, phantom, lost update, write skew |
-| Levels | read uncommitted, read committed, repeatable read, serializable |
-| Defaults | PostgreSQL read committed; MySQL InnoDB repeatable read |
-| Lost update fixes | atomic UPDATE, `FOR UPDATE`, `@Version`, higher isolation |
-| `@Transactional` traps | proxy only, self-invocation and private methods skipped, only unchecked exceptions roll back |
-| BASE | basically available, soft state, eventually consistent |
-| ACID vs BASE | strong consistency and isolation vs availability and scale |
-| Across services | sagas, outbox, idempotency, not 2PC |
+| Atomicity | All or nothing, using the undo log, the WAL and rollback. |
+| Consistency | From one valid state to another, using constraints and business rules. It is not the CAP "C". |
+| Isolation | Concurrent transactions do not interfere. The levels trade safety for concurrency. |
+| Durability | Committed data survives crashes, because the WAL is flushed before the commit is confirmed. |
+| Anomalies | Dirty read, non-repeatable read, phantom, lost update and write skew. |
+| Levels | Read uncommitted, read committed, repeatable read and serializable. |
+| Defaults | PostgreSQL uses read committed. MySQL InnoDB uses repeatable read. |
+| Lost update fixes | An atomic `UPDATE`, `FOR UPDATE`, `@Version` or a higher isolation level. |
+| `@Transactional` traps | It works only through the proxy, self-invocation and private methods skip it, and only unchecked exceptions roll back. |
+| BASE | Basically available, soft state, eventually consistent. |
+| ACID vs BASE | Strong consistency and isolation, versus availability and scale. |
+| Across services | Use sagas, the outbox and idempotency, not 2PC. |
 
 ## Interview questions {#questions}
 
 ### [basic] What does ACID stand for? {#acid-q}
 
-Atomicity (a transaction is all or nothing), Consistency (it takes the database from one valid state to another, preserving integrity rules), Isolation (concurrent transactions do not interfere, as if run serially) and Durability (once committed, changes survive crashes). Together they make transactions reliable for correctness-critical data such as money.
+Four guarantees that make transactions reliable:
+
+1. **Atomicity:** a transaction is all or nothing.
+2. **Consistency:** it takes the database from one valid state to another, keeping the integrity rules.
+3. **Isolation:** transactions running at the same time do not interfere, as if they ran one after another.
+4. **Durability:** once committed, the changes survive crashes.
+
+Together they make transactions safe for data where correctness is critical, such as money.
 
 ### [basic] What is a transaction? {#transaction-q}
 
-A group of operations executed as one unit: they all commit or all roll back. It is delimited by BEGIN and COMMIT or ROLLBACK, and it gives the ACID guarantees, so a failure in the middle never leaves partial results visible or stored.
+A group of operations that run as one unit: they all commit, or they all roll back.
+
+It starts with `BEGIN` and ends with `COMMIT` or `ROLLBACK`. It gives the ACID guarantees, so a failure in the middle never leaves partial results visible or stored.
+
+Example: a transfer debits one account and credits another. Either both happen, or neither does.
 
 ### [basic] How does a database guarantee atomicity and durability? {#wal-q}
 
-With a write-ahead log: changes (with old and new values) are written to a sequential log and flushed to disk before the commit is acknowledged. On a crash, recovery uses the log to undo transactions without a commit record (atomicity) and redo committed ones whose data pages were not yet written (durability). Rollback uses the undo information.
+With a **write-ahead log (WAL)**.
+
+1. Every change, with its old and new values, is written to a log, one entry after another.
+2. The log is flushed to disk before the commit is confirmed.
+3. After a crash, recovery uses the log. It undoes transactions that have no commit record, which gives atomicity. It redoes committed transactions whose data pages were not written yet, which gives durability.
+
+A rollback uses the same undo information.
 
 ### [basic] What is the difference between the C in ACID and the C in CAP? {#c-vs-c}
 
-In ACID, consistency means a transaction preserves the database's integrity constraints and invariants (valid state to valid state), a property the application and database enforce together. In CAP, consistency means linearizability: every read returns the most recent write, a property of replicated data under partitions. They share a name, not a meaning.
+They share a name, not a meaning.
+
+- **In ACID**, consistency means a transaction keeps the database's integrity rules: from one valid state to another. The application and the database enforce it together.
+- **In CAP**, consistency means linearizability: every read returns the most recent write. It is a property of copied data when the network splits.
 
 ### [basic] What are dirty, non-repeatable and phantom reads? {#anomalies-q}
 
-A dirty read sees uncommitted changes of another transaction that might roll back. A non-repeatable read reads the same row twice and gets different values because another transaction committed a change in between. A phantom read re-runs a query and gets a different set of rows because another transaction inserted or deleted matching rows.
+They are three problems that weaker isolation levels allow:
+
+- A **dirty read** sees changes from another transaction that has not committed yet, and might roll back.
+- A **non-repeatable read** reads the same row twice and gets different values, because another transaction committed a change in between.
+- A **phantom read** runs the same query twice and gets a different set of rows, because another transaction inserted or deleted matching rows.
 
 ### [basic] What is BASE? {#base-q}
 
-An alternative to ACID for distributed systems: Basically Available (the system keeps answering during failures), Soft state (state may change as replicas converge), Eventually consistent (if writes stop, all replicas agree eventually). It trades immediate consistency and isolation for availability, partition tolerance and horizontal scalability.
+An alternative to ACID for distributed systems:
+
+- **Basically Available:** the system keeps answering during failures.
+- **Soft state:** the state may change while copies catch up.
+- **Eventually consistent:** if writes stop, all copies end up agreeing.
+
+It gives up immediate consistency and isolation, and in return gets availability, tolerance of network splits and the ability to scale across machines.
 
 ### [basic] When would you use ACID and when BASE? {#when-q}
 
-ACID for data with hard invariants and correctness requirements: payments, account balances, orders being committed, inventory reservations, identity. BASE for data that tolerates temporary staleness and needs scale and availability: feeds, recommendations, caches, counters, analytics, search indexes. Many systems combine them: a strongly consistent core, with eventually consistent read models and integrations.
+Use ACID where correctness is a hard rule, and BASE where slightly stale data is acceptable.
+
+- **ACID** suits payments, account balances, orders being committed, stock reservations and identity.
+- **BASE** suits feeds, recommendations, caches, counters, analytics and search indexes, which need scale and availability.
+
+Many systems use both: a strongly consistent core, with eventually consistent read models and integrations around it.
 
 ### [intermediate] Explain the isolation levels and what each prevents. {#levels-q}
 
-Read uncommitted allows dirty reads; read committed prevents dirty reads; repeatable read also prevents non-repeatable reads (phantoms are allowed by the standard, though some databases prevent them); serializable prevents all anomalies, behaving as if transactions ran one at a time. Higher levels give stronger guarantees at the cost of more blocking or more aborts and retries. Real databases differ (PostgreSQL's repeatable read is snapshot isolation; MySQL's uses gap locks), so check the documentation.
+Each level prevents one more problem than the level below it:
+
+1. **Read uncommitted** allows dirty reads.
+2. **Read committed** prevents dirty reads.
+3. **Repeatable read** also prevents non-repeatable reads. The standard allows phantoms, though some databases prevent them.
+4. **Serializable** prevents all anomalies. It behaves as if transactions ran one at a time.
+
+Higher levels give stronger guarantees, but cost more blocking or more aborts and retries. Real databases differ: PostgreSQL's repeatable read is snapshot isolation, and MySQL's uses gap locks. Check the documentation.
 
 ### [intermediate] What is MVCC and why is it used? {#mvcc-q}
 
-Multi-version concurrency control keeps several versions of each row; a transaction reads from a consistent snapshot of the versions committed when it (or its statement) began. Readers do not block writers and writers do not block readers, which improves concurrency; write-write conflicts are still detected through locks or version checks. Old versions are cleaned up later (vacuum in PostgreSQL, purge in InnoDB).
+**MVCC (multi-version concurrency control)** keeps several versions of each row. A transaction reads from a consistent snapshot: the versions that were committed when the transaction, or the statement, began.
+
+It is used because readers do not block writers and writers do not block readers, so more work runs at the same time. Conflicts between two writers are still detected through locks or version checks.
+
+Old versions are cleaned up later, by vacuum in PostgreSQL and by purge in InnoDB.
 
 ### [intermediate] What is a lost update and how do you prevent it? {#lost-update-q}
 
-Two transactions read the same value, each computes a new one and writes it back, and the second write overwrites the first. Prevent with an atomic update statement (`balance = balance - x`), pessimistic locking (`SELECT FOR UPDATE`), optimistic locking with a version column and retry, or a higher isolation level that detects the conflict and aborts one transaction.
+Two transactions read the same value, each calculates a new value, and each writes it back. The second write overwrites the first, so one change is lost.
+
+Example: the balance is 100. T1 withdraws 30 and writes 70. T2 withdraws 50 and writes 50. The balance should be 20.
+
+Prevent it with one of these:
+
+1. An atomic update statement, such as `balance = balance - x`.
+2. Pessimistic locking with `SELECT FOR UPDATE`.
+3. Optimistic locking with a version column, and a retry on conflict.
+4. A higher isolation level that detects the conflict and aborts one transaction.
 
 ### [intermediate] What is write skew and why does snapshot isolation allow it? {#write-skew-q}
 
-Two transactions read overlapping data, make a decision based on it and write to different rows, so there is no write-write conflict, yet together they violate an invariant (two withdrawals from two sub-accounts that must stay non-negative in total). Snapshot isolation only detects conflicts on the same row, so both commit. Prevent with serializable isolation (which detects the read-write dependency), explicit locks on the rows read, or a constraint or a single row representing the invariant.
+Two transactions read the same data, decide based on it, and write to **different** rows. Neither overwrites the other, yet together they break a rule.
+
+Example: two sub-accounts must stay at or above zero in total. Two withdrawals, one from each sub-account, each see enough money and both succeed.
+
+Snapshot isolation allows it because it only detects conflicts on the **same** row. Here the rows are different, so both transactions commit.
+
+Prevent it with one of these:
+
+- serializable isolation, which detects the read-write dependency;
+- explicit locks on the rows that were read;
+- a constraint, or a single row that holds the total.
 
 ### [intermediate] Optimistic versus pessimistic locking: when to use which? {#locking-q}
 
-Optimistic locking assumes conflicts are rare: read without locks, and at update time check a version (`WHERE version = ?`), retrying on failure. It holds no locks, scales well and suits web requests and low contention. Pessimistic locking locks rows on read (`FOR UPDATE`) so others wait; it avoids retries and suits high contention or short critical sections, at the cost of blocking and deadlock risk.
+Optimistic when conflicts are rare, and pessimistic when they are common.
+
+- **Optimistic locking** reads without locks. At update time it checks a version (`WHERE version = ?`) and retries if the check fails. It holds no locks and scales well, so it suits web requests and low contention.
+- **Pessimistic locking** locks rows when it reads them (`FOR UPDATE`), so others wait. It avoids retries and suits high contention or short critical sections. The cost is blocking and a risk of deadlocks.
 
 ### [intermediate] What are the common @Transactional pitfalls in Spring? {#transactional-pitfalls}
 
-Self-invocation and private methods bypass the proxy so no transaction applies; only unchecked exceptions trigger a rollback by default (use `rollbackFor` for checked ones), and catching the exception inside swallows the rollback; `REQUIRES_NEW` commits independently of the outer transaction; `readOnly` is only a hint; long transactions holding connections and locks, or remote calls inside a transaction; lazy-loading outside the transaction; and thread-bound scope (async work is outside it).
+The common ones are:
+
+1. **Self-invocation and private methods** skip the proxy, so no transaction applies.
+2. **Only unchecked exceptions roll back by default.** Use `rollbackFor` for checked ones.
+3. **Catching the exception inside the method** hides it, so the transaction commits.
+4. **`REQUIRES_NEW` commits on its own**, separately from the outer transaction.
+5. **`readOnly` is only a hint.**
+6. **Long transactions** hold connections and locks, especially with remote calls inside them.
+7. **Lazy loading outside the transaction** fails.
+8. **The transaction belongs to the thread**, so async work runs outside it.
 
 ### [intermediate] What are the transaction propagation types? {#propagation-q}
 
-`REQUIRED` joins an existing transaction or creates one (default); `REQUIRES_NEW` suspends the current one and starts a new independent one; `NESTED` uses a savepoint inside the current one; `SUPPORTS` uses one if present; `MANDATORY` requires an existing one; `NOT_SUPPORTED` runs without one; `NEVER` fails if one exists. `REQUIRES_NEW` is typical for audit logging that must persist even if the main transaction rolls back.
+Propagation decides what a method does when a transaction may already exist:
+
+- `REQUIRED` (the default) joins the existing transaction, or creates one.
+- `REQUIRES_NEW` pauses the current one and starts a new, independent one.
+- `NESTED` uses a savepoint inside the current one.
+- `SUPPORTS` uses a transaction if there is one.
+- `MANDATORY` requires an existing one.
+- `NOT_SUPPORTED` runs without one.
+- `NEVER` fails if one exists.
+
+A typical use of `REQUIRES_NEW` is audit logging that must be saved even if the main transaction rolls back.
 
 ### [intermediate] How does a deadlock happen and how do you handle it? {#deadlock-q}
 
-Two transactions each hold a lock the other needs and wait forever (T1 locks account A then wants B, T2 locks B then wants A). Databases detect the cycle and abort one transaction (the victim) with an error. Reduce deadlocks by always acquiring locks in the same order, keeping transactions short, using appropriate isolation and indexes (to lock fewer rows), and retrying the aborted transaction.
+Two transactions each hold a lock that the other needs, so both wait forever. Example: T1 locks account A and then wants B, while T2 locks B and then wants A.
+
+The database detects the cycle and aborts one transaction (the victim) with an error.
+
+Reduce deadlocks by:
+
+1. always taking locks in the same order;
+2. keeping transactions short;
+3. using suitable isolation levels and indexes, so fewer rows are locked;
+4. retrying the aborted transaction.
 
 ### [intermediate] How are ACID and CAP related? {#acid-cap-q}
 
-They describe different things. ACID is about transactions on a database (reliability and isolation); CAP is about replicated data under network partitions (consistency versus availability). A single-node ACID database ignores partitions; a distributed one that wants strong consistency becomes CP (refuses on the minority side), while BASE systems choose AP. "ACID means CP, BASE means AP" is a useful approximation, not a rule.
+They describe different things.
+
+- **ACID** is about transactions in a database: reliability and isolation.
+- **CAP** is about copied data when the network splits: consistency versus availability.
+
+An ACID database on one server does not deal with network splits. A distributed database that wants strong consistency becomes CP: the smaller side of a split refuses requests. BASE systems choose AP.
+
+"ACID means CP and BASE means AP" is a useful approximation, not a rule.
 
 ### [deep] Can a NoSQL database be ACID, and can a relational database be BASE? {#nosql-acid-q}
 
-Yes to both. MongoDB, DynamoDB and FoundationDB provide multi-document or multi-item ACID transactions, and distributed SQL systems (Spanner, CockroachDB) give strong consistency across nodes via consensus. Conversely a relational database with asynchronous read replicas, or with caches, serves eventually consistent reads. The label follows the guarantees you configure and use, not the data model.
+**Yes, both.**
+
+- MongoDB, DynamoDB and FoundationDB provide ACID transactions across several documents or items.
+- Distributed SQL systems, such as Spanner and CockroachDB, give strong consistency across machines using consensus.
+- A relational database with asynchronous read replicas, or with caches, serves eventually consistent reads.
+
+The label follows the guarantees you configure and use, not the data model.
 
 ### [deep] How do you achieve consistency across microservices without distributed transactions? {#cross-service-q}
 
-Use a local ACID transaction in each service and coordinate with sagas: a sequence of local transactions with compensating actions, plus the outbox pattern for reliable events and idempotent consumers. Accept eventual consistency between services, design the UI and APIs for pending states, and run reconciliation. Two-phase commit is avoided because it blocks, couples services and is poorly supported by brokers.
+Use a local ACID transaction in each service, and coordinate the services with sagas.
+
+1. A **saga** is a sequence of local transactions, each with a compensating action that undoes it.
+2. The **outbox pattern** publishes events reliably.
+3. **Idempotent consumers** handle duplicate messages safely.
+4. **Reconciliation** jobs find and repair differences.
+
+Accept eventual consistency between services, and design the UI and APIs for pending states.
+
+Two-phase commit is avoided because it blocks, ties the services together and is poorly supported by message brokers.
 
 ### [deep] What is the cost of Serializable isolation and how do databases implement it? {#serializable-q}
 
-Implementations: two-phase locking with predicate or range locks (readers and writers block each other, high contention and deadlocks), serial execution (one thread per partition, as in some in-memory databases), or serializable snapshot isolation (PostgreSQL's SSI: run on snapshots and track read-write dependencies, aborting a transaction when a dangerous cycle is detected). The costs are blocking or abort-and-retry, so applications must handle serialization failures by retrying.
+The cost is blocking, or aborts and retries. There are three ways to implement it:
+
+1. **Two-phase locking with predicate or range locks.** Readers and writers block each other, which causes high contention and deadlocks.
+2. **Serial execution.** One thread runs everything for a partition, as in some in-memory databases.
+3. **Serializable snapshot isolation (SSI),** as in PostgreSQL. Transactions run on snapshots, and the database tracks read-write dependencies. When it finds a dangerous cycle, it aborts a transaction.
+
+So applications must handle serialization failures by retrying.
 
 ### [coding] What is wrong with this transactional code? {#coding-bug}
 
@@ -345,7 +541,15 @@ class PaymentService {
 }
 ```
 
-`process` calls `record` on `this`, so the proxy is bypassed and `@Transactional` has no effect. Even if it applied, `IOException` is checked and the default is to commit, so `save` would stay committed although the audit failed. Fix: call it from another bean (or move the annotation to the entry method), and use `@Transactional(rollbackFor = Exception.class)` or throw an unchecked exception.
+There are two bugs:
+
+1. `process` calls `record` on `this`, so the call skips the proxy and `@Transactional` has no effect.
+2. Even if the transaction applied, `IOException` is a checked exception, and the default is to commit. So `save` would stay committed even though the audit failed.
+
+The fix:
+
+- Call `record` from another bean, or move the annotation to the entry method.
+- Use `@Transactional(rollbackFor = Exception.class)`, or throw an unchecked exception.
 
 ### [coding] Prevent overdrafts with an atomic update. {#coding-atomic}
 
@@ -362,7 +566,11 @@ public void withdraw(long id, BigDecimal amount) {
 }
 ```
 
-Explain that the check and the write happen in one statement so there is no read-then-write gap (no lost update, no overdraft), that the row is locked by the database for the duration, and that the affected-row count signals failure.
+How it works:
+
+- The check and the write happen in one statement. There is no gap between reading and writing, so there is no lost update and no overdraft.
+- The database locks the row while the statement runs.
+- The number of changed rows shows failure: zero rows means the account is missing or the balance is too low.
 
 ### [coding] Implement optimistic locking with retry in Spring. {#coding-optimistic}
 
@@ -388,4 +596,8 @@ class WithdrawalService {
 }
 ```
 
-Explain that a concurrent change makes the version check fail (zero rows) and Hibernate throws an optimistic locking exception, the retry re-reads the fresh row in a new transaction (so `@Retryable` must wrap the transactional method, not sit inside it), and that after the attempts the error is reported to the caller.
+How it works:
+
+- If another transaction changed the row, the version check fails (zero rows change), and Hibernate throws an optimistic locking exception.
+- The retry reads the fresh row again in a new transaction. That is why `@Retryable` must wrap the transactional method, not sit inside it.
+- After the last attempt, the error is passed to the caller.
