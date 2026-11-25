@@ -1,0 +1,39 @@
+/* ---- OOP stage (OopStage): variable, object and class hierarchy ---- */
+.oop-panel { fill: rgba(255, 255, 255, 0.85); stroke: #c3cfdd; stroke-width: 1.5; }
+.oop-panel-title, .oop-heading { font: 700 14px var(--font-hand, cursive); fill: var(--color-pen); }
+
+.oop-class { fill: #fff; stroke: #8d9bb0; stroke-width: 1.75; transition: stroke 0.3s, fill 0.3s; }
+.oop-class.is-checked, .oop-class.is-waiting { stroke: var(--color-warn); stroke-width: 2.5; }
+.oop-class.is-searching { stroke: var(--color-warn); stroke-width: 2.5; stroke-dasharray: 7 4; fill: var(--color-warn-soft); }
+.oop-class.is-passed { stroke: #8b97a8; stroke-dasharray: 7 4; fill: #f2f4f7; }
+.oop-class.is-found, .oop-class.is-done { stroke: var(--color-ok); stroke-width: 2.5; fill: var(--color-ok-soft); }
+.oop-class.is-actual, .oop-class.is-active { stroke: var(--color-pen); stroke-width: 2.5; fill: var(--color-pen-soft); }
+.oop-class-name { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.oop-tag { font: 700 11.5px system-ui, sans-serif; }
+
+.oop-pill { fill: #fff; stroke: #b9c7d9; stroke-width: 1.5; }
+.oop-pill.is-checked { fill: var(--color-warn-soft); stroke: var(--color-warn); stroke-width: 2; }
+.oop-pill.is-found { fill: var(--color-ok-soft); stroke: var(--color-ok); stroke-width: 2; }
+.oop-pill.is-miss { fill: #eef0f3; stroke: #8b97a8; stroke-dasharray: 4 3; }
+.oop-pill-text { font: 700 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.oop-pill-text.is-miss { fill: #6b7788; text-decoration: line-through; }
+.oop-pill-text.is-checked { fill: var(--color-warn); }
+.oop-pill-text.is-found { fill: var(--color-ok); }
+.oop-order { font: 700 11px system-ui, sans-serif; fill: #fff; }
+
+.oop-up-label { font: 600 11.5px system-ui, sans-serif; }
+.oop-up-label.is-hot { font-weight: 700; }
+
+.oop-var { fill: #fff; stroke: var(--color-warn); stroke-width: 2; }
+.oop-obj { fill: #fff; stroke: var(--color-ok); stroke-width: 2; }
+.oop-var-name { font: 700 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.oop-small { font: 12px system-ui, sans-serif; fill: #3d4a5c; }
+.oop-small-strong { font: 700 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.oop-arrow-label { font: 700 11.5px system-ui, sans-serif; }
+
+.oop-divider { stroke: #b9c4d3; stroke-dasharray: 5 4; }
+.oop-part { font: 700 12.5px system-ui, sans-serif; fill: var(--color-pen); }
+.oop-field { font: 600 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #7b8697; font-style: italic; }
+.oop-field.is-set { fill: var(--color-ok); font-style: normal; font-weight: 700; }
+.oop-field-set { fill: var(--color-ok-soft); stroke: var(--color-ok); stroke-width: 1; }
+.oop-empty { font: italic 12px system-ui, sans-serif; fill: #7b8697; }

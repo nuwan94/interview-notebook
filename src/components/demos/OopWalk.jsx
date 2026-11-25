@@ -4,48 +4,11 @@ import { useReducedMotion } from '../../lib/prefs.jsx';
 import { Glossed } from '../Term.jsx';
 import { usePlayer, useOnceVisible } from './usePlayer.js';
 import { OOP_SCENES } from './oopScenes.js';
+import { OopStage } from './OopStage.jsx';
 
-const METHOD = {
-  checked: { background: 'var(--color-warn-soft)', border: '2px solid var(--color-warn)', color: 'var(--color-warn)' },
-  found: { background: 'var(--color-ok-soft)', border: '2px solid var(--color-ok)', color: 'var(--color-ok)' },
-  miss: { background: '#eef0f3', border: '2px dashed #8b97a8', color: '#6b7788', textDecoration: 'line-through' },
-  none: { background: '#fff', border: '2px solid #b9c7d9', color: 'var(--color-ink)' },
-};
-const CLASS_BORDER = {
-  active: '2px solid var(--color-pen)',
-  searching: '2px dashed var(--color-warn)',
-  found: '2px solid var(--color-ok)',
-  done: '2px solid var(--color-ok)',
-};
+const RESULT = { ok: 'var(--color-ok)', warn: 'var(--color-warn)', bad: 'var(--color-bad)', new: 'var(--color-pen)' };
 
-function ClassBox({ c, depth }) {
-  return (
-    <div style={{ marginLeft: `${depth * 1.25}rem` }}>
-      {c.parent && (
-        <div className="text-xs text-soft leading-none pb-0.5" aria-hidden="true">
-          ↑ extends {c.parent}
-        </div>
-      )}
-      <div className="rounded-md bg-white/80 px-2 py-1.5" style={{ border: CLASS_BORDER[c.state] || '1px solid #b9c7d9' }}>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-hand font-bold text-lg text-pen leading-tight">{c.name}</span>
-          {c.state === 'searching' && <span className="text-[0.65rem] font-bold text-warn">SEARCHING HERE</span>}
-          {c.state === 'active' && <span className="text-[0.65rem] font-bold text-pen">RUNNING</span>}
-          {c.state === 'done' && <span className="text-[0.65rem] font-bold text-ok">DONE</span>}
-        </div>
-        <div className="mt-1 flex flex-wrap gap-1.5">
-          {c.methods.map((mm) => (
-            <span key={mm.sig} className="rounded px-2 py-0.5 font-mono text-sm font-bold" style={METHOD[mm.state || 'none']}>
-              {mm.sig}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** Replayable walk through method lookup, overload resolution and constructor order. */
+/** Replayable walk through method lookup, overload resolution and constructor order, drawn by OopStage. */
 export function OopWalk() {
   const reduced = useReducedMotion();
   const rootRef = useRef(null);
@@ -76,17 +39,6 @@ export function OopWalk() {
     p.seek(0);
   };
 
-  // depth = how many parents above the class
-  const depthOf = (c) => {
-    let d = 0;
-    let cur = c;
-    while (cur?.parent) {
-      cur = f.classes.find((x) => x.name === cur.parent);
-      d++;
-    }
-    return d;
-  };
-
   return (
     <figure ref={rootRef} className="demo" data-noread aria-label="Object-oriented programming walk-through">
       <DemoHeader title={scene.title} scenes={OOP_SCENES} sceneId={sceneId} onPick={pick} />
@@ -96,48 +48,16 @@ export function OopWalk() {
           <div key={i} className="px-2" style={i === f.line ? { background: 'var(--color-hi, #fff3a3)', fontWeight: 700 } : undefined}>
             <span className="inline-block w-5 text-soft select-none">{i + 1}</span>
             {ln}
-            {i === f.line && f.result && <span className="ml-2 font-sans text-xs text-ok">→ {f.result}</span>}
+            {i === f.line && f.result && (
+              <span className="ml-2 rounded-full px-2 py-0.5 font-sans text-xs font-bold text-white" style={{ background: RESULT[f.result.tone] || RESULT.new }}>
+                {f.result.text}
+              </span>
+            )}
           </div>
         ))}
       </pre>
 
-      <div className="grid gap-2 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <div className="flex flex-col gap-1.5">
-          {f.classes.map((c) => (
-            <ClassBox key={c.name} c={c} depth={depthOf(c)} />
-          ))}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          {f.vars && (
-            <div className="rounded-md border border-slate-300 bg-white/70 px-2 py-1.5">
-              <div className="font-hand font-bold text-lg text-pen leading-tight">Variable and object</div>
-              {f.vars.length === 0 && <div className="text-sm text-soft">no variable yet</div>}
-              {f.vars.map((v) => (
-                <div key={v.n} className="mt-1 text-sm font-mono">
-                  <b>{v.n}</b>
-                  <div className="text-xs text-soft font-sans">
-                    declared type: <b className="font-mono text-warn">{v.declared}</b>
-                  </div>
-                  <div className="text-xs text-soft font-sans">
-                    actual object: <b className="font-mono text-ok">{v.actual}</b>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {f.log && (
-            <div className="rounded-md border border-slate-300 bg-white/70 px-2 py-1.5">
-              <div className="font-hand font-bold text-lg text-pen leading-tight">Order of execution</div>
-              {f.log.length === 0 && <div className="text-sm text-soft">nothing has run yet</div>}
-              <ol className="m-0 mt-1 list-decimal pl-5 text-sm font-mono" style={{ listStyle: 'decimal' }}>
-                {f.log.map((l) => (
-                  <li key={l}>{l}</li>
-                ))}
-              </ol>
-            </div>
-          )}
-        </div>
-      </div>
+      <OopStage key={scene.id} frames={scene.frames} index={p.index} label="Object-oriented programming walk-through" />
 
       <div className="mt-2 rounded-md border border-pen/30 bg-pen-soft/60 px-3 py-2 min-h-[5rem] text-[0.95rem] leading-snug" role="status" aria-live="polite">
         <Glossed text={f.note} />

@@ -1,0 +1,42 @@
+/* ---- data structure stages (DsListStage, DsHashStage, DsTreeStage, DsGraphStage) and the ArrayStage bar ---- */
+.ds-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.ds-line { font: 700 0.9rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff8d6; border: 1px solid #e8d77a; border-radius: 0.35rem; padding: 0.15rem 0.5rem; color: var(--color-ink, #1b2430); }
+.ds-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+
+.ds-panel { fill: rgba(255, 255, 255, 0.85); stroke: #c3cfdd; stroke-width: 1.5; }
+.ds-panel-title { font: 700 15px var(--font-hand, cursive); fill: var(--color-pen); }
+.ds-caption { font: 700 12px system-ui, sans-serif; fill: #3d4a5c; }
+.ds-small { font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #6a7586; }
+.ds-text { font: 700 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.ds-text-sm { font: 700 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.ds-tag { font: 700 11.5px system-ui, sans-serif; }
+.ds-empty { font: italic 12px system-ui, sans-serif; fill: #7b8697; }
+
+/* boxes and circles: the tone sets fill and stroke */
+.ds-box { stroke-width: 2; transition: fill 0.35s, stroke 0.35s, stroke-width 0.3s, opacity 0.35s; }
+.ds-box.tone-none { fill: #fff; stroke: #8d9bb0; }
+.ds-box.tone-ok { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.ds-box.tone-bad { fill: var(--color-bad-soft); stroke: var(--color-bad); }
+.ds-box.tone-warn { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.ds-box.tone-new { fill: var(--color-pen-soft); stroke: var(--color-pen); stroke-width: 3; }
+.ds-box.tone-dim { fill: #f1f4f8; stroke: #c9d2de; }
+.ds-cell { fill: #fff; stroke: #8d9bb0; stroke-width: 1.5; transition: fill 0.35s, stroke 0.35s; }
+.ds-cell.is-focus { fill: var(--color-pen-soft); stroke: var(--color-pen); stroke-width: 2.5; }
+.ds-divider { stroke: #8d9bb0; stroke-width: 1.5; }
+.ds-dot { fill: #556070; }
+.ds-plain-edge { stroke: #b9c4d3; stroke-width: 2; }
+.ds-move { transition: transform 0.45s cubic-bezier(0.3, 0.7, 0.3, 1), opacity 0.35s; }
+@media (prefers-reduced-motion: reduce) { .ds-box, .ds-cell, .ds-move { transition: none; } }
+
+/* ArrayStage extras: gaps between groups and brackets under a range of cells */
+.a-stage .ds-bar { padding: 0; align-self: stretch; }
+.a-span { position: absolute; height: 0.45rem; border: 2px solid var(--color-pen); border-top: none; border-radius: 0 0 0.3rem 0.3rem; transition: left 0.45s cubic-bezier(0.3, 0.7, 0.3, 1), width 0.45s cubic-bezier(0.3, 0.7, 0.3, 1); }
+.a-span-label { position: absolute; top: 0.5rem; left: 50%; transform: translateX(-50%); white-space: nowrap; font: 700 0.75rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--color-pen); }
+.a-span.tone-ok { border-color: var(--color-ok); }
+.a-span.tone-ok .a-span-label { color: var(--color-ok); }
+.a-span.tone-warn { border-color: var(--color-warn); }
+.a-span.tone-warn .a-span-label { color: var(--color-warn); }
+.a-span.tone-bad { border-color: var(--color-bad); }
+.a-span.tone-bad .a-span-label { color: var(--color-bad); }
+.a-spans { position: relative; height: 1.75rem; margin-top: 0.15rem; }
+@media (prefers-reduced-motion: reduce) { .a-span { transition: none; } }

@@ -1,40 +1,78 @@
-// Frame data for the "Data structures" walk-through (box-and-arrow player).
-// box.tone: ok | bad | warn | new | none.
+// Frame data for the "Data structures" walk-through. Every scene brings its own picture:
+// DsListStage (nodes and pointers), DsHashStage (bucket array and chains), DsTreeStage (a binary search tree)
+// and DsGraphStage (a graph with the queue or call stack beside it). Tones: ok | bad | warn | new | none | dim.
+import { DsListStage } from './DsListStage.jsx';
+import { DsHashStage } from './DsHashStage.jsx';
+import { DsTreeStage } from './DsTreeStage.jsx';
+import { DsGraphStage } from './DsGraphStage.jsx';
 
-const b = (id, title, lines = [], tone, badge) => ({ id, title, lines, tone, badge });
-const d = (from, to, label, tone) => ({ from, to, label, tone });
+// ---- linked list: made-up addresses show that the nodes are scattered in memory
+const n = (id, v, addr, slot, next, extra = {}) => ({ id, v, addr, slot, next, ...extra });
 
-// the friends graph used for traversal: every frame shows all six people, only the tones change
-const PEOPLE = ['Alice', 'Bob', 'Carol', 'Dave', 'Erin', 'Frank'];
-const EDGES = [d('Alice', 'Bob'), d('Alice', 'Carol'), d('Bob', 'Dave'), d('Carol', 'Dave'), d('Carol', 'Erin'), d('Dave', 'Frank'), d('Erin', 'Frank')];
-// state: name -> [tone, line, badge]
-const people = (state) => PEOPLE.map((n) => b(n, n, state[n] ? [state[n][1]] : ['not seen yet'], state[n]?.[0] || 'none', state[n]?.[2]));
+// ---- the friends graph used for both traversals; laid out by distance from Alice so no edge crosses another
+const GRAPH = {
+  pos: { Alice: [52, 150], Bob: [166, 84], Carol: [166, 216], Dave: [286, 84], Erin: [286, 216], Frank: [396, 150] },
+  edges: [['Alice', 'Bob'], ['Alice', 'Carol'], ['Bob', 'Dave'], ['Carol', 'Dave'], ['Carol', 'Erin'], ['Dave', 'Frank'], ['Erin', 'Frank']],
+};
+const g = (frame) => ({ graph: GRAPH, used: [], active: [], ...frame });
 
 export const DATA_STRUCTURE_SCENES = [
   {
     id: 'list',
     label: 'Linked list',
     title: 'A linked list chains nodes with pointers',
+    stage: DsListStage, // nodes with a value part and a next part, the head variable and the arrows between them
     frames: [
       {
-        note: 'A linked list stores each value in a node together with a pointer to the next node. The list only knows its head. There is no index: to reach the third element you follow two pointers from the head.',
-        boxes: [b('h', 'Head', ['points to the first node'], 'new'), b('a', 'Node 10', ['next to Node 20'], 'ok'), b('b', 'Node 20', ['next to Node 30'], 'ok'), b('c', 'Node 30', ['next is null'], 'ok', 'last')],
-        deps: [d('Head', 'Node 10', 'head'), d('Node 10', 'Node 20', 'next'), d('Node 20', 'Node 30', 'next')],
+        line: 'Node head = n10;',
+        note: 'A linked list stores each value in a node. A node also holds a pointer to the next node. The list only knows its first node, called the head. There is no index: to reach the third value, you follow two pointers from the head.',
+        head: 'a',
+        nodes: [n('a', 10, '@7f3a', 1, 'b'), n('b', 20, '@21c4', 2, 'c'), n('c', 30, '@9e08', 3, null)],
       },
       {
-        note: 'Adding at the front is O(1): create a node, point it at the old first node, and make the head point to it. No elements are moved, unlike an array, where inserting at the front shifts everything.',
-        boxes: [b('h', 'Head', ['now points to Node 5'], 'new'), b('n', 'Node 5', ['new node'], 'new', 'inserted'), b('a', 'Node 10', [], 'ok'), b('b', 'Node 20', [], 'ok'), b('c', 'Node 30', [], 'ok')],
-        deps: [d('Head', 'Node 5', 'head', 'new'), d('Node 5', 'Node 10', 'next', 'new'), d('Node 10', 'Node 20', 'next'), d('Node 20', 'Node 30', 'next')],
+        line: 'Node n5 = new Node(5, head);',
+        note: 'To add 5 at the front, first create a new node whose next pointer is the current first node. Nothing else moves. In an array, adding at the front would shift every element one place to the right.',
+        head: 'a',
+        nodes: [n('n', 5, '@4b10', 0, 'a', { tone: 'new', tag: 'new node' }), n('a', 10, '@7f3a', 1, 'b'), n('b', 20, '@21c4', 2, 'c'), n('c', 30, '@9e08', 3, null)],
       },
       {
-        note: 'Searching is O(n). To find 30 you start at the head and follow the pointers, comparing each node, until you reach it. Even if the list is sorted, you cannot jump to the middle, so binary search does not work on a linked list.',
-        boxes: [b('h', 'Head', [], 'none'), b('n', 'Node 5', ['5 is not 30'], 'warn', 'checked'), b('a', 'Node 10', ['10 is not 30'], 'warn', 'checked'), b('b', 'Node 20', ['20 is not 30'], 'warn', 'checked'), b('c', 'Node 30', ['found'], 'ok', 'found')],
-        deps: [d('Head', 'Node 5', 'head'), d('Node 5', 'Node 10', 'next', 'warn'), d('Node 10', 'Node 20', 'next', 'warn'), d('Node 20', 'Node 30', 'next', 'warn')],
+        line: 'head = n5;',
+        result: { text: 'O(1): no element moved', tone: 'ok' },
+        note: 'Then point the head at the new node. Adding at the front took two pointer changes, whatever the length of the list. That is O(1).',
+        head: 'n',
+        nodes: [n('n', 5, '@4b10', 0, 'a', { tone: 'ok' }), n('a', 10, '@7f3a', 1, 'b'), n('b', 20, '@21c4', 2, 'c'), n('c', 30, '@9e08', 3, null)],
       },
       {
-        note: 'Deleting a node you already hold is O(1) in a doubly linked list: make its neighbours point to each other. Here Node 10 skips Node 20 and points to Node 30 directly. Finding the node in the first place is still O(n). In Java, LinkedList is rarely faster than ArrayList in practice, because array elements sit together in memory and linked nodes are scattered.',
-        boxes: [b('a', 'Node 10', ['next is now Node 30'], 'ok'), b('b', 'Node 20', ['unlinked'], 'bad', 'removed'), b('c', 'Node 30', [], 'ok')],
-        deps: [d('Node 10', 'Node 30', 'next', 'ok')],
+        line: 'Node current = head;',
+        note: 'Now search for 30. Start at the head. The value there is 5, which is not 30, so move on.',
+        head: 'n',
+        cursor: 'n',
+        nodes: [n('n', 5, '@4b10', 0, 'a', { tone: 'warn', tag: '5 is not 30' }), n('a', 10, '@7f3a', 1, 'b'), n('b', 20, '@21c4', 2, 'c'), n('c', 30, '@9e08', 3, null)],
+      },
+      {
+        line: 'current = current.next;',
+        result: { text: 'found after 4 nodes: O(n)', tone: 'ok' },
+        note: 'Follow the next pointers one at a time: 10, then 20, then 30, which matches. Searching is O(n). You cannot jump to the middle, so binary search does not work on a linked list, even a sorted one.',
+        head: 'n',
+        cursor: 'c',
+        nodes: [
+          n('n', 5, '@4b10', 0, 'a', { tone: 'warn' }),
+          n('a', 10, '@7f3a', 1, 'b', { tone: 'warn', edgeTone: 'warn' }),
+          n('b', 20, '@21c4', 2, 'c', { tone: 'warn', edgeTone: 'warn' }),
+          n('c', 30, '@9e08', 3, null, { tone: 'ok', tag: 'found' }),
+        ],
+      },
+      {
+        line: 'n10.next = n10.next.next;',
+        result: { text: 'O(1) once you hold Node 10', tone: 'ok' },
+        note: 'To delete 20 when you already hold the node before it (10), change one pointer: 10 now points straight to 30. Node 20 is unlinked, and the garbage collector removes it later. A doubly linked list can also delete a node you hold directly, because each node knows its previous node. In Java, ArrayList is still usually faster than LinkedList, because array elements sit side by side in memory and linked nodes are scattered.',
+        head: 'n',
+        nodes: [
+          n('n', 5, '@4b10', 0, 'a'),
+          n('a', 10, '@7f3a', 1, 'c', { tone: 'ok', edgeTone: 'ok' }),
+          n('b', 20, '@21c4', 2, 'c', { tone: 'bad', tag: 'unlinked', low: true }),
+          n('c', 30, '@9e08', 3, null),
+        ],
       },
     ],
   },
@@ -42,31 +80,50 @@ export const DATA_STRUCTURE_SCENES = [
     id: 'hash',
     label: 'Hash table',
     title: 'A hash table turns a key into a bucket number',
+    stage: DsHashStage, // the key, the hash function, the bucket array and the chains below it
     frames: [
       {
-        note: 'A hash table finds an entry without searching. A hash function turns the key into a number, and the number modulo the table size picks a bucket. Here "ACC-42" hashes to bucket 3 of 8.',
-        boxes: [b('k', 'Key ACC-42', ['an account id'], 'new'), b('f', 'Hash function', ['hash(key) % 8 = 3'], 'ok'), b('u', 'Bucket 3', ['empty'], 'none')],
-        deps: [d('Key ACC-42', 'Hash function', 'hash'), d('Hash function', 'Bucket 3', 'index 3')],
+        line: 'map.put("ACC-42", 800.00);',
+        result: { text: 'bucket 3', tone: 'new' },
+        note: 'A hash table finds an entry without searching. A hash function turns the key into a number. That number modulo the table size picks a bucket. Here the key "ACC-42" goes to bucket 3 of 8.',
+        buckets: 8,
+        key: { text: 'ACC-42', calc: 'hash(key) % 8 = 3', to: 3 },
+        items: [{ k: 'ACC-08', v: '120.00', b: 0 }, { k: 'ACC-31', v: '75.50', b: 6 }],
       },
       {
-        note: 'The entry (key and value) is stored in bucket 3. To read it later, hash the key again, go straight to bucket 3 and compare the key. That is O(1) on average, with no loop over the other entries.',
-        boxes: [b('f', 'Hash function', ['hash(key) % 8 = 3'], 'ok'), b('u', 'Bucket 3', ['holds entries'], 'ok'), b('e', 'Entry ACC-42', ['balance 800.00'], 'ok', 'stored')],
-        deps: [d('Hash function', 'Bucket 3', 'index 3'), d('Bucket 3', 'Entry ACC-42', 'entry')],
+        line: 'map.put("ACC-42", 800.00);',
+        result: { text: 'O(1) on average', tone: 'ok' },
+        note: 'The entry, the key with its value, is stored in bucket 3. To read it later, hash the key again, go straight to bucket 3 and compare the key. There is no loop over the other entries.',
+        buckets: 8,
+        key: { text: 'ACC-42', calc: 'hash(key) % 8 = 3', to: 3 },
+        items: [{ k: 'ACC-08', v: '120.00', b: 0 }, { k: 'ACC-42', v: '800.00', b: 3, tone: 'ok', tag: 'stored' }, { k: 'ACC-31', v: '75.50', b: 6 }],
       },
       {
-        note: 'Two different keys can hash to the same bucket, called a collision. ACC-17 also maps to bucket 3. With chaining, the bucket holds a small list of entries. Java\'s HashMap does this, and turns long chains into balanced trees.',
-        boxes: [b('u', 'Bucket 3', ['two entries'], 'warn', 'collision'), b('e', 'Entry ACC-42', ['first in the chain'], 'ok'), b('g', 'Entry ACC-17', ['added to the chain'], 'new')],
-        deps: [d('Bucket 3', 'Entry ACC-42', 'first'), d('Entry ACC-42', 'Entry ACC-17', 'next', 'new')],
+        line: 'map.put("ACC-17", 250.00);',
+        result: { text: 'collision in bucket 3', tone: 'warn' },
+        note: 'Two different keys can land in the same bucket. This is called a collision. "ACC-17" also goes to bucket 3. With chaining, the bucket holds a short list of entries. Java\'s HashMap works like this, and turns a long chain into a balanced tree.',
+        buckets: 8,
+        key: { text: 'ACC-17', calc: 'hash(key) % 8 = 3', to: 3, tone: 'warn' },
+        items: [{ k: 'ACC-08', v: '120.00', b: 0 }, { k: 'ACC-42', v: '800.00', b: 3 }, { k: 'ACC-17', v: '250.00', b: 3, tone: 'new', tag: 'added to the chain' }, { k: 'ACC-31', v: '75.50', b: 6 }],
       },
       {
-        note: 'To look up ACC-17, hash it, go to bucket 3, and compare keys along the chain using equals. ACC-42 does not match, ACC-17 does. This is why keys need a correct hashCode and equals, and why a poor hash function that fills one bucket makes lookups slow.',
-        boxes: [b('u', 'Bucket 3', ['look up ACC-17'], 'new'), b('e', 'Entry ACC-42', ['not equal'], 'bad', 'skipped'), b('g', 'Entry ACC-17', ['equal: found'], 'ok', 'found')],
-        deps: [d('Bucket 3', 'Entry ACC-42', 'first'), d('Entry ACC-42', 'Entry ACC-17', 'next', 'ok')],
+        line: 'map.get("ACC-17");',
+        result: { text: 'found: 250.00', tone: 'ok' },
+        note: 'To look up "ACC-17", hash it, go to bucket 3 and compare keys along the chain with equals. "ACC-42" does not match, and "ACC-17" does. This is why keys need a correct hashCode and equals. A poor hash function that puts many keys in one bucket makes lookups slow.',
+        buckets: 8,
+        key: { text: 'ACC-17', calc: 'hash(key) % 8 = 3', to: 3 },
+        items: [{ k: 'ACC-08', v: '120.00', b: 0 }, { k: 'ACC-42', v: '800.00', b: 3, tone: 'bad', tag: 'equals? no' }, { k: 'ACC-17', v: '250.00', b: 3, tone: 'ok', tag: 'equals? yes' }, { k: 'ACC-31', v: '75.50', b: 6 }],
       },
       {
-        note: 'When the table gets too full (the load factor, 0.75 by default in Java), chains grow long. The table is resized, usually doubled, and every entry is rehashed into the new buckets. Resizing is expensive but rare, so adding is O(1) on average.',
-        boxes: [b('o', 'Old table', ['8 buckets, 75 percent full'], 'warn', 'too full'), b('n', 'New table', ['16 buckets'], 'ok', 'resized')],
-        deps: [d('Old table', 'New table', 'rehash every entry', 'ok')],
+        line: 'size > 0.75 × capacity: resize to 16',
+        result: { text: 'resized and rehashed', tone: 'ok' },
+        note: 'When the table gets too full, chains grow long. The limit is the load factor, 0.75 by default in Java. The table is then resized, usually doubled, and every entry is placed again with hash % 16. Here "ACC-17" moves to bucket 11, so bucket 3 has no collision any more. Resizing is expensive but rare, so adding is O(1) on average.',
+        buckets: 16,
+        resize: {
+          old: [{ k: 'ACC-08', b: 0 }, { k: 'ACC-42', b: 3, tone: 'warn' }, { k: 'ACC-17', b: 3, tone: 'warn' }, { k: 'ACC-55', b: 5 }, { k: 'ACC-31', b: 6 }, { k: 'ACC-90', b: 7 }],
+          items: [{ k: 'ACC-08', b: 0 }, { k: 'ACC-42', b: 3, tone: 'ok' }, { k: 'ACC-31', b: 6 }, { k: 'ACC-90', b: 7 }, { k: 'ACC-17', b: 11, tone: 'ok' }, { k: 'ACC-55', b: 13 }],
+          moves: [{ k: 'ACC-42', from: 3, to: 3 }, { k: 'ACC-17', from: 3, to: 11 }],
+        },
       },
     ],
   },
@@ -74,31 +131,41 @@ export const DATA_STRUCTURE_SCENES = [
     id: 'tree',
     label: 'Binary search tree',
     title: 'A binary search tree keeps smaller values left and larger right',
+    stage: DsTreeStage, // nodes placed by their path from the root
     frames: [
       {
-        note: 'In a binary search tree every node has at most two children. Values smaller than a node go to its left, larger values to its right. Here 50 is the root, 30 and 70 are its children, and 20 and 40 are below 30.',
-        boxes: [b('a', 'Node 50', ['root'], 'new'), b('b', 'Node 30', ['smaller than 50'], 'ok'), b('c', 'Node 70', ['larger than 50'], 'ok'), b('d', 'Node 20', [], 'ok'), b('e', 'Node 40', [], 'ok')],
-        deps: [d('Node 50', 'Node 30', 'left'), d('Node 50', 'Node 70', 'right'), d('Node 30', 'Node 20', 'left'), d('Node 30', 'Node 40', 'right')],
+        line: 'insert 50, 30, 70, 20, 40',
+        note: 'In a binary search tree, every node has at most two children. Smaller values go to the left of a node, and larger values to the right. Here 50 is the root, 30 and 70 are its children, and 20 and 40 are below 30.',
+        nodes: [{ id: 50, v: 50, path: '', tone: 'new', tag: 'root' }, { id: 30, v: 30, path: 'L' }, { id: 70, v: 70, path: 'R' }, { id: 20, v: 20, path: 'LL' }, { id: 40, v: 40, path: 'LR' }],
       },
       {
-        note: 'To search for 40, compare with the root: 40 is smaller than 50, so go left. At 30, 40 is larger, so go right. Found after three steps. Each step discards a whole subtree, like binary search, so a balanced tree needs about log n steps.',
-        boxes: [b('a', 'Node 50', ['40 is smaller: go left'], 'warn', 'checked'), b('b', 'Node 30', ['40 is larger: go right'], 'warn', 'checked'), b('c', 'Node 70', ['never visited'], 'none'), b('d', 'Node 20', ['never visited'], 'none'), b('e', 'Node 40', ['found'], 'ok', 'found')],
-        deps: [d('Node 50', 'Node 30', 'left', 'warn'), d('Node 50', 'Node 70', 'right'), d('Node 30', 'Node 20', 'left'), d('Node 30', 'Node 40', 'right', 'warn')],
+        line: 'search(40)',
+        note: 'To search for 40, start at the root and compare. 40 is smaller than 50, so go left. The whole right side, 70 and everything under it, is ruled out in one step.',
+        nodes: [{ id: 50, v: 50, path: '', tone: 'warn', tag: '40 < 50: go left' }, { id: 30, v: 30, path: 'L', tone: 'new', edge: 'warn' }, { id: 70, v: 70, path: 'R', tone: 'dim' }, { id: 20, v: 20, path: 'LL' }, { id: 40, v: 40, path: 'LR' }],
       },
       {
-        note: 'Insertion follows the same path until it falls off the tree. Inserting 45 goes 50, then left to 30, then right to 40, then right again, where there is no node, so 45 becomes the right child of 40. Insert is O(log n) when the tree is balanced.',
-        boxes: [b('a', 'Node 50', [], 'ok'), b('b', 'Node 30', [], 'ok'), b('e', 'Node 40', ['has a new child'], 'ok'), b('n', 'Node 45', ['new leaf'], 'new', 'inserted')],
-        deps: [d('Node 50', 'Node 30', 'left'), d('Node 30', 'Node 40', 'right'), d('Node 40', 'Node 45', 'right', 'new')],
+        line: 'search(40)',
+        result: { text: 'found in 3 steps: O(log n)', tone: 'ok' },
+        note: 'At 30, 40 is larger, so go right, and there it is. Each step throws away a whole subtree, like binary search. A balanced tree needs about log n steps.',
+        nodes: [{ id: 50, v: 50, path: '', tone: 'warn' }, { id: 30, v: 30, path: 'L', tone: 'warn', tag: '40 > 30: go right', edge: 'warn' }, { id: 70, v: 70, path: 'R', tone: 'dim' }, { id: 20, v: 20, path: 'LL', tone: 'dim' }, { id: 40, v: 40, path: 'LR', tone: 'ok', tag: 'found', edge: 'warn' }],
       },
       {
-        note: 'The shape depends on the insert order. If values arrive already sorted (1, 2, 3, 4), every new node goes to the right and the tree becomes a chain, which is a linked list. Search then takes O(n). Plain binary search trees give no guarantee on height.',
-        boxes: [b('a', 'Node 1', ['root'], 'bad'), b('b', 'Node 2', [], 'bad'), b('c', 'Node 3', [], 'bad'), b('d', 'Node 4', ['height 4 for 4 nodes'], 'bad', 'degenerate')],
-        deps: [d('Node 1', 'Node 2', 'right', 'bad'), d('Node 2', 'Node 3', 'right', 'bad'), d('Node 3', 'Node 4', 'right', 'bad')],
+        line: 'insert(45)',
+        result: { text: 'O(log n) when balanced', tone: 'ok' },
+        note: 'Inserting follows the same path until it falls off the tree. For 45: left at 50, right at 30, right at 40. There is no node there, so 45 becomes the right child of 40.',
+        nodes: [{ id: 50, v: 50, path: '' }, { id: 30, v: 30, path: 'L', edge: 'new' }, { id: 70, v: 70, path: 'R' }, { id: 20, v: 20, path: 'LL' }, { id: 40, v: 40, path: 'LR', edge: 'new' }, { id: 45, v: 45, path: 'LRR', tone: 'new', tag: 'new leaf', edge: 'new' }],
       },
       {
-        note: 'Self-balancing trees, such as AVL and red-black trees, rotate nodes during inserts so the height stays around log n. Java\'s TreeMap and TreeSet are red-black trees, so get, put and remove are O(log n) and the keys stay sorted.',
-        boxes: [b('b', 'Node 2', ['root after rotation'], 'ok', 'balanced'), b('a', 'Node 1', [], 'ok'), b('c', 'Node 3', [], 'ok'), b('d', 'Node 4', [], 'ok')],
-        deps: [d('Node 2', 'Node 1', 'left', 'ok'), d('Node 2', 'Node 3', 'right', 'ok'), d('Node 3', 'Node 4', 'right', 'ok')],
+        line: 'insert 1, 2, 3, 4',
+        result: { text: 'height 4 for 4 nodes: O(n)', tone: 'bad' },
+        note: 'The shape depends on the insert order. If values arrive already sorted, every new node goes to the right. The tree becomes a chain, which is really a linked list, and a search takes O(n). A plain binary search tree gives no guarantee on height.',
+        nodes: [{ id: 1, v: 1, path: '', tone: 'bad', tag: 'a chain, not a tree' }, { id: 2, v: 2, path: 'R', tone: 'bad', edge: 'bad' }, { id: 3, v: 3, path: 'RR', tone: 'bad', edge: 'bad' }, { id: 4, v: 4, path: 'RRR', tone: 'bad', edge: 'bad' }],
+      },
+      {
+        line: 'TreeMap: a red-black tree',
+        result: { text: 'height 3: O(log n)', tone: 'ok' },
+        note: 'Self-balancing trees, such as AVL trees and red-black trees, rotate nodes during inserts so the height stays near log n. Here 2 has become the root. Java\'s TreeMap and TreeSet are red-black trees, so get, put and remove are O(log n), and the keys stay sorted.',
+        nodes: [{ id: 2, v: 2, path: '', tone: 'ok', tag: 'root after a rotation' }, { id: 1, v: 1, path: 'L', tone: 'ok' }, { id: 3, v: 3, path: 'R', tone: 'ok' }, { id: 4, v: 4, path: 'RR', tone: 'ok' }],
       },
     ],
   },
@@ -106,59 +173,149 @@ export const DATA_STRUCTURE_SCENES = [
     id: 'bfs',
     label: 'Breadth-first search',
     title: 'Breadth-first search visits the graph level by level',
+    stage: DsGraphStage, // the graph, the queue and the visit order
     frames: [
-      {
-        note: 'A graph is nodes connected by edges. Here the arrows show who can reach whom. Breadth-first search (BFS) starts at Alice and uses a queue: it visits all neighbours at distance one, then distance two, and so on.',
-        boxes: people({ Alice: ['new', 'start here', 'start'] }),
-        deps: EDGES,
-      },
-      {
-        note: 'Visit Alice and add her unvisited neighbours, Bob and Carol, to the queue. Mark nodes as visited when you add them, so a node reachable by two paths is queued only once. The queue is now: Bob, Carol.',
-        boxes: people({ Alice: ['ok', 'visited 1st'], Bob: ['warn', 'in the queue'], Carol: ['warn', 'in the queue'] }),
-        deps: EDGES,
-      },
-      {
-        note: 'Take Bob from the front of the queue and visit him; queue his neighbour Dave. Then visit Carol and queue Erin (Dave is already queued). All nodes one step from Alice have been visited before any node two steps away.',
-        boxes: people({ Alice: ['ok', 'visited 1st'], Bob: ['ok', 'visited 2nd'], Carol: ['ok', 'visited 3rd'], Dave: ['warn', 'in the queue'], Erin: ['warn', 'in the queue'] }),
-        deps: EDGES,
-      },
-      {
-        note: 'Visit Dave and Erin, and queue Frank, who is reachable from both but queued only once. The queue is now just Frank.',
-        boxes: people({ Alice: ['ok', 'visited 1st'], Bob: ['ok', 'visited 2nd'], Carol: ['ok', 'visited 3rd'], Dave: ['ok', 'visited 4th'], Erin: ['ok', 'visited 5th'], Frank: ['warn', 'in the queue'] }),
-        deps: EDGES,
-      },
-      {
-        note: 'Visit Frank. Every node has been visited in order of distance from Alice. This is why BFS finds the shortest path in a graph where every edge counts the same: the first time you reach a node is by the fewest steps. It takes O(V + E) time, for V nodes and E edges, and memory for the queue.',
-        boxes: people({ Alice: ['ok', 'distance 0'], Bob: ['ok', 'distance 1'], Carol: ['ok', 'distance 1'], Dave: ['ok', 'distance 2'], Erin: ['ok', 'distance 2'], Frank: ['ok', 'distance 3', 'last'] }),
-        deps: EDGES,
-      },
+      g({
+        line: 'queue.offer(Alice);',
+        mode: 'queue',
+        note: 'A graph is a set of nodes joined by edges. Here the arrows show who can reach whom. Breadth-first search (BFS) starts at Alice and uses a queue: it visits everyone one step away, then two steps away, and so on. It starts by putting Alice in the queue.',
+        nodes: { Alice: ['warn', 'in queue'] },
+        list: ['Alice'],
+        order: [],
+      }),
+      g({
+        line: 'node = queue.poll();  // Alice',
+        mode: 'queue',
+        note: 'Take Alice from the front of the queue and visit her. Add her neighbours Bob and Carol to the back. Mark a node as seen when you add it, so a node reachable by two paths is queued only once.',
+        nodes: { Alice: ['new', 'visiting'], Bob: ['warn', 'in queue'], Carol: ['warn', 'in queue'] },
+        list: ['Bob', 'Carol'],
+        order: ['Alice'],
+        active: [['Alice', 'Bob'], ['Alice', 'Carol']],
+      }),
+      g({
+        line: 'node = queue.poll();  // Bob',
+        mode: 'queue',
+        note: 'Take Bob from the front. His neighbour Dave goes to the back of the queue, behind Carol.',
+        nodes: { Alice: ['ok', 'distance 0'], Bob: ['new', 'visiting'], Carol: ['warn', 'in queue'], Dave: ['warn', 'in queue'] },
+        list: ['Carol', 'Dave'],
+        order: ['Alice', 'Bob'],
+        used: [['Alice', 'Bob'], ['Alice', 'Carol']],
+        active: [['Bob', 'Dave']],
+      }),
+      g({
+        line: 'node = queue.poll();  // Carol',
+        mode: 'queue',
+        note: 'Take Carol. Dave is already queued, so he is skipped. Erin is added. Everyone one step from Alice has now been visited, before anyone two steps away.',
+        nodes: { Alice: ['ok', 'distance 0'], Bob: ['ok', 'distance 1'], Carol: ['new', 'visiting'], Dave: ['warn', 'in queue'], Erin: ['warn', 'in queue'] },
+        list: ['Dave', 'Erin'],
+        order: ['Alice', 'Bob', 'Carol'],
+        used: [['Alice', 'Bob'], ['Alice', 'Carol'], ['Bob', 'Dave']],
+        active: [['Carol', 'Erin']],
+      }),
+      g({
+        line: 'node = queue.poll();  // Dave',
+        mode: 'queue',
+        note: 'Take Dave and add Frank to the queue.',
+        nodes: { Alice: ['ok', 'distance 0'], Bob: ['ok', 'distance 1'], Carol: ['ok', 'distance 1'], Dave: ['new', 'visiting'], Erin: ['warn', 'in queue'], Frank: ['warn', 'in queue'] },
+        list: ['Erin', 'Frank'],
+        order: ['Alice', 'Bob', 'Carol', 'Dave'],
+        used: [['Alice', 'Bob'], ['Alice', 'Carol'], ['Bob', 'Dave'], ['Carol', 'Erin']],
+        active: [['Dave', 'Frank']],
+      }),
+      g({
+        line: 'node = queue.poll();  // Erin',
+        mode: 'queue',
+        note: 'Take Erin. Frank can be reached from her too, but he is already queued, so he is not added again.',
+        nodes: { Alice: ['ok', 'distance 0'], Bob: ['ok', 'distance 1'], Carol: ['ok', 'distance 1'], Dave: ['ok', 'distance 2'], Erin: ['new', 'visiting'], Frank: ['warn', 'in queue'] },
+        list: ['Frank'],
+        order: ['Alice', 'Bob', 'Carol', 'Dave', 'Erin'],
+        used: [['Alice', 'Bob'], ['Alice', 'Carol'], ['Bob', 'Dave'], ['Carol', 'Erin'], ['Dave', 'Frank']],
+      }),
+      g({
+        line: 'node = queue.poll();  // Frank',
+        result: { text: 'shortest paths found: O(V + E)', tone: 'ok' },
+        note: 'Take Frank. The queue is empty, and every node was visited in order of distance from Alice. This is why BFS finds the shortest path when every edge counts the same: the first time it reaches a node is by the fewest steps. It takes O(V + E) time, for V nodes and E edges, plus memory for the queue.',
+        mode: 'queue',
+        nodes: { Alice: ['ok', 'distance 0'], Bob: ['ok', 'distance 1'], Carol: ['ok', 'distance 1'], Dave: ['ok', 'distance 2'], Erin: ['ok', 'distance 2'], Frank: ['ok', 'distance 3'] },
+        list: [],
+        order: ['Alice', 'Bob', 'Carol', 'Dave', 'Erin', 'Frank'],
+        used: [['Alice', 'Bob'], ['Alice', 'Carol'], ['Bob', 'Dave'], ['Carol', 'Erin'], ['Dave', 'Frank']],
+      }),
     ],
   },
   {
     id: 'dfs',
     label: 'Depth-first search',
     title: 'Depth-first search goes as deep as it can, then backs up',
+    stage: DsGraphStage, // the graph, the call stack and the visit order
     frames: [
-      {
-        note: 'Depth-first search (DFS) uses a stack, or recursion, which is a stack in disguise. Instead of visiting neighbours level by level, it follows one path as far as it can before trying another.',
-        boxes: people({ Alice: ['new', 'start here', 'start'] }),
-        deps: EDGES,
-      },
-      {
-        note: 'From Alice go to Bob, then to Dave, then to Frank, which has no unvisited neighbours. Each step goes one level deeper before anything else is tried.',
-        boxes: people({ Alice: ['ok', 'visited 1st'], Bob: ['ok', 'visited 2nd'], Dave: ['ok', 'visited 3rd'], Frank: ['new', 'visited 4th, dead end', 'deepest'] }),
-        deps: EDGES,
-      },
-      {
-        note: 'Frank is a dead end, so the search backtracks: up to Dave (nothing left), up to Bob (nothing left), and back to Alice, who still has an unvisited neighbour, Carol. Backtracking is just returning from the recursive calls.',
-        boxes: people({ Alice: ['ok', 'visited 1st'], Bob: ['ok', 'visited 2nd'], Dave: ['ok', 'visited 3rd'], Frank: ['ok', 'visited 4th'], Carol: ['new', 'visited 5th', 'backtracked'] }),
-        deps: EDGES,
-      },
-      {
-        note: 'From Carol go to Erin. Erin\'s neighbour Frank is already visited, so it is skipped. Every node has been visited once. DFS is also O(V + E). It suits detecting cycles, topological ordering, finding connected components and exploring all paths, but it does not find shortest paths.',
-        boxes: people({ Alice: ['ok', 'visited 1st'], Bob: ['ok', 'visited 2nd'], Dave: ['ok', 'visited 3rd'], Frank: ['ok', 'visited 4th'], Carol: ['ok', 'visited 5th'], Erin: ['ok', 'visited 6th', 'last'] }),
-        deps: EDGES,
-      },
+      g({
+        line: 'dfs(Alice);',
+        mode: 'stack',
+        note: 'Depth-first search (DFS) uses a stack. Often that stack is the call stack, because DFS is written as a recursive method. Instead of going level by level, it follows one path as far as it can before it tries another.',
+        nodes: { Alice: ['new', 'visiting'] },
+        list: ['Alice'],
+        order: ['Alice'],
+      }),
+      g({
+        line: 'dfs(Bob);',
+        mode: 'stack',
+        note: 'From Alice, go to her first neighbour, Bob. The call for Bob goes on top of the stack. Alice waits underneath.',
+        nodes: { Alice: ['warn', 'waiting'], Bob: ['new', 'visiting'] },
+        list: ['Alice', 'Bob'],
+        order: ['Alice', 'Bob'],
+        active: [['Alice', 'Bob']],
+      }),
+      g({
+        line: 'dfs(Dave);',
+        mode: 'stack',
+        note: 'From Bob, go deeper to Dave. Each step goes one level deeper before anything else is tried.',
+        nodes: { Alice: ['warn', 'waiting'], Bob: ['warn', 'waiting'], Dave: ['new', 'visiting'] },
+        list: ['Alice', 'Bob', 'Dave'],
+        order: ['Alice', 'Bob', 'Dave'],
+        used: [['Alice', 'Bob']],
+        active: [['Bob', 'Dave']],
+      }),
+      g({
+        line: 'dfs(Frank);',
+        mode: 'stack',
+        note: 'From Dave, go to Frank. Frank has no neighbours left to visit. He is a dead end, the deepest point of this path.',
+        nodes: { Alice: ['warn', 'waiting'], Bob: ['warn', 'waiting'], Dave: ['warn', 'waiting'], Frank: ['new', 'dead end'] },
+        list: ['Alice', 'Bob', 'Dave', 'Frank'],
+        order: ['Alice', 'Bob', 'Dave', 'Frank'],
+        used: [['Alice', 'Bob'], ['Bob', 'Dave']],
+        active: [['Dave', 'Frank']],
+      }),
+      g({
+        line: 'return;  return;  return;',
+        mode: 'stack',
+        note: 'Now the search backtracks. Backtracking is just returning from the recursive calls. Frank returns, Dave has nothing left, Bob has nothing left. We are back in Alice\'s call, and she still has an unvisited neighbour, Carol.',
+        nodes: { Alice: ['new', 'back here'], Bob: ['ok', 'finished'], Dave: ['ok', 'finished'], Frank: ['ok', 'finished'] },
+        list: ['Alice'],
+        order: ['Alice', 'Bob', 'Dave', 'Frank'],
+        used: [['Alice', 'Bob'], ['Bob', 'Dave'], ['Dave', 'Frank']],
+      }),
+      g({
+        line: 'dfs(Carol);',
+        mode: 'stack',
+        note: 'Go to Carol. Her neighbour Dave is already visited, so he is skipped.',
+        nodes: { Alice: ['warn', 'waiting'], Bob: ['ok', 'finished'], Carol: ['new', 'visiting'], Dave: ['ok', 'finished'], Frank: ['ok', 'finished'] },
+        list: ['Alice', 'Carol'],
+        order: ['Alice', 'Bob', 'Dave', 'Frank', 'Carol'],
+        used: [['Alice', 'Bob'], ['Bob', 'Dave'], ['Dave', 'Frank']],
+        active: [['Alice', 'Carol']],
+      }),
+      g({
+        line: 'dfs(Erin);',
+        result: { text: 'all visited: O(V + E)', tone: 'ok' },
+        note: 'From Carol, go to Erin. Erin\'s neighbour Frank is already visited, so he is skipped too. Every node was visited once. DFS is also O(V + E). It suits detecting cycles, topological ordering, finding connected components and exploring all paths, but it does not find shortest paths.',
+        mode: 'stack',
+        nodes: { Alice: ['warn', 'waiting'], Bob: ['ok', 'finished'], Carol: ['warn', 'waiting'], Dave: ['ok', 'finished'], Erin: ['new', 'visiting'], Frank: ['ok', 'finished'] },
+        list: ['Alice', 'Carol', 'Erin'],
+        order: ['Alice', 'Bob', 'Dave', 'Frank', 'Carol', 'Erin'],
+        used: [['Alice', 'Bob'], ['Bob', 'Dave'], ['Dave', 'Frank'], ['Alice', 'Carol']],
+        active: [['Carol', 'Erin']],
+      }),
     ],
   },
 ];

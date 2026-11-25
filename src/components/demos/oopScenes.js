@@ -1,10 +1,31 @@
-// Frame data for the OOP walk-through demo (method lookup, overloads and constructors).
-// class.state: active | searching | found | done. method.state: checked | found | miss.
+// Frame data for the OOP walk-through demo (method lookup, overloads and constructors), drawn by OopStage.
+// class.state: checked | searching | passed | found | actual | active | waiting | done.
+// method.state: checked | found | miss. method.order: the step number in the constructor scene.
 
-const m = (sig, state) => ({ sig, state });
-const cls = (name, parent, methods, state, extra) => ({ name, parent, methods, state, ...extra });
+const m = (sig, state, order) => ({ sig, state, order });
+const cls = (name, parent, methods, state) => ({ name, parent, methods, state });
 
-const product = (methods, state, extra) => cls('Product', null, methods, state, extra);
+// ---------- which method runs ----------
+const product = (price, describe, state) => cls('Product', null, [m('price()', price), m('describe()', describe)], state);
+const perishable = (price, state) => cls('Perishable', 'Product', [m('price()', price)], state);
+const frozen = (methods, state) => cls('FrozenItem', 'Perishable', methods, state);
+const P = { n: 'p', declared: 'Product', actual: 'FrozenItem' };
+
+// ---------- overload versus override ----------
+const printer = (a, b, state) => cls('Printer', null, [m('print(Product)', a), m('print(Perishable)', b)], state);
+const oProduct = (state) => cls('Product', null, [m('describe()')], state);
+const oPerishable = (d, state) => cls('Perishable', 'Product', [m('describe()', d)], state);
+const P2 = { n: 'p', declared: 'Product', actual: 'Perishable' };
+
+// ---------- constructor order ----------
+const ctor = (name, parent, f, c, state) => cls(name, parent, [m('fields', f && 'found', f), m('constructor', c && 'found', c)], state);
+const parts = (a, b, c) => ({
+  sections: [
+    { cls: 'Product', field: a ? 'name = "peas"' : 'name = null', set: a },
+    { cls: 'Perishable', field: b ? 'shelfDays = 90' : 'shelfDays = 0', set: b },
+    { cls: 'FrozenItem', field: c ? 'tag = "frozen"' : 'tag = null', set: c },
+  ],
+});
 
 export const OOP_SCENES = [
   {
@@ -15,51 +36,63 @@ export const OOP_SCENES = [
     frames: [
       {
         line: -1,
-        note: 'Three classes: Product, Perishable (extends Product, overrides price) and FrozenItem (extends Perishable, overrides describe). Both price() and describe() exist in Product.',
-        classes: [
-          product([m('price()'), m('describe()')]),
-          cls('Perishable', 'Product', [m('price()')]),
-          cls('FrozenItem', 'Perishable', [m('describe()')]),
-        ],
-        vars: [],
+        note: 'There are three classes. Perishable extends Product and overrides price(). FrozenItem extends Perishable and overrides describe().',
+        classes: [product(), perishable(), frozen([m('describe()')])],
       },
       {
         line: 0,
-        note: 'The variable p has the declared type Product, but the object it refers to is a FrozenItem. The two types are different, and that gap is what polymorphism uses.',
-        classes: [product([m('price()'), m('describe()')]), cls('Perishable', 'Product', [m('price()')]), cls('FrozenItem', 'Perishable', [m('describe()')], 'active')],
-        vars: [{ n: 'p', declared: 'Product', actual: 'FrozenItem' }],
+        note: 'The variable p has the declared type Product. The object it points to is a FrozenItem. Polymorphism uses exactly this gap between the two types.',
+        classes: [product(), perishable(), frozen([m('describe()')], 'actual')],
+        vars: [P],
+        focus: ['FrozenItem'],
       },
       {
         line: 1,
-        note: 'Compile time: the compiler checks that the declared type, Product, has a method price(). It does, so the line compiles. It only ever looks at the declared type.',
-        classes: [product([m('price()', 'checked'), m('describe()')]), cls('Perishable', 'Product', [m('price()')]), cls('FrozenItem', 'Perishable', [m('describe()')])],
-        vars: [{ n: 'p', declared: 'Product', actual: 'FrozenItem' }],
+        note: 'At compile time, the compiler only looks at the declared type, Product. Product has a price() method, so the line compiles.',
+        classes: [product('checked', undefined, 'checked'), perishable(), frozen([m('describe()')])],
+        vars: [P],
+        arrows: { compile: ['compile time:', 'check Product'] },
+        focus: ['Product'],
+        result: { text: 'it compiles', tone: 'ok' },
       },
       {
         line: 1,
-        note: 'Run time: the JVM starts the search at the actual class of the object, FrozenItem. It has no price(), so the search moves up to the parent.',
-        classes: [product([m('price()'), m('describe()')]), cls('Perishable', 'Product', [m('price()')]), cls('FrozenItem', 'Perishable', [m('describe()', 'miss')], 'searching')],
-        vars: [{ n: 'p', declared: 'Product', actual: 'FrozenItem' }],
+        note: 'At run time, the JVM starts looking at the real class of the object, FrozenItem. FrozenItem has no price() of its own, so the search moves up to its parent.',
+        classes: [product(), perishable(), frozen([m('describe()'), m('no price()', 'miss')], 'searching')],
+        vars: [P],
+        arrows: { run: ['run time: start', 'at real class'] },
+        up: ['FrozenItem'],
+        upLabel: 'not here: look in the parent',
+        focus: ['FrozenItem', 'Perishable'],
       },
       {
         line: 1,
-        note: 'Perishable has price(), so that version runs, not Product\'s. The overriding method closest to the actual class wins.',
-        classes: [product([m('price()'), m('describe()')]), cls('Perishable', 'Product', [m('price()', 'found')], 'found'), cls('FrozenItem', 'Perishable', [m('describe()')])],
-        vars: [{ n: 'p', declared: 'Product', actual: 'FrozenItem' }],
-        result: 'Perishable.price() ran',
+        note: 'Perishable has price(), so its version runs, not the one in Product. The override closest to the real class always wins.',
+        classes: [product(), perishable('found', 'found'), frozen([m('describe()'), m('no price()', 'miss')], 'passed')],
+        vars: [P],
+        arrows: { run: ['run time: start', 'at real class'] },
+        up: ['FrozenItem'],
+        upLabel: 'not here: look in the parent',
+        focus: ['FrozenItem', 'Perishable'],
+        result: { text: 'Perishable.price() runs', tone: 'ok' },
       },
       {
         line: 2,
-        note: 'p.describe(): the compiler again only checks Product, which has describe().',
-        classes: [product([m('price()'), m('describe()', 'checked')]), cls('Perishable', 'Product', [m('price()')]), cls('FrozenItem', 'Perishable', [m('describe()')])],
-        vars: [{ n: 'p', declared: 'Product', actual: 'FrozenItem' }],
+        note: 'Next, p.describe(). The compiler again checks only Product, and Product has describe().',
+        classes: [product(undefined, 'checked', 'checked'), perishable(), frozen([m('describe()')])],
+        vars: [P],
+        arrows: { compile: ['compile time:', 'check Product'] },
+        focus: ['Product'],
+        result: { text: 'it compiles', tone: 'ok' },
       },
       {
         line: 2,
-        note: 'At run time FrozenItem itself overrides describe(), so the search ends at once and FrozenItem.describe() runs. The same call on the same variable ran code from two different classes.',
-        classes: [product([m('price()'), m('describe()')]), cls('Perishable', 'Product', [m('price()')]), cls('FrozenItem', 'Perishable', [m('describe()', 'found')], 'found')],
-        vars: [{ n: 'p', declared: 'Product', actual: 'FrozenItem' }],
-        result: 'FrozenItem.describe() ran',
+        note: 'At run time, FrozenItem has its own describe(), so the search stops at once. The same variable ran code from two different classes.',
+        classes: [product(), perishable(), frozen([m('describe()', 'found')], 'found')],
+        vars: [P],
+        arrows: { run: ['run time: start', 'at real class'] },
+        focus: ['FrozenItem'],
+        result: { text: 'FrozenItem.describe() runs', tone: 'ok' },
       },
     ],
   },
@@ -71,39 +104,40 @@ export const OOP_SCENES = [
     frames: [
       {
         line: -1,
-        note: 'Printer has two overloads of print: one for Product and one for Perishable. Perishable extends Product and overrides describe().',
-        classes: [
-          cls('Printer', null, [m('print(Product)'), m('print(Perishable)')]),
-          product([m('describe()')]),
-          cls('Perishable', 'Product', [m('describe()')]),
-        ],
-        vars: [],
+        note: 'Printer has two overloads of print: one takes a Product and one takes a Perishable. Perishable extends Product and overrides describe().',
+        classes: [printer(), oProduct(), oPerishable()],
       },
       {
         line: 0,
-        note: 'p is declared as Product but holds a Perishable.',
-        classes: [cls('Printer', null, [m('print(Product)'), m('print(Perishable)')]), product([m('describe()')]), cls('Perishable', 'Product', [m('describe()')], 'active')],
-        vars: [{ n: 'p', declared: 'Product', actual: 'Perishable' }],
+        note: 'The variable p is declared as a Product, but it holds a Perishable.',
+        classes: [printer(), oProduct(), oPerishable(undefined, 'actual')],
+        vars: [P2],
+        focus: ['Perishable'],
       },
       {
         line: 1,
-        note: 'Compile time: to pick an overload the compiler uses the declared type of the argument, Product. print(Product) fits. print(Perishable) does not, because a Product is not necessarily a Perishable. The choice is fixed here.',
-        classes: [cls('Printer', null, [m('print(Product)', 'found'), m('print(Perishable)', 'miss')], 'found'), product([m('describe()')]), cls('Perishable', 'Product', [m('describe()')])],
-        vars: [{ n: 'p', declared: 'Product', actual: 'Perishable' }],
-        result: 'print(Product) chosen',
+        note: 'The compiler picks the overload from the declared type of the argument, which is Product. print(Product) fits. print(Perishable) does not, because a Product is not always a Perishable. This choice is fixed before the program runs.',
+        classes: [printer('found', 'miss', 'checked'), oProduct(), oPerishable()],
+        vars: [P2],
+        arrows: { compile: ['compiler sees', 'type Product'] },
+        focus: ['Printer'],
+        result: { text: 'print(Product) is chosen', tone: 'warn' },
       },
       {
         line: 2,
-        note: 'Inside print(Product), the call p.describe() is an override, so it is decided at run time from the actual object. Perishable.describe() runs.',
-        classes: [cls('Printer', null, [m('print(Product)'), m('print(Perishable)')]), product([m('describe()')]), cls('Perishable', 'Product', [m('describe()', 'found')], 'found')],
-        vars: [{ n: 'p', declared: 'Product', actual: 'Perishable' }],
-        result: 'Perishable.describe() ran',
+        note: 'Inside print(Product), the call p.describe() is an override. It is decided at run time from the real object, so Perishable.describe() runs.',
+        classes: [printer(), oProduct(), oPerishable('found', 'found')],
+        vars: [P2],
+        arrows: { run: ['run time:', 'real object'] },
+        focus: ['Perishable'],
+        result: { text: 'Perishable.describe() runs', tone: 'ok' },
       },
       {
         line: 2,
-        note: 'The rule to remember: overloading looks at the declared (compile-time) types of the arguments; overriding looks at the actual (run-time) type of the receiver. Mixing them up is a classic interview trap.',
-        classes: [cls('Printer', null, [m('print(Product)'), m('print(Perishable)')]), product([m('describe()')]), cls('Perishable', 'Product', [m('describe()')])],
-        vars: [{ n: 'p', declared: 'Product', actual: 'Perishable' }],
+        note: 'The rule to remember: an overload is chosen from the declared types of the arguments. An override is chosen from the real class of the object. Mixing these up is a classic interview trap.',
+        classes: [printer('found', undefined), oProduct(), oPerishable('found')],
+        vars: [P2],
+        arrows: { compile: ['overload:', 'declared type'], run: ['override:', 'real class'] },
       },
     ],
   },
@@ -115,39 +149,53 @@ export const OOP_SCENES = [
     frames: [
       {
         line: -1,
-        note: 'Each class has a constructor and a field with an initial value. The question: in which order do they run?',
-        classes: [product([m('fields'), m('constructor')]), cls('Perishable', 'Product', [m('fields'), m('constructor')]), cls('FrozenItem', 'Perishable', [m('fields'), m('constructor')])],
-        log: [],
+        note: 'Each class has a field with a starting value and a constructor. In which order do they run?',
+        classes: [ctor('Product', null), ctor('Perishable', 'Product'), ctor('FrozenItem', 'Perishable')],
       },
       {
         line: 0,
-        note: 'The FrozenItem constructor is called. Its first statement is an implicit (or explicit) super(...) call, so before anything else of its own runs, control goes up.',
-        classes: [product([m('fields'), m('constructor')]), cls('Perishable', 'Product', [m('fields'), m('constructor')]), cls('FrozenItem', 'Perishable', [m('fields'), m('constructor')], 'active')],
-        log: [],
+        note: 'First, Java reserves memory for the whole object. The object has one part for each class. Every field starts at its default value: null, 0 or false.',
+        classes: [ctor('Product', null), ctor('Perishable', 'Product'), ctor('FrozenItem', 'Perishable')],
+        object: parts(false, false, false),
       },
       {
         line: 0,
-        note: 'Perishable\'s constructor also begins with super(...), so control reaches the top of the hierarchy: Product.',
-        classes: [product([m('fields'), m('constructor')]), cls('Perishable', 'Product', [m('fields'), m('constructor')], 'active'), cls('FrozenItem', 'Perishable', [m('fields'), m('constructor')])],
-        log: [],
+        note: 'The FrozenItem constructor is called. Its first statement is super(...), written by you or added by the compiler, so control goes up to the parent before anything else runs.',
+        classes: [ctor('Product', null), ctor('Perishable', 'Product'), ctor('FrozenItem', 'Perishable', 0, 0, 'waiting')],
+        object: parts(false, false, false),
+        up: ['FrozenItem'],
+        upLabel: 'super(...) first',
+        upTone: 'new',
       },
       {
         line: 0,
-        note: 'Product runs first: its field initialisers, then its constructor body. Object (above Product) has already run.',
-        classes: [product([m('fields', 'found'), m('constructor', 'found')], 'done'), cls('Perishable', 'Product', [m('fields'), m('constructor')]), cls('FrozenItem', 'Perishable', [m('fields'), m('constructor')])],
-        log: ['Product fields', 'Product constructor'],
+        note: 'The Perishable constructor also starts with super(...), so control goes up again, to Product.',
+        classes: [ctor('Product', null), ctor('Perishable', 'Product', 0, 0, 'waiting'), ctor('FrozenItem', 'Perishable', 0, 0, 'waiting')],
+        object: parts(false, false, false),
+        up: ['FrozenItem', 'Perishable'],
+        upLabel: 'super(...) first',
+        upTone: 'new',
       },
       {
         line: 0,
-        note: 'Back in Perishable: its field initialisers run, then the rest of its constructor body.',
-        classes: [product([m('fields', 'found'), m('constructor', 'found')], 'done'), cls('Perishable', 'Product', [m('fields', 'found'), m('constructor', 'found')], 'done'), cls('FrozenItem', 'Perishable', [m('fields'), m('constructor')])],
-        log: ['Product fields', 'Product constructor', 'Perishable fields', 'Perishable constructor'],
+        note: 'Product runs first: its field values, then its constructor body. (Object, above Product, has already finished.)',
+        classes: [ctor('Product', null, 1, 2, 'done'), ctor('Perishable', 'Product', 0, 0, 'waiting'), ctor('FrozenItem', 'Perishable', 0, 0, 'waiting')],
+        object: parts(true, false, false),
+        focus: ['Product'],
       },
       {
         line: 0,
-        note: 'Finally FrozenItem finishes. The order is always top-down: parent before child. This is why calling an overridable method from a constructor is dangerous: the child\'s override can run before the child\'s fields are initialised.',
-        classes: [product([m('fields', 'found'), m('constructor', 'found')], 'done'), cls('Perishable', 'Product', [m('fields', 'found'), m('constructor', 'found')], 'done'), cls('FrozenItem', 'Perishable', [m('fields', 'found'), m('constructor', 'found')], 'done')],
-        log: ['Product fields', 'Product constructor', 'Perishable fields', 'Perishable constructor', 'FrozenItem fields', 'FrozenItem constructor'],
+        note: 'Back in Perishable: its field values are set, then the rest of its constructor runs.',
+        classes: [ctor('Product', null, 1, 2, 'done'), ctor('Perishable', 'Product', 3, 4, 'done'), ctor('FrozenItem', 'Perishable', 0, 0, 'waiting')],
+        object: parts(true, true, false),
+        focus: ['Perishable'],
+      },
+      {
+        line: 0,
+        note: 'Finally FrozenItem finishes. The order is always parent first, child last. So never call an overridable method from a constructor: the child version could run before the child fields are set.',
+        classes: [ctor('Product', null, 1, 2, 'done'), ctor('Perishable', 'Product', 3, 4, 'done'), ctor('FrozenItem', 'Perishable', 5, 6, 'done')],
+        object: parts(true, true, true),
+        result: { text: 'parent first, child last', tone: 'ok' },
       },
     ],
   },

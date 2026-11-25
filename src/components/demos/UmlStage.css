@@ -1,0 +1,36 @@
+/* ---- class-diagram stage (UmlStage): SOLID and design-pattern scenes ---- */
+.uml-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.uml-bar-code { font: 700 0.9rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff8d6; border: 1px solid #e8d77a; border-radius: 0.35rem; padding: 0.15rem 0.5rem; overflow-wrap: anywhere; }
+.uml-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+
+.uml-band { fill: rgba(255, 255, 255, 0.7); stroke: #c3cfdd; stroke-width: 1.5; stroke-dasharray: 7 5; }
+.uml-band-title { font: 700 14px var(--font-hand, cursive); fill: var(--color-pen); }
+
+.uml-card { fill: #fff; stroke: #8d9bb0; stroke-width: 1.75; transition: stroke 0.3s, fill 0.3s; }
+.uml-card.is-ok { stroke: var(--color-ok); fill: var(--color-ok-soft); }
+.uml-card.is-bad { stroke: var(--color-bad); fill: var(--color-bad-soft); }
+.uml-card.is-warn { stroke: var(--color-warn); fill: var(--color-warn-soft); }
+.uml-card.is-new { stroke: var(--color-pen); fill: var(--color-pen-soft); stroke-width: 2.5; }
+.uml-interface { stroke-dasharray: 6 4; }
+.uml-actor { fill: #fff; }
+.uml-wrap { fill-opacity: 0.55; }
+.uml-card.uml-code { fill: #fbfaf5; }
+
+.uml-stereo { font: italic 11px system-ui, sans-serif; fill: #556070; }
+.uml-title { font: 700 13.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.uml-actor-title { font: 700 13px system-ui, sans-serif; fill: var(--color-pen); }
+.uml-sep { stroke: #b9c4d3; stroke-width: 1; }
+.uml-line { font: 500 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #2d3644; }
+.uml-line.is-marked { font-weight: 700; fill: var(--color-ink, #1b2430); }
+.uml-actor-line { font: 12px system-ui, sans-serif; fill: #3d4a5c; }
+.uml-mark.is-bad { fill: var(--color-bad-soft); stroke: var(--color-bad); stroke-width: 1; }
+.uml-mark.is-ok { fill: var(--color-ok-soft); stroke: var(--color-ok); stroke-width: 1; }
+.uml-mark.is-new { fill: var(--color-pen-soft); stroke: var(--color-pen); stroke-width: 1; }
+.uml-mark.is-warn { fill: var(--color-warn-soft); stroke: var(--color-warn); stroke-width: 1; }
+.uml-badge { font: 700 11px system-ui, sans-serif; fill: #fff; }
+
+.uml-impl { stroke-width: 2; stroke-dasharray: 6 4; stroke-linecap: round; }
+.uml-arrow-label { font-size: 11.5px; }
+.uml-fade { animation: uml-fade 0.5s ease-out both; }
+@keyframes uml-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .uml-fade { animation: none; } }
