@@ -1,0 +1,14 @@
+/* ---- deadlock stage (LockStage): threads and locks on a ring, and the thread-dump report ---- */
+.lock-node { stroke-width: 2; transition: fill 0.3s, stroke 0.3s; }
+.lock-node.tone-none { fill: #fff; stroke: #8d9bb0; }
+.lock-node.tone-ok { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.lock-node.tone-bad { fill: var(--color-bad-soft); stroke: var(--color-bad); }
+.lock-node.tone-warn { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.lock-node.tone-new { fill: var(--color-pen-soft); stroke: var(--color-pen); }
+.lock-node.is-lock { stroke-dasharray: 0; }
+.lock-title { font: 700 13.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.lock-sub { font: 12px system-ui, sans-serif; fill: #3d4a5c; }
+.lock-center { font: 700 14px system-ui, sans-serif; paint-order: stroke; stroke: #fff; stroke-width: 4px; }
+.lock-report { fill: #f7f9fc; stroke: var(--color-pen); stroke-width: 1.5; }
+.lock-report-text { font: 11.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); white-space: pre; }
+.lock-report-text.is-head { font-weight: 700; fill: var(--color-bad); }

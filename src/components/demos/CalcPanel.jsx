@@ -41,11 +41,11 @@ export function CalcPanel({ calc, snap, tags }) {
         <div className="flex flex-col gap-1 mt-2 text-xs">
           <span>
             <span className="inline-block w-3 h-3 align-middle mr-1 rounded-sm" style={{ background: 'var(--color-lo)' }} />
-            <b>lo</b>: <code>hash &amp; oldCap == 0</code> → stays at the same index
+            <b>lo</b>: when <code>hash &amp; oldCap</code> is 0, the node stays at the same index.
           </span>
           <span>
             <span className="inline-block w-3 h-3 align-middle mr-1 rounded-sm" style={{ background: 'var(--color-hi-move)' }} />
-            <b>hi</b>: <code>hash &amp; oldCap != 0</code> → moves to index + oldCap
+            <b>hi</b>: otherwise, the node moves to index + oldCap.
           </span>
         </div>
       </div>
@@ -83,16 +83,16 @@ export function CalcPanel({ calc, snap, tags }) {
       </Row>
       {s >= 2 && (
         <>
-          <Row label="h >>> 16" value={calc.high}>
+          <Row label="high bits" value={calc.high}>
             <Bits value={calc.high} dim />
           </Row>
-          <Row label="h ^ (h >>> 16)" value={calc.spread}>
+          <Row label="spread hash" value={calc.spread}>
             <Bits value={calc.spread} usedLow={s >= 3 ? k : 0} />
           </Row>
         </>
       )}
       {s >= 3 && (
-        <Row label={`& (n-1) = ${calc.cap - 1}`} value={<span className="text-pen">→ bucket {calc.idx}</span>}>
+        <Row label={`mask n - 1 = ${calc.cap - 1}`} value={<span className="text-pen">bucket {calc.idx}</span>}>
           <Bits value={calc.cap - 1} usedLow={k} />
         </Row>
       )}

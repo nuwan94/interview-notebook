@@ -1,0 +1,17 @@
+/* ---- GC reachability stage (GcReachStage): roots, heap objects and the references between them ---- */
+.gcr-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.gcr-phase { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.7rem; }
+.gcr-panel { fill: rgba(255, 255, 255, 0.85); stroke: #c3cfdd; stroke-width: 1.5; }
+.gcr-panel-title { font: 700 15px var(--font-hand, cursive); fill: var(--color-pen); }
+.gcr-root { fill: #fff; stroke: var(--color-pen); stroke-width: 2; }
+.gcr-root-name { font: 700 13.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.gcr-root-kind { font: 11.5px system-ui, sans-serif; fill: #4a5566; }
+.gcr-obj { stroke-width: 2; transition: fill 0.3s, stroke 0.3s; }
+.gcr-obj.is-live { fill: var(--color-pen-soft); stroke: var(--color-pen); }
+.gcr-obj.is-marked { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.gcr-obj.is-dead { fill: #eef0f3; stroke: #8b97a8; stroke-dasharray: 5 3; }
+.gcr-obj-text { font: 700 16px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-pen); }
+.gcr-obj-text.is-marked { fill: var(--color-ok); }
+.gcr-obj-text.is-dead { fill: #6b7788; text-decoration: line-through; }
+.gcr-hint { font: italic 12px system-ui, sans-serif; fill: #6b7788; }
+.gcr-legend { font: 12px system-ui, sans-serif; fill: #3d4a5c; }

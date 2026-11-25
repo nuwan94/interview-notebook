@@ -1,0 +1,9 @@
+/* TypeTreeStage: a type hierarchy and what the compiler allows */
+.ttree-panel { fill: rgba(255, 255, 255, 0.88); stroke: #c3cfdd; stroke-width: 1.5; }
+.ttree-title { font: 700 15px var(--font-hand, cursive); fill: var(--color-pen); }
+.ttree-caption { font-weight: 700; font-family: system-ui, sans-serif; fill: #3d4a5c; }
+.ttree-name { font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.ttree-sub { font-family: system-ui, sans-serif; fill: #4a515c; }
+.ttree-tag { font: 700 11px system-ui, sans-serif; fill: #fff; }
+.ttree-code { font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.ttree-verdict { font-weight: 700; font-family: system-ui, sans-serif; }

@@ -1,0 +1,30 @@
+/* ---- leak stage (LeakStage): GC log chart and what the heap dump shows ---- */
+.lk-panel { fill: rgba(255, 255, 255, 0.88); stroke: #c3cfdd; stroke-width: 1.5; }
+.lk-panel-title { font: 700 15px var(--font-hand, cursive); fill: var(--color-pen); }
+.lk-axis { stroke: #8d9bb0; stroke-width: 1.5; }
+.lk-max { stroke: var(--color-bad); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.lk-tick { font: 11px system-ui, sans-serif; fill: #4a5566; }
+.lk-line { fill: none; stroke: var(--color-pen); stroke-width: 2; stroke-linejoin: round; }
+.lk-floor { fill: none; stroke-width: 2; stroke-dasharray: 5 4; }
+.lk-floor.is-bad { stroke: var(--color-bad); }
+.lk-floor.is-ok { stroke: var(--color-ok); }
+.lk-dot.is-bad { fill: var(--color-bad); }
+.lk-dot.is-ok { fill: var(--color-ok); }
+.lk-floor-label { font: 700 12px system-ui, sans-serif; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+.lk-floor-label.is-bad { fill: var(--color-bad); }
+.lk-floor-label.is-ok { fill: var(--color-ok); }
+.lk-card { stroke-width: 2; }
+.lk-card.tone-new { fill: var(--color-pen-soft); stroke: var(--color-pen); }
+.lk-card.tone-ok { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.lk-card.tone-warn { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.lk-card.tone-bad { fill: var(--color-bad-soft); stroke: var(--color-bad); }
+.lk-card-title { font: 700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.lk-card-sub { font: 11.5px system-ui, sans-serif; fill: #3d4a5c; }
+.lk-col { font: 700 12px system-ui, sans-serif; fill: #3d4a5c; }
+.lk-row { fill: #f4f7fb; stroke: #c9d2de; stroke-width: 1; }
+.lk-row.is-top { stroke: var(--color-bad); stroke-width: 2; }
+.lk-bar { fill: #dbe3ee; }
+.lk-bar.is-top { fill: var(--color-bad-soft); }
+.lk-row-text { font: 700 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.lk-hint { font: italic 12px system-ui, sans-serif; fill: #4a5566; }
+.lk-empty { font: italic 13px system-ui, sans-serif; fill: #6b7788; }

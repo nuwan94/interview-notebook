@@ -70,8 +70,8 @@ export function JavaTimeline() {
         ))}
       </ol>
       <p className="text-xs text-soft mt-1 mb-3">
-        Until Java 8 releases arrived every few years. Since Java 10 a new version ships every March and September; a long-term-support (LTS)
-        release comes every two years.
+        Until Java 9, a release came every few years. Since Java 10, a new version ships every March and September. A long-term support
+        (LTS) release now comes every two years.
       </p>
 
       <div className="rounded-md border border-pen/30 bg-pen-soft/60 px-3 py-2 min-h-[7.5rem]" role="status" aria-live="polite">

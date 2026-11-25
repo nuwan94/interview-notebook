@@ -1,0 +1,8 @@
+/* CodePanelStage: code before and after, with marked lines */
+.cpanel-panel { fill: rgba(255, 255, 255, 0.9); stroke: #c3cfdd; stroke-width: 1.5; }
+.cpanel-title { font-weight: 700; font-family: var(--font-hand, cursive); fill: var(--color-pen); }
+.cpanel-code { font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.cpanel-code.is-gone { fill: #8a94a3; }
+.cpanel-strike { stroke: var(--color-bad); stroke-width: 1.5; }
+.cpanel-tag { font-weight: 700; font-family: system-ui, sans-serif; }
+.cpanel-arrow-label { font: 700 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-pen); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }

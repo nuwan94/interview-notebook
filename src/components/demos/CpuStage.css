@@ -1,0 +1,12 @@
+/* ---- busy-thread stage (CpuStage): top, hex conversion, thread dump and the cause ---- */
+.cpu-term { fill: #f7f9fc; stroke: #8d9bb0; stroke-width: 1.5; }
+.cpu-term.is-current { stroke: var(--color-pen); stroke-width: 2.5; }
+.cpu-cmd { font: 700 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-pen); }
+.cpu-head { font: 700 11.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #5b6676; white-space: pre; }
+.cpu-out { font: 11.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); white-space: pre; }
+.cpu-out.is-hot { font-weight: 700; }
+.cpu-hit { fill: var(--color-warn-soft); stroke: var(--color-warn); stroke-width: 1.2; }
+.cpu-code { fill: var(--color-bad-soft); stroke: var(--color-bad); stroke-width: 1.2; }
+.cpu-tag { font: 700 12px system-ui, sans-serif; fill: var(--color-bad); }
+.cpu-tag-left { font: 12px system-ui, sans-serif; fill: #3d4a5c; }
+.cpu-fix { font: 700 12px system-ui, sans-serif; fill: var(--color-ok); }

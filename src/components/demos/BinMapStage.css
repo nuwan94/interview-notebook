@@ -1,0 +1,16 @@
+/* BinMapStage: a hash map's array of bins with node chains, locks and threads. Classes start with bm-. */
+.bm-global { stroke: var(--color-warn); stroke-width: 3; stroke-dasharray: 9 6; }
+.bm-bin { fill: #fff; stroke: #8d9bb0; stroke-width: 1.5; transition: fill 0.3s, stroke 0.3s; }
+.bm-bin.is-locked { fill: var(--color-warn-soft); stroke: var(--color-warn); stroke-width: 2.5; }
+.bm-bin.is-cursor { stroke: var(--color-pen); stroke-width: 2.5; }
+.bm-index { font: 700 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #7b8697; }
+.bm-empty { font-style: italic; font-size: 10px; }
+.bm-link { stroke: #8d9bb0; stroke-width: 1.5; }
+.bm-dot { fill: #556070; }
+.bm-node { fill: #fff; stroke: #8d9bb0; stroke-width: 1.5; }
+.bm-node.is-new { fill: var(--color-pen-soft); stroke: var(--color-pen); stroke-width: 2; }
+.bm-node.is-ok { fill: var(--color-ok-soft); stroke: var(--color-ok); stroke-width: 2; }
+.bm-node.is-bad { fill: var(--color-bad-soft); stroke: var(--color-bad); stroke-width: 2; }
+.bm-node.is-lost { fill: var(--color-bad-soft); stroke: var(--color-bad); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.bm-strike { text-decoration: line-through; }
+.bm-visited { opacity: 0.45; transition: opacity 0.3s; }

@@ -70,15 +70,15 @@ class SimHashMap {
   hashFrames(sig, key) {
     const c = this.calc(key);
     if (this.brief) {
-      this.emit(`${sig}: \`hashCode()\` ${c.raw} → spread ${c.spread} → bucket \`${this.cap - 1} & ${c.spread}\` = ${c.idx}.`, {
+      this.emit(`${sig}: the hash code is ${c.raw}, the spread hash is ${c.spread}, and \`${this.cap - 1} & ${c.spread}\` picks bucket ${c.idx}.`, {
         calc: { ...c, stage: 3 },
         active: { bucket: c.idx, state: 'target' },
       });
       return c;
     }
-    this.emit(`${sig}: first ask the key for its \`hashCode()\` → ${c.raw}.`, { calc: { ...c, stage: 1 } });
-    this.emit(`Spread the high bits into the low bits: \`h ^ (h >>> 16)\` → ${c.spread}.`, { calc: { ...c, stage: 2 } });
-    this.emit(`Pick the bucket: \`(n - 1) & hash\` = \`${this.cap - 1} & ${c.spread}\` → bucket ${c.idx}.`, {
+    this.emit(`${sig}: first the map asks the key for its \`hashCode()\`, which is ${c.raw}.`, { calc: { ...c, stage: 1 } });
+    this.emit(`Next it mixes the high 16 bits into the low 16 bits with \`h ^ (h >>> 16)\`. The spread hash is ${c.spread}.`, { calc: { ...c, stage: 2 } });
+    this.emit(`Then it keeps only the low bits: \`(n - 1) & hash\` is \`${this.cap - 1} & ${c.spread}\`, which is bucket ${c.idx}.`, {
       calc: { ...c, stage: 3 },
       active: { bucket: c.idx, state: 'target' },
     });
@@ -92,7 +92,7 @@ class SimHashMap {
     if (b.tree) {
       const hit = b.nodes.find((n) => n.hash === c.spread && (n.key === key || this.kf.equals(n.key, key)));
       this.emit(
-        `Bucket ${c.idx} is a red-black tree: descend by hash (then \`compareTo\`) instead of walking every node — O(log n).`,
+        `Bucket ${c.idx} is a red-black tree. The map goes down the tree by hash (then by \`compareTo\`), so it checks only a few nodes: O(log n).`,
         {
           calc: { ...c, stage: 3 },
           active: { bucket: c.idx, nodeId: hit?.id, state: hit ? 'match' : 'compare' },
@@ -113,34 +113,34 @@ class SimHashMap {
       }
       this.emit(
         hit
-          ? `Walked ${skipped + 1} of ${b.nodes.length} nodes in bucket ${c.idx} (hash, then \`equals()\`) → match.`
-          : `Bucket ${c.idx} is a collision: walked all ${b.nodes.length} nodes comparing hash (then \`equals()\`) → no match.`,
+          ? `The map checked ${skipped + 1} of the ${b.nodes.length} nodes in bucket ${c.idx}, comparing the hash and then \`equals()\`. It found the key.`
+          : `Bucket ${c.idx} already holds other keys. The map checked all ${b.nodes.length} nodes, comparing the hash and then \`equals()\`, and found no match.`,
         { calc: { ...c, stage: 3 }, active: { bucket: c.idx, nodeId: hit?.id, state: hit ? 'match' : 'compare' }, dwell: 1 },
       );
       return hit;
     }
     this.emit(
       b.nodes.length === 1
-        ? `Bucket ${c.idx} already holds a node — compare it with our key.`
-        : `Bucket ${c.idx} already holds ${b.nodes.length} nodes — walk the chain, comparing each one.`,
+        ? `Bucket ${c.idx} already holds a node. The map compares it with our key.`
+        : `Bucket ${c.idx} already holds ${b.nodes.length} nodes. The map walks the chain and compares each one.`,
       { calc: { ...c, stage: 3 }, active: { bucket: c.idx, state: 'target' }, dwell: 0.8 },
     );
     for (const n of b.nodes) {
       const lbl = this.kf.label(n.key);
       if (n.hash !== c.spread) {
-        this.emit(`Node ${lbl}: stored hash ${n.hash} ≠ ${c.spread} → different key. \`equals()\` is not even called.`, {
+        this.emit(`Node ${lbl} has stored hash ${n.hash}, not ${c.spread}, so it is a different key. \`equals()\` is not even called.`, {
           calc: { ...c, stage: 3 },
           active: { bucket: c.idx, nodeId: n.id, state: 'compare' },
           dwell: 0.8,
         });
       } else if (n.key === key || this.kf.equals(n.key, key)) {
-        this.emit(`Node ${lbl}: hash is equal and \`equals()\` returns true → same key found.`, {
+        this.emit(`Node ${lbl} has the same hash, and \`equals()\` returns true. This is the same key.`, {
           calc: { ...c, stage: 3 },
           active: { bucket: c.idx, nodeId: n.id, state: 'match' },
         });
         return n;
       } else {
-        this.emit(`Node ${lbl}: hash is equal but \`equals()\` returns false → a genuine collision, keep walking.`, {
+        this.emit(`Node ${lbl} has the same hash, but \`equals()\` returns false. It is a different key with the same hash, so the map keeps walking.`, {
           calc: { ...c, stage: 3 },
           active: { bucket: c.idx, nodeId: n.id, state: 'compare' },
         });
@@ -156,7 +156,7 @@ class SimHashMap {
     if (hit) {
       const old = hit.value;
       hit.value = value;
-      this.emit(`Key already present → replace the value (${fmtVal(old)} → ${fmtVal(value)}). Size stays ${this.size}.`, {
+      this.emit(`The key is already there, so the map replaces the value ${fmtVal(old)} with ${fmtVal(value)}. The size stays ${this.size}.`, {
         calc: { ...c, stage: 3 },
         active: { bucket: c.idx, nodeId: hit.id, state: 'new' },
         result: { text: `returns ${fmtVal(old)}`, kind: 'ok' },
@@ -171,10 +171,10 @@ class SimHashMap {
     this.size++;
     this.emit(
       wasEmpty
-        ? `Bucket ${c.idx} is empty → store the new Node here. No collision.`
+        ? `Bucket ${c.idx} is empty, so the new node goes straight in. There is no collision.`
         : b.tree
-          ? `Not found → insert a new TreeNode into the tree.`
-          : `End of chain, key not found → append the new Node at the tail (Java 8+; Java 7 inserted at the head).`,
+          ? `The key is not in the tree, so the map inserts a new TreeNode.`
+          : `The map reached the end of the chain without finding the key. It adds the new node at the tail. (Java 7 added it at the head.)`,
       {
         calc: { ...c, stage: 3 },
         active: { bucket: c.idx, nodeId: node.id, state: 'new' },
@@ -182,21 +182,21 @@ class SimHashMap {
       },
     );
     if (!b.tree && b.nodes.length > TREEIFY_THRESHOLD) this.treeifyBin(c.idx);
-    if (this.size > this.threshold) this.resize(`size ${this.size} > threshold ${this.threshold}`);
+    if (this.size > this.threshold) this.resize(`the size ${this.size} is above the threshold ${this.threshold}`);
   }
 
   treeifyBin(idx) {
     const b = this.table[idx];
     if (this.cap < MIN_TREEIFY_CAPACITY) {
       this.emit(
-        `Chain has ${b.nodes.length} nodes (more than ${TREEIFY_THRESHOLD}) but the table has only ${this.cap} buckets (< ${MIN_TREEIFY_CAPACITY}) → HashMap resizes instead of treeifying.`,
+        `The chain now has ${b.nodes.length} nodes, more than ${TREEIFY_THRESHOLD}. But the table has only ${this.cap} buckets, fewer than ${MIN_TREEIFY_CAPACITY}, so HashMap doubles the table instead of making a tree.`,
         { active: { bucket: idx, state: 'target' }, dwell: 1.4 },
       );
-      this.resize(`treeifyBin() with capacity ${this.cap} < ${MIN_TREEIFY_CAPACITY}`);
+      this.resize(`the table is too small to make a tree`);
     } else {
       b.tree = true;
       this.emit(
-        `Chain has ${b.nodes.length} nodes and the table has ${this.cap} (≥ ${MIN_TREEIFY_CAPACITY}) buckets → bucket ${idx} is converted into a red-black tree.`,
+        `The chain has ${b.nodes.length} nodes and the table has ${this.cap} buckets, which is at least ${MIN_TREEIFY_CAPACITY}. So bucket ${idx} becomes a red-black tree.`,
         { active: { bucket: idx, state: 'treeify' }, dwell: 1.5 },
       );
     }
@@ -208,7 +208,7 @@ class SimHashMap {
     const tags = {};
     for (const b of this.table) b?.nodes.forEach((n) => (tags[n.id] = (n.hash & oldCap) === 0 ? 'lo' : 'hi'));
     this.emit(
-      `Resize (${why}): capacity ${oldCap} → ${newCap}. One bit decides each node's fate: \`hash & ${oldCap}\` is 0 → stays at index i ("lo"), else moves to i + ${oldCap} ("hi").`,
+      `Resize, because ${why}. The capacity doubles from ${oldCap} to ${newCap}. One bit decides where each node goes: if \`hash & ${oldCap}\` is 0, the node stays at index i (blue, "lo"). Otherwise it moves to i + ${oldCap} (orange, "hi").`,
       { tags, dwell: 2 },
     );
     const next = new Array(newCap).fill(null);
@@ -223,7 +223,7 @@ class SimHashMap {
     this.cap = newCap;
     this.threshold = oldCap >= 16 ? this.threshold * 2 : Math.floor(newCap * 0.75);
     this.emit(
-      `Done: ${newCap} buckets, new threshold ${this.threshold}. Stored hashes were reused — no \`hashCode()\` call, no re-hashing; relative order inside each chain is preserved.`,
+      `Done. The table has ${newCap} buckets and the new threshold is ${this.threshold}. The map reused the stored hashes, so it called no \`hashCode()\`. The nodes in each chain kept their order.`,
       { tags, dwell: 2 },
     );
   }
@@ -233,7 +233,7 @@ class SimHashMap {
     const c = this.hashFrames(sig, key);
     const hit = this.locate(key, c);
     if (hit) {
-      this.emit(`Found it → ${sig} returns ${fmtVal(hit.value)}.`, {
+      this.emit(`Found it. ${sig} returns ${fmtVal(hit.value)}.`, {
         calc: { ...c, stage: 3 },
         active: { bucket: c.idx, nodeId: hit.id, state: 'match' },
         result: { text: `returns ${fmtVal(hit.value)}`, kind: 'ok' },
@@ -242,8 +242,8 @@ class SimHashMap {
       const b = this.table[c.idx];
       this.emit(
         b
-          ? `Reached the end of bucket ${c.idx} without a match → ${sig} returns null.`
-          : `Bucket ${c.idx} is empty → ${sig} returns null.`,
+          ? `The map reached the end of bucket ${c.idx} without a match, so ${sig} returns null.`
+          : `Bucket ${c.idx} is empty, so ${sig} returns null.`,
         {
           calc: { ...c, stage: 3 },
           active: { bucket: c.idx, state: 'miss' },
@@ -259,7 +259,7 @@ class SimHashMap {
     const c = this.hashFrames(sig, key);
     const hit = this.locate(key, c);
     if (!hit) {
-      this.emit(`Not found → nothing to remove, returns null.`, {
+      this.emit(`The key is not there, so there is nothing to remove. It returns null.`, {
         active: { bucket: c.idx, state: 'miss' },
         result: { text: 'returns null', kind: 'null' },
       });
@@ -269,7 +269,7 @@ class SimHashMap {
     b.nodes = b.nodes.filter((n) => n !== hit);
     if (!b.nodes.length) this.table[c.idx] = null;
     this.size--;
-    this.emit(`Node unlinked from bucket ${c.idx}. Size is now ${this.size}. (The table never shrinks.)`, {
+    this.emit(`The node is unlinked from bucket ${c.idx}. The size is now ${this.size}. The table itself never shrinks.`, {
       active: { bucket: c.idx, state: 'target' },
       result: { text: `returns ${fmtVal(hit.value)}`, kind: 'ok' },
     });
@@ -281,7 +281,7 @@ class SimHashMap {
     const node = this.table[bIdx]?.nodes.find((n) => n.key === key);
     const c = this.calc(key);
     this.emit(
-      `${caption} The Node stays in bucket ${bIdx} (stored hash ${node?.hash}), but the key's hashCode() is now ${c.raw} → it would be looked up in bucket ${c.idx}.`,
+      `${caption} The node stays in bucket ${bIdx}, with its old stored hash ${node?.hash}. But the key's \`hashCode()\` is now ${c.raw}, so every lookup goes to bucket ${c.idx}.`,
       { calc: { ...c, stage: 3 }, active: { bucket: bIdx, nodeId: node?.id, state: 'stale' }, dwell: 2 },
     );
   }
@@ -295,7 +295,7 @@ export function runScenario({ kf = defaultKeyFns, capacity = 16, ops = [], intro
   const frames = [];
   const map = new SimHashMap(kf, capacity, frames, brief);
   map.emit(
-    intro || `A brand-new HashMap: ${capacity} empty buckets, load factor 0.75 → resize threshold ${map.threshold}.`,
+    intro || `A brand-new HashMap has ${capacity} empty buckets. With a load factor of 0.75, it grows when it holds more than ${map.threshold} entries.`,
   );
   const opStarts = [];
   ops.forEach((op, i) => {

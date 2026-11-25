@@ -6,26 +6,35 @@ summary: Why plain collections fail across threads, how ConcurrentHashMap, CopyO
 tags: [Java, Concurrency, Collections]
 order: 20
 topic: Java / Concurrency
-updated: 2026-11-13
+updated: 2026-11-24
 subnav: true
 ---
 
-After "what is a race condition?" the next interview question is usually "what do you use instead of `HashMap` across threads, and how does it work?". This lesson builds on [Java concurrency](lesson:java-concurrency) (threads, locks, atomics) and the [collections framework](lesson:java-collections); the internals of the plain map are in [HashMap](lesson:java-hashmap). Play the four scenes: why plain collections fail, `ConcurrentHashMap`, `CopyOnWriteArrayList`, and `BlockingQueue`.
+After "what is a race condition?", the next interview question is usually: "What do you use instead of `HashMap` when several threads share it, and how does it work?"
+
+This lesson builds on two others:
+
+- [Java concurrency](lesson:java-concurrency) covers threads, locks and atomics.
+- The [collections framework](lesson:java-collections) covers the plain collections. The inside of the plain map is explained in [HashMap](lesson:java-hashmap).
+
+The animation has four scenes: why plain collections fail, `ConcurrentHashMap`, `CopyOnWriteArrayList` and `BlockingQueue`.
 
 ```demo
 name: java-concurrent-collections-walk
 ```
 
-> **One sentence to remember:** *`ArrayList` and `HashMap` are not thread-safe; use `ConcurrentHashMap` for shared maps (bucket-level locking and CAS, atomic `merge`/`compute`), `CopyOnWriteArrayList` for read-mostly lists, and a `BlockingQueue` to hand work between threads, and remember that two safe calls in a row are still not atomic.*
+> **One sentence to remember:** *Share a `ConcurrentHashMap`, never a `HashMap`, and use one atomic call such as `merge` instead of two safe calls in a row.*
 
 ## Why synchronized wrappers are not enough {#why}
 
-| Approach | Safe for single calls? | Scales? | Problem |
+| Approach | Is one call safe? | Does it scale? | Problem |
 | --- | --- | --- | --- |
-| plain `HashMap` / `ArrayList` | no | n/a | lost updates, corrupted structure, infinite loops on resize (Java 7) |
-| `Hashtable`, `Vector` | yes | poor | one lock on every method |
-| `Collections.synchronizedMap(...)` | yes | poor | one lock; **iteration and check-then-act still need manual locking** |
-| `java.util.concurrent` collections | yes | good | different semantics (weakly consistent iterators, no nulls) |
+| Plain `HashMap` / `ArrayList` | No. | Not relevant. | Updates get lost and the structure can break. In Java 7, a resize could even loop for ever. |
+| `Hashtable`, `Vector` | Yes. | Poorly. | Every method takes the same single lock. |
+| `Collections.synchronizedMap(...)` | Yes. | Poorly. | It has one lock too. **Loops over it and check-then-act still need your own lock.** |
+| `java.util.concurrent` collections | Yes. | Well. | They behave a little differently: iterators are weakly consistent and `null` is not allowed. |
+
+A safe single call does not make a sequence of calls safe:
 
 ```java
 // still a race with a synchronized map: two threads can both see "absent"
@@ -37,15 +46,23 @@ Account acc = map.computeIfAbsent(id, Account::new);
 
 ## ConcurrentHashMap {#chm}
 
-The standard thread-safe map. Since Java 8 it has no segments and no global lock: an array of bins where inserting into an **empty bin uses CAS** (compare-and-swap), and otherwise the writer `synchronized`s on the **first node of that one bin**. Reads are lock-free (volatile reads). Many threads can write to different bins at the same time. Long bins become trees, like `HashMap`.
+`ConcurrentHashMap` is the standard thread-safe map. Since Java 8 it has no segments and no lock for the whole map.
+
+Inside, it is an array of **bins** (buckets):
+
+- To put a node into an **empty bin**, a thread uses **CAS** (compare-and-swap): "set this slot to my node only if it is still empty". No lock is needed.
+- To change a bin that already has nodes, the thread locks only the **first node of that bin** with `synchronized`.
+- Reads take no lock. They use volatile reads, which always see the latest published value.
+
+So many threads can write to different bins at the same time. A bin with many nodes becomes a tree, as in `HashMap`.
 
 | Feature | Behaviour |
 | --- | --- |
-| nulls | `null` keys and values are **not allowed** (so `get` returning `null` means "absent") |
-| iterators | weakly consistent: no `ConcurrentModificationException`, may or may not see concurrent changes |
-| `size()` | an estimate while writers run (`mappingCount()` returns a `long`) |
-| atomic per-key methods | `putIfAbsent`, `computeIfAbsent`, `computeIfPresent`, `compute`, `merge`, `replace`, `remove(key, value)` |
-| bulk operations | `forEach`, `reduce`, `search` with a parallelism threshold |
+| Nulls | `null` keys and values are **not allowed**. So when `get` returns `null`, the key is absent. |
+| Iterators | They are weakly consistent. They never throw `ConcurrentModificationException`, and they may or may not see changes made while they run. |
+| `size()` | It is only an estimate while other threads write. `mappingCount()` returns the count as a `long`. |
+| Atomic methods for one key | `putIfAbsent`, `computeIfAbsent`, `computeIfPresent`, `compute`, `merge`, `replace` and `remove(key, value)`. |
+| Bulk operations | `forEach`, `reduce` and `search`, each with a parallelism threshold (the size above which the work runs in parallel). |
 
 ```java
 ConcurrentMap<String, LongAdder> hits = new ConcurrentHashMap<>();
@@ -55,29 +72,37 @@ ConcurrentMap<String, Integer> counts = new ConcurrentHashMap<>();
 counts.merge(word, 1, Integer::sum);                                  // atomic read-modify-write
 ```
 
-Keep the function passed to `compute*` and `merge` short, side-effect free and never touching the same map: it runs while the bin is locked, and a slow or re-entrant function blocks other writers or can deadlock.
+Keep the function you pass to `compute*` and `merge` short. It should have no side effects and must never touch the same map. The reason: it runs while the bin is locked. A slow function blocks other writers, and a function that updates the same map can deadlock.
 
 ## CopyOnWriteArrayList and CopyOnWriteArraySet {#cow}
 
-Every mutation copies the whole backing array; reads take no lock and iterate a **snapshot**. Iterators never throw and never see later changes, and they do not support `remove`.
+Every change copies the whole backing array. Reads take no lock.
+
+An iterator walks a **snapshot**: the array as it was when the iterator was created. So iterators never throw and never see later changes. They also do not support `remove`.
 
 | Good for | Bad for |
 | --- | --- |
-| listener lists, configuration, small lists read constantly and changed rarely | large lists, frequent writes (each write is O(n) and creates garbage) |
+| Listener lists, configuration, and other small lists that are read all the time and changed rarely. | Large lists, and lists that change often. Each write takes O(n) time (it grows with the list size) and creates garbage. |
 
 ## Queues {#queues}
 
 | Class | Blocking? | Bounded? | Notes |
 | --- | --- | --- | --- |
-| `ConcurrentLinkedQueue` / `ConcurrentLinkedDeque` | no (non-blocking, lock-free CAS) | no | `poll` returns `null` when empty; `size()` is O(n) |
-| `ArrayBlockingQueue` | yes | yes (fixed) | one lock, optional fairness |
-| `LinkedBlockingQueue` | yes | optional (default unbounded) | separate put and take locks, higher throughput |
-| `PriorityBlockingQueue` | take blocks | unbounded | ordered by priority |
-| `DelayQueue` | take blocks until delay expired | unbounded | scheduled tasks |
-| `SynchronousQueue` | yes | zero capacity | direct hand-off (used by cached thread pools) |
-| `LinkedTransferQueue` | yes | no | `transfer` waits for a consumer |
+| `ConcurrentLinkedQueue` / `ConcurrentLinkedDeque` | No. It never blocks and uses CAS instead of locks. | No. | `poll` returns `null` when the queue is empty. `size()` is O(n), because it counts the nodes. |
+| `ArrayBlockingQueue` | Yes. | Yes, with a fixed size. | It has one lock, with an optional fair mode. |
+| `LinkedBlockingQueue` | Yes. | Optional, and unbounded by default. | It has separate locks for put and take, so it handles more operations per second. |
+| `PriorityBlockingQueue` | `take` blocks. | No. | Items come out in priority order. |
+| `DelayQueue` | `take` blocks until an item's delay has passed. | No. | Used for scheduled tasks. |
+| `SynchronousQueue` | Yes. | It has zero capacity. | It hands each item directly to a waiting thread. Cached thread pools use it. |
+| `LinkedTransferQueue` | Yes. | No. | `transfer` waits until a consumer takes the item. |
 
-`BlockingQueue` methods: `put` (block when full), `take` (block when empty), `offer(e, timeout, unit)`, `poll(timeout, unit)`. A bounded queue gives **backpressure**.
+The `BlockingQueue` methods:
+
+- `put` waits while the queue is full.
+- `take` waits while the queue is empty.
+- `offer(e, timeout, unit)` and `poll(timeout, unit)` wait only up to a time limit.
+
+A bounded queue gives you **backpressure**: when the queue is full, the producer has to wait, so a fast producer is slowed down to the speed of the consumers.
 
 ```java
 BlockingQueue<PaymentRequest> queue = new ArrayBlockingQueue<>(100);
@@ -91,27 +116,43 @@ PaymentRequest next = queue.take();              // waits for work
 
 ## Sorted concurrent collections {#skiplist}
 
-`ConcurrentSkipListMap` and `ConcurrentSkipListSet` are the concurrent counterparts of `TreeMap` and `TreeSet`: a skip list (layers of linked lists) with lock-free updates, sorted order, O(log n) operations and navigation methods (`ceilingKey`, `headMap`).
+`ConcurrentSkipListMap` and `ConcurrentSkipListSet` are the thread-safe versions of `TreeMap` and `TreeSet`.
+
+They are built on a **skip list**: several layers of sorted linked lists, where the higher layers skip over more nodes. They give you:
+
+- updates without locks,
+- sorted order,
+- O(log n) operations,
+- navigation methods such as `ceilingKey` and `headMap`.
 
 ## Atomic counters {#counters}
 
-For a shared number, an `AtomicLong` is a single CAS variable; `LongAdder` spreads updates over several cells and sums them on read, which is much faster under heavy contention but gives a non-atomic snapshot of the total.
+For a shared number there are two choices:
+
+- An `AtomicLong` is a single variable updated with CAS.
+- A `LongAdder` spreads the updates over several cells and adds them up when you read it. It is much faster when many threads update it at once. The price is that the total you read is not an atomic snapshot.
 
 ## Immutable beats concurrent {#immutable}
 
-The simplest thread-safe collection is one nobody changes: build it, make it immutable (`List.copyOf`, `Map.copyOf`), and publish it safely (a `final` or `volatile` field). To update, build a new one and swap the reference (the idea behind copy-on-write). Also consider confining a collection to one thread.
+The simplest thread-safe collection is one that nobody changes.
+
+1. Build it.
+2. Make it immutable with `List.copyOf` or `Map.copyOf`.
+3. Publish it safely, through a `final` or `volatile` field.
+
+To update it, build a new one and swap the reference. This is the same idea as copy-on-write. Another option is to keep a collection inside one thread, so no other thread ever sees it.
 
 ## Choosing {#choosing}
 
 | Need | Use |
 | --- | --- |
-| shared map | `ConcurrentHashMap` |
-| shared sorted map | `ConcurrentSkipListMap` |
-| list read much more than written | `CopyOnWriteArrayList` |
-| unbounded non-blocking queue | `ConcurrentLinkedQueue` |
-| producer-consumer with backpressure | `ArrayBlockingQueue` / `LinkedBlockingQueue(capacity)` |
-| shared counter | `AtomicLong` or `LongAdder` |
-| a set | `ConcurrentHashMap.newKeySet()` |
+| A shared map | `ConcurrentHashMap` |
+| A shared sorted map | `ConcurrentSkipListMap` |
+| A list that is read much more than written | `CopyOnWriteArrayList` |
+| An unbounded queue that never blocks | `ConcurrentLinkedQueue` |
+| Producer-consumer with backpressure | `ArrayBlockingQueue` / `LinkedBlockingQueue(capacity)` |
+| A shared counter | `AtomicLong` or `LongAdder` |
+| A set | `ConcurrentHashMap.newKeySet()` |
 
 Try it in the lab: [ConcurrentHashMap: check-then-act and atomic compute](lab:concurrent-map-atomic).
 
@@ -123,98 +164,202 @@ Try it in the lab: [ConcurrentHashMap: check-then-act and atomic compute](lab:co
 | `TreeMap` | `ConcurrentSkipListMap` |
 | `HashSet` | `ConcurrentHashMap.newKeySet()` |
 | `ArrayList` (read-mostly) | `CopyOnWriteArrayList` |
-| `ArrayDeque` / `LinkedList` queue | `ConcurrentLinkedQueue` or a `BlockingQueue` |
+| `ArrayDeque` / `LinkedList` used as a queue | `ConcurrentLinkedQueue` or a `BlockingQueue` |
 | `PriorityQueue` | `PriorityBlockingQueue` |
 
 ## Interview questions {#questions}
 
 ### [basic] Why is HashMap not thread-safe? {#hashmap-unsafe}
 
-Operations such as `put` are several steps (read size, find bucket, link node, maybe resize) that can interleave between threads, so updates can be lost or the structure corrupted, and a visibility problem means one thread may not see another's writes. In Java 7 a concurrent resize could even create an infinite loop. See [HashMap](lesson:java-hashmap).
+Because a `put` is several steps, and two threads can run those steps at the same time.
+
+1. A `put` reads the size, finds the bucket, links the node and maybe resizes. Steps of two threads can interleave, so updates can be lost or the structure can break.
+2. There is also a visibility problem: one thread may not see what another thread wrote.
+3. In Java 7, two threads resizing at the same time could even create an infinite loop.
+
+See [HashMap](lesson:java-hashmap).
 
 ### [basic] What is the difference between HashMap, Hashtable, Collections.synchronizedMap and ConcurrentHashMap? {#map-comparison}
 
-`HashMap` is fast but unsafe. `Hashtable` and `synchronizedMap` lock the whole map on each call (safe, but contended; iteration needs extra locking). `ConcurrentHashMap` locks per bin or uses CAS, has lock-free reads and atomic compound methods. It disallows `null` keys and values.
+They differ in safety and in how much they lock.
+
+- `HashMap` is fast but not safe across threads.
+- `Hashtable` and `synchronizedMap` lock the whole map on each call. They are safe, but threads wait for each other, and loops over them need an extra lock.
+- `ConcurrentHashMap` locks one bin at a time or uses CAS. Reads take no lock, and it has atomic compound methods. It does not allow `null` keys or values.
 
 ### [basic] What is a ConcurrentModificationException and do concurrent collections throw it? {#cme}
 
-A fail-fast signal from plain collections when they change while being iterated. Concurrent collections do not throw it: their iterators are weakly consistent (or work on a snapshot), so iteration continues and may or may not reflect concurrent changes.
+It is an error that plain collections throw when they change while you loop over them. This early failure is called **fail-fast**.
+
+Concurrent collections do not throw it. Their iterators are weakly consistent, or they walk a snapshot. So the loop continues, and it may or may not see the changes.
 
 ### [basic] When would you use CopyOnWriteArrayList? {#cow-when}
 
-For lists that are iterated very often and modified rarely, such as a list of event listeners, because reads need no locking and iteration is on a snapshot. Avoid it for large or frequently written lists since every write copies the array.
+For lists that are looped over very often and changed rarely, such as a list of event listeners.
+
+- Reads need no lock.
+- Loops run on a snapshot, so they are never disturbed.
+
+Avoid it for large lists or lists that change often, because every write copies the whole array.
 
 ### [basic] What is a BlockingQueue and what is it used for? {#blockingqueue-q}
 
-A queue whose `put` blocks when full and `take` blocks when empty, used for producer-consumer designs and thread pools. It removes the need for manual `wait`/`notify` and, when bounded, applies backpressure to fast producers.
+It is a queue where `put` waits when the queue is full and `take` waits when it is empty.
+
+- It is used for producer-consumer designs and inside thread pools.
+- It removes the need for your own `wait` and `notify` code.
+- When it is bounded, it slows down producers that are too fast (backpressure).
 
 ### [basic] Why does ConcurrentHashMap not allow null keys or values? {#chm-null-q}
 
-Because `get(key)` returning `null` must unambiguously mean "no mapping". In a concurrent map you cannot reliably follow up with `containsKey` to distinguish "absent" from "mapped to null", since another thread may change the map in between.
+So that `get(key)` returning `null` always means "there is no entry".
+
+With a `null` value allowed, you would have to call `containsKey` to tell "absent" from "mapped to null". In a concurrent map that check is not reliable, because another thread can change the map between the two calls.
 
 ### [intermediate] How does ConcurrentHashMap work internally in Java 8+? {#chm-internals}
 
-An array of bins. For an empty bin the first node is inserted with CAS (no lock). Otherwise the thread synchronizes on the head node of that bin, so only writers to the same bin contend. Reads use volatile reads and never lock. Large bins become red-black trees, and resizing is done cooperatively by multiple threads, with a `ForwardingNode` marking moved bins. Java 7 used segments (a fixed number of locks) instead.
+It is an array of bins, and it locks at most one bin at a time.
+
+1. For an empty bin, the first node is put in with CAS. No lock is taken.
+2. Otherwise, the thread synchronizes on the first node of that bin. So only writers to the same bin wait for each other.
+3. Reads use volatile reads and never lock.
+4. Large bins become red-black trees.
+5. Several threads share the work of a resize. A `ForwardingNode` marks the bins that have already moved to the new array.
+
+Java 7 used segments instead: a fixed number of locks.
 
 ### [intermediate] Are ConcurrentHashMap operations atomic as a group? {#chm-compound}
 
-Each single method is atomic, but a sequence of calls is not. `if (!map.containsKey(k)) map.put(k, v)` is a race. Use `putIfAbsent`, `computeIfAbsent`, `compute` or `merge`, which perform the read-modify-write atomically for that key. Operations across several keys are still not atomic.
+No. Each single method is atomic, but a sequence of calls is not.
+
+`if (!map.containsKey(k)) map.put(k, v)` is a race. Use `putIfAbsent`, `computeIfAbsent`, `compute` or `merge` instead. Each of them does the read-modify-write for that key in one atomic step.
+
+Operations across several keys are still not atomic.
 
 ### [intermediate] What does computeIfAbsent guarantee, and what are its pitfalls? {#compute-if-absent}
 
-It runs the mapping function at most once per absent key and the result becomes visible atomically. The function executes while the bin is locked, so it must be fast, must not block on I/O and must not modify the same map (the update can deadlock or throw `IllegalStateException: Recursive update` on Java 9+). Do not use it to start long computations; store a `CompletableFuture` or `Lazy` holder instead.
+It runs the mapping function at most once for an absent key, and the result appears atomically.
+
+The pitfall is that the function runs while the bin is locked. So the function:
+
+- must be fast,
+- must not wait for I/O,
+- must not change the same map. That can deadlock, or throw `IllegalStateException: Recursive update` on Java 9+.
+
+Do not use it to start a long computation. Store a `CompletableFuture` or a `Lazy` holder in the map instead.
 
 ### [intermediate] What are weakly consistent iterators? {#weakly-consistent}
 
-Iterators that are safe to use while the collection changes: they never throw `ConcurrentModificationException`, they traverse elements as they existed at or after creation, and may or may not reflect changes made after that. They are not a point-in-time snapshot (unlike `CopyOnWriteArrayList`'s).
+They are iterators that are safe to use while the collection changes.
+
+- They never throw `ConcurrentModificationException`.
+- They return the elements as they existed when the iterator was created, or later.
+- They may or may not show changes made after the iterator was created.
+
+They are not a snapshot taken at one moment. The iterators of `CopyOnWriteArrayList` are snapshots.
 
 ### [intermediate] Is size() accurate on a ConcurrentHashMap? {#chm-size}
 
-Only when no concurrent updates are happening. It sums counter cells, so under concurrent modification it is an estimate that may be stale immediately. Use `mappingCount()` for a `long`, and do not base logic on `size()` of a map being modified.
+Only when no other thread is changing the map.
+
+`size()` adds up several counter cells. While other threads write, the sum is only an estimate, and it can be out of date immediately. Use `mappingCount()` to get the count as a `long`. Do not base program logic on the `size()` of a map that is being changed.
 
 ### [intermediate] How do you create a concurrent Set? {#concurrent-set}
 
-`ConcurrentHashMap.newKeySet()` (backed by a `ConcurrentHashMap`), `ConcurrentSkipListSet` for a sorted one, `CopyOnWriteArraySet` for tiny read-mostly sets. `Collections.newSetFromMap(new ConcurrentHashMap<>())` also works.
+There are several ways:
+
+- `ConcurrentHashMap.newKeySet()`, which is backed by a `ConcurrentHashMap`.
+- `ConcurrentSkipListSet` for a sorted set.
+- `CopyOnWriteArraySet` for tiny sets that are mostly read.
+- `Collections.newSetFromMap(new ConcurrentHashMap<>())` also works.
 
 ### [intermediate] What is the difference between ArrayBlockingQueue and LinkedBlockingQueue? {#abq-vs-lbq}
 
-`ArrayBlockingQueue` is bounded with a fixed array and a single lock (optional fairness). `LinkedBlockingQueue` uses linked nodes, optional capacity (unbounded by default), and separate locks for put and take, so producers and consumers contend less. An unbounded queue can hide overload until memory runs out; give it a capacity.
+They differ in storage, size limit and locking.
+
+- `ArrayBlockingQueue` is bounded. It uses a fixed array and a single lock, with an optional fair mode.
+- `LinkedBlockingQueue` uses linked nodes. Its capacity is optional, and it is unbounded by default. It has separate locks for put and take, so producers and consumers wait for each other less.
+
+An unbounded queue can hide an overload until memory runs out, so give it a capacity.
 
 ### [intermediate] How would you implement a producer-consumer with a BlockingQueue? {#producer-consumer}
 
-Create a bounded queue, give producers `put` and consumers `take` in loops, and use a poison pill (a special sentinel item) or interruption to stop consumers. A thread pool does the same: its work queue is a `BlockingQueue<Runnable>`.
+1. Create a bounded queue.
+2. Producers call `put` in a loop, and consumers call `take` in a loop.
+3. To stop the consumers, send a **poison pill** (a special item that means "stop"), or interrupt them.
+
+A thread pool works the same way: its work queue is a `BlockingQueue<Runnable>`.
 
 ### [intermediate] What is backpressure and how does a BlockingQueue give you it? {#backpressure-q}
 
-Slowing the producer when the consumer cannot keep up. With a bounded queue, `put` blocks when full (or `offer` returns `false`), so memory stays bounded and the load is pushed back to the caller instead of building up unbounded.
+Backpressure means slowing the producer down when the consumer cannot keep up.
+
+With a bounded queue, `put` waits when the queue is full, or `offer` returns `false`. So memory use stays limited, and the load is pushed back to the caller instead of piling up without limit.
 
 ### [intermediate] ConcurrentLinkedQueue versus LinkedBlockingQueue? {#clq-vs-lbq}
 
-`ConcurrentLinkedQueue` is non-blocking and lock-free (CAS), unbounded, and `poll` returns `null` when empty, so consumers must spin or sleep. `LinkedBlockingQueue` blocks consumers on empty and optionally producers on full, which is what you want for worker threads, and can be bounded.
+The first never blocks. The second makes threads wait.
+
+- `ConcurrentLinkedQueue` uses CAS instead of locks and is unbounded. `poll` returns `null` when it is empty, so a consumer has to loop or sleep.
+- `LinkedBlockingQueue` makes a consumer wait while it is empty, and optionally makes a producer wait while it is full. It can be bounded. This is what you want for worker threads.
 
 ### [deep] How do CopyOnWriteArrayList's iterators and writes work? {#cow-internals}
 
-The list holds a `volatile` array reference. A write takes a lock, copies the array (`Arrays.copyOf`), modifies the copy and publishes it. An iterator captures the array reference at creation and iterates that fixed snapshot, so it never sees later changes and does not support `remove`. Memory churn and O(n) writes are the price.
+The list holds a `volatile` reference to an array that is never changed in place.
+
+1. A write takes a lock and copies the array with `Arrays.copyOf`.
+2. It changes the copy.
+3. It publishes the copy by pointing the reference at it.
+
+An iterator remembers the array reference from the moment it was created and walks that fixed snapshot. So it never sees later changes, and it does not support `remove`.
+
+The price is O(n) writes and a lot of short-lived garbage.
 
 ### [deep] What is a lock-free algorithm and how does CAS work? {#cas}
 
-CAS (compare-and-swap) is a CPU instruction that sets a variable to a new value only if it still holds the expected one. Lock-free structures such as `ConcurrentLinkedQueue` and the atomic classes retry in a loop until their CAS succeeds, so some thread always makes progress without holding a lock. The ABA problem and retry storms under heavy contention are the drawbacks.
+CAS (compare-and-swap) is a CPU instruction. It sets a variable to a new value only if the variable still holds the expected value.
+
+Lock-free structures, such as `ConcurrentLinkedQueue` and the atomic classes, repeat their CAS in a loop until it succeeds. So some thread always makes progress, and no thread holds a lock.
+
+The drawbacks:
+
+- **The ABA problem:** a value changes from A to B and back to A, and CAS cannot tell.
+- **Retry storms:** when many threads compete, many CAS attempts fail and are repeated.
 
 ### [deep] How does LongAdder differ from AtomicLong? {#longadder}
 
-`AtomicLong` is one CAS variable, so many threads updating it keep retrying. `LongAdder` keeps a base plus an array of cells; contended updates go to different cells and `sum()` adds them. It is far faster for heavily updated counters and statistics, but `sum()` is not an atomic snapshot and it is a poor choice for sequence generators.
+`AtomicLong` is one value. `LongAdder` spreads the value over several cells.
+
+- With `AtomicLong`, many threads update the same CAS variable, so they keep retrying.
+- `LongAdder` keeps a base value plus an array of cells. When threads compete, their updates go to different cells, and `sum()` adds them all up.
+
+`LongAdder` is far faster for counters and statistics that are updated very often. But `sum()` is not an atomic snapshot, so it is a poor choice for generating sequence numbers.
 
 ### [deep] Why was the Java 7 HashMap resize able to loop forever? {#java7-loop}
 
-Resizing reversed the order of nodes in a bucket chain while transferring them. Two threads resizing the same bucket could form a cycle in the chain, so a later `get` looped forever on that bucket. Java 8 preserves order during transfer, but `HashMap` is still unsafe and can lose data.
+Because two threads could turn a bucket's chain into a circle.
+
+1. A resize moves the nodes of each bucket to a new array, and in Java 7 it reversed their order while doing so.
+2. Two threads resizing the same bucket at once could link the nodes into a cycle.
+3. A later `get` on that bucket then followed the cycle for ever.
+
+Java 8 keeps the order during the move. `HashMap` is still not safe across threads, and it can still lose data.
 
 ### [deep] How does ConcurrentSkipListMap work and when do you use it? {#skiplist-q}
 
-A skip list: several layers of sorted linked lists where higher layers skip over more nodes, giving O(log n) search with probabilistic balancing and lock-free updates via CAS. Use it when you need a sorted, navigable map or set (range queries, `ceilingKey`) shared across threads, where `TreeMap` would need a global lock.
+It is a skip list: several layers of sorted linked lists, where the higher layers skip over more nodes.
+
+- A search takes O(log n) time.
+- It stays balanced by chance: each new node gets a random number of layers.
+- It updates nodes with CAS instead of locks.
+
+Use it when several threads share a sorted map or set, and you need navigation such as range queries or `ceilingKey`. A `TreeMap` would need one lock for the whole map.
 
 ### [deep] What is the memory visibility guarantee when you put an object into a concurrent collection? {#visibility}
 
-Actions in a thread before putting an element into a concurrent collection happen-before actions in another thread after it reads or removes that element. So a safely constructed object handed over through `ConcurrentHashMap` or a `BlockingQueue` is fully visible to the reader without extra synchronisation.
+Everything a thread did before it put an element into a concurrent collection **happens-before** everything another thread does after it reads or removes that element.
+
+So when you hand over a correctly built object through a `ConcurrentHashMap` or a `BlockingQueue`, the reader sees it completely. No extra synchronization is needed.
 
 ### [coding] Implement a thread-safe word counter. {#coding-word-counter}
 
@@ -233,6 +378,8 @@ class WordCounter {
 }
 // simpler for light contention: counts.merge(word, 1L, Long::sum);
 ```
+
+`computeIfAbsent` creates each word's counter exactly once, and `LongAdder` handles many threads adding at once.
 
 ### [coding] Write a bounded producer-consumer with a BlockingQueue. {#coding-producer-consumer}
 
@@ -258,6 +405,8 @@ Thread consumer = new Thread(() -> {
 producer.start(); consumer.start();
 ```
 
+The queue holds at most 10 jobs, so the producer waits when it gets too far ahead. The poison pill tells the consumer to stop.
+
 ### [coding] Fix this racy cache. {#coding-racy-cache}
 
 ```java
@@ -273,6 +422,12 @@ Rate rate(String currency) {
 }
 ```
 
+The original has three problems:
+
+1. A visibility problem: one thread may not see the rate that another thread stored.
+2. A lost-update problem: the `HashMap` can lose entries or break.
+3. Two threads can both miss the cache and load the same rate twice.
+
 ```java
 private final ConcurrentMap<String, Rate> cache = new ConcurrentHashMap<>();
 
@@ -281,4 +436,4 @@ Rate rate(String currency) {
 }
 ```
 
-The original has a visibility problem, a lost-update problem and can load the rate twice. `computeIfAbsent` is atomic per key. If `loadFromService` is slow, store a `CompletableFuture<Rate>` in the map so the bin is not locked during the remote call.
+`computeIfAbsent` is atomic for each key. If `loadFromService` is slow, store a `CompletableFuture<Rate>` in the map instead, so the bin is not locked during the remote call.

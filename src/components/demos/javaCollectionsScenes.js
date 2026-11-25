@@ -1,56 +1,104 @@
-// Frame data for the Java Collections walk-through (box-and-arrow player).
-// box.tone: ok | bad | warn | new | none.
+// Frame data for the Java Collections walk-through.
+// Every scene is drawn by a custom stage from CollectionsStage.jsx, because each one is about the shape of the data.
 
-const b = (id, title, lines = [], tone, badge) => ({ id, title, lines, tone, badge });
-const d = (from, to, label, tone) => ({ from, to, label, tone });
+import { ChooseStage, ArrayListStage, FailFastStage, SortStage } from './CollectionsStage.jsx';
+
+// --- ArrayList helpers -------------------------------------------------------------------------------
+const LETTERS = 'ABCDEFGHIJK'.split('');
+// n filled slots (A, B, C ...) followed by empty slots up to `cap`; `tones` maps an index to a tone
+const slots = (n, cap, tones = {}) => Array.from({ length: cap }, (_, i) => ({ t: i < n ? LETTERS[i] : '', tone: tones[i] }));
+
+// --- fail-fast helpers -------------------------------------------------------------------------------
+const cells = (list, tones = {}) => list.map((t, i) => ({ t, tone: tones[i] }));
 
 export const JAVA_COLLECTIONS_SCENES = [
   {
     id: 'choose',
     label: 'Choosing a collection',
     title: 'Start from the question you need to answer, not from the class name',
+    stage: ChooseStage,
     frames: [
       {
-        note: 'Collections answer different questions. Do you need an ordered sequence you read by position? That is a List. Do you only need to know whether something is already there, with no duplicates? That is a Set. Do you look values up by a key? That is a Map. Do you take items in a particular order, such as first in first out? That is a Queue or Deque.',
-        boxes: [b('l', 'List', ['ordered, by index', 'duplicates allowed'], 'new'), b('s', 'Set', ['no duplicates', 'contains() is the point'], 'new'), b('m', 'Map', ['key to value', 'get(key) is the point'], 'new'), b('q', 'Queue / Deque', ['take from the ends', 'FIFO, LIFO, priority'], 'new')],
-        deps: [],
+        panels: {
+          list: { q: 'What is the third transaction?', op: 'list.get(2)', hl: true, lines: ['Keeps the order. Duplicates allowed.'] },
+          set: { q: 'Have I seen this account number?', op: 'set.contains("ACC-7")', hl: true, lines: ['No duplicates are allowed.'] },
+          map: { q: 'What is the balance of ACC-2?', op: 'map.get("ACC-2")', hl: true, lines: ['Each key is unique.', 'Values may repeat.'] },
+          queue: { q: 'What should I process next?', op: 'queue.poll()', hl: true, lines: ['Take items from the ends.', 'FIFO, LIFO (a stack) or by priority.'] },
+        },
+        note: 'Each kind of collection answers a different question. A List gives you items by position. A Set tells you whether an item is already there, and it refuses duplicates. A Map finds a value by its key. A Queue or Deque hands out items from its ends, for example first in, first out.',
       },
       {
-        note: 'Pick the implementation by the access pattern. ArrayList for almost every List. HashSet when order does not matter, LinkedHashSet to keep insertion order, TreeSet to keep sorted order. HashMap, LinkedHashMap and TreeMap follow the same pattern. ArrayDeque for stacks and queues, PriorityQueue when the next item is the smallest or largest.',
-        boxes: [b('l', 'List', ['ArrayList (default)'], 'ok', 'default'), b('s', 'Set', ['HashSet: fastest', 'LinkedHashSet: insertion order', 'TreeSet: sorted'], 'ok'), b('m', 'Map', ['HashMap: fastest', 'LinkedHashMap: insertion or access order', 'TreeMap: sorted keys'], 'ok'), b('q', 'Queue / Deque', ['ArrayDeque', 'PriorityQueue'], 'ok')],
-        deps: [d('List', 'Set', 'same idea, no index', 'none')],
+        panels: {
+          list: { q: 'Which class?', lines: ['ArrayList: the default.'] },
+          set: { q: 'Which class?', lines: ['HashSet: fastest, no order.', 'LinkedHashSet: insertion order.', 'TreeSet: sorted.'] },
+          map: { q: 'Which class?', lines: ['HashMap: fastest, no order.', 'LinkedHashMap: insertion or access.', 'TreeMap: sorted keys.'] },
+          queue: { q: 'Which class?', lines: ['ArrayDeque: a stack or FIFO queue.', 'PriorityQueue: smallest first.'] },
+        },
+        note: 'Then pick the class by the order you need. Use ArrayList for almost every List. For a Set, HashSet has no order, LinkedHashSet keeps insertion order and TreeSet keeps sorted order. Maps follow the same pattern. Use ArrayDeque for stacks and queues, and PriorityQueue when the next item must be the smallest or largest.',
       },
       {
-        note: 'A banking example. Account numbers you have already processed today: a HashSet, because the only question is "have I seen this?". The last 20 transactions in order: an ArrayDeque used as a bounded queue. A balance per account number: a HashMap. Statements sorted by date: a TreeMap keyed by date.',
-        boxes: [b('a', 'Processed account numbers', ['HashSet<String>', 'contains in O(1)'], 'ok'), b('b', 'Recent transactions', ['ArrayDeque<Txn>', 'addLast, pollFirst'], 'ok'), c('Balance per account', 'HashMap<String, BigDecimal>', 'ok'), c('Statements by date', 'TreeMap<LocalDate, Statement>', 'ok')],
-        deps: [],
+        panels: {
+          list: { q: "Today's transactions, in order.", lines: ['ArrayList<Txn>'] },
+          set: { q: 'Account numbers processed today.', hl: true, lines: ['HashSet<String>', 'contains() is O(1).'] },
+          map: { q: 'Balances, and statements by date.', hl: true, lines: ['HashMap<String, BigDecimal>', 'TreeMap<LocalDate, Statement>'] },
+          queue: { q: 'The last 20 transactions.', lines: ['ArrayDeque<Txn>', 'addLast() and pollFirst().'] },
+        },
+        note: 'A banking example. The account numbers already processed today go in a HashSet, because the only question is "have I seen this one?". The balance of each account goes in a HashMap. Statements sorted by date go in a TreeMap. The last 20 transactions go in an ArrayDeque used as a queue with a size limit.',
       },
     ],
   },
   {
     id: 'arraylist',
     label: 'ArrayList growth',
-    title: 'ArrayList is an array that copies itself into a bigger one when it fills up',
+    title: 'An ArrayList is an array that copies itself into a bigger one when it is full',
+    stage: ArrayListStage,
     frames: [
       {
-        note: 'An ArrayList keeps its elements in a plain Object array. size is how many slots are used, capacity is how many exist. A new ArrayList starts empty and allocates 10 slots on the first add.',
-        boxes: [b('a', 'ArrayList', ['size = 3', 'capacity = 10'], 'new'), b('r', 'Backing array', ['[A, B, C, _, _, _, _, _, _, _]', 'index 0..9'], 'ok')],
-        deps: [d('ArrayList', 'Backing array', 'elementData', 'ok')],
+        line: 'list.add("A"); list.add("B"); list.add("C");',
+        size: 3,
+        cap: 10,
+        rows: [{ label: 'backing array (elementData)', cells: slots(3, 10) }],
+        note: 'An ArrayList keeps its elements in a plain array. size is the number of slots in use, and capacity is the number of slots that exist. A new ArrayList creates 10 slots on the first add.',
       },
       {
-        note: 'get(i) and set(i) are direct array accesses, O(1). add(x) at the end writes the next free slot, also O(1) most of the time.',
-        boxes: [b('a', 'ArrayList', ['add("D")', 'size 3 -> 4'], 'new'), b('r', 'Backing array', ['[A, B, C, D, _, _, _, _, _, _]', 'write at index size'], 'ok', 'O(1)')],
-        deps: [d('ArrayList', 'Backing array', 'write at size', 'ok')],
+        line: 'list.get(1)',
+        result: { text: '"B" in O(1)', tone: 'ok' },
+        size: 3,
+        cap: 10,
+        rows: [{ label: 'backing array (elementData)', cells: slots(3, 10, { 1: 'ok' }) }],
+        note: 'get(1) reads slot 1 directly. It does not look at any other slot, so it takes the same time however long the list is: O(1). set(i) works the same way.',
       },
       {
-        note: 'When the array is full the list allocates a new array about 1.5 times larger and copies every element across. That one add costs O(n), but it happens rarely, so the average cost of add is still O(1) (amortised).',
-        boxes: [b('a', 'ArrayList', ['size = 10, capacity = 10', 'add("K") needs room'], 'warn'), b('r', 'Old array', ['10 slots, full'], 'bad', 'discarded'), b('n', 'New array', ['15 slots', 'elements copied over'], 'ok', 'x1.5')],
-        deps: [d('ArrayList', 'New array', 'Arrays.copyOf', 'ok')],
+        line: 'list.add("D")',
+        result: { text: 'O(1): one write', tone: 'ok' },
+        size: 4,
+        cap: 10,
+        rows: [{ label: 'backing array (elementData)', cells: slots(4, 10, { 3: 'new' }) }],
+        note: 'add("D") writes into the next free slot, at index size. It is one write, so it is also O(1). The size grows from 3 to 4, and the capacity stays 10.',
       },
       {
-        note: 'Inserting or removing in the middle shifts every later element by one slot with System.arraycopy, so it is O(n). Removing the first element of a large ArrayList in a loop is a classic performance bug. A LinkedList does not shift, but it must walk node by node to reach the position, so it is rarely faster in practice.',
-        boxes: [b('a', 'ArrayList', ['remove(0)'], 'warn'), b('r', 'Backing array', ['[B, C, D, E, ...] all shifted left', 'n - 1 elements moved'], 'bad', 'O(n)')],
-        deps: [d('ArrayList', 'Backing array', 'shift left', 'bad')],
+        line: 'list.add("K")  // the array is full',
+        result: { text: 'O(n) this time, O(1) on average', tone: 'warn' },
+        size: 11,
+        cap: 15,
+        links: 'copy',
+        rows: [
+          { label: 'new array: 15 slots (1.5 times bigger)', cells: slots(11, 15, { 10: 'new' }) },
+          { label: 'old array: full, thrown away', cells: slots(10, 10), dim: true, noIndex: true },
+        ],
+        note: 'All 10 slots are used, so there is no room for "K". The list creates a new array about 1.5 times bigger (15 slots) and copies every element across. This one add costs O(n). It happens rarely, so the average cost of add is still O(1). This is called amortised O(1).',
+      },
+      {
+        line: 'list.remove(0)   // a list of six: A to F',
+        result: { text: 'O(n): n - 1 elements move', tone: 'bad' },
+        size: 5,
+        cap: 10,
+        links: 'shift',
+        rows: [
+          { label: 'before: remove "A" at index 0', cells: slots(6, 10, { 0: 'bad' }) },
+          { label: 'after: all moved one slot left', cells: slots(6, 10).map((c, i) => ({ t: LETTERS[i + 1] && i < 5 ? LETTERS[i + 1] : '' })), noIndex: true },
+        ],
+        note: 'Here the list holds six elements, A to F. Removing the first one leaves a gap, so every later element moves one slot to the left (System.arraycopy). That is O(n). Removing the first element of a big ArrayList inside a loop is a classic performance bug. A LinkedList does not shift, but it must walk node by node to reach a position, so it is rarely faster in practice.',
       },
     ],
   },
@@ -58,58 +106,101 @@ export const JAVA_COLLECTIONS_SCENES = [
     id: 'failfast',
     label: 'Fail-fast iteration',
     title: 'Changing a list while you loop over it throws ConcurrentModificationException',
+    stage: FailFastStage,
     frames: [
       {
-        note: 'Every ArrayList counts its structural changes in a field called modCount. When you start a for-each loop the iterator remembers the current modCount as its expected value.',
-        boxes: [b('l', 'ArrayList', ['modCount = 4', '[A, B, C, D]'], 'new'), b('i', 'Iterator', ['expectedModCount = 4', 'cursor = 0'], 'ok')],
-        deps: [d('Iterator', 'ArrayList', 'iterates', 'ok')],
+        line: 'for (String s : list) {   // reads "A"',
+        cells: cells(['A', 'B', 'C', 'D'], { 0: 'ok' }),
+        cursor: 1,
+        mod: 4,
+        expected: 4,
+        check: 'The counters match, so the loop goes on.',
+        note: 'Every ArrayList counts its structural changes (adds and removes) in a field called modCount. When a for-each loop starts, its iterator copies the current modCount into expectedModCount. Here both are 4.',
       },
       {
-        note: 'Inside the loop the code calls list.remove(item). The list changes its structure and modCount becomes 5, but the iterator still expects 4.',
-        boxes: [b('l', 'ArrayList', ['list.remove("B")', 'modCount = 5'], 'warn'), b('i', 'Iterator', ['expectedModCount = 4'], 'warn', 'out of date')],
-        deps: [d('Iterator', 'ArrayList', 'still expects 4', 'warn')],
+        line: 'if (s.equals("B")) list.remove("B");',
+        result: { text: 'modCount is now 5', tone: 'warn' },
+        cells: cells(['A', 'C', 'D', ''], {}),
+        cursor: 2,
+        mod: 5,
+        expected: 4,
+        check: 'The list changed behind the iterator.',
+        note: 'Inside the loop, the code calls list.remove("B") directly on the list. The list removes B, shifts C and D left, and adds one to modCount, which becomes 5. The iterator was not told, so it still expects 4.',
       },
       {
-        note: 'On the next call to next() the iterator compares the two counters, sees they differ and throws ConcurrentModificationException. This is "fail-fast": the iterator detects the problem immediately instead of returning wrong data. It is a best-effort check, not a thread-safety guarantee.',
-        boxes: [b('i', 'Iterator.next()', ['modCount != expectedModCount'], 'bad', 'throws'), b('e', 'ConcurrentModificationException', ['the loop is aborted'], 'bad')],
-        deps: [d('Iterator.next()', 'ConcurrentModificationException', 'throws', 'bad')],
+        line: '}  // the loop calls it.next()',
+        result: { text: 'throws', tone: 'bad' },
+        cells: cells(['A', 'C', 'D', ''], {}),
+        cursor: 2,
+        mod: 5,
+        expected: 4,
+        check: 'next() compares them: 5 is not 4.',
+        banner: { text: 'ConcurrentModificationException: the loop stops', tone: 'bad' },
+        note: 'On the next step, the iterator compares the two counters. They differ, so it throws ConcurrentModificationException. This is called "fail-fast": the iterator stops at once instead of returning wrong data. It is a best-effort check, not a thread-safety guarantee.',
       },
       {
-        note: 'Remove through the iterator itself with it.remove(), or use list.removeIf(predicate), which is the shortest and fastest option. Both keep the expected count in step, so nothing is thrown. Alternatively collect the items to remove and call removeAll after the loop.',
-        boxes: [b('r', 'removeIf(t -> t.isExpired())', ['one pass, no exception'], 'ok', 'preferred'), b('i', 'Iterator.remove()', ['updates expectedModCount'], 'ok'), b('x', 'list.remove() in for-each', ['throws'], 'bad', 'avoid')],
-        deps: [],
+        line: 'it.remove();   // or list.removeIf(s -> s.equals("B"))',
+        result: { text: 'no exception', tone: 'ok' },
+        cells: cells(['A', 'C', 'D', ''], {}),
+        cursor: 1,
+        mod: 5,
+        expected: 5,
+        check: 'it.remove() updated both counters.',
+        options: [
+          { text: 'list.removeIf(predicate): one pass, no iterator. This is the best option.', tone: 'ok' },
+          { text: 'it.remove() on an explicit Iterator: it keeps expectedModCount in step.', tone: 'ok' },
+          { text: 'list.remove(...) inside a for-each loop: it throws. Avoid it.', tone: 'bad' },
+        ],
+        note: 'Remove through the iterator with it.remove(), or call list.removeIf(predicate), which is the shortest and fastest option. Both keep the counters in step, so nothing is thrown. You can also collect the items to remove and call removeAll after the loop.',
       },
     ],
   },
   {
     id: 'ordering',
     label: 'Sorting with Comparator',
-    title: 'Comparable is the natural order, Comparator is any order you pass in',
+    title: 'Comparable is the natural order, and a Comparator is any order you pass in',
+    stage: SortStage,
     frames: [
       {
-        note: 'Comparable is implemented by the class itself and defines its single natural order through compareTo. String, Integer and LocalDate already have one. TreeSet, TreeMap and Collections.sort use it when you do not pass anything else.',
-        boxes: [b('c', 'Transaction implements Comparable', ['compareTo compares the date', 'one natural order only'], 'new'), b('s', 'TreeSet<Transaction>', ['sorted by date', 'no extra argument'], 'ok')],
-        deps: [d('TreeSet<Transaction>', 'Transaction implements Comparable', 'calls compareTo', 'ok')],
+        line: 'List<Txn> txns = loadTransactions();',
+        order: ['t1', 't2', 't3', 't4', 't5'],
+        key: null,
+        note: 'Five transactions arrive in the order they were loaded. Each one has a date, a merchant and an amount. Each step below sorts the same list in a different way.',
       },
       {
-        note: 'A Comparator is a separate object that compares two items. You can have as many as you like: by amount, by merchant, by date then amount. It does not touch the class, so it also works on classes you cannot edit.',
-        boxes: [b('a', 'byAmount', ['Comparator.comparing(Txn::amount)'], 'ok'), b('m', 'byMerchant', ['Comparator.comparing(Txn::merchant)'], 'ok'), b('d', 'list.sort(byAmount)', ['sorts any List in place'], 'new')],
-        deps: [d('list.sort(byAmount)', 'byAmount', 'uses', 'ok')],
+        line: 'Collections.sort(txns);   // Txn implements Comparable',
+        result: { text: 'sorted by date', tone: 'ok' },
+        order: ['t1', 't3', 't4', 't2', 't5'],
+        key: 'date',
+        note: 'Comparable is implemented by the class itself. Its compareTo method defines one natural order, here by date. String, Integer and LocalDate already have one. TreeSet, TreeMap and Collections.sort use the natural order when you do not pass anything else.',
       },
       {
-        note: 'Comparators compose. thenComparing breaks ties, reversed flips the direction, and nullsFirst or nullsLast handle missing values. Here: newest first, and for the same date the largest amount first.',
-        boxes: [b('c', 'Combined comparator', ['comparing(Txn::date).reversed()', '.thenComparing(Txn::amount, reverseOrder())'], 'ok'), b('r', 'Result', ['newest date first', 'ties: biggest amount first'], 'ok')],
-        deps: [d('Combined comparator', 'Result', 'orders', 'ok')],
+        line: 'txns.sort(Comparator.comparing(Txn::amount));',
+        result: { text: 'sorted by amount', tone: 'ok' },
+        order: ['t4', 't5', 't1', 't3', 't2'],
+        key: 'amount',
+        note: 'A Comparator is a separate object that compares two items. You can have as many as you like: by amount, by merchant, or by date and then amount. It does not change the class, so it also works on classes you cannot edit.',
       },
       {
-        note: 'The comparator must be consistent: if a is before b and b is before c then a must be before c, and compare(a, b) must never be the negative of a different answer. Subtracting ints (a - b) can overflow and break this. Use Integer.compare or Comparator.comparingInt.',
-        boxes: [b('x', 'return a.amount - b.amount', ['can overflow for large values'], 'bad', 'bug'), b('y', 'Integer.compare(a, b)', ['never overflows'], 'ok', 'correct')],
-        deps: [],
+        line: 'comparing(Txn::date).reversed().thenComparing(Txn::amount, reverseOrder())',
+        result: { text: 'newest first, then biggest', tone: 'ok' },
+        order: ['t2', 't5', 't4', 't3', 't1'],
+        key: 'both',
+        hl: ['t2', 't5', 't3', 't1'],
+        note: 'Comparators combine. reversed() flips the direction, and thenComparing breaks ties. Here the newest date comes first. The four highlighted rows are two pairs that share a date. Within each pair, the bigger amount comes first. nullsFirst and nullsLast handle missing values.',
+      },
+      {
+        line: '(a, b) -> a.amount - b.amount   // amounts as int',
+        result: { text: 'wrong answer', tone: 'bad' },
+        order: ['t2', 't5', 't4', 't3', 't1'],
+        key: null,
+        calc: [
+          { code: 'a = 2 000 000 000,  b = -2 000 000 000', says: 'a is clearly bigger, so compare(a, b) must be positive.', tone: 'new' },
+          { code: 'a - b  =  -294 967 296', says: 'The true result, 4 000 000 000, does not fit in an int. It wraps round to a negative number.', tone: 'bad' },
+          { code: 'Integer.compare(a, b)  =  1', says: 'Integer.compare never overflows, so it gives the right answer.', tone: 'ok' },
+        ],
+        note: 'A comparator must be consistent. If a comes before b and b comes before c, then a must come before c. Subtracting ints (a - b) can overflow and break this rule. Use Integer.compare or Comparator.comparingInt instead.',
       },
     ],
   },
 ];
-
-function c(title, line, tone) {
-  return b(title.toLowerCase().replace(/\s+/g, '-'), title, [line], tone);
-}

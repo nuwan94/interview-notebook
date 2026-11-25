@@ -1,0 +1,22 @@
+/* ---- GC heap stage (GcHeapStage): eden, survivor spaces and the old generation as rows of slots ---- */
+.gch-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.gch-phase { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.7rem; }
+.gch-gen { fill: rgba(255, 255, 255, 0.85); stroke: #c3cfdd; stroke-width: 1.5; }
+.gch-gen-title { font: 700 15px var(--font-hand, cursive); fill: var(--color-pen); }
+.gch-space { fill: #f4f7fb; stroke: #8d9bb0; stroke-width: 1.5; transition: stroke 0.3s; }
+.gch-space.is-active { stroke: var(--color-pen); stroke-width: 2.5; }
+.gch-quiet { opacity: 0.55; transition: opacity 0.3s; }
+.gch-space-title { font: 700 12.5px system-ui, sans-serif; fill: #3d4a5c; }
+.gch-space-sub { font-weight: 400; fill: #5b6676; }
+.gch-free { fill: none; stroke: #c9d2de; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.gch-cell { stroke-width: 2; transition: fill 0.3s, stroke 0.3s; }
+.gch-cell.is-new { fill: #fff; stroke: var(--color-pen); }
+.gch-cell.is-live { fill: var(--color-pen-soft); stroke: var(--color-pen); }
+.gch-cell.is-marked { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.gch-cell.is-dead { fill: #eef0f3; stroke: #8b97a8; stroke-dasharray: 5 3; }
+.gch-cell-text { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-pen); }
+.gch-cell-text.is-marked { fill: var(--color-ok); }
+.gch-cell-text.is-dead { fill: #6b7788; text-decoration: line-through; }
+.gch-age { fill: #fff; stroke: #8d9bb0; stroke-width: 1.2; }
+.gch-age-text { font: 700 11px system-ui, sans-serif; fill: #3d4a5c; }
+.gch-legend { font: 12px system-ui, sans-serif; fill: #3d4a5c; }

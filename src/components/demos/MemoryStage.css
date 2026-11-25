@@ -1,0 +1,28 @@
+/* ---- memory stage (MemoryStage): code, stack frames, heap and string pool ---- */
+.mem-code { margin: 0.5rem 0.6rem 0; padding: 0.25rem 0; border: 1px solid #d3dbe6; border-radius: 0.35rem; background: #f7f9fc; font: 0.85rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-x: auto; }
+.mem-line { padding: 0 0.5rem; white-space: pre; }
+.mem-line.is-current { background: #fff3a3; font-weight: 700; }
+.mem-num { display: inline-block; width: 1.6rem; color: #7b8697; user-select: none; }
+.mem-result { margin-left: 0.6rem; padding: 0.05rem 0.55rem; border-radius: 999px; color: #fff; font: 700 0.75rem system-ui, sans-serif; white-space: nowrap; }
+.mem-panel { fill: rgba(255, 255, 255, 0.85); stroke: #c3cfdd; stroke-width: 1.5; }
+.mem-panel-title { font: 700 15px var(--font-hand, cursive); fill: var(--color-pen); }
+.mem-frame { fill: #f4f7fb; stroke: #8d9bb0; stroke-width: 1.5; }
+.mem-frame.is-top { stroke: var(--color-pen); stroke-width: 2; }
+.mem-frame-title { font: 700 12px system-ui, sans-serif; fill: #3d4a5c; }
+.mem-var { font: 700 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.mem-slot { fill: #fff; stroke: #8d9bb0; stroke-width: 1.5; transition: stroke 0.3s, fill 0.3s; }
+.mem-slot.is-focus { stroke: var(--color-pen); stroke-width: 2.5; }
+.mem-slot.is-changed { fill: var(--color-warn-soft); stroke: var(--color-warn); stroke-width: 2; }
+.mem-dot { fill: #334155; }
+.mem-value { font: 700 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.mem-pool { fill: var(--color-ok-soft); stroke: var(--color-ok); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.mem-pool-title { font: 700 12px system-ui, sans-serif; fill: #2f5a3d; }
+.mem-obj { fill: var(--color-pen-soft); stroke: var(--color-pen); stroke-width: 2; transition: stroke-width 0.3s; }
+.mem-obj.in-pool { fill: #fff; stroke: var(--color-ok); }
+.mem-obj.is-hit { stroke-width: 3.5; }
+.mem-obj.is-changed { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.mem-obj.is-dead { fill: #eef0f3; stroke: #8b97a8; stroke-dasharray: 6 4; }
+.mem-obj-type { font: 700 12px system-ui, sans-serif; fill: #3d4a5c; }
+.mem-obj-body { font: 700 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.mem-obj-note { font: italic 11px system-ui, sans-serif; fill: #5b6676; }
+.mem-empty { font: italic 12px system-ui, sans-serif; fill: #7b8697; }

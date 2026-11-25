@@ -1,0 +1,22 @@
+/* ---- string cells stage (StringCellsStage): objects drawn as strips of characters or bytes ---- */
+.sc-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.sc-line { font: 700 0.95rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff8d6; border: 1px solid #e8d77a; border-radius: 0.35rem; padding: 0.15rem 0.5rem; }
+.sc-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+.sc-label { font: 700 13px system-ui, sans-serif; fill: #3d4a5c; }
+.sc-tag { font: 700 12.5px system-ui, sans-serif; }
+.sc-obj { fill: rgba(255, 255, 255, 0.9); stroke: #c3cfdd; stroke-width: 1.5; }
+.sc-cell { stroke-width: 2; transition: fill 0.3s, stroke 0.3s; }
+.sc-cell.tone-none { fill: #fff; stroke: #9aa8bb; }
+.sc-cell.tone-new { fill: var(--color-pen-soft); stroke: var(--color-pen); }
+.sc-cell.tone-ok { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.sc-cell.tone-warn { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.sc-cell.tone-bad { fill: var(--color-bad-soft); stroke: var(--color-bad); }
+.sc-cell.is-empty { fill: none; stroke: #b9c4d3; stroke-dasharray: 4 3; stroke-width: 1.5; }
+.sc-ch { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.sc-ch.is-small { font-size: 11px; }
+.sc-sub { font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #6b7687; }
+.sc-var { fill: #fff; stroke: var(--color-pen); stroke-width: 2; }
+.sc-var-text { font: 700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.sc-dot { fill: #556070; }
+.sc-footer { fill: rgba(255, 255, 255, 0.92); stroke-width: 1.5; }
+.sc-footer-text { font: 700 13px system-ui, sans-serif; }

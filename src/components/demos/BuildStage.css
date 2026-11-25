@@ -1,0 +1,25 @@
+/* ---- build-tool stages (Maven and Gradle demos): shared look from BuildStageKit.jsx ---- */
+.bst-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.bst-line { font: 700 0.95rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff8d6; border: 1px solid #e8d77a; border-radius: 0.35rem; padding: 0.15rem 0.5rem; }
+.bst-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+.bst-panel { fill: rgba(255, 255, 255, 0.85); stroke: #c3cfdd; stroke-width: 1.5; }
+.bst-panel.is-dashed { stroke-dasharray: 6 5; }
+.bst-panel-title { font: 700 15px var(--font-hand, cursive); fill: var(--color-pen); }
+.bst-section { font: 700 12px system-ui, sans-serif; fill: #3d4a5c; }
+.bst-card { stroke-width: 1.75; transition: stroke-width 0.3s, fill 0.3s; }
+.bst-card.tone-none { fill: #fff; stroke: #8d9bb0; }
+.bst-card.tone-ok { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.bst-card.tone-bad { fill: var(--color-bad-soft); stroke: var(--color-bad); }
+.bst-card.tone-warn { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.bst-card.tone-new { fill: var(--color-pen-soft); stroke: var(--color-pen); }
+.bst-card.is-focus { stroke-width: 3; }
+.bst-card.is-ghost { fill: #fff; stroke-dasharray: 5 4; }
+.bst-title { font: 700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.bst-sub { font: 11.5px system-ui, sans-serif; fill: #4a515c; }
+.bst-pill { font: 700 11px system-ui, sans-serif; fill: #fff; }
+.bst-code { font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); white-space: pre; }
+.bst-hl { fill: #fff3b8; stroke: #e8d77a; stroke-width: 1; }
+.bst-empty { font: italic 12px system-ui, sans-serif; fill: #7b8697; }
+.bst-num { font: 700 13px system-ui, sans-serif; fill: #fff; }
+.bst-edge-label { font-size: 11px; }
+.bst-rail { stroke: #c3cfdd; stroke-width: 2; }

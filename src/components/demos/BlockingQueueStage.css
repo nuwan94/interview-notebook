@@ -1,0 +1,3 @@
+/* BlockingQueueStage: producer, bounded queue slots and consumers. Classes start with bq-. */
+.bq-slot { fill: #fff; stroke: #8d9bb0; stroke-width: 1.5; transition: stroke 0.3s; }
+.bq-slot.is-full { stroke: var(--color-bad); stroke-width: 2; }

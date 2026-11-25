@@ -1,0 +1,7 @@
+/* CowStage: CopyOnWriteArrayList arrays, the reader's snapshot and the writer's copy. Classes start with cw-. */
+.cw-list { stroke: var(--color-ok); stroke-width: 2; }
+.cw-cell { fill: #fff; stroke: #556070; stroke-width: 1.5; transition: fill 0.3s; }
+.cw-cell.is-reading { fill: var(--color-pen-soft); stroke: var(--color-pen); stroke-width: 2.5; }
+.cw-cell.is-fresh { fill: var(--color-ok-soft); stroke: var(--color-ok); stroke-width: 2.5; }
+.cw-copy { stroke: var(--color-warn); stroke-width: 1.75; stroke-dasharray: 4 4; }
+.cw-garbage { opacity: 0.4; transition: opacity 0.4s; }

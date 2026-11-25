@@ -1,49 +1,59 @@
-// Frame data for the "Maven" walk-through (box-and-arrow player).
-// box.tone: ok | bad | warn | new | none.
+// Frame data for the Maven walk-through. Every scene brings its own picture (a custom stage).
 
-const b = (id, title, lines = [], tone, badge) => ({ id, title, lines, tone, badge });
-const d = (from, to, label, tone) => ({ from, to, label, tone });
+import { LifecycleStage } from './LifecycleStage.jsx';
+import { DepTreeStage } from './DepTreeStage.jsx';
+import { ReactorStage } from './ReactorStage.jsx';
 
-const PHASES = (tones, badges = {}) => [
-  b('c', 'compile', ['compiler:compile'], tones[0], badges.c),
-  b('t', 'test', ['surefire:test'], tones[1], badges.t),
-  b('p', 'package', ['jar:jar'], tones[2], badges.p),
-  b('v', 'verify', ['failsafe, checks'], tones[3], badges.v),
-  b('i', 'install', ['copy to ~/.m2'], tones[4], badges.i),
-  b('y', 'deploy', ['upload to Nexus'], tones[5], badges.y),
-];
-const CHAIN = (tones) => [d('compile', 'test', '', tones[0]), d('test', 'package', '', tones[1]), d('package', 'verify', '', tones[2]), d('verify', 'install', '', tones[3]), d('install', 'deploy', '', tones[4])];
+// ---- dependencies scene: nodes of the dependency tree (d = depth column, row = position in the column) ----
+const n = (id, name, sub, d, row, tone = 'none', state, badge) => ({ id, name, sub, d, row, tone, state, badge });
+const APP = n('app', 'your app', 'pom.xml', 0, 0);
+const STARTER = n('starter', 'starter-web', '3.3.0, declared', 1, 0, 'new', 'focus');
+const DIM_REPOS = {
+  local: { sub: 'has the jars now', tone: 'ok', state: 'dim' },
+  nexus: { sub: 'company mirror', tone: 'none', state: 'dim' },
+  central: { sub: 'public source', tone: 'none', state: 'dim' },
+};
 
 export const MAVEN_SCENES = [
   {
     id: 'lifecycle',
     label: 'Lifecycle',
     title: 'Running a phase runs every phase before it',
+    stage: LifecycleStage, // drawn by LifecycleStage: the phases in order, their goals and where the jar goes
     frames: [
       {
-        note: 'A Maven build follows a lifecycle: an ordered list of phases. The default lifecycle runs validate, compile, test, package, verify, install and deploy. A phase does no work itself. Plugin goals are bound to phases, and the goals do the work, for example compiler:compile in compile and surefire:test in test.',
-        boxes: PHASES(['new', 'new', 'new', 'new', 'new', 'new']),
-        deps: CHAIN(['ok', 'ok', 'ok', 'ok', 'ok']),
+        line: 'the default lifecycle',
+        upTo: -1,
+        clean: false,
+        note: 'A Maven build follows a lifecycle. A lifecycle is a fixed list of steps called phases. A phase does no work by itself. A plugin goal is attached to each phase and does the work. For example, compiler:compile does the work of the compile phase.',
       },
       {
-        note: 'mvn package runs compile, test and package, in that order, and stops. You ask for a phase and Maven runs everything up to and including it. The result is a jar in the target directory.',
-        boxes: PHASES(['ok', 'ok', 'new', 'none', 'none', 'none'], { p: 'asked' }),
-        deps: CHAIN(['ok', 'ok', 'none', 'none', 'none']),
+        line: 'mvn package',
+        upTo: 3,
+        clean: false,
+        result: { text: 'jar in target/', tone: 'ok' },
+        note: 'You ask for one phase, and Maven runs every phase up to it, in order. So mvn package runs validate, compile, test and package, then stops. The jar is now in the target folder.',
       },
       {
-        note: 'mvn test stops after test. A failing test therefore stops the build before any jar exists, which is what you want in continuous integration. mvn -DskipTests still compiles the tests but does not run them; -Dmaven.test.skip=true does not even compile them.',
-        boxes: PHASES(['ok', 'new', 'none', 'none', 'none', 'none'], { t: 'asked' }),
-        deps: CHAIN(['ok', 'none', 'none', 'none', 'none']),
+        line: 'mvn test',
+        upTo: 2,
+        clean: false,
+        result: { text: 'stops after test: no jar yet', tone: 'warn' },
+        note: 'mvn test stops after the test phase. So a failing test stops the build before any jar exists, which is what you want in CI. The flag -DskipTests still compiles the tests but does not run them. The flag -Dmaven.test.skip=true does not even compile them.',
       },
       {
-        note: 'mvn clean install runs the separate clean lifecycle first, which deletes target, then goes up to install. Install copies the jar into your local repository in ~/.m2, so other projects on your machine can depend on it. Nothing leaves your computer yet.',
-        boxes: PHASES(['ok', 'ok', 'ok', 'ok', 'new', 'none'], { i: 'asked' }),
-        deps: CHAIN(['ok', 'ok', 'ok', 'ok', 'none']),
+        line: 'mvn clean install',
+        upTo: 5,
+        clean: true,
+        result: { text: 'jar copied to ~/.m2', tone: 'ok' },
+        note: 'clean is a separate lifecycle. It runs first and deletes the target folder. Then Maven runs the default lifecycle up to install. Install copies the jar into your local repository, ~/.m2, so other projects on your machine can use it. Nothing has left your computer yet.',
       },
       {
-        note: 'mvn deploy goes all the way and uploads the artifact to a remote repository such as Nexus or Artifactory, where teammates and other builds can download it. Releases are normally deployed by the continuous integration server, not by a developer laptop.',
-        boxes: PHASES(['ok', 'ok', 'ok', 'ok', 'ok', 'new'], { y: 'asked' }),
-        deps: CHAIN(['ok', 'ok', 'ok', 'ok', 'ok']),
+        line: 'mvn deploy',
+        upTo: 6,
+        clean: false,
+        result: { text: 'uploaded to Nexus', tone: 'ok' },
+        note: 'mvn deploy runs every phase and then uploads the jar to a remote repository, such as Nexus or Artifactory. Teammates and other builds can now download it. Releases are usually deployed by the CI server, not from a developer laptop.',
       },
     ],
   },
@@ -51,31 +61,83 @@ export const MAVEN_SCENES = [
     id: 'dependencies',
     label: 'Dependencies',
     title: 'Maven finds every jar your code needs',
+    stage: DepTreeStage, // drawn by DepTreeStage: the dependency tree by depth, and the repositories below it
     frames: [
       {
-        note: 'The pom.xml declares dependencies by coordinates: groupId, artifactId and version, for example org.springframework.boot : spring-boot-starter-web : 3.3.0. The scope says where it is needed: compile (default), provided, runtime or test.',
-        boxes: [b('p', 'pom.xml', ['spring-boot-starter-web 3.3.0'], 'new'), b('l', 'Local repository', ['~/.m2/repository'], 'none')],
-        deps: [d('pom.xml', 'Local repository', 'look here first', 'ok')],
+        line: 'org.springframework.boot : spring-boot-starter-web : 3.3.0',
+        nodes: [APP, STARTER],
+        edges: [['app', 'starter', 'new']],
+        lookup: true,
+        repos: {
+          local: { sub: 'checked first', tone: 'new', state: 'focus' },
+          nexus: { sub: 'company mirror', tone: 'none' },
+          central: { sub: 'public source', tone: 'none' },
+        },
+        note: 'The pom.xml names each dependency by its coordinates: groupId, artifactId and version. The scope says where it is needed: compile (the default), provided, runtime or test. To find the jar, Maven looks in your local repository, ~/.m2, first.',
       },
       {
-        note: 'If the jar is not in the local repository, Maven downloads it from a remote repository and keeps a copy. Companies usually point all builds at one mirror (Nexus or Artifactory) that proxies Maven Central. The second build on a machine does not need the network.',
-        boxes: [b('p', 'pom.xml', ['spring-boot-starter-web 3.3.0'], 'none'), b('l', 'Local repository', ['~/.m2/repository'], 'new'), b('r', 'Remote repository', ['company Nexus, then Maven Central'], 'ok')],
-        deps: [d('pom.xml', 'Local repository', 'miss', 'warn'), d('Local repository', 'Remote repository', 'download and cache', 'ok')],
+        line: 'mvn package (first build on this machine)',
+        nodes: [APP, STARTER],
+        edges: [['app', 'starter', 'new']],
+        lookup: true,
+        ask: true,
+        repos: {
+          local: { sub: 'miss: not here', tone: 'bad', state: 'focus' },
+          nexus: { sub: 'proxy: has it', tone: 'ok', state: 'focus' },
+          central: { sub: 'public source', tone: 'none' },
+        },
+        result: { text: 'downloaded once, then kept in ~/.m2', tone: 'ok' },
+        note: 'The jar is not in the local repository yet, so Maven downloads it from a remote repository and keeps a copy. Companies point every build at one mirror, such as Nexus or Artifactory, which stands in for Maven Central. The next build on this machine does not need the network.',
       },
       {
-        note: "Dependencies bring their own dependencies. The starter pulls in Spring MVC, Jackson and an embedded Tomcat, and those pull in more. Maven reads each jar's pom and builds the whole tree. These are transitive dependencies. Run mvn dependency:tree to see them.",
-        boxes: [b('p', 'pom.xml', ['declares one starter'], 'none'), b('s', 'spring-boot-starter-web', ['direct'], 'ok'), b('t', 'Transitive jars', ['spring-webmvc, jackson, tomcat-embed'], 'new')],
-        deps: [d('pom.xml', 'spring-boot-starter-web', 'declares', 'ok'), d('spring-boot-starter-web', 'Transitive jars', 'brings', 'new')],
+        line: 'mvn dependency:tree',
+        nodes: [
+          APP,
+          n('starter', 'starter-web', '3.3.0, declared', 1, 0, 'ok'),
+          n('mvc', 'spring-webmvc', 'transitive', 2, 0, 'new'),
+          n('jackson', 'jackson', 'transitive', 2, 1, 'new'),
+          n('tomcat', 'tomcat-embed', 'transitive', 2, 2, 'new'),
+          n('core', 'spring-core', 'transitive', 3, 0, 'new'),
+          n('jcore', 'jackson-core', 'transitive', 3, 1, 'new'),
+        ],
+        edges: [['app', 'starter', 'ok'], ['starter', 'mvc', 'new'], ['starter', 'jackson', 'new'], ['starter', 'tomcat', 'new'], ['mvc', 'core', 'new'], ['jackson', 'jcore', 'new']],
+        repos: DIM_REPOS,
+        result: { text: 'you declared 1, you get 6', tone: 'new' },
+        note: 'Dependencies bring their own dependencies. The starter brings Spring MVC, Jackson and an embedded Tomcat, and those bring more. These are called transitive dependencies. Maven reads the pom of each jar and builds the whole tree. Run mvn dependency:tree to see it.',
       },
       {
-        note: "Two paths can ask for different versions of the same library. Maven's rule is nearest wins: the version closest to your project in the tree is used, and the first declared wins a tie. Here Jackson 2.17 is two steps away and 2.12 is three, so 2.12 is omitted. The rule picks by position, not by the newest version.",
-        boxes: [b('a', 'Your application', [], 'none'), b('x', 'Library A', [], 'none'), b('y', 'Library B', [], 'none'), b('z', 'Library C', [], 'none'), b('n', 'Jackson 2.17', ['nearest, chosen'], 'ok'), b('o', 'Jackson 2.12', ['farther, omitted'], 'bad')],
-        deps: [d('Your application', 'Library A', '', 'none'), d('Your application', 'Library B', '', 'none'), d('Library A', 'Jackson 2.17', 'depth 2', 'ok'), d('Library B', 'Library C', '', 'none'), d('Library C', 'Jackson 2.12', 'depth 3', 'bad')],
+        line: 'two paths ask for different Jackson versions',
+        nodes: [
+          n('app', 'your app', 'pom.xml', 0, 1),
+          n('a', 'Library A', 'direct', 1, 0),
+          n('b', 'Library B', 'direct', 1, 2),
+          n('j17', 'jackson', '2.17, depth 2', 2, 0, 'ok', 'focus', 'chosen'),
+          n('c', 'Library C', 'transitive', 2, 2),
+          n('j12', 'jackson', '2.12, depth 3', 3, 2, 'bad', 'focus', 'omitted'),
+        ],
+        edges: [['app', 'a'], ['app', 'b'], ['a', 'j17', 'ok'], ['b', 'c'], ['c', 'j12', 'bad']],
+        repos: DIM_REPOS,
+        result: { text: 'nearest wins: depth 2 beats depth 3', tone: 'ok' },
+        note: 'Two paths ask for different versions of Jackson. Maven keeps only one, and its rule is "nearest wins": the version closest to your project is used. If two are equally close, the one declared first wins. Here 2.17 is at depth 2 and 2.12 is at depth 3, so 2.12 is left out. The rule looks at position, not at which version is newer.',
       },
       {
-        note: 'Do not leave versions to chance. dependencyManagement pins a version for every artifact that appears anywhere in the tree. Spring Boot publishes a BOM (bill of materials), spring-boot-dependencies, that lists tested versions of hundreds of libraries, so you usually omit the version in your own dependencies.',
-        boxes: [b('p', 'pom.xml', ['no version on jackson'], 'new'), b('m', 'Spring Boot BOM', ['dependencyManagement'], 'ok'), b('j', 'Jackson 2.17', ['one version everywhere'], 'ok')],
-        deps: [d('pom.xml', 'Spring Boot BOM', 'imports', 'ok'), d('Spring Boot BOM', 'Jackson 2.17', 'pins', 'ok')],
+        line: '<scope>import</scope> spring-boot-dependencies',
+        nodes: [
+          n('app', 'your app', 'imports the BOM', 0, 1, 'new', 'focus'),
+          n('a', 'Library A', 'direct', 1, 0),
+          n('b', 'Library B', 'direct', 1, 2),
+          n('j17', 'jackson', '2.17.1, managed', 2, 0, 'ok', undefined, 'BOM'),
+          n('c', 'Library C', 'transitive', 2, 2),
+          n('j12', 'jackson', '2.17.1, managed', 3, 2, 'ok', undefined, 'BOM'),
+        ],
+        edges: [['app', 'a'], ['app', 'b'], ['a', 'j17', 'ok'], ['b', 'c'], ['c', 'j12', 'ok']],
+        managed: [
+          { name: 'jackson', sub: '2.17.1 everywhere' },
+          { name: 'tomcat-embed', sub: 'version set too' },
+          { name: '+ hundreds more', sub: 'tested together' },
+        ],
+        result: { text: 'one version everywhere', tone: 'ok' },
+        note: 'Do not leave versions to chance. dependencyManagement sets one version for a library wherever it appears in the tree. Spring Boot publishes a BOM (bill of materials), spring-boot-dependencies, that lists tested versions of hundreds of libraries. So you usually leave the version out of your own dependencies.',
       },
     ],
   },
@@ -83,26 +145,76 @@ export const MAVEN_SCENES = [
     id: 'reactor',
     label: 'Multi-module',
     title: 'The reactor builds modules in dependency order',
+    stage: ReactorStage, // drawn by ReactorStage: the parent pom and the modules in build order
     frames: [
       {
-        note: 'A multi-module project has a parent pom with packaging pom that lists its modules. The parent holds shared configuration: Java version, dependencyManagement, plugin settings. Each module has its own pom and inherits from the parent.',
-        boxes: [b('p', 'Parent pom', ['packaging pom', 'shared versions'], 'new'), b('a', 'api module', ['DTOs'], 'none'), b('s', 'service module', ['business logic'], 'none'), b('w', 'app module', ['Spring Boot main'], 'none')],
-        deps: [d('Parent pom', 'api module', 'module', 'ok'), d('Parent pom', 'service module', 'module', 'ok'), d('Parent pom', 'app module', 'module', 'ok')],
+        line: 'parent pom with <packaging>pom</packaging>',
+        hl: [0, 7, 8],
+        order: false,
+        modules: [
+          { id: 'app', slot: 0, sub: 'Spring Boot main class', tone: 'none' },
+          { id: 'service', slot: 1, sub: 'business logic', tone: 'none' },
+          { id: 'api', slot: 2, sub: 'DTOs', tone: 'none' },
+          { id: 'reports', slot: 3, sub: 'monthly statements', tone: 'none' },
+        ],
+        needs: [],
+        note: 'A multi-module project has a parent pom with packaging pom. It holds the shared settings, such as the Java version, dependencyManagement and plugin settings. Each module has its own pom and inherits from the parent.',
       },
       {
-        note: "The order of the modules list does not decide the build order. Maven's reactor reads the dependencies between modules and sorts them: app needs service, and service needs api, so api builds first, then service, then app.",
-        boxes: [b('a', 'api module', ['built first'], 'ok', '1'), b('s', 'service module', ['needs api'], 'ok', '2'), b('w', 'app module', ['needs service'], 'ok', '3')],
-        deps: [d('app module', 'service module', 'depends on', 'ok'), d('service module', 'api module', 'depends on', 'ok')],
+        line: 'mvn install',
+        hl: [2, 3, 4, 5],
+        order: true,
+        modules: [
+          { id: 'api', slot: 0, sub: 'needs nothing', tone: 'new' },
+          { id: 'service', slot: 1, sub: 'needs api', tone: 'new' },
+          { id: 'app', slot: 2, sub: 'needs service', tone: 'new' },
+          { id: 'reports', slot: 3, sub: 'needs nothing', tone: 'none' },
+        ],
+        needs: [['service', 'api'], ['app', 'service']],
+        result: { text: 'sorted by what each module needs', tone: 'new' },
+        note: 'The order of the modules list does not decide the build order. The reactor reads which module needs which, and sorts them. app needs service, and service needs api. So api is built first, then service, then app.',
       },
       {
-        note: 'You rarely need the whole tree. mvn -pl app -am package builds only the app module (-pl, projects list) and the modules it needs (-am, also make). In a large repository this saves minutes on every run.',
-        boxes: [b('a', 'api module', ['also made'], 'ok'), b('s', 'service module', ['also made'], 'ok'), b('w', 'app module', ['asked with -pl'], 'new'), b('o', 'other modules', ['skipped'], 'none')],
-        deps: [d('app module', 'service module', '', 'ok'), d('service module', 'api module', '', 'ok')],
+        line: 'mvn -pl app -am package',
+        hl: [2],
+        order: true,
+        modules: [
+          { id: 'api', slot: 0, sub: 'needed by service', tone: 'ok', status: 'also made' },
+          { id: 'service', slot: 1, sub: 'needed by app', tone: 'ok', status: 'also made' },
+          { id: 'app', slot: 2, sub: 'chosen with -pl', tone: 'new', state: 'focus', status: 'asked' },
+          { id: 'reports', slot: 3, sub: 'not needed', tone: 'none', state: 'dim', status: 'not built' },
+        ],
+        needs: [['service', 'api'], ['app', 'service']],
+        result: { text: '3 of 4 modules built', tone: 'ok' },
+        note: 'You rarely need to build every module. -pl app (project list) picks the app module. -am (also make) adds the modules it needs. reports is not needed, so it is not built. In a large repository this saves minutes on every run.',
       },
       {
-        note: 'If one module fails, the reactor stops and the modules after it show SKIPPED. Use --fail-at-end to continue with modules that do not depend on the failed one, or --fail-never to ignore failures. In continuous integration, the default of failing fast is usually right.',
-        boxes: [b('a', 'api module', ['SUCCESS'], 'ok'), b('s', 'service module', ['FAILURE: a test failed'], 'bad'), b('w', 'app module', ['SKIPPED'], 'warn')],
-        deps: [d('app module', 'service module', 'depends on', 'warn'), d('service module', 'api module', 'depends on', 'ok')],
+        line: 'mvn install',
+        hl: [],
+        order: true,
+        modules: [
+          { id: 'api', slot: 0, sub: 'built', tone: 'ok', status: 'SUCCESS' },
+          { id: 'service', slot: 1, sub: 'a test failed', tone: 'bad', state: 'focus', status: 'FAILURE' },
+          { id: 'app', slot: 2, sub: 'not started', tone: 'warn', status: 'SKIPPED' },
+          { id: 'reports', slot: 3, sub: 'not started', tone: 'warn', status: 'SKIPPED' },
+        ],
+        needs: [['service', 'api'], ['app', 'service']],
+        result: { text: 'the build stops at the first failure', tone: 'bad' },
+        note: 'When one module fails, the reactor stops. Every module after it shows SKIPPED, even reports, which does not need service. In CI this "fail fast" default is usually right.',
+      },
+      {
+        line: 'mvn install --fail-at-end',
+        hl: [],
+        order: true,
+        modules: [
+          { id: 'api', slot: 0, sub: 'built', tone: 'ok', status: 'SUCCESS' },
+          { id: 'service', slot: 1, sub: 'a test failed', tone: 'bad', status: 'FAILURE' },
+          { id: 'app', slot: 2, sub: 'needs the failed module', tone: 'warn', status: 'SKIPPED' },
+          { id: 'reports', slot: 3, sub: 'does not need service', tone: 'ok', state: 'focus', status: 'SUCCESS' },
+        ],
+        needs: [['service', 'api'], ['app', 'service']],
+        result: { text: 'independent modules still build', tone: 'warn' },
+        note: '--fail-at-end keeps building the modules that do not depend on the failed one, and fails the build at the end. app needs service, so it is still skipped, but reports is built. --fail-never ignores failures completely.',
       },
     ],
   },

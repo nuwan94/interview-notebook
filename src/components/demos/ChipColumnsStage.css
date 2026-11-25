@@ -1,0 +1,16 @@
+/* ChipColumnsStage, plus the bar (code line and result) shared with TypeTreeStage and CodePanelStage */
+.chipcol-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.chipcol-line { font: 700 0.9rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff8d6; border: 1px solid #e8d77a; border-radius: 0.35rem; padding: 0.15rem 0.5rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.chipcol-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+.chipcol-panel { fill: rgba(255, 255, 255, 0.88); stroke: #c3cfdd; stroke-width: 1.5; }
+.chipcol-title { font-weight: 700; font-family: var(--font-hand, cursive); fill: var(--color-pen); }
+.chipcol-sub { font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #3d4a5c; }
+.chipcol-empty { font-style: italic; font-family: system-ui, sans-serif; fill: #7b8697; }
+.chipcol-group { fill: #f3f6fa; stroke: #9fb0c6; stroke-width: 1.25; stroke-dasharray: 5 4; transition: stroke 0.3s; }
+.chipcol-group.is-focus { stroke: var(--color-pen); stroke-width: 2.25; stroke-dasharray: none; }
+.chipcol-group-label { font-weight: 700; font-family: system-ui, sans-serif; fill: #3d4a5c; }
+.chipcol-text { font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.chipcol-text.is-off { fill: #7b8697; }
+.chipcol-subtext { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #4a515c; }
+.chipcol-strike { stroke: var(--color-bad); stroke-width: 1.75; }
+.chipcol-link-label { font: 700 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }

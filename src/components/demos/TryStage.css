@@ -1,0 +1,19 @@
+/* ---- try stage (TryStage): code with run / skip / throw markers, jump arrows, and cards for resources and exceptions ---- */
+.tr-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.tr-case { font: 700 0.95rem system-ui, sans-serif; color: var(--color-pen); }
+.tr-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+.tr-panel { fill: rgba(255, 255, 255, 0.88); stroke: #c3cfdd; stroke-width: 1.5; }
+.tr-panel-title { font: 700 15px var(--font-hand, cursive); fill: var(--color-pen); }
+.tr-hl.is-run { fill: var(--color-ok-soft); }
+.tr-hl.is-throw { fill: var(--color-bad-soft); }
+.tr-mark { stroke-width: 2; }
+.tr-mark.is-run { fill: var(--color-ok); stroke: var(--color-ok); }
+.tr-mark.is-throw { fill: var(--color-bad); stroke: var(--color-bad); }
+.tr-mark.is-skip { fill: #fff; stroke: #b3bdca; }
+.tr-mark.is-wait { fill: #fff; stroke: #8d9bb0; }
+.tr-code { font: 600 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.tr-code.is-skip { fill: #a3adba; }
+.tr-exit { font: 700 12.5px system-ui, sans-serif; fill: var(--color-bad); }
+.tr-card { fill: #fff; stroke-width: 2; }
+.tr-card-title { font: 700 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.tr-card-text { font: 12px system-ui, sans-serif; fill: #3d4a5c; }

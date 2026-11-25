@@ -1,0 +1,9 @@
+/* ---- throwable tree stage (ThrowableTreeStage): the exception class tree with group brackets ---- */
+.tt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.tt-line { font: 700 0.95rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff8d6; border: 1px solid #e8d77a; border-radius: 0.35rem; padding: 0.15rem 0.5rem; }
+.tt-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+.tt-link { fill: none; stroke: #8d9bb0; stroke-width: 1.75; }
+.tt-name { font: 700 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.tt-tag { font: italic 12px system-ui, sans-serif; fill: #5b6676; }
+.tt-group-title { font: 700 13px system-ui, sans-serif; }
+.tt-group-text { font: 12px system-ui, sans-serif; fill: #3d4a5c; }

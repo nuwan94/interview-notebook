@@ -187,10 +187,10 @@ export function Playground({ title, variants }) {
           <span className="text-xs text-soft w-full">
             {v.input.kind === 'string' ? (
               <>
-                Tip: try <code>Aa</code> and <code>BB</code> — different strings, identical <code>hashCode()</code> ({stringHash('Aa')}).
+                Tip: try <code>Aa</code> and <code>BB</code>. They are different strings with the same <code>hashCode()</code>, {stringHash('Aa')}.
               </>
             ) : (
-              <>Tip: in a 16-bucket table, keys 1, 17, 33 … all land in bucket 1.</>
+              <>Tip: in a table of 16 buckets, the keys 1, 17, 33 and so on all land in bucket 1.</>
             )}
           </span>
         </form>

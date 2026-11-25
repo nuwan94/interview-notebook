@@ -1673,6 +1673,25 @@ mark.reading-word {
   .g-edge.is-new .g-edge-line, .g-edge.is-new .g-edge-label, .g-pop { animation: none; stroke-dashoffset: 0; }
 }
 
+/* ---- string pool stage (PoolStage): variables, heap and the pool region ---- */
+.pool-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.pool-line { font: 700 0.95rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff8d6; border: 1px solid #e8d77a; border-radius: 0.35rem; padding: 0.15rem 0.5rem; }
+.pool-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+.pool-panel { fill: rgba(255, 255, 255, 0.85); stroke: #c3cfdd; stroke-width: 1.5; }
+.pool-panel-title { font: 700 15px var(--font-hand, cursive); fill: var(--color-pen); }
+.pool-region { fill: var(--color-ok-soft); stroke: var(--color-ok); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.pool-region-title { font: 700 12px system-ui, sans-serif; fill: #3d4a5c; }
+.pool-var { fill: #fff; stroke: #8d9bb0; stroke-width: 1.5; transition: stroke 0.3s, stroke-width 0.3s; }
+.pool-var.is-focus { stroke: var(--color-pen); stroke-width: 2.5; }
+.pool-var-text { font: 700 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.pool-dot { fill: #556070; }
+.pool-obj { stroke-width: 2; transition: stroke-width 0.3s; }
+.pool-obj.in-pool { fill: #fff; stroke: var(--color-ok); }
+.pool-obj.in-heap { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.pool-obj.is-hit { stroke-width: 3.5; }
+.pool-obj-text { font: 700 13.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.pool-empty { font: italic 12px system-ui, sans-serif; fill: #7b8697; }
+
 /* ---- array stage (ArrayStage): sorting, searching, pointers, windows, dynamic programming ---- */
 .a-stage { margin-top: 0.5rem; padding: 0.9rem 0.8rem 0.5rem; border: 1px solid var(--color-rule, #d6dde8); border-radius: 0.5rem; background-color: #fff; background-image: radial-gradient(circle, #cfd8e6 1px, transparent 1.2px); background-size: 18px 18px; min-height: 12rem; display: flex; flex-direction: column; justify-content: center; gap: 0.9rem; }
 .a-row { display: flex; flex-direction: column; align-items: center; }

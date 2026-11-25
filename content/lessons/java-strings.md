@@ -6,132 +6,186 @@ summary: Why String is immutable, the string pool and == versus equals, concaten
 tags: [Java, Strings, Immutability]
 order: 8
 topic: Java / Language
-updated: 2026-11-13
+updated: 2026-11-24
 subnav: true
 ---
 
-`==` versus `equals`, "how many objects does `new String("a")` create?" and "why is `String` immutable?" are among the oldest Java interview questions, and they lead straight into immutability, thread safety and hash-based collections. This lesson covers `String` completely and then applies the same ideas to your own classes. It connects to [HashMap](lesson:java-hashmap) (strings as keys), the [memory model](lesson:java-memory-model) (safe publication of immutable objects) and [OOP concepts](lesson:oop-concepts). Play the four scenes: the string pool, concatenation, why strings are immutable, and characters and encoding.
+Strings are behind some of the oldest Java interview questions:
+
+- What is the difference between `==` and `equals`?
+- How many objects does `new String("a")` create?
+- Why is `String` immutable?
+
+The answers lead to bigger topics: immutability, thread safety and how strings work as `HashMap` keys. This lesson explains `String` first, then shows how to make your own classes immutable in the same way.
+
+Related lessons: [HashMap](lesson:java-hashmap) (strings as keys), the [memory model](lesson:java-memory-model) (sharing immutable objects between threads) and [OOP concepts](lesson:oop-concepts).
+
+The animation has four scenes: the string pool, concatenation, why strings are immutable, and characters and encoding.
 
 ```demo
 name: java-strings-walk
 ```
 
-> **One sentence to remember:** *a `String` never changes, so literals can be shared in a pool, its hash code can be cached, it is safe across threads and as a map key; compare with `equals`, build text in loops with `StringBuilder`, and copy this immutability into your own value classes with `final` fields, no setters and defensive copies.*
+> **One sentence to remember:** *A `String` never changes, so compare it with `equals` and build long text with `StringBuilder`.*
 
 ## String basics {#basics}
 
-`String` is a `final` class that stores text as UTF-16 (Java 9+ compact strings store Latin-1 text in one byte per character internally). It is **immutable**: no method changes an existing string; methods such as `toUpperCase`, `trim`, `replace` and `substring` return a **new** string.
+`String` is a `final` class, so nobody can extend it.
+
+It is **immutable**: once a string is created, its text never changes. Methods that seem to change it, such as `toUpperCase`, `trim`, `replace` and `substring`, return a **new** string. The original stays the same.
 
 ```java
 String name = "ana";
-name.toUpperCase();              // result thrown away: name is still "ana"
-name = name.toUpperCase();       // assign the returned string
+name.toUpperCase();              // the new string is thrown away: name is still "ana"
+name = name.toUpperCase();       // keep the new string by assigning it
 ```
+
+How the text is stored inside: Java uses UTF-16, two bytes per character. Since Java 9, a string that contains only Latin-1 characters (plain English text, for example) is stored with one byte per character. This is called **compact strings**. It saves memory and does not change how you use `String`.
 
 ## The string pool and == {#pool}
 
-String **literals** are interned: the JVM keeps one object per distinct literal in the **string pool** (on the heap since Java 7) and every use of the literal refers to it. `new String("x")` always creates a separate heap object.
+The **string pool** is a special area of the heap where Java keeps one copy of each string **literal** (text written in quotes in your code). If the same literal appears many times, every use points to the same object. Putting a string into the pool is called **interning**.
+
+`new String("x")` is different: it always creates a new object, outside the pool.
 
 ```java
 String a = "ACC-1";
 String b = "ACC-1";
 String c = new String("ACC-1");
 
-a == b;             // true: same pooled object
-a == c;             // false: different objects
-a.equals(c);        // true: same characters
-a == c.intern();    // true: intern() returns the pooled instance
+a == b;             // true: both point to the same pooled object
+a == c;             // false: c is a different object
+a.equals(c);        // true: the characters are the same
+a == c.intern();    // true: intern() returns the pooled object
 ```
+
+`==` asks *"are these the same object?"*. `equals` asks *"do they contain the same text?"*. For text you almost always want `equals`.
+
+Some cases are surprising, because the compiler joins constant strings before the program runs:
 
 | Expression | Result | Why |
 | --- | --- | --- |
-| `"a" + "b" == "ab"` | `true` | compile-time constant, folded and pooled |
-| `final String x = "a"; x + "b" == "ab"` | `true` | `x` is a constant variable |
-| `String x = "a"; x + "b" == "ab"` | `false` | built at run time |
-| `new String("a") == new String("a")` | `false` | two heap objects |
+| `"a" + "b" == "ab"` | `true` | Both parts are constants, so the compiler turns them into the literal `"ab"`, which is pooled. |
+| `final String x = "a"; x + "b" == "ab"` | `true` | `x` is `final` and set to a constant, so it is treated as a constant too. |
+| `String x = "a"; x + "b" == "ab"` | `false` | `x` is a normal variable, so the result is built at run time as a new object. |
+| `new String("a") == new String("a")` | `false` | Each `new` creates its own object. |
 
-`new String("abc")` creates **one** object on the heap (plus the pooled `"abc"` literal if it was not already there), so the usual answer is "one or two". Never use `==` to compare string content; use `equals`, and put the literal first (`"ACC-1".equals(input)`) or use `Objects.equals` to avoid a `NullPointerException`.
+**How many objects does `new String("abc")` create?** One or two. The `new` always creates one object. The literal `"abc"` is also added to the pool, but only if it is not there already.
+
+**Comparing safely when a value may be `null`:** write the literal first, `"ACC-1".equals(input)`, or use `Objects.equals(a, b)`. If `input` is `null`, `input.equals("ACC-1")` throws a `NullPointerException`.
 
 ## Why String is immutable {#why-immutable}
 
 | Reason | Explanation |
 | --- | --- |
-| **String pool** | shared literals are only safe if nobody can change them |
-| **Hash caching** | `hashCode()` is computed once and stored, so strings are fast `HashMap` keys; a key whose hash changed would be lost |
-| **Thread safety** | immutable objects can be shared by any number of threads with no locks |
-| **Security** | file names, class names, URLs and credentials cannot be altered after validation |
-| **Class loading and reflection** | names used to look up classes must not change |
+| **The string pool** | The pool shares one object between many variables. That is only safe if nobody can change it. |
+| **Cached hash code** | A string calculates its `hashCode()` once and stores it. This makes strings fast `HashMap` keys. If a key could change, its hash would change and the map could no longer find it. |
+| **Thread safety** | An object that never changes can be read by many threads at once, with no locks. |
+| **Security** | Values such as file names, URLs and class names are checked before use. Because they cannot change afterwards, nobody can swap them after the check. |
+| **Class loading** | Java looks up classes by name. Those names must not change. |
 
-The cost: every change creates a new object, so repeated modification needs a builder.
+The cost: every change creates a new object. If you change text many times, use a builder instead (next section).
 
 ## Concatenation and StringBuilder {#builder}
 
-`s = s + part` in a loop creates a new string each pass and copies everything so far, so the work is O(n²). Use a `StringBuilder`:
+Joining strings with `+` inside a loop is slow:
+
+```java
+String s = "";
+for (String part : parts) s = s + part;      // slow for many parts
+```
+
+Each pass creates a new string and copies all the text built so far. With 1 000 parts, Java copies the text about 1 000 times, and the copies get longer each time. The work grows with the **square** of the number of parts (O(n²)).
+
+A `StringBuilder` keeps one growing buffer and adds to the end of it, so there is no copying on every step:
 
 ```java
 StringBuilder sb = new StringBuilder();
 for (String line : lines) sb.append(line).append('\n');
-String text = sb.toString();
+String text = sb.toString();                  // one final string
 ```
 
-| Class | Mutable | Thread-safe | Use |
+| Class | Can change? | Thread-safe? | When to use |
 | --- | --- | --- | --- |
-| `String` | no | yes (immutable) | normal text |
-| `StringBuilder` | yes | no | building text in one thread: the default |
-| `StringBuffer` | yes | yes (synchronized) | legacy; rarely useful |
+| `String` | No | Yes, because it never changes | Normal text |
+| `StringBuilder` | Yes | No | Building text, usually inside one method. **The usual choice.** |
+| `StringBuffer` | Yes | Yes, its methods are `synchronized` | Old code. Rarely needed today. |
 
-A single expression `a + b + c` is fine: the compiler uses `StringBuilder` (Java 8) or `invokedynamic` and `StringConcatFactory` (Java 9+). Other tools: `String.join(", ", items)`, `Collectors.joining`, `String.format` and `"...".formatted(...)`, `repeat`, and **text blocks** (`"""`) for multi-line JSON or SQL.
+A single line such as `a + b + c` is fine. The compiler already turns it into efficient code, so you do not need a builder there.
+
+Other useful tools:
+
+- `String.join(", ", items)` and `Collectors.joining(", ")` join a list with a separator.
+- `String.format("%s: %.2f", name, amount)` or `"%s: %.2f".formatted(name, amount)` fill in a template.
+- `"ab".repeat(3)` gives `"ababab"`.
+- **Text blocks** (`"""`, Java 15) hold multi-line text such as JSON or SQL without escape characters.
 
 ## Common methods and traps {#methods}
 
-| Method | Note |
+| Method | What to know |
 | --- | --- |
-| `equals`, `equalsIgnoreCase`, `compareTo` | `equals` for content; `compareTo` for ordering (negative, zero, positive) |
-| `isEmpty` / `isBlank` (Java 11) | `isBlank` is also true for whitespace only |
-| `trim` / `strip` (Java 11) | `strip` removes all Unicode whitespace, `trim` only characters up to `' '` |
-| `split(regex)` | the argument is a **regex**: `"a.b".split(".")` returns nothing useful, use `"\\."`; trailing empty strings are dropped |
-| `substring(i, j)` | end index exclusive; copies the characters (since Java 7u6) |
-| `replace` vs `replaceAll` | `replace` takes literal text, `replaceAll` takes a regex |
-| `chars()`, `codePoints()` | streams of characters or Unicode code points |
-| `toLowerCase(Locale.ROOT)` | the no-argument version depends on the default locale (Turkish `I` problem) |
-| `String.valueOf(x)` | safe for `null` (`"null"`); `x.toString()` throws on `null` |
+| `equals`, `equalsIgnoreCase` | Compare the text. |
+| `compareTo` | Compares for sorting. Returns a negative number, zero or a positive number. |
+| `isEmpty` / `isBlank` (Java 11) | `isEmpty` is true only for `""`. `isBlank` is also true for text that is only spaces. |
+| `trim` / `strip` (Java 11) | Both remove spaces at the ends. `strip` also removes Unicode spaces that `trim` misses. |
+| `split(regex)` | The argument is a **regular expression**, not plain text. `"a.b".split(".")` does not work, because `.` means "any character". Write `"a.b".split("\\.")`. Empty strings at the end are dropped. |
+| `substring(begin, end)` | The `end` position is **not** included: `"bank".substring(0, 2)` is `"ba"`. |
+| `replace` / `replaceAll` | `replace` looks for plain text. `replaceAll` takes a regular expression. |
+| `chars()`, `codePoints()` | Give a stream of the characters. |
+| `toLowerCase(Locale.ROOT)` | Without a `Locale`, the result depends on the computer's language settings (see the Turkish example below). |
+| `String.valueOf(x)` | Returns `"null"` when `x` is `null`. `x.toString()` would throw an exception. |
 
 ## Characters, Unicode and encodings {#unicode}
 
-A `char` is a 16-bit UTF-16 code unit, not always a "character": emoji and some scripts need two (a surrogate pair), so `"A😀".length()` is 3 while a person sees 2 symbols. Use `codePointCount` and `codePoints()` when that matters. Converting between text and bytes needs a **charset**: always pass `StandardCharsets.UTF_8` to `getBytes`, `new String(bytes, charset)`, readers and writers. The platform default only became UTF-8 on every platform in Java 18 (JEP 400).
+A Java `char` holds 16 bits. Most letters fit in one `char`, but emoji and some rare characters need **two** `char`s, called a **surrogate pair**. So `"A😀".length()` is **3**, even though a person sees two symbols. When you need the number of real characters, use `codePointCount`, or `codePoints()` to loop over them.
+
+Turning text into bytes (for a file or a network call) needs a **charset**: the rule for how characters become bytes. Always say which one, normally UTF-8:
+
+```java
+byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+String back = new String(bytes, StandardCharsets.UTF_8);
+```
+
+Before Java 18, the default charset depended on the operating system, so the same code could produce different bytes on Windows and Linux. Since Java 18 the default is UTF-8 everywhere, but naming it is still clearer.
 
 ## Passwords and sensitive text {#passwords}
 
-APIs such as `JPasswordField` and `Console.readPassword()` return `char[]` so you can **overwrite** it after use; a `String` stays in memory until it is garbage collected (and may remain in the pool or a heap dump). The benefit is modest in practice, but never log secrets or put them in exception messages, and avoid building them with string concatenation into URLs or SQL.
+Some APIs, such as `Console.readPassword()`, return a password as a `char[]` instead of a `String`. The reason: you can **overwrite** an array with zeros as soon as you are done. A `String` cannot be changed, so the password stays in memory until the garbage collector removes it, and it could appear in a memory dump.
+
+This protection is small. The important rules are simpler: never log a password or token, never put one in an exception message, and never build one into a URL or SQL text.
 
 ## Designing immutable classes {#immutable-classes}
 
-An immutable class cannot be changed after construction. Recipe:
+An **immutable class** is one whose objects cannot change after they are created. You can apply the same idea as `String` to your own classes. The recipe:
 
-1. Declare the class `final` (or make constructors private) so subclasses cannot add mutability.
-2. Make all fields `private final`.
-3. No setters; "modifying" methods return a **new** instance (`withAmount(...)`).
-4. **Defensive copies** of mutable arguments (in the constructor) and mutable fields (in the getters).
-5. Do not let `this` escape from the constructor.
+1. Make the class `final`, so nobody can create a changeable subclass.
+2. Make every field `private final`.
+3. Do not write setters. A method that "changes" the object returns a **new** object instead, for example `withAmount(...)`.
+4. Make **defensive copies**: copy changeable objects when they come in (constructor) and when they go out (getters). Otherwise the caller keeps a reference and can change your data from outside.
+5. Do not pass `this` to other code from inside the constructor.
 
 ```java
 public final class Statement {
     private final String accountId;
     private final List<Entry> entries;
-    private final Date issued;                       // mutable type: copy it
+    private final Date issued;                        // Date can be changed, so we must copy it
 
     public Statement(String accountId, List<Entry> entries, Date issued) {
         this.accountId = Objects.requireNonNull(accountId);
-        this.entries = List.copyOf(entries);          // immutable copy, also rejects nulls
-        this.issued = new Date(issued.getTime());     // defensive copy in
+        this.entries = List.copyOf(entries);           // an unchangeable copy of the list
+        this.issued = new Date(issued.getTime());      // copy on the way in
     }
 
-    public List<Entry> entries() { return entries; }              // already immutable
-    public Date issued() { return new Date(issued.getTime()); }   // defensive copy out
+    public List<Entry> entries() { return entries; }               // safe: the list cannot change
+    public Date issued() { return new Date(issued.getTime()); }    // copy on the way out
 }
+```
 
-public record Money(BigDecimal amount, String currency) {          // records: final, immutable by default
-    public Money {
+A **record** (Java 16) gives you most of this with one line. Its fields are `private final`, there are no setters, and the class is `final`:
+
+```java
+public record Money(BigDecimal amount, String currency) {
+    public Money {                                                  // checks run when the object is created
         Objects.requireNonNull(amount);
         if (currency.length() != 3) throw new IllegalArgumentException("currency");
     }
@@ -139,7 +193,13 @@ public record Money(BigDecimal amount, String currency) {          // records: f
 }
 ```
 
-Benefits: thread-safe without locks, safe as map keys and set elements, easy to reason about and cache, and no defensive copying for callers. `final` on a reference does **not** make the object immutable (`final List<String> x` can still be added to). Prefer `java.time` types (`LocalDate`, `Instant`) over `Date`, and `BigDecimal` for money: both are immutable. `BigDecimal.equals` compares scale too (`2.0` is not equal to `2.00`); use `compareTo` for numeric comparison.
+What you gain: the object is safe to share between threads without locks, safe to use as a map key, and easy to reason about, because it is always in the state it was created in.
+
+Three things to watch:
+
+- **`final` on a variable does not make the object immutable.** `final List<String> items` means you cannot point `items` at another list, but you can still add to the list.
+- **Prefer immutable types** such as `LocalDate` and `Instant` instead of the old `Date`, and `BigDecimal` for money.
+- **`BigDecimal.equals` also compares the number of decimal places**: `2.0` and `2.00` are *not* equal with `equals`. Use `compareTo(...) == 0` to compare the values.
 
 Try it in the lab: [Strings: the pool, immutability and StringBuilder](lab:string-pool-builder).
 
@@ -147,121 +207,207 @@ Try it in the lab: [Strings: the pool, immutability and StringBuilder](lab:strin
 
 | Need | Do |
 | --- | --- |
-| compare text | `a.equals(b)`, `"lit".equals(x)`, `Objects.equals` |
-| build text in a loop | `StringBuilder` |
-| join a list | `String.join(sep, list)` / `Collectors.joining` |
-| template | `"%s: %.2f".formatted(...)` |
-| multi-line text | text block `"""` |
-| text to bytes | `getBytes(StandardCharsets.UTF_8)` |
-| case-insensitive keys | `toLowerCase(Locale.ROOT)` |
-| immutable value object | `record`, or `final` class with `final` fields and defensive copies |
-| immutable collection | `List.copyOf`, `List.of` |
+| Compare text | `a.equals(b)`, `"lit".equals(x)` or `Objects.equals(a, b)` |
+| Build text in a loop | `StringBuilder` |
+| Join a list | `String.join(sep, list)` or `Collectors.joining(sep)` |
+| Fill in a template | `"%s: %.2f".formatted(...)` |
+| Multi-line text | a text block `"""` |
+| Text to bytes | `getBytes(StandardCharsets.UTF_8)` |
+| Lower case for keys and codes | `toLowerCase(Locale.ROOT)` |
+| Immutable value object | a `record`, or a `final` class with `final` fields and defensive copies |
+| Immutable list | `List.of(...)` or `List.copyOf(list)` |
 
 ## Interview questions {#questions}
 
 ### [basic] Why is String immutable in Java? {#why-immutable-q}
 
-Several benefits: literals can be shared in the string pool safely; the hash code can be cached, making strings efficient and reliable `HashMap` keys; strings can be shared between threads without synchronisation; and security-sensitive values (file paths, class names, URLs, credentials) cannot be modified after validation. The price is a new object for every change.
+Because it makes strings safe to share. Four reasons:
+
+1. **The string pool** shares one object between many variables, which only works if nobody can change it.
+2. **The hash code is cached.** A string calculates it once, which makes strings fast and reliable `HashMap` keys.
+3. **Thread safety.** Many threads can read the same string without locks.
+4. **Security.** A file path or URL that was checked cannot be changed after the check.
+
+The price is that every change creates a new string.
 
 ### [basic] What is the difference between == and equals() for Strings? {#eq-vs-equals}
 
-`==` compares references: do both variables point to the same object? `equals` compares the characters. Two strings with the same text can be different objects (`new String("a")`), so use `equals` for content. Literals often compare `==` true only because of the pool, which is an implementation detail to avoid relying on.
+`==` checks whether two variables point to the **same object**. `equals` checks whether two strings contain the **same text**.
+
+Two strings can have the same text but be different objects, for example `new String("a")` and `"a"`. So always use `equals` to compare text. Sometimes `==` returns `true` for literals, but only because of the string pool, and you should not rely on that.
 
 ### [basic] What is the string pool? {#pool-q}
 
-A cache of distinct string literals kept on the heap (since Java 7). Every occurrence of the same literal refers to one pooled object, saving memory and making literal comparison cheap. `String.intern()` returns the pooled instance for any string, adding it if absent.
+An area of the heap where Java keeps **one copy of each string literal**. Every place in the code that uses the same literal gets the same object. This saves memory.
+
+`String.intern()` returns the pooled copy of any string, and adds it to the pool if it is not there yet. Since Java 7 the pool is on the normal heap.
 
 ### [basic] How many objects does new String("abc") create? {#new-string-objects}
 
-At most two: the pooled literal `"abc"` (created once, when the class is loaded, if not already in the pool) and a new heap `String` for the `new` expression. The commonly accepted answer is "one or two, depending on whether the literal was already pooled".
+**One or two.**
+
+- `new` always creates one new `String` object.
+- The literal `"abc"` is also put in the pool when the class is loaded, but only if the pool does not already have it.
+
+So it is two the first time, and one if `"abc"` was already in the pool.
 
 ### [basic] What is the difference between String, StringBuilder and StringBuffer? {#string-sb-sbuf}
 
-`String` is immutable. `StringBuilder` is a mutable character buffer, not thread-safe, fastest, the default for building text. `StringBuffer` is the same but with synchronized methods, so it is slower and rarely needed because a builder is almost always used by one thread.
+- **`String`** cannot change.
+- **`StringBuilder`** is a buffer you can change. It is not thread-safe, and it is the fastest. Use it when you build text.
+- **`StringBuffer`** is the same as `StringBuilder`, but every method is `synchronized`, which makes it slower. It is rarely needed, because text is usually built inside one thread.
 
 ### [basic] Why shouldn't you concatenate strings with + inside a loop? {#concat-loop}
 
-Each `+` creates a new `String` and copies the text built so far, making the total cost O(n²) and producing garbage. A `StringBuilder` appends in place with amortised O(1) per append, and `toString()` creates one string at the end. A single one-line `a + b + c` is fine.
+Each `+` creates a new string and copies all the text built so far. Over many loop passes, this copying adds up to work that grows with the square of the number of parts (O(n²)), and it creates a lot of garbage.
+
+A `StringBuilder` adds to the end of one buffer, and `toString()` creates the final string once. Note that a single line like `a + b + c` is fine, because the compiler handles it efficiently.
 
 ### [basic] How do you compare strings safely when one may be null? {#null-safe-equals}
 
-Call `equals` on a value you know is not null (`"ACC-1".equals(input)`), or use `Objects.equals(a, b)`, which handles `null` on either side. `input.equals("ACC-1")` throws `NullPointerException` when `input` is `null`.
+Call `equals` on a value you know is not `null`, such as the literal: `"ACC-1".equals(input)`. Or use `Objects.equals(a, b)`, which handles `null` on either side.
+
+`input.equals("ACC-1")` throws a `NullPointerException` if `input` is `null`.
 
 ### [basic] What is the difference between trim() and strip()? {#trim-vs-strip}
 
-`trim()` removes characters up to the space (code point 32) from both ends. `strip()` (Java 11) removes all Unicode whitespace as defined by `Character.isWhitespace`, so it also handles non-ASCII spaces. `isBlank()` is true for empty or whitespace-only text.
+Both remove spaces from both ends of a string.
+
+- `trim()` removes only basic spaces and control characters (codes up to 32).
+- `strip()` (Java 11) removes **every kind of Unicode space**, including the special spaces used in some languages.
+
+A related method, `isBlank()`, is true when a string is empty or contains only spaces.
 
 ### [basic] What is the difference between substring, split and replace? {#substring-split-replace}
 
-`substring(begin, end)` returns part of the string (end exclusive). `split(regex)` divides by a **regular expression** and drops trailing empty strings; special characters such as `.` or `|` must be escaped. `replace` substitutes literal text, `replaceAll` uses a regex.
+- `substring(begin, end)` returns part of the string. The character at `end` is not included.
+- `split(regex)` cuts the string into pieces. The separator is a **regular expression**, so special characters such as `.` or `|` must be escaped (`"\\."`). Empty pieces at the end are dropped.
+- `replace` swaps plain text. `replaceAll` uses a regular expression.
 
 ### [basic] What are text blocks? {#text-blocks}
 
-Java 15+ multi-line string literals delimited by `"""`. They keep line breaks, remove the common indentation and need little escaping, which suits JSON, SQL and HTML: `String sql = """ SELECT id FROM account WHERE ... """;`.
+Multi-line strings written between `"""` marks (Java 15). They keep the line breaks, remove the shared indentation and need almost no escape characters. They are handy for JSON, SQL and HTML:
+
+```java
+String sql = """
+    SELECT id, balance
+    FROM account
+    WHERE customer_id = ?
+    """;
+```
 
 ### [intermediate] What does intern() do and when would you use it? {#intern-q}
 
-It returns the canonical pooled instance equal to the string, adding it to the pool if needed. It can save memory when millions of duplicates of a small set of values exist (the same few country codes), but the pool has overhead and `intern` itself is costly; modern GCs offer string deduplication (`-XX:+UseStringDeduplication` with G1) instead.
+`intern()` returns the pooled copy of a string, adding it to the pool if needed. After interning, equal strings are the same object.
+
+It can save memory when a program holds millions of copies of a few values (for example, the same few country codes). But interning has its own cost. Today a better option is often the garbage collector's **string deduplication** (`-XX:+UseStringDeduplication` with the G1 collector), which removes duplicate text automatically.
 
 ### [intermediate] Why are Strings good HashMap keys? {#string-keys}
 
-They are immutable, so the hash code never changes while the key is in the map, and `String` caches its `hashCode`, making repeated lookups cheap. `equals` and `hashCode` are consistent. See [HashMap](lesson:java-hashmap).
+Because they never change. A map finds a key by its hash code, so a key's hash code must stay the same while it is in the map. A string's hash code never changes, and `String` calculates it only once and stores it, so looking it up again is cheap. See [HashMap](lesson:java-hashmap).
 
 ### [intermediate] Is "a" + "b" == "ab" true? What about with variables? {#constant-folding}
 
-True: both operands are compile-time constants, so the compiler folds them into the literal `"ab"` and it is pooled. If either operand is a non-final variable, the concatenation is computed at run time into a new object, and `==` is false. If the variable is `final` and initialised with a constant, it is a constant variable and folding applies.
+**Yes, it is true.** Both parts are constants, so the compiler joins them into the literal `"ab"` before the program runs, and that literal comes from the pool.
+
+With a normal variable it is **false**: `String x = "a"; x + "b" == "ab"`. The joining happens while the program runs and creates a new object.
+
+If the variable is `final` and set to a constant (`final String x = "a";`), the compiler treats it as a constant, and the result is `true` again.
 
 ### [intermediate] How do you make a custom class immutable? {#custom-immutable}
 
-Make the class `final`, all fields `private final`, no setters, initialise everything in the constructor, make defensive copies of mutable inputs (in the constructor) and mutable internal state (in getters), use immutable collections (`List.copyOf`), and ensure `this` does not escape the constructor. Records give most of this automatically.
+1. Make the class `final`.
+2. Make all fields `private final`, and set them in the constructor.
+3. Do not add setters.
+4. Copy changeable inputs in the constructor, and copy changeable fields in getters (defensive copies).
+5. Use unchangeable collections, such as `List.copyOf`.
+6. Do not let `this` escape from the constructor.
+
+A **record** does most of this for you.
 
 ### [intermediate] Does final make an object immutable? {#final-vs-immutable}
 
-No. `final` on a reference only prevents reassigning the variable. `final List<String> items` can still have elements added. Immutability is a property of the object: no way to change its state after construction.
+**No.** `final` on a variable only means the variable cannot point to a different object. The object itself can still change: with `final List<String> items`, you can still call `items.add(...)`.
+
+An object is immutable only if there is **no way** to change its state after it is created.
 
 ### [intermediate] What is a defensive copy and when is it needed? {#defensive-copy}
 
-A copy of a mutable object made when you store it (constructor arguments) or hand it out (getters), so the caller cannot change your internal state later. Needed for `Date`, arrays and collections held by an immutable class. Immutable types (`String`, `LocalDate`, `List.copyOf`) need no copy.
+A copy of a changeable object that you make when it **comes in** (a constructor argument) or **goes out** (a getter). Without it, the caller keeps a reference to the same object and can change your data from outside.
+
+You need it for changeable types such as `Date`, arrays and normal collections. Types that cannot change, such as `String`, `LocalDate` or a list from `List.copyOf`, need no copy.
 
 ### [intermediate] How are Java records related to immutability? {#records-q}
 
-A record is a concise final class whose components are `private final` fields with generated accessors, constructor, `equals`, `hashCode` and `toString`. It is shallowly immutable: a component of a mutable type (a `List`) can still be mutated, so copy such components in the compact constructor.
+A record is a short way to write a `final` class whose fields are `private final`. Java generates the constructor, the accessor methods, `equals`, `hashCode` and `toString`.
+
+A record is only **shallowly** immutable. If one of its fields is a changeable object, such as a normal `List`, that list can still be changed. So copy such fields in the record's constructor, for example with `List.copyOf`.
 
 ### [intermediate] Why does BigDecimal.equals(2.0, 2.00) return false? {#bigdecimal-equals}
 
-`BigDecimal.equals` compares both the value and the **scale** (digits after the point), and `2.0` and `2.00` have different scales. `compareTo` ignores scale and returns 0. Use `compareTo` for numeric equality, and note that `HashSet`/`HashMap` use `equals`.
+`BigDecimal.equals` compares two things: the **value** and the **scale** (the number of digits after the decimal point). `2.0` has scale 1 and `2.00` has scale 2, so they are not equal.
+
+To compare only the values, use `a.compareTo(b) == 0`. Be careful with `HashSet` and `HashMap`, because they use `equals`, so they treat `2.0` and `2.00` as different keys.
 
 ### [intermediate] Why use a char[] instead of a String for a password? {#char-array-password}
 
-A `char[]` can be overwritten (`Arrays.fill(pw, '\0')`) as soon as you finish, shortening how long the secret sits in memory, while a `String` is immutable and lingers until garbage collected, possibly in the pool or a heap dump. It is a defence in depth, not a complete one; mainly never log or persist the secret.
+You can wipe a `char[]` as soon as you are done with it (`Arrays.fill(password, '\0')`), so the secret stays in memory for less time. A `String` cannot be changed, so it stays until the garbage collector removes it, and it might show up in a memory dump.
+
+This is a small extra protection, not a complete one. The rules that matter more: never log a secret and never store it as plain text.
 
 ### [intermediate] What problems does String.format or toLowerCase() have with locales? {#locale}
 
-They use the default locale, which can change results: in a Turkish locale `"TITLE".toLowerCase()` yields a dotless i, and number formats use commas instead of points. Use `toLowerCase(Locale.ROOT)` for identifiers and protocol values, and an explicit `Locale` in `format`.
+Without an explicit `Locale`, both use the computer's language settings, and the results can change:
+
+- In Turkish, `"TITLE".toLowerCase()` gives `"tıtle"` with a dotless **ı**, so a check such as `equals("title")` fails.
+- Number formatting may use a comma instead of a decimal point: `1,50` instead of `1.50`.
+
+Use `toLowerCase(Locale.ROOT)` for codes and identifiers, and pass a `Locale` to `String.format` when you format numbers.
 
 ### [deep] What are compact strings (Java 9)? {#compact-strings}
 
-`String` stores its characters in a `byte[]` plus a coder flag: Latin-1 text uses one byte per character, anything else UTF-16 with two. Most strings are Latin-1, so memory use roughly halves. It is an internal optimisation; the API is unchanged.
+An internal memory saving. Since Java 9, a string stores its text in a `byte[]` plus a flag that says how it is encoded:
+
+- Text that contains only Latin-1 characters (most English text) uses **one byte** per character.
+- Any other text uses UTF-16, with **two bytes** per character.
+
+Since most strings are Latin-1, string memory roughly halves. Your code does not change at all.
 
 ### [deep] How does string concatenation compile in Java 8 versus Java 9+? {#concat-compile}
 
-Java 8 compiled `a + b + c` into code that creates a `StringBuilder`, appends each part and calls `toString()`. Java 9+ emits an `invokedynamic` call to `StringConcatFactory`, which picks the best strategy at run time (sizing the result exactly, avoiding intermediate builders), so it is faster and keeps bytecode smaller.
+- **Java 8:** the compiler turned `a + b + c` into code that creates a `StringBuilder`, appends each part and calls `toString()`.
+- **Java 9 and later:** the compiler emits a single `invokedynamic` instruction that calls `StringConcatFactory`. The JVM picks the best way to join the strings when the program runs, for example by calculating the exact size of the result first.
+
+The result is faster joining and smaller compiled code.
 
 ### [deep] Explain String.hashCode() and the cached hash. {#string-hash}
 
-It computes `s[0]*31^(n-1) + s[1]*31^(n-2) + ... + s[n-1]` and stores the result in a private field the first time it is needed (a `hash` field with `hashIsZero` handling for the value 0). Immutability makes the cached value permanently valid. It is not collision-free: `"Aa"` and `"BB"` have the same hash, which is why `equals` is still needed ([HashMap](lesson:java-hashmap)).
+`hashCode()` combines the characters with the formula `s[0]*31^(n-1) + s[1]*31^(n-2) + ... + s[n-1]`.
+
+The first time it is called, the result is stored in a private field of the string. Later calls just return that stored value. This is only safe because the string never changes.
+
+Different strings can still have the same hash code. For example, `"Aa"` and `"BB"` both give 2112. That is why `HashMap` also calls `equals` to confirm a match ([HashMap](lesson:java-hashmap)).
 
 ### [deep] How does a switch on a String work? {#switch-string}
 
-The compiler switches on `s.hashCode()` to jump to a candidate and then confirms with `equals` (because different strings can share a hash). The strings in `case` labels must be constants, and `null` throws `NullPointerException`.
+The compiler first switches on `s.hashCode()` to jump quickly to the likely `case`. Then it calls `equals` to confirm, because two different strings can have the same hash code.
+
+The `case` labels must be constants. If `s` is `null`, the switch throws a `NullPointerException`.
 
 ### [deep] What is the difference between a char and a code point? {#code-point}
 
-A `char` is a 16-bit UTF-16 code unit. A Unicode code point can need two `char`s (a surrogate pair), as with most emoji. `length()` and `charAt` work on code units; `codePointCount`, `codePointAt` and `codePoints()` work on code points. Reversing text with `StringBuilder.reverse()` handles surrogate pairs correctly; a naive `char` loop does not.
+- A **`char`** is one 16-bit unit of UTF-16 text.
+- A **code point** is one real Unicode character.
+
+Most characters fit in one `char`. Emoji and some rare characters need **two** `char`s, called a surrogate pair. Methods such as `length()` and `charAt` count `char`s. Methods such as `codePointCount`, `codePointAt` and `codePoints()` count real characters.
+
+This matters when you reverse text: `StringBuilder.reverse()` keeps surrogate pairs together, but a simple loop over `char`s breaks them.
 
 ### [deep] Why are immutable objects thread-safe, and what is safe publication? {#safe-publication}
 
-With no state changes there are no races on their fields, and `final` fields get a special guarantee: other threads see their correct values once the constructor finishes, even if the reference is published through a data race ([memory model](lesson:java-memory-model)). Immutability plus not leaking `this` from the constructor is what makes sharing safe.
+An immutable object never changes, so two threads can never conflict while reading it.
+
+**Safe publication** means another thread is guaranteed to see the object fully built, not half-built. Java gives `final` fields a special guarantee: once the constructor finishes, every thread sees the correct values of those fields, even without locks ([memory model](lesson:java-memory-model)). That guarantee only holds if the constructor does not leak `this` to other code before it finishes.
 
 ### [coding] Write a method that reverses a string and one that checks for a palindrome. {#coding-reverse}
 
@@ -271,7 +417,7 @@ static String reverse(String s) {
 }
 
 static boolean isPalindrome(String s) {
-    String cleaned = s.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+    String cleaned = s.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");   // keep only letters and digits
     int i = 0, j = cleaned.length() - 1;
     while (i < j) {
         if (cleaned.charAt(i++) != cleaned.charAt(j--)) return false;
@@ -280,24 +426,29 @@ static boolean isPalindrome(String s) {
 }
 ```
 
-`StringBuilder.reverse` is O(n) and handles surrogate pairs; the palindrome check compares from both ends in O(n) without building a reversed copy.
+How it works:
+
+- `reverse` uses `StringBuilder.reverse()`, which takes O(n) time and keeps emoji and other two-`char` characters intact.
+- `isPalindrome` removes everything except letters and digits, then compares characters from both ends towards the middle. It takes O(n) time and does not build a reversed copy.
 
 ### [coding] Check whether two strings are anagrams. {#coding-anagram}
+
+Two strings are anagrams if they contain the same letters the same number of times, for example `"listen"` and `"silent"`.
 
 ```java
 static boolean anagrams(String a, String b) {
     if (a.length() != b.length()) return false;
-    int[] counts = new int[26];
+    int[] counts = new int[26];                  // one counter per letter a to z
     for (int i = 0; i < a.length(); i++) {
-        counts[a.charAt(i) - 'a']++;
-        counts[b.charAt(i) - 'a']--;
+        counts[a.charAt(i) - 'a']++;             // add for letters in a
+        counts[b.charAt(i) - 'a']--;             // subtract for letters in b
     }
     for (int c : counts) if (c != 0) return false;
     return true;
 }
 ```
 
-O(n) time and O(1) space for lowercase `a-z`. For arbitrary Unicode, use a `Map<Integer, Integer>` of code points, or sort both arrays (O(n log n)).
+If every counter ends at zero, both strings used the same letters. This takes O(n) time and a fixed amount of memory, but it only works for lowercase `a` to `z`. For any Unicode text, count characters in a `Map<Integer, Integer>`, or sort both strings and compare them (O(n log n)).
 
 ### [coding] Make this class immutable. {#coding-make-immutable}
 
@@ -315,26 +466,38 @@ public class Customer {
 }
 ```
 
+The problems: the setter changes the name, the caller's list and `Date` are stored directly so the caller can still change them, and the getters hand out the same changeable objects.
+
+A fixed version as a record:
+
 ```java
 public record Customer(String name, List<String> accountIds, LocalDate joined) {
     public Customer {
         Objects.requireNonNull(name);
-        accountIds = List.copyOf(accountIds);     // defensive copy, immutable list
+        accountIds = List.copyOf(accountIds);     // an unchangeable copy
     }
 }
 ```
 
-Fixes: a record (final, no setters), an immutable copy of the list, and `LocalDate` instead of the mutable `Date`. With a classic class: `final` class, `private final` fields, remove the setter, copy in the constructor and copy or wrap in the getters.
+What changed: the record has no setters and its fields are `final`; the list is copied into an unchangeable list; and `LocalDate`, which cannot change, replaces `Date`.
+
+With a normal class instead of a record: make the class `final` and the fields `private final`, remove the setter, copy the list and the date in the constructor, and return copies from the getters.
 
 ### [coding] Count the occurrences of each character in a string. {#coding-char-count}
 
 ```java
-Map<Character, Integer> counts = new TreeMap<>();
+Map<Character, Integer> counts = new TreeMap<>();     // TreeMap keeps the characters sorted
 for (char c : s.toCharArray()) {
-    counts.merge(c, 1, Integer::sum);
+    counts.merge(c, 1, Integer::sum);                  // add 1, or start at 1 if missing
 }
-// streams: s.chars().mapToObj(c -> (char) c)
-//            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 ```
 
-`merge` replaces the "get, check null, put" pattern; use a `LinkedHashMap` to keep first-seen order and `codePoints()` for full Unicode.
+The same with streams:
+
+```java
+Map<Character, Long> counts = s.chars()
+        .mapToObj(c -> (char) c)
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+```
+
+`merge` replaces the longer "get the value, check for `null`, put it back" code. Use a `LinkedHashMap` to keep the order in which characters first appear, and `codePoints()` instead of `chars()` if the text may contain emoji.

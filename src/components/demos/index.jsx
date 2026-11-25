@@ -36,6 +36,7 @@ const DEMOS = {
       {
         id: 'main',
         label: 'Strings',
+        blurb: 'Four fruit names go into an empty map, and then `get("fig")` finds one of them again. The panel shows the three steps from key to bucket.',
         ops: [...puts(['apple', 'banana', 'fig', 'elderberry']), { type: 'get', key: 'fig' }],
         input: { kind: 'string', placeholder: 'e.g. mango' },
       },
@@ -48,7 +49,7 @@ const DEMOS = {
         id: 'main',
         label: 'Chain',
         blurb:
-          '"banana" and "date" have different hash codes but land in the same bucket. "Aa" and "BB" are worse: their hashCode() is identical.',
+          '"banana" and "date" have different hash codes, but they land in the same bucket. "Aa" and "BB" are harder: their `hashCode()` is exactly the same, so only `equals()` can tell them apart.',
         ops: [...puts(['banana', 'date', 'Aa', 'BB']), { type: 'get', key: 'BB' }],
         input: { kind: 'string', placeholder: 'e.g. date' },
       },
@@ -61,7 +62,7 @@ const DEMOS = {
         id: 'main',
         label: 'Treeify',
         blurb:
-          'Keys 1, 65, 129, … all share bucket 1 in every table up to 64 buckets. Watch what HashMap does at the 9th, 10th and 11th key.',
+          'The keys 1, 65, 129 and so on all land in bucket 1, in every table of up to 64 buckets. Watch what HashMap does at the 9th, 10th and 11th key.',
         ops: puts(Array.from({ length: 11 }, (_, i) => 1 + 64 * i)),
         brief: true,
         speed: 2,
@@ -74,7 +75,7 @@ const DEMOS = {
       {
         id: 'main',
         label: 'Resize',
-        blurb: 'Thirteen fruit keys go in. The 13th pushes size past the threshold (12) and the table doubles.',
+        blurb: 'Thirteen fruit names go in. The 13th one pushes the size past the threshold of 12, so the table doubles.',
         ops: puts(FRUITS),
         brief: true,
         speed: 2,
@@ -89,7 +90,7 @@ const DEMOS = {
         id: 'neither',
         label: 'Neither overridden',
         blurb:
-          '`p1` and `p2` are two objects with the same coordinates. Without overrides, `equals()` compares identity and `hashCode()` is an identity number.',
+          '`p1` and `p2` are two objects with the same coordinates. Without overrides, `equals()` checks whether they are the same object, and `hashCode()` returns a number based on the object, not on its coordinates.',
         kf: pointKf({ hash: 'identity', equals: 'identity' }),
         makeOps: twoPoints,
       },
@@ -97,27 +98,27 @@ const DEMOS = {
         id: 'equals-only',
         label: 'Only equals()',
         blurb:
-          '`equals()` now compares coordinates, but `hashCode()` is still the identity number, so `get(p2)` goes to the wrong bucket and `equals()` is never consulted. (It can even work by luck — 1 time in 16.)',
+          '`equals()` now compares the coordinates, but `hashCode()` is still based on the object. So `get(p2)` goes to the wrong bucket, and `equals()` is never called. It can even work by luck, about 1 time in 16.',
         kf: pointKf({ hash: 'identity', equals: 'value' }),
         makeOps: twoPoints,
       },
       {
         id: 'both',
         label: 'Both overridden',
-        blurb: 'Both methods use the coordinates (`Objects.hash(x, y)`): equal points hash to the same bucket and `equals()` confirms.',
+        blurb: 'Both methods now use the coordinates, with `Objects.hash(x, y)`. Equal points go to the same bucket, and `equals()` confirms the match.',
         kf: pointKf({ hash: 'value', equals: 'value' }),
         makeOps: twoPoints,
       },
       {
         id: 'mutable',
         label: 'Mutable key trap',
-        blurb: 'A correct key class, but the key is changed after it was stored. The entry is still in the map and nobody can find it.',
+        blurb: 'The key class is correct, but the key is changed after it was stored. The entry is still in the map, and nobody can find it.',
         kf: pointKf({ hash: 'value', equals: 'value' }),
         makeOps: () => {
           const p1 = pt('p1', 1, 2);
           return [
             { type: 'put', key: p1, value: 'A' },
-            { type: 'mutate', key: p1, fn: (k) => (k.x = 5), caption: '`p1.x = 5` — the key changed after it was stored.', short: 'p1.x = 5' },
+            { type: 'mutate', key: p1, fn: (k) => (k.x = 5), caption: 'The code runs `p1.x = 5`, so the key changes after it was stored.', short: 'p1.x = 5' },
             { type: 'get', key: p1 },
             { type: 'get', key: pt('p2', 1, 2) },
           ];

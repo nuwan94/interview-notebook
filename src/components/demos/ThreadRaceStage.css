@@ -1,0 +1,5 @@
+/* ThreadRaceStage: two threads, their code and local variable, and the shared count. Classes start with tr-. */
+.tr-here { fill: #fff8d6; stroke: #e8d77a; stroke-width: 1; }
+.tr-code-dim { opacity: 0.55; }
+.tr-lock { transition: fill 0.3s, stroke 0.3s; }
+.tr-none { font-style: italic; }
