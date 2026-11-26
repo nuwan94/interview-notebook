@@ -87,12 +87,12 @@ function Edge({ a, rects, isNew }) {
   );
 }
 
-function Card({ c, isNew }) {
+function Card({ c, isNew, state }) {
   const h = cardH(c);
   const tone = c.ghost ? '' : `t-${c.tone || 'none'}`;
   const badgeW = c.badge ? c.badge.length * 6.2 + 14 : 0;
   return (
-    <g className={isNew ? 'g-pop' : ''} opacity={c.dim ? 0.4 : 1}>
+    <g className={`${isNew ? 'g-pop' : ''} ${state ? `bd-${state}` : ''}`} opacity={c.dim ? 0.4 : 1}>
       <rect x={c.x} y={c.y} width={c.w} height={h} rx="7" className={`bd-card ${tone} ${c.dashed ? 'is-dashed' : ''} ${c.focus ? 'is-focus' : ''} ${c.ghost ? 'is-ghost' : ''}`} />
       {c.title && (
         <text x={c.x + 10} y={c.y + 18} className="bd-card-title">
@@ -147,9 +147,15 @@ function Steps({ s, h }) {
   );
 }
 
-export function BoardStage({ frames, index, label }) {
+const sig = (c) => JSON.stringify([c.x, c.y, c.w, c.title, c.lines, c.tone, c.badge, c.dim, c.ghost]);
+
+export function BoardStage({ frames, index, label, focus = false }) {
   const f = frames[index];
   const prev = index > 0 ? frames[index - 1] : null;
+  // with focus on, cards that are new or changed since the last step stand out and the rest fade back
+  const prevSig = new Map((prev?.cards || []).map((c) => [c.id, sig(c)]));
+  const changedIds = new Set((f.cards || []).filter((c) => prevSig.get(c.id) !== sig(c)).map((c) => c.id));
+  const focusOn = focus && !!prev && changedIds.size > 0 && changedIds.size < (f.cards || []).length;
   const H = f.h || 300;
   const prevCards = new Set((prev?.cards || []).map((c) => c.id));
   const prevArrows = new Set((prev?.arrows || []).map((a) => `${a.from}>${a.to}>${a.label || ''}`));
@@ -205,7 +211,7 @@ export function BoardStage({ frames, index, label }) {
           </text>
         ))}
         {(f.cards || []).map((c) => (
-          <Card key={c.id} c={c} isNew={!!prev && !prevCards.has(c.id)} />
+          <Card key={c.id} c={c} isNew={!!prev && !prevCards.has(c.id)} state={focusOn ? (changedIds.has(c.id) ? 'changed' : 'quiet') : ''} />
         ))}
         {(f.wraps || []).map((w) => {
           const r = rects[`wrap:${w.around}`];

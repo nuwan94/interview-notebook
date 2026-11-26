@@ -10,7 +10,7 @@ export function fitDemos() {
   const watched = new WeakSet(); // per call, so a StrictMode remount observes again
 
   const fit = (fig) => {
-    if (fig.classList.contains('lab') || fig.classList.contains('mermaid-fig')) return; // static diagrams keep their size
+    if (fig.classList.contains('lab') || fig.classList.contains('mermaid-fig') || fig.classList.contains('is-full')) return; // static diagrams keep their size
     const z = Number(fig.dataset.fit || 1);
     const natural = fig.getBoundingClientRect().height / z;
     if (!natural) return;

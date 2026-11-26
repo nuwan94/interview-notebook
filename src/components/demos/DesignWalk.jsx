@@ -6,6 +6,7 @@ import { ArrayStage } from './ArrayStage.jsx';
 import { useReducedMotion } from '../../lib/prefs.jsx';
 import { Glossed } from '../Term.jsx';
 import { usePlayer, useOnceVisible } from './usePlayer.js';
+import { useDemoPref } from './demoPrefs.js';
 import { SOLID_SCENES, PATTERN_SCENES } from './designScenes.js';
 import { CRYPTO_SCENES } from './cryptoScenes.js';
 import { AUTH_SCENES } from './authScenes.js';
@@ -124,6 +125,14 @@ export function Walk({ scenes, ariaLabel, icons = false, graph = false, arrays =
   const scene = scenes.find((x) => x.id === sceneId);
   const p = usePlayer(scene.frames, { speed: 1 });
   const f = scene.frames[p.index];
+  const focus = useDemoPref('focus');
+  const compact = useDemoPref('compact');
+  // pictures can put the note beside them on wide screens. Short notes go beside, long ones below, and a frame can say layout: 'side' | 'below'.
+  const pictured = typeof scene.stage === 'function' || graph || arrays;
+  const usesFocus = typeof scene.stage === 'function';
+  const noteLens = scene.frames.map((x) => (typeof x.note === 'string' ? x.note.length : 0)).sort((a, b) => a - b);
+  const sceneLayout = noteLens[Math.floor(noteLens.length / 2)] <= 260 ? 'side' : 'below';
+  const layout = pictured ? f.layout || sceneLayout : 'below';
 
   // keep the ruled lines of the page registered with the text after the figure
   useLayoutEffect(() => {
@@ -151,9 +160,12 @@ export function Walk({ scenes, ariaLabel, icons = false, graph = false, arrays =
     <figure ref={rootRef} className="demo" data-noread aria-label={ariaLabel}>
       <DemoHeader title={scene.title} scenes={scenes} sceneId={sceneId} onPick={pick} />
 
+      <div className="demo-body">
+      <div className={`demo-grid ${layout === 'side' ? 'is-side' : ''}`}>
+      <div className="demo-pic">
       {typeof scene.stage === 'function' ? (
-        // a scene can bring its own picture: stage is a component taking { frames, index, label, reduced }
-        <scene.stage key={scene.id} frames={scene.frames} index={p.index} label={ariaLabel} reduced={reduced} />
+        // a scene can bring its own picture: stage is a component taking { frames, index, label, reduced, focus }
+        <scene.stage key={scene.id} frames={scene.frames} index={p.index} label={ariaLabel} reduced={reduced} focus={focus} />
       ) : arrays ? (
         <ArrayStage key={scene.id} frames={scene.frames} index={p.index} label={ariaLabel} />
       ) : graph ? (
@@ -233,10 +245,20 @@ export function Walk({ scenes, ariaLabel, icons = false, graph = false, arrays =
         </>
       )}
 
-      <div className="mt-2 rounded-md border border-pen/30 bg-pen-soft/60 px-3 py-2 min-h-[5rem] text-[0.95rem] leading-snug" role="status" aria-live="polite">
+      </div>
+
+      <div
+        className={`demo-note mt-2 rounded-md border border-pen/30 bg-pen-soft/60 px-3 py-2 text-[0.95rem] leading-snug ${compact ? 'is-compact' : ''}`}
+        role="status"
+        aria-live="polite"
+        tabIndex={compact ? 0 : undefined}
+        title={compact ? 'Click to read the whole note' : undefined}
+      >
         <Glossed text={f.note} />
       </div>
-      <DemoControls p={p} speeds />
+      </div>
+      </div>
+      <DemoControls p={p} speeds caption={f.result?.text} features={{ focus: pictured && usesFocus, notes: true }} />
     </figure>
   );
 }

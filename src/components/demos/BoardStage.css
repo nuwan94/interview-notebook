@@ -46,3 +46,8 @@
 .bd-steps-rail { stroke: #c9d3e0; stroke-width: 2; }
 .bd-text { font: 12px system-ui, sans-serif; fill: #3d4a5c; }
 .bd-text.is-big { font: 700 14px system-ui, sans-serif; }
+
+/* focus: what changed in this step stands out, the rest fades back */
+.bd-quiet { opacity: 0.5; transition: opacity 0.3s; }
+.bd-changed .bd-card { stroke-width: 3; }
+.bd-changed { filter: drop-shadow(0 0 4px rgba(31, 111, 120, 0.35)); }
