@@ -6,21 +6,36 @@ summary: Implementing authentication in a Node.js and Express API, storing passw
 tags: [Node.js, Authentication, Passwords, Sessions, JWT, Refresh tokens, MFA, TOTP, Security, Backend, Full stack]
 order: 72
 topic: Full stack / Node.js
-updated: 2026-11-18
+updated: 2026-11-26
 subnav: true
 ---
 
-Authentication is where backend interviews check judgement, not syntax. They ask *how you store passwords and why not SHA-256, how login avoids revealing which emails exist, session or JWT and where the token lives, how refresh tokens work and what rotation protects against, how you add MFA, how a password reset is made safe, how you stop brute force, and what you log.* This lesson implements those parts in Node.js and Express, on top of the concepts in [authentication and authorisation](lesson:authn-authz#basics), [JWT](lesson:jwt#validation) and [OAuth 2.0](lesson:oauth2#tokens), and uses the layers from [Express middleware](lesson:node-express-middleware#auth). Examples use banking accounts. Play the four scenes: passwords and login, session or token, refresh token rotation, and defence in depth.
+In backend interviews, authentication tests your judgement, not your syntax. Expect questions like these:
+
+- How do you store passwords, and why not with SHA-256?
+- How does login avoid revealing which emails exist?
+- Session or JWT, and where does the token live?
+- How do refresh tokens work, and what does rotation protect against?
+- How do you add MFA?
+- How do you make a password reset safe?
+- How do you stop brute force?
+- What do you log?
+
+This lesson builds those parts in Node.js and Express. It builds on the ideas in [authentication and authorisation](lesson:authn-authz#basics), [JWT](lesson:jwt#validation) and [OAuth 2.0](lesson:oauth2#tokens). It uses the layers from [Express middleware](lesson:node-express-middleware#auth). The examples use bank accounts. Play the four scenes: passwords and login, session or token, refresh token rotation, and defence in depth.
 
 ```demo
 name: auth-node-walk
 ```
 
-> **One sentence to remember:** *Store only a slow salted hash, answer every failure the same way, prove login with a revocable session or a short-lived token plus a rotating refresh token, add a second factor for risky actions, and log everything except secrets.*
+> **One sentence to remember:** *Store only a slow salted hash, and answer every failed login the same way.*
+
+Then prove the login with a session you can revoke, or a short-lived token plus a rotating refresh token. Ask for a second factor before risky actions. Log every event, but never a secret.
 
 ## Authentication and where it fits {#basics}
 
-**Authentication** answers "who are you?" and **authorisation** answers "what may you do?". This lesson covers the first, plus the hooks into the second. The parts of an authentication system:
+**Authentication** answers "who are you?". **Authorisation** answers "what may you do?". This lesson covers the first, plus the points where it hands over to the second.
+
+An authentication system has five parts:
 
 | Part | Job | Examples |
 | --- | --- | --- |
@@ -30,20 +45,27 @@ name: auth-node-walk
 | **recovery** | a safe way back | password reset, account recovery |
 | **protection** | making attacks expensive | rate limits, MFA, monitoring |
 
-**Build or buy?** For anything beyond a simple app, prefer an identity provider (Keycloak, Auth0, Cognito, Okta, a bank's own IdP) with **OpenID Connect**, and let your API only **verify tokens**. Writing your own password storage, MFA and recovery is hard to get right and a common source of breaches. You still need to know how it works, because interviewers ask, and because many systems keep their own login.
+**Build or buy?** For anything beyond a simple app, prefer an identity provider (IdP), such as Keycloak, Auth0, Cognito, Okta or a bank's own. Connect to it with **OpenID Connect**, and let your API only **verify tokens**. Writing your own password storage, MFA and recovery is hard to get right. It is a common cause of breaches.
+
+You still need to know how it works. Interviewers ask, and many systems still keep their own login.
 
 ## Storing passwords {#passwords}
 
 Rules:
 
-1. **Never** store the password, and never encrypt it (encryption can be reversed).
-2. Use a **slow, memory-hard, salted** password hash: **argon2id** (the current recommendation), **scrypt**, or **bcrypt** (older, still acceptable, but only the first 72 bytes count). Not MD5, SHA-1 or plain SHA-256: they are built to be fast, so an attacker with a leaked database tries billions of guesses per second on a GPU.
-3. A **salt** is a random value stored with the hash, unique per user. It makes identical passwords hash differently and defeats precomputed (rainbow) tables.
-4. A **pepper** is an extra secret kept outside the database (in a secret manager or HSM), mixed in with an HMAC. A stolen database alone is then not enough. Optional extra layer.
-5. Store the **algorithm, its parameters and the salt** together with the hash in one string, so you can **upgrade** the settings later.
-6. Compare hashes in **constant time**.
+1. **Never** store the password. Never encrypt it either, because encryption can be reversed.
+2. Use a **slow, memory-hard, salted** password hash:
+   - **argon2id** is the current recommendation;
+   - **scrypt** is also good;
+   - **bcrypt** is older but still acceptable. Only its first 72 bytes count.
 
-With a package: `argon2.hash(password)` and `argon2.verify(hash, password)` (the `argon2` npm package), or `bcrypt.hash(password, 12)` and `bcrypt.compare`. Node.js also has **scrypt built in**:
+   Do not use MD5, SHA-1 or plain SHA-256. They are built to be fast. So an attacker with a leaked database tries billions of guesses a second on a GPU.
+3. A **salt** is a random value stored with the hash, different for every user. Two users with the same password then get different hashes. It also defeats rainbow tables, which are precomputed lists of hashes.
+4. A **pepper** is an extra secret kept outside the database, in a secret manager or HSM. It is mixed in with an HMAC. A stolen database alone is then not enough. It is an optional extra layer.
+5. Store the **algorithm, its parameters and the salt** in one string with the hash. Then you can **upgrade** the settings later.
+6. Compare hashes in **constant time**, so the time taken reveals nothing.
+
+With a package, call `argon2.hash(password)` and `argon2.verify(hash, password)` from the `argon2` npm package. Or call `bcrypt.hash(password, 12)` and `bcrypt.compare`. Node.js also has **scrypt built in**:
 
 ```javascript
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto';
@@ -80,10 +102,18 @@ export function needsRehash(stored) {                            // weaker than 
 
 Practical points:
 
-- **Cost is a trade-off.** Aim for roughly 50 to 250 ms per hash on your hardware. Hashing runs on the libuv **thread pool** (4 threads by default, [thread pool](lesson:node-runtime#runtime)), so many concurrent logins can saturate it and slow `fs` and DNS too. **Rate limit login** and consider a larger `UV_THREADPOOL_SIZE` or a separate service.
-- **Limit the password length** (for example 128 characters) before hashing, so an attacker cannot send a 10 MB "password" to burn CPU.
-- **Password policy** (NIST 800-63B): a **minimum length** (8 or more, 12 recommended), allow long passphrases and all characters, **check against lists of breached passwords** (k-anonymity range queries to Have I Been Pwned), and do **not** force periodic rotation or arbitrary complexity rules. Show a strength meter and allow password managers to paste.
-- **Rehash on login**: after a successful verification, if `needsRehash(stored)`, hash again with the current parameters and save. This raises the cost over the years without forcing resets.
+- **Cost is a trade-off.** Aim for about 50 to 250 ms per hash on your hardware.
+  - Hashing runs on the libuv **thread pool**, which has 4 threads by default ([thread pool](lesson:node-runtime#runtime)).
+  - Many logins at once can fill it, which also slows `fs` and DNS.
+  - So **rate limit login**. Consider a larger `UV_THREADPOOL_SIZE`, or a separate service.
+- **Limit the password length** before hashing, for example to 128 characters. Otherwise an attacker can send a 10 MB "password" to burn CPU.
+- **Password policy**, following NIST 800-63B:
+  - set a **minimum length** of 8 or more, with 12 recommended;
+  - allow long passphrases and every character;
+  - **check against lists of breached passwords**, for example with k-anonymity range queries to Have I Been Pwned;
+  - do **not** force regular password changes or arbitrary complexity rules;
+  - show a strength meter, and let password managers paste.
+- **Rehash on login.** After a successful check, if `needsRehash(stored)` is true, hash again with the current settings and save. The cost rises over the years, and nobody is forced to reset.
 
 ## Registration and login {#login}
 
@@ -124,17 +154,17 @@ app.post('/auth/login', loginLimiter, validate(LoginBody), async (req, res) => {
 });
 ```
 
-Why each detail:
+Why each detail matters:
 
-- **Same response for unknown email and wrong password**, and the **dummy hash** for similar timing. Otherwise login, registration and password reset become ways to **enumerate accounts**.
-- **Normalise the email** (lower case, trim) and apply a **unique index** on the normalised value.
-- **Verify the email address** before trusting the account (see below).
-- **HTTPS only**, and never put credentials in a URL or a log line.
-- **Rate limit** by IP **and** by account ([rate limiting](lesson:node-express#security)), because a distributed attack uses many IPs against one account.
+- An unknown email and a wrong password get the **same response**. The **dummy hash** makes the timing similar too. Otherwise login, registration and password reset all let an attacker **enumerate accounts**, which means find out who is registered.
+- **Normalise the email**: lower case, with spaces trimmed. Put a **unique index** on the normalised value.
+- **Verify the email address** before trusting the account. See below.
+- Use **HTTPS only**. Never put credentials in a URL or a log line.
+- **Rate limit** by IP **and** by account ([rate limiting](lesson:node-express#security)). A distributed attack uses many IPs against one account.
 
 ## Server-side sessions {#sessions}
 
-A **session** keeps the login state on the **server**. The browser holds only a random **session id** in a cookie (the second scene).
+A **session** keeps the login state on the **server**. The browser holds only a random **session id** in a cookie. The second scene shows this.
 
 ```javascript
 import session from 'express-session';
@@ -179,7 +209,7 @@ app.post('/auth/logout', (req, res) => {
 });
 ```
 
-**Cookie flags** (each one blocks an attack):
+**Cookie flags.** Each one blocks an attack:
 
 | Flag | Effect |
 | --- | --- |
@@ -191,15 +221,15 @@ app.post('/auth/logout', (req, res) => {
 
 **Session security checklist:**
 
-- **Session fixation:** an attacker plants a known session id in the victim's browser, the victim logs in, and the attacker now has a logged-in id. **Regenerate the id at login** and at privilege changes.
-- **Hijacking:** HTTPS, `HttpOnly`, short timeouts, and optionally bind the session to coarse client data and re-authenticate for sensitive actions.
-- **Storage:** use a shared store (Redis) with a TTL. The default in-memory store leaks memory and breaks with several instances.
-- **Revocation** is instant: delete the record (logout, password change, "log out everywhere", account ban). Keep an index of a user's sessions to delete them all.
-- **CSRF:** because cookies are sent automatically, protect state-changing requests with `SameSite`, a CSRF token (synchroniser or double-submit) or a required custom header, and never change state on `GET`.
+- **Session fixation.** An attacker plants a session id they know in the victim's browser. The victim logs in. Now the attacker holds a logged-in id. To stop it, **issue a new id at login**, and again whenever privileges change.
+- **Hijacking**, meaning someone steals a live session. Use HTTPS, `HttpOnly` and short timeouts. Optionally tie the session to rough client data, and ask the user to log in again before sensitive actions.
+- **Storage.** Use a shared store such as Redis, with a TTL. The default in-memory store leaks memory, and it breaks when you run several instances.
+- **Revocation** is instant: delete the record. Do this on logout, password change, "log out everywhere" or an account ban. Keep an index of each user's sessions, so you can delete them all.
+- **CSRF**, or cross-site request forgery. The browser sends cookies automatically, even on requests another site triggers. So protect requests that change state with `SameSite`, a CSRF token, or a required custom header. The token can be a synchroniser token or a double-submit cookie. Never change state on a `GET`.
 
 ## JWT access tokens {#jwt}
 
-A **JSON Web Token** is a signed set of claims. The server (or a separate auth service) signs it, and any API that has the verification key checks it **without a database call** ([JWT basics](lesson:jwt#what)). Use the **`jose`** library:
+A **JSON Web Token** (JWT) is a signed set of claims. The server, or a separate auth service, signs it. Any API that has the verification key can check it **without a database call** ([JWT basics](lesson:jwt#what)). Use the **`jose`** library:
 
 ```javascript
 import { SignJWT, jwtVerify, importPKCS8, importSPKI } from 'jose';
@@ -242,11 +272,14 @@ export async function authenticate(req, res, next) {
 
 Rules:
 
-- **Verify**, never just decode: signature, **algorithm whitelist** (blocks `alg: none` and the RS256-to-HS256 key confusion attack), `exp`, `nbf`, **`iss`**, **`aud`**.
-- **Asymmetric keys** (ES256, RS256, EdDSA) let many services verify with a public key, usually fetched from the issuer's **JWKS** endpoint (`createRemoteJWKSet`) and cached. **HS256** (a shared secret) is fine only when one service both signs and verifies.
-- **Short lifetime** (5 to 15 minutes), because a signed token **cannot be revoked** before it expires. Keep claims small and **non-sensitive**, since a JWT is only signed, not encrypted: anyone can read the payload.
-- Never put secrets or personal data (account numbers, full names) in the payload. Never use the token as a reference to permissions that must be immediately accurate.
-- **Where the client keeps it:** a token in `localStorage` can be read by any script (XSS). Better: a **BFF** that holds tokens and gives the browser an httpOnly session cookie, or the token in memory plus a refresh token in an httpOnly cookie ([where to store tokens](lesson:fullstack-integration#auth)).
+- **Verify the token. Never just decode it.** Check the signature, `exp`, `nbf`, **`iss`** and **`aud`**. Allow only the algorithms you expect, with a **whitelist**. This blocks `alg: none` and the attack that swaps RS256 for HS256.
+- **Asymmetric keys** (ES256, RS256, EdDSA) let many services verify with a public key. The key usually comes from the issuer's **JWKS** endpoint, through `createRemoteJWKSet`, and is cached. **HS256** uses one shared secret. It is fine only when the same service both signs and verifies.
+- **Keep the lifetime short**, 5 to 15 minutes. A signed token **cannot be revoked** before it expires.
+- **Keep claims small and non-sensitive.** A JWT is only signed, not encrypted, so anyone can read the payload. Never put secrets or personal data in it, such as account numbers or full names.
+- Never rely on the token for permissions that must be accurate right now. The claims can be up to 15 minutes old.
+- **Where the client keeps it.** Any script can read a token in `localStorage`, so XSS can steal it. Two better options:
+  - a **BFF** (backend for frontend) that holds the tokens, and gives the browser an httpOnly session cookie;
+  - the token in memory, plus a refresh token in an httpOnly cookie ([where to store tokens](lesson:fullstack-integration#auth)).
 
 **Session or token?**
 
@@ -260,11 +293,13 @@ Rules:
 | mobile, third parties | awkward | natural |
 | best for | one web app, one backend | many services, mobile, partners |
 
-A common bank setup: browser to a **BFF with a session cookie**, and the BFF uses tokens to call internal APIs.
+A common bank setup: the browser talks to a **BFF with a session cookie**, and the BFF uses tokens to call internal APIs.
 
 ## Refresh token rotation {#refresh}
 
-A short access token forces frequent renewal, so the client also holds a **refresh token**: a long, random, **opaque** string (not a JWT) that can be exchanged for a new access token. Storing it as a hash and **rotating** it on every use limits the damage of a theft (the third scene).
+A short access token must be renewed often. So the client also holds a **refresh token**. This is a long, random, **opaque** string, not a JWT. The client exchanges it for a new access token.
+
+Two habits limit the damage if it is stolen. Store only its hash. And **rotate** it on every use. The third scene shows this.
 
 ```javascript
 import { randomBytes, createHash, randomUUID } from 'node:crypto';
@@ -304,17 +339,17 @@ export async function rotateRefreshToken(db, presented) {
 
 How it works:
 
-- Every refresh returns a **new** refresh token and marks the old one **used**. Each works **once**.
-- All tokens of one login share a **family id**. If a used token is presented again, one of two parties holds a stolen copy and you cannot tell which, so **revoke the whole family**. The user signs in again and the thief's token is dead.
-- **Store only hashes** (like passwords, but a fast hash is fine because the token has 256 bits of entropy), so a database leak does not leak usable tokens.
-- **Race and multiple tabs:** two tabs refreshing at the same moment look like reuse. Use an atomic update, and optionally a short **grace period** (for example 10 seconds) in which the previous token is accepted once more.
-- **Absolute lifetime:** a family should end after a maximum age (for example 30 days) even if used continuously.
-- Deliver it in an **httpOnly, Secure, SameSite=Strict cookie scoped to the refresh path** (`Path=/auth/refresh`), so it is not sent with other requests.
-- **Logout** revokes the family. **Password change** revokes all families of the user.
+- Every refresh returns a **new** refresh token, and marks the old one **used**. Each token works **once**.
+- All tokens from one login share a **family id**. Suppose a used token comes back. Then two parties hold copies, one of them stolen, and you cannot tell which. So **revoke the whole family**. The user signs in again, and the thief's token is dead.
+- **Store only hashes**, as with passwords. A fast hash is fine here, because the token has 256 bits of randomness. A database leak then leaks no usable tokens.
+- **Races and multiple tabs.** Two tabs refreshing at the same moment look like reuse. Use an atomic update. Optionally allow a short **grace period**, for example 10 seconds, in which the previous token works once more.
+- **Absolute lifetime.** A family should end after a maximum age, for example 30 days, even if it is used all the time.
+- Send it in an **httpOnly, Secure, SameSite=Strict cookie, limited to the refresh path** (`Path=/auth/refresh`). Then it is not sent with other requests.
+- **Logout** revokes the family. **A password change** revokes every family of that user.
 
 ## OpenID Connect and social login {#oidc}
 
-When login is delegated to an identity provider, your app is a **relying party** using the **authorization code flow with PKCE** ([OIDC flow](lesson:oidc#flow)). In Node.js use **`openid-client`** (a certified client library) or **Passport** strategies:
+When an identity provider handles login, your app is a **relying party**. It uses the **authorization code flow with PKCE** ([OIDC flow](lesson:oidc#flow)). In Node.js, use **`openid-client`**, a certified client library, or **Passport** strategies:
 
 ```javascript
 import * as client from 'openid-client';
@@ -344,18 +379,29 @@ app.get('/auth/callback', async (req, res) => {
 });
 ```
 
-(`openid-client` v6 shown. Check the version you install, because its API changed between major versions.)
+This shows `openid-client` v6. Check the version you install, because its API changed between major versions.
 
-Points: the **`state`** value blocks CSRF on the callback, **`nonce`** binds the ID token to the session, **PKCE** blocks code interception. Validate the **ID token** (signature, `iss`, `aud`, `exp`, `nonce`), match users by the stable **`sub`** claim rather than the email, and only trust an email if `email_verified` is true. Avoid open redirects: allow-list the post-login return URL.
+Each part has a job:
+
+- **`state`** blocks CSRF on the callback.
+- **`nonce`** ties the ID token to this session.
+- **PKCE** stops an attacker who intercepts the code from using it.
+
+Also:
+
+- Validate the **ID token**: signature, `iss`, `aud`, `exp` and `nonce`.
+- Match users by the stable **`sub`** claim, not by email.
+- Trust an email only when `email_verified` is true.
+- Avoid open redirects. Allow-list the URL the user returns to after login.
 
 ## Multi-factor authentication {#mfa}
 
-A second factor means a stolen password is not enough. Common factors:
+With a second factor, a stolen password is not enough. Common factors:
 
-- **TOTP** (RFC 6238): a 6-digit code from an authenticator app, computed from a shared secret and the current 30-second time step.
-- **Passkeys and WebAuthn**: public-key credentials bound to the site and stored on the device or security key. **Phishing-resistant**, and the best option. Use a library (`@simplewebauthn/server`).
-- **SMS and email codes**: weak (SIM swap, interception) but better than nothing.
-- **Recovery codes**: single-use codes, stored as hashes, shown once at enrolment.
+- **TOTP** (RFC 6238). A 6-digit code from an authenticator app. It is computed from a shared secret and the current 30-second time step.
+- **Passkeys and WebAuthn.** Public-key credentials, tied to the site and stored on the device or a security key. They are **phishing-resistant**, and the best option. Use a library such as `@simplewebauthn/server`.
+- **SMS and email codes.** Weak, because of SIM swaps and interception, but better than nothing.
+- **Recovery codes.** Single-use codes, stored as hashes, shown once when the user enrols.
 
 ```javascript
 import { createHmac, timingSafeEqual } from 'node:crypto';
@@ -383,14 +429,14 @@ export function verifyTotp(secret, token, { step = 30, window = 1, now = Date.no
 
 Details that matter:
 
-- Store the TOTP **secret encrypted** (it must be recoverable), generate it with `randomBytes(20)`, and show it as a QR code (`otpauth://` URI) at enrolment, requiring one valid code to **confirm** enrolment.
-- **Reject reuse** of a code: remember the last accepted counter per user, otherwise a phished code works again within its window.
-- **Rate limit** code attempts (a 6-digit code has only a million values).
-- **Step-up authentication:** require a fresh factor for risky actions (adding a payee, a large transfer, changing the password or phone). Record `authTime` and the **assurance level** in the session or token, and demand re-authentication when it is older than a threshold.
+- **Store the TOTP secret encrypted**, not hashed, because the server must read it back. Generate it with `randomBytes(20)`. Show it as a QR code (an `otpauth://` URI) at enrolment. Ask for one valid code to **confirm** enrolment.
+- **Reject a reused code.** Remember the last accepted counter for each user. Otherwise a phished code works again within its window.
+- **Rate limit** code attempts. A 6-digit code has only a million values.
+- **Step-up authentication.** Ask for a fresh factor before risky actions: adding a payee, a large transfer, or changing the password or phone. Record `authTime` and the **assurance level** in the session or token. Ask the user to authenticate again when `authTime` is older than a limit.
 
 ## Password reset and email verification {#reset}
 
-Reset is the weakest link in many systems, because it is a second way to log in.
+In many systems, reset is the weakest link, because it is a second way to log in.
 
 ```javascript
 import { randomBytes, createHash } from 'node:crypto';
@@ -420,18 +466,23 @@ app.post('/auth/reset', async (req, res) => {
 });
 ```
 
-- Tokens are **random, long, hashed in the database, short-lived and single-use**. Put the token in the URL **fragment** or POST it, so it does not appear in server logs or `Referer` headers.
-- **Generic response**, so the form cannot be used to enumerate emails.
-- After a reset, **invalidate all sessions and refresh tokens**, and **notify** the user by email.
-- **Email verification** uses the same pattern: a random single-use token sent to the address, and the account stays limited until it is confirmed.
+- Tokens are **random, long, hashed in the database, short-lived and single-use**.
+- Put the token in the URL **fragment** (after `#`), or send it in a POST. Then it does not appear in server logs or `Referer` headers.
+- Give a **generic response**, so the form cannot be used to find out which emails exist.
+- After a reset, **invalidate all sessions and refresh tokens**, and **email the user** to tell them.
+- **Email verification** uses the same pattern. Send a random single-use token to the address. The account stays limited until it is confirmed.
 - **Changing the email or password** while logged in should require the current password or a fresh factor.
 
 ## API keys and service authentication {#service}
 
-- **API keys** identify a **client application**, not a person. Generate them randomly with a readable prefix and an id: `bk_live_<id>_<secret>`. Store only a **hash of the secret**, look up by the id, compare in constant time, show the key **once**, and support **rotation**, scopes, expiry and per-key rate limits.
-- **Service to service:** the OAuth 2.0 **client credentials** grant (a service gets a short-lived token with its own identity), or **mutual TLS** inside a mesh. Do not reuse a user's token between services without careful audience and scope handling.
-- **Webhooks** are authenticated by an **HMAC signature** over the raw body ([verifying signatures](lesson:node-express-middleware#bodies)).
-- **Secrets** (signing keys, client secrets, pepper) live in a secret manager, are rotated, and are never committed.
+- **API keys** identify a **client application**, not a person.
+  - Generate them randomly, with a readable prefix and an id: `bk_live_<id>_<secret>`.
+  - Store only a **hash of the secret**. Look the key up by its id, and compare in constant time.
+  - Show the key **once**.
+  - Support **rotation**, scopes, expiry and a rate limit per key.
+- **Service to service.** Use the OAuth 2.0 **client credentials** grant, where a service gets a short-lived token with its own identity. Or use **mutual TLS** inside a service mesh. Do not pass a user's token between services without careful audience and scope handling.
+- **Webhooks** are checked with an **HMAC signature** over the raw body ([verifying signatures](lesson:node-express-middleware#bodies)).
+- **Secrets**, such as signing keys, client secrets and the pepper, live in a secret manager. Rotate them, and never commit them.
 
 ## Attacks and defences {#attacks}
 
@@ -451,12 +502,30 @@ app.post('/auth/reset', async (req, res) => {
 | **Phishing** | passkeys (WebAuthn), user education, device alerts |
 | **Account lockout abuse** | prefer delays and alerts over hard lockout, or short temporary locks |
 
-Locking an account after N failures lets an attacker **lock out real users** (a denial of service), so prefer progressive delays, CAPTCHA after several failures, and notifications.
+Locking an account after N failures lets an attacker **lock out real users**. That is a denial of service. So prefer growing delays, a CAPTCHA after several failures, and notifications.
 
 ## Logging, monitoring and testing {#ops}
 
-- **Audit log** (structured, with the request id): login success and failure, MFA events, password changes and resets, token refresh reuse, session revocation, role changes. **Never log** passwords, tokens, reset links or full card numbers. Alert on spikes of failures, many accounts from one IP, logins from new devices or countries, and refresh reuse.
-- **Tests:** unit-test `hashPassword`, `verifyPassword` and `needsRehash`, `rotateRefreshToken` (including reuse and the race), `verifyTotp` with the RFC test vectors, and the JWT verification (wrong `aud`, expired, wrong algorithm). Integration-test the login endpoint with supertest: same response for unknown email and wrong password, cookie flags present, session id changes at login, logout invalidates, rate limit returns 429 ([testing Express](lesson:node-express#testing)).
+- **Audit log.** Make it structured, and include the request id. Record:
+  - login success and failure;
+  - MFA events;
+  - password changes and resets;
+  - refresh token reuse;
+  - session revocation;
+  - role changes.
+
+  **Never log** passwords, tokens, reset links or full card numbers. Alert on spikes of failures, on many accounts tried from one IP, on logins from new devices or countries, and on refresh reuse.
+- **Unit tests.** Cover:
+  - `hashPassword`, `verifyPassword` and `needsRehash`;
+  - `rotateRefreshToken`, including reuse and the race;
+  - `verifyTotp`, with the RFC test vectors;
+  - JWT verification, with a wrong `aud`, an expired token and a wrong algorithm.
+- **Integration tests.** Drive the login endpoint with supertest ([testing Express](lesson:node-express#testing)). Check that:
+  - an unknown email and a wrong password get the same response;
+  - the cookie flags are present;
+  - the session id changes at login;
+  - logout invalidates the session;
+  - the rate limit returns 429.
 
 ```javascript
 test('login does not reveal whether the email exists', async () => {
@@ -538,63 +607,161 @@ Try it in the lab: [Node API login: hashed password, access and refresh tokens](
 
 ### [basic] How should passwords be stored and why not SHA-256? {#store-q}
 
-As the output of a slow, salted, memory-hard password hash such as argon2id, scrypt or bcrypt, together with the algorithm, parameters and salt in one string. SHA-256 is designed to be fast, so an attacker with a leaked database can test billions of guesses per second on a GPU. A per-user random salt makes identical passwords hash differently and defeats rainbow tables, and the cost parameter can be raised over time as hardware improves. Passwords are never stored in plain text or encrypted.
+Store the output of a slow, salted, memory-hard password hash, such as argon2id, scrypt or bcrypt. Keep the algorithm, its parameters and the salt in one string with the hash.
+
+SHA-256 is designed to be fast. An attacker with a leaked database can test billions of guesses a second on a GPU.
+
+A random salt for each user makes equal passwords hash differently, and makes precomputed rainbow tables useless. The cost parameter can be raised over time as hardware gets faster. Passwords are never stored in plain text, and never encrypted.
 
 ### [basic] What is the difference between authentication and authorisation? {#authn-authz-q}
 
-Authentication establishes who the caller is (a password, a token, a certificate) and answers with 401 when it fails. Authorisation decides what that identity may do (roles, scopes, ownership of an object) and answers with 403 when it fails. In an Express API, authentication is a middleware that sets `req.user`, and authorisation is further middleware and checks in the service.
+Authentication establishes who the caller is, with a password, a token or a certificate. When it fails, the answer is 401.
+
+Authorisation decides what that identity may do, using roles, scopes or ownership of an object. When it fails, the answer is 403.
+
+In an Express API, authentication is a middleware that sets `req.user`. Authorisation is further middleware, plus checks in the service.
 
 ### [basic] What is a salt and what is a pepper? {#salt-q}
 
-A salt is a random value, unique per password, stored next to the hash. It makes equal passwords produce different hashes and makes precomputed tables useless, but it is not secret. A pepper is a secret value, kept outside the database (a secret manager or HSM), mixed into the hashing. Even a full database leak is then not enough to crack passwords. The pepper is an optional extra layer, the salt is mandatory.
+A salt is a random value, different for every password, stored next to the hash. It makes equal passwords produce different hashes, and makes precomputed tables useless. It is not secret.
+
+A pepper is a secret value kept outside the database, in a secret manager or HSM, and mixed into the hashing. Then even a full database leak is not enough to crack passwords.
+
+The salt is required. The pepper is an optional extra layer.
 
 ### [basic] How do you prevent account enumeration on login? {#enumeration-q}
 
-Return the same status and body for an unknown email and a wrong password, and make the timing similar by always performing a password hash, using a precomputed dummy hash when the user does not exist. Apply the same rule to registration ("check your email") and password reset ("if that email exists, we sent a link"), because any difference lets an attacker learn which accounts exist.
+Return the same status and body for an unknown email and for a wrong password.
+
+Make the timing similar too. Always run a password hash, using a precomputed dummy hash when the user does not exist.
+
+Apply the same rule to registration ("check your email") and to password reset ("if that email exists, we sent a link"). Any difference lets an attacker learn which accounts exist.
 
 ### [basic] Where should the session id or token be stored in the browser? {#storage-q}
 
-In an httpOnly, Secure, SameSite cookie, so JavaScript cannot read it. A token in `localStorage` can be stolen by any injected script. If a SPA must hold an access token itself, keep it in memory and use a refresh token in an httpOnly cookie, or better, use a backend for frontend that keeps the tokens on the server and gives the browser only a session cookie.
+In an httpOnly, Secure, SameSite cookie, so JavaScript cannot read it. Any injected script can steal a token kept in `localStorage`.
+
+If a single-page app must hold an access token itself, keep it in memory, and put the refresh token in an httpOnly cookie.
+
+Better still, use a backend for frontend. It keeps the tokens on the server, and gives the browser only a session cookie.
 
 ### [intermediate] Compare server-side sessions and JWT access tokens. When would you choose each? {#session-vs-jwt-q}
 
-A session keeps state on the server (usually Redis), the browser holds a random id, and revocation is immediate, at the cost of a lookup and a shared store. A JWT carries signed claims and is verified without a database call by any service with the public key, but it cannot be revoked before it expires, so it must be short-lived and paired with refresh tokens. Sessions suit a single web app and its backend. Tokens suit several services, mobile apps and third parties. A backend for frontend combines them: a session cookie for the browser and tokens between servers.
+A session keeps state on the server, usually in Redis, and the browser holds a random id. Revocation is immediate. The cost is a lookup on every request, and a store shared by all instances.
+
+A JWT carries signed claims. Any service with the public key verifies it, with no database call. But it cannot be revoked before it expires. So it must be short-lived, and paired with refresh tokens.
+
+Sessions suit a single web app and its backend. Tokens suit several services, mobile apps and third parties. A backend for frontend combines both: a session cookie for the browser, and tokens between servers.
 
 ### [intermediate] What must you validate when you receive a JWT? {#jwt-validate-q}
 
-Verify the signature with the right key, restrict the allowed algorithms with a whitelist (blocking `alg: none` and key-confusion attacks), and check `exp` and `nbf`, the issuer (`iss`) and the audience (`aud`). Fetch keys from the issuer's JWKS and cache them, honour `kid` for rotation, and apply authorisation using scopes and roles. Never just decode a token and trust the payload, and never put secrets in it, because it is signed and not encrypted.
+Check all of these:
+
+- the signature, with the right key;
+- the algorithm, against a whitelist, which blocks `alg: none` and key-confusion attacks;
+- `exp` and `nbf`;
+- the issuer, `iss`;
+- the audience, `aud`.
+
+Fetch keys from the issuer's JWKS and cache them. Use `kid` to pick the key, so keys can rotate. Then apply authorisation with scopes and roles.
+
+Never just decode a token and trust the payload. Never put secrets in it, because it is signed, not encrypted.
 
 ### [intermediate] How does refresh token rotation with reuse detection work? {#rotation-q}
 
-The access token is short-lived. The client exchanges an opaque, random refresh token for a new access token. On each exchange the server issues a new refresh token, marks the old one used, and stores only hashes, with a family id linking the tokens of one login. If a used token is presented again, either the user or a thief has a stale copy, so the server revokes the entire family and forces a new login, which neutralises a stolen token. Atomic updates and an optional short grace period avoid false alarms from two tabs refreshing at once.
+The access token is short-lived. The client exchanges an opaque, random refresh token for a new one.
+
+On each exchange, the server issues a new refresh token and marks the old one used. It stores only hashes. A family id links all the tokens from one login.
+
+If a used token comes back, either the user or a thief has an old copy. So the server revokes the entire family, and forces a new login. That makes the stolen token useless.
+
+Atomic updates, and an optional short grace period, avoid false alarms when two tabs refresh at once.
 
 ### [intermediate] What is session fixation and how do you prevent it? {#fixation-q}
 
-The attacker makes the victim use a session id the attacker already knows (planted before login). When the victim logs in, the session becomes authenticated and the attacker can use it. Prevent it by issuing a new session id when authentication happens (`req.session.regenerate`) and when privileges change, by never accepting session ids from URLs, and by using HttpOnly and Secure cookies.
+The attacker makes the victim use a session id the attacker already knows, planted before login. When the victim logs in, that session becomes authenticated. Now the attacker can use it.
+
+To prevent it:
+
+- issue a new session id at login with `req.session.regenerate`, and again when privileges change;
+- never accept session ids from URLs;
+- use HttpOnly and Secure cookies.
 
 ### [intermediate] How do you make password reset safe? {#reset-q}
 
-Generate a long random single-use token, store only its hash with a short expiry (15 to 60 minutes), and email a link that carries it in the URL fragment or a POST body. Respond identically whether or not the email exists, rate limit the endpoint, and on success consume the token, set the new password hash, invalidate all sessions and refresh tokens, and notify the user. Do not use predictable tokens, do not let tokens be reused, and do not leak whether the account exists.
+Generate a long, random, single-use token. Store only its hash, with a short expiry of 15 to 60 minutes. Email a link that carries the token in the URL fragment or a POST body.
+
+Respond the same way whether or not the email exists, and rate limit the endpoint.
+
+On success, consume the token and set the new password hash. Invalidate all sessions and refresh tokens, and notify the user.
+
+Never use predictable tokens, never let a token be reused, and never reveal whether the account exists.
 
 ### [intermediate] How do you defend against brute force and credential stuffing? {#bruteforce-q}
 
-Rate limit login per IP and per account with growing delays, add a global limit and bot detection, require MFA, check new passwords against breached-password lists, and alert on spikes and logins from new devices. Avoid permanent lockout, which lets an attacker deny service to real users, and prefer temporary delays, CAPTCHA after repeated failures and notifications. Make sure the slow hash does not become a CPU exhaustion vector by limiting request rate and password length.
+Use several layers:
+
+- rate limit login per IP and per account, with growing delays;
+- add a global limit and bot detection;
+- require MFA;
+- check new passwords against breached-password lists;
+- alert on spikes, and on logins from new devices.
+
+Avoid permanent lockout, because it lets an attacker deny service to real users. Prefer temporary delays, a CAPTCHA after repeated failures, and notifications.
+
+Also make sure the slow hash cannot be used to exhaust the CPU. Limit the request rate and the password length.
 
 ### [intermediate] How does TOTP work and what must you remember when implementing it? {#totp-q}
 
-Both sides share a secret. The code is an HMAC (SHA-1 by default) of the current 30-second time-step counter, truncated to 6 digits (RFC 6238 on top of HOTP, RFC 4226). The server computes the codes for the current step and one step either side to tolerate clock drift, compares in constant time, rejects any counter already used, rate limits attempts, stores the secret encrypted, requires a confirming code at enrolment, and provides recovery codes. Passkeys are stronger because they resist phishing.
+Both sides share a secret. The code is an HMAC, SHA-1 by default, of the current 30-second time-step counter, cut down to 6 digits. This is RFC 6238, built on HOTP from RFC 4226.
+
+The server must:
+
+- compute the code for the current step and one step either side, to tolerate clock drift;
+- compare in constant time;
+- reject any counter already used;
+- rate limit attempts;
+- store the secret encrypted;
+- require a confirming code at enrolment;
+- provide recovery codes.
+
+Passkeys are stronger, because they resist phishing.
 
 ### [deep] Why can a signed JWT not be revoked, and how do you cope? {#revoke-q}
 
-Verification needs only the signature and expiry, so no server is asked whether the token is still valid. To cope, keep access tokens short (minutes) and revoke the refresh token, so the damage window is small. For immediate revocation add a small deny-list of `jti` values or a per-user "valid after" timestamp checked on each request (which reintroduces a lookup), use opaque tokens with introspection for high-risk systems, or use sessions. The right choice balances revocation speed against statelessness.
+Verification needs only the signature and the expiry. No server is asked whether the token is still valid.
+
+To cope, keep access tokens short, a few minutes, and revoke the refresh token. Then the damage window is small.
+
+For immediate revocation there are three options:
+
+- a small deny-list of `jti` values, or a per-user "valid after" timestamp, checked on each request. This brings back a lookup.
+- opaque tokens with introspection, for high-risk systems;
+- sessions instead of tokens.
+
+The right choice trades revocation speed against statelessness.
 
 ### [deep] How would you design authentication for a banking web app with a React front end and Express APIs? {#design-q}
 
-Use an OIDC identity provider with MFA and passkeys, and a backend for frontend in Node.js that performs the authorization code flow with PKCE and keeps access and refresh tokens server side. The browser gets only an httpOnly, Secure, SameSite session cookie with idle and absolute timeouts, a CSRF defence, and a regenerated id at login. Internal APIs verify short-lived JWTs (issuer, audience, algorithm, scopes) from a JWKS. Money movement requires step-up authentication, rate limits and idempotency keys apply, every event is logged with a request id, and sessions and tokens are revoked on password change or suspicious activity. See [the integration lesson](lesson:fullstack-integration#auth).
+Use an OIDC identity provider with MFA and passkeys. Put a backend for frontend (BFF) in Node.js in front of the APIs. The BFF runs the authorization code flow with PKCE, and keeps the access and refresh tokens on the server.
+
+The browser gets only a session cookie: httpOnly, Secure and SameSite. It has idle and absolute timeouts, a CSRF defence, and a new id at login.
+
+Internal APIs verify short-lived JWTs from a JWKS. They check issuer, audience, algorithm and scopes.
+
+Moving money requires step-up authentication. Rate limits and idempotency keys apply. Every event is logged with a request id. Sessions and tokens are revoked on a password change or suspicious activity. See [the integration lesson](lesson:fullstack-integration#auth).
 
 ### [deep] What are the weaknesses of SMS codes and how do passkeys improve on them? {#passkey-q}
 
-SMS codes can be intercepted through SIM swapping or SS7 attacks, redirected by social engineering of the carrier, and phished by a fake site that relays the code in real time. A passkey (WebAuthn) is a public-key credential bound to the origin: the private key never leaves the device, the browser signs a server challenge only for the genuine domain, and there is nothing to type or to phish. They are also faster for users, and a server stores only public keys, so a leak exposes no secrets.
+SMS codes have three weaknesses:
+
+- They can be intercepted through SIM swapping or SS7 attacks.
+- An attacker can talk the phone carrier into redirecting them.
+- A fake site can phish them, and relay them to the real site in real time.
+
+A passkey (WebAuthn) is a public-key credential tied to the site's origin. The private key never leaves the device. The browser signs a server challenge only for the genuine domain. There is nothing to type, so there is nothing to phish.
+
+Passkeys are also faster for users. And the server stores only public keys, so a leak exposes no secrets.
 
 ### [coding] Implement `hashPassword` and `verifyPassword` with Node's built-in scrypt: salted, parameters stored in the string, constant-time compare, and `needsRehash`. {#coding-hash}
 
@@ -640,7 +807,13 @@ const ok = await verifyPassword(input, user?.passwordHash ?? DUMMY_HASH);
 if (ok && needsRehash(user.passwordHash)) await users.setHash(user.id, await hashPassword(input));
 ```
 
-The salt is random per password, the parameters travel with the hash so each user can be verified with the settings used when it was created, `timingSafeEqual` avoids timing leaks, the length limits block CPU abuse, and `needsRehash` upgrades weak hashes when the user next logs in.
+Explain these points:
+
+- The salt is random for each password.
+- The parameters travel with the hash. So each user is verified with the settings used when their hash was made.
+- `timingSafeEqual` avoids timing leaks.
+- The length limits block CPU abuse.
+- `needsRehash` upgrades weak hashes the next time the user logs in.
 
 ### [coding] Implement refresh token rotation with reuse detection against an in-memory store (family ids, hashed tokens, atomic use). {#coding-rotation}
 
@@ -694,7 +867,14 @@ svc.rotate(r1);                                    // throws REFRESH_TOKEN_REUSE
 // from now on r2 and r3 also fail with INVALID_REFRESH_TOKEN, so the thief and the user must log in again
 ```
 
-Tokens are random and only their hashes are stored. Each works once, all tokens of a login share a family id, and presenting a used token revokes the whole family. In a real database the "mark as used" must be a single atomic statement so two simultaneous requests cannot both succeed, and an optional grace period avoids false alarms from two browser tabs.
+Explain these points:
+
+- Tokens are random, and only their hashes are stored.
+- Each token works once.
+- All tokens from one login share a family id.
+- Presenting a used token revokes the whole family.
+- In a real database, "mark as used" must be one atomic statement. Then two requests at the same time cannot both succeed.
+- An optional grace period avoids false alarms from two browser tabs.
 
 ### [coding] Implement TOTP verification (RFC 6238) with a one-step drift window, constant-time comparison and replay protection. {#coding-totp}
 
@@ -735,4 +915,10 @@ const counter = verifyTotp(secret, '287082', { now: 59_000 });             // 1
 verifyTotp(secret, '287082', { now: 59_000, lastUsedCounter: counter });   // null: replay is rejected
 ```
 
-The code is an HMAC of the time step, truncated to digits. The window accepts the previous and next 30-second step for clock drift, the comparison is constant-time, and returning the counter lets the caller store it and refuse the same code twice. The attempt rate must still be limited, because a 6-digit code has only a million possibilities.
+Explain these points:
+
+- The code is an HMAC of the time step, cut down to 6 digits.
+- The window also accepts the previous and next 30-second step, for clock drift.
+- The comparison is constant-time.
+- Returning the counter lets the caller store it, and refuse the same code twice.
+- The attempt rate must still be limited, because a 6-digit code has only a million possibilities.

@@ -6,32 +6,53 @@ summary: Securing a Node.js and Express API beyond login, the OWASP Top 10 mappe
 tags: [Node.js, Security, OWASP, Injection, SSRF, XSS, CORS, Validation, Supply chain, Backend, Full stack]
 order: 76
 topic: Full stack / Node.js
-updated: 2026-11-20
+updated: 2026-11-26
 subnav: true
 ---
 
-Security questions in a Node.js interview are about habits more than tools. They ask *how you validate input and why a schema beats ad hoc checks, what SQL injection and NoSQL operator injection look like and how you prevent them, what mass assignment and prototype pollution are, how SSRF works and how you stop it, how you keep path traversal and command injection out, how helmet, CSP, CORS and CSRF protections fit together, how you limit abuse and denial of service, how you encrypt and compare secrets correctly, what you never log, and how you deal with dependencies you did not write.* Login, sessions and tokens are in [Node.js authentication](lesson:node-authentication#basics), so this lesson covers everything around them. It builds on [authorisation layers](lesson:node-express-middleware#auth), [JWT](lesson:jwt#validation), [cryptography](lesson:cryptography#practice) and the [full-stack security checklist](lesson:fullstack-integration#security). Examples use a banking transfer service. Play the four scenes: never trust input, server-side requests and files, protect the browser, and defence in depth.
+Security questions in a Node.js interview are about habits more than tools. Expect questions like these:
+
+- How do you validate input, and why does a schema beat scattered checks?
+- What do SQL injection and NoSQL operator injection look like, and how do you prevent them?
+- What are mass assignment and prototype pollution?
+- How does SSRF work, and how do you stop it?
+- How do you keep out path traversal and command injection?
+- How do helmet, CSP, CORS and CSRF protection fit together?
+- How do you limit abuse and denial of service?
+- How do you encrypt and compare secrets correctly?
+- What do you never log?
+- How do you handle dependencies you did not write?
+
+Login, sessions and tokens are in [Node.js authentication](lesson:node-authentication#basics). This lesson covers everything around them. It builds on [authorisation layers](lesson:node-express-middleware#auth), [JWT](lesson:jwt#validation), [cryptography](lesson:cryptography#practice) and the [full-stack security checklist](lesson:fullstack-integration#security). The examples use a banking transfer service. Play the four scenes: never trust input, server-side requests and files, protect the browser, and defence in depth.
 
 ```demo
 name: node-security-walk
 ```
 
-> **One sentence to remember:** *Treat every byte from outside as hostile: validate it against a strict schema at the edge, keep data and code apart (parameters, argument arrays, encoding), authorise every object, limit what any caller can cost you, keep secrets and sensitive data out of code and logs, and assume dependencies and mistakes will happen by layering defences and watching for them.*
+> **One sentence to remember:** *Treat every byte from outside as hostile until a strict schema has checked it.*
+
+Keep data and code apart, with parameters, argument arrays and encoding. Authorise every object. Limit what any caller can cost you. Keep secrets and sensitive data out of code and logs. Assume dependencies and mistakes will fail you, so layer your defences and watch for trouble.
 
 ## Thinking about security {#mindset}
 
-A secure design starts with **where trust changes**. A **trust boundary** is any place where data or control crosses from something you do not control to something you do: a browser, a mobile app, another company's webhook, a file upload, even another internal service (it can be compromised too). Every boundary needs **validation** (is it well formed?), **authentication** (who is it?) and **authorisation** (may they do this to this object?).
+A secure design starts with **where trust changes**. A **trust boundary** is any place where data or control crosses from something you do not control into something you do. Examples: a browser, a mobile app, another company's webhook, a file upload. Even another internal service counts, because it can be compromised too.
+
+Every boundary needs three checks:
+
+- **validation**: is the data well formed?
+- **authentication**: who is sending it?
+- **authorisation**: may they do this, to this object?
 
 Principles that answer most interview questions:
 
-- **Defence in depth**: several independent layers (validation, parameterised queries, least-privilege database user, network policies, monitoring), so one mistake is not a breach.
-- **Least privilege**: the process, the database user and the cloud role get only what they need.
-- **Fail closed and fail safely**: on an error deny access, and do not leak details.
-- **Secure defaults and simplicity**: the safe option is the default, and less code and fewer dependencies mean fewer bugs.
-- **Never trust the client**: hiding a button is not authorisation. The server decides.
-- **Complete mediation**: check every request, not only the first one.
+- **Defence in depth.** Use several independent layers: validation, parameterised queries, a least-privilege database user, network policies, monitoring. Then one mistake is not a breach.
+- **Least privilege.** The process, the database user and the cloud role get only what they need.
+- **Fail closed, and fail safely.** On an error, deny access, and do not leak details.
+- **Secure defaults and simplicity.** The safe option is the default. Less code and fewer dependencies mean fewer bugs.
+- **Never trust the client.** Hiding a button is not authorisation. The server decides.
+- **Complete mediation.** Check every request, not only the first one.
 
-The **OWASP Top 10** is the common checklist (the 2021 edition is widely cited, so check the current version), here mapped to a Node API:
+The **OWASP Top 10** is the common checklist. The 2021 edition is widely cited, so check the current version. Here it is mapped to a Node API:
 
 | OWASP category | In Node terms | Where |
 | --- | --- | --- |
@@ -46,21 +67,21 @@ The **OWASP Top 10** is the common checklist (the 2021 edition is widely cited, 
 | **Logging and monitoring failures** | no audit log, secrets in logs | [data](#data) |
 | **Server-side request forgery** | fetching user URLs from inside the network | [SSRF](#ssrf) |
 
-A quick way to find problems before writing code is **threat modelling**: draw the data flow, mark the trust boundaries, and for each flow ask the **STRIDE** questions (spoofing, tampering, repudiation, information disclosure, denial of service, elevation of privilege). It is cheap and finds design flaws that no scanner can.
+**Threat modelling** finds problems before you write code. Draw the data flow, and mark the trust boundaries. For each flow, ask the **STRIDE** questions: spoofing, tampering, repudiation, information disclosure, denial of service, and elevation of privilege. It is cheap, and it finds design flaws that no scanner can.
 
 ## Validate input at the edge {#input}
 
-Anything that arrives in `req.body`, `req.query`, `req.params`, `req.headers`, cookies, uploaded files and messages from queues is untrusted. The rules:
+Everything in `req.body`, `req.query`, `req.params`, `req.headers`, cookies, uploaded files and queue messages is untrusted. The rules:
 
-1. **Validate once, at the edge**, with a **schema** (zod, ajv, valibot, TypeBox), before the data reaches business code. Ad hoc `if` checks scattered through handlers get forgotten.
-2. **Allow-list, do not deny-list**: define what is valid (type, length, format, range, enumeration) instead of trying to list what is bad.
-3. **Be strict**: wrong type is a 400 or 422, unknown keys are rejected, numbers have bounds, strings have maximum lengths.
-4. **Build a new object** from the validated result. Never pass `req.body` through.
-5. **Validate on the server even if the browser validates too.** Client-side validation is for usability only.
-6. **Normalise** where it matters (Unicode normalisation, trimming, case for emails) and strip control characters from text that will be logged or shown.
-7. Validate **types as well as shapes**. A query string can arrive as an array or an object: with the `qs` parser that Express 4 uses, `?id[]=1&id[]=2` is an array and `?id[$ne]=x` becomes `{ $ne: 'x' }`. Express 5 uses a simpler parser by default, but the schema must still insist on a string.
+1. **Validate once, at the edge**, with a **schema** (zod, ajv, valibot, TypeBox), before the data reaches business code. `if` checks scattered through handlers get forgotten.
+2. **Allow-list; do not deny-list.** Define what is valid (type, length, format, range, allowed values), instead of trying to list what is bad.
+3. **Be strict.** A wrong type is a 400 or 422. Unknown keys are rejected. Numbers have bounds, and strings have maximum lengths.
+4. **Build a new object** from the validated result. Never pass `req.body` along.
+5. **Validate on the server, even if the browser validates too.** Client-side validation is only for usability.
+6. **Normalise** where it matters: Unicode normalisation, trimming, lower case for emails. Strip control characters from text that will be logged or shown.
+7. **Check types as well as shapes.** A query string value can arrive as an array or an object. With the `qs` parser that Express 4 uses, `?id[]=1&id[]=2` becomes an array, and `?id[$ne]=x` becomes `{ $ne: 'x' }`. Express 5 uses a simpler parser by default, but the schema must still insist on a string.
 
-A strict validator for a transfer request, written without a library so the checks are visible (zod or ajv express the same from a schema):
+Here is a strict validator for a transfer request. It is written without a library, so the checks are visible. zod or ajv express the same thing as a schema.
 
 ```javascript
 export class ValidationError extends Error {
@@ -112,13 +133,21 @@ export function parseTransfer(input) {
 }
 ```
 
-I ran this with `node:test`: a good request produces a clean object, and `role: 'admin'`, a string amount, a negative amount, `from: { $ne: null }`, an array body and a JSON body with `__proto__` are all rejected, with every issue reported together. Return validation errors as a **consistent error format** (422 with a list of issues) and do **not** echo hostile input into the message unescaped.
+I ran this with `node:test`. A good request produces a clean object. These are all rejected, with every issue reported together:
 
-Also limit the size of everything: `express.json({ limit: '100kb' })`, a maximum number of items in arrays, a maximum page size, and a maximum upload size ([abuse](#abuse)).
+- `role: 'admin'`;
+- a string amount, and a negative amount;
+- `from: { $ne: null }`;
+- an array body;
+- a JSON body with `__proto__`.
+
+Return validation errors in a **consistent format**: a 422 with a list of issues. Do **not** echo hostile input back into the message unescaped.
+
+Also limit the size of everything: `express.json({ limit: '100kb' })`, the number of items in arrays, the page size, and the upload size ([abuse](#abuse)).
 
 ## Injection {#injection}
 
-**Injection** happens when untrusted data is interpreted as code or as a command by another system. The cure is always the same: **keep data and code apart**, so that data can never become code.
+**Injection** happens when another system reads untrusted data as code or as a command. The cure is always the same: **keep data and code apart**, so data can never become code.
 
 ### SQL injection
 
@@ -131,15 +160,15 @@ const { rows } = await pool.query(`SELECT * FROM accounts WHERE owner = '${req.q
 const { rows } = await pool.query('SELECT * FROM accounts WHERE owner = $1', [req.query.owner]);
 ```
 
-- **Always use parameters** (`$1`, `?`, named parameters), including in ORMs and query builders (their `raw` or `sql` escape hatches need the same care).
-- Things that **cannot be parameters** (table and column names, `ORDER BY` direction, `LIMIT` sometimes) must be **allow-listed**: `const column = { date: 'created_at', amount: 'amount' }[req.query.sort] ?? 'created_at'`.
-- `LIKE` patterns need the `%` and `_` characters in user text escaped.
-- Use a **least-privilege database user** so injection that slips through cannot drop tables or read other schemas. Do not connect as the owner or a superuser.
-- Escaping functions are a last resort. Parameters are the control.
+- **Always use parameters** (`$1`, `?`, named parameters). That includes ORMs and query builders: their `raw` or `sql` escape hatches need the same care.
+- Some things **cannot be parameters**: table and column names, the `ORDER BY` direction, and sometimes `LIMIT`. **Allow-list** them: `const column = { date: 'created_at', amount: 'amount' }[req.query.sort] ?? 'created_at'`.
+- For `LIKE` patterns, escape the `%` and `_` characters in user text.
+- Connect as a **least-privilege database user**. Then any injection that slips through cannot drop tables or read other schemas. Never connect as the owner or a superuser.
+- Escaping functions are a last resort. Parameters are the real control.
 
 ### NoSQL operator injection
 
-A MongoDB-style query takes JSON, so a **JSON body can inject operators**:
+A MongoDB-style query is JSON. So a **JSON body can inject operators**:
 
 ```javascript
 // POST /login  { "email": "alice@bank.example", "password": { "$ne": null } }
@@ -147,7 +176,14 @@ const user = await users.findOne({ email: req.body.email, password: req.body.pas
 // the password condition becomes "not null": always true, so the login succeeds
 ```
 
-Cure: validate that `email` and `password` are **strings** (a schema does this), never pass request objects into queries, hash passwords instead of comparing them in the query, and consider sanitising keys that start with `$` (`express-mongo-sanitize`). The same type confusion applies to any query built from `req.body`.
+The cure:
+
+- validate that `email` and `password` are **strings**, which a schema does;
+- never pass request objects into queries;
+- hash passwords, instead of comparing them in the query;
+- consider removing keys that start with `$`, for example with `express-mongo-sanitize`.
+
+The same type confusion applies to any query built from `req.body`.
 
 ### OS command injection
 
@@ -158,27 +194,37 @@ exec(`convert ${req.query.file} out.png`);                       // a shell pars
 execFile('convert', [file, 'out.png']);                          // no shell: the text stays one argument
 ```
 
-I ran both with the input `hello && echo INJECTED`: `exec` printed `INJECTED` (the shell ran the second command), while `execFile` printed the text unchanged as a single argument. Rules: prefer a **library** to spawning programs, use `execFile` or `spawn` with an **argument array** and `shell: false` (the default), validate the argument against an allow-list (and reject values starting with `-` that a program would read as an option, or put `--` before them), and run with minimal privileges. Never use `eval`, `new Function`, `vm` (it is **not** a security sandbox) or a template engine on user-controlled template text.
+I ran both with the input `hello && echo INJECTED`. `exec` printed `INJECTED`, because the shell ran the second command. `execFile` printed the text unchanged, as one argument.
+
+Rules:
+
+- Prefer a **library** to starting a program.
+- Use `execFile` or `spawn` with an **argument array**, and `shell: false`, which is the default.
+- Validate the argument against an allow-list. Reject values starting with `-`, which a program would read as an option, or put `--` before them.
+- Run with minimal privileges.
+- Never use `eval`, `new Function`, `vm` (it is **not** a security sandbox), or a template engine on template text the user controls.
 
 ### Other injection forms
 
-- **Log injection**: user text with newlines forges log lines (`\n2026-11-20 INFO admin logged in`). Log **structured JSON** (pino) with the user text as a field, so it is escaped, and strip control characters.
-- **Header injection** (CRLF): never put raw user text into a header value or a redirect URL. Node rejects invalid characters in header values, but validate anyway.
-- **Template injection**: do not build templates from user input, and let the engine escape variables by default.
-- **LDAP, XPath, GraphQL and email injection**: the same idea, with parameterisation or encoding for each target. For GraphQL also limit **query depth and cost**.
-- **Open redirect**: `res.redirect(req.query.next)` sends users to a phishing site from your domain. Allow-list the targets or accept only relative paths.
+- **Log injection.** User text with newlines can forge log lines, such as `\n2026-11-20 INFO admin logged in`. Log **structured JSON** (pino), with the user text as a field, so it is escaped. Strip control characters.
+- **Header injection** (CRLF). Never put raw user text into a header value or a redirect URL. Node rejects invalid characters in header values, but validate anyway.
+- **Template injection.** Do not build templates from user input. Let the engine escape variables by default.
+- **LDAP, XPath, GraphQL and email injection.** The same idea, with parameters or encoding suited to each target. For GraphQL, also limit **query depth and cost**.
+- **Open redirect.** `res.redirect(req.query.next)` can send users from your domain to a phishing site. Allow-list the targets, or accept only relative paths.
 
 ## Mass assignment and prototype pollution {#objects}
 
-**Mass assignment** copies a whole request body into a model or an update, so a caller can set fields you never meant to expose:
+**Mass assignment** copies a whole request body into a model or an update. A caller can then set fields you never meant to expose:
 
 ```javascript
 await db.accounts.update(id, { ...req.body });        // body: { "nickname": "x", "role": "admin", "limit": 99999999 }
 ```
 
-Reject unknown keys and **pick allowed fields** explicitly (see the validator above), and keep separate input types for create and update, with server-controlled fields (`id`, `owner`, `role`, `balance`) never accepted from the client. In TypeScript the types do **not** protect you, because they are erased at runtime. Validate at runtime.
+Reject unknown keys, and **pick the allowed fields** explicitly (see the validator above). Keep separate input types for create and update. Never accept server-controlled fields, such as `id`, `owner`, `role` and `balance`, from the client.
 
-**Prototype pollution** abuses the fact that JavaScript objects inherit from `Object.prototype`. A recursive merge that follows the key `__proto__` (or `constructor.prototype`) writes onto the shared prototype, so **every** object in the process changes:
+TypeScript types do **not** protect you here, because they are erased at runtime. Validate at runtime.
+
+**Prototype pollution** abuses the fact that JavaScript objects inherit from `Object.prototype`. A recursive merge that follows the key `__proto__`, or `constructor.prototype`, writes onto that shared prototype. Then **every** object in the process changes:
 
 ```javascript
 function unsafeMerge(target, src) {
@@ -192,7 +238,9 @@ unsafeMerge({}, JSON.parse('{"__proto__": {"isAdmin": true}}'));
 ({}).isAdmin;        // true: every object now has isAdmin
 ```
 
-`JSON.parse` itself is safe, because it creates `__proto__` as an ordinary own property. The danger is the **merge, clone or path-set** code that then follows it (`lodash.merge`, `set(obj, path, value)` with user paths, hand-written deep copies). The same test showed this: after the unsafe merge `({}).isAdmin` was `true`, and after the safe merge below it stayed `undefined`.
+`JSON.parse` itself is safe. It creates `__proto__` as an ordinary property of the object. The danger is the **merge, clone or path-set** code that runs afterwards: `lodash.merge`, `set(obj, path, value)` with user paths, or a hand-written deep copy.
+
+My test showed this. After the unsafe merge, `({}).isAdmin` was `true`. After the safe merge below, it stayed `undefined`.
 
 ```javascript
 const FORBIDDEN = new Set(['__proto__', 'constructor', 'prototype']);
@@ -209,20 +257,34 @@ function safeMerge(target, src) {
 }
 ```
 
-Other defences: use a `Map` or `Object.create(null)` for dictionaries keyed by user text, `structuredClone` for copying, a schema that rejects unknown keys, `Object.freeze(Object.prototype)` in tests, up-to-date libraries, and `node --disable-proto=delete` to remove `__proto__` altogether.
+Other defences:
+
+- a `Map`, or `Object.create(null)`, for dictionaries keyed by user text;
+- `structuredClone` for copying;
+- a schema that rejects unknown keys;
+- `Object.freeze(Object.prototype)` in tests;
+- up-to-date libraries;
+- `node --disable-proto=delete`, which removes `__proto__` altogether.
 
 ## Server-side requests: SSRF {#ssrf}
 
-**Server-side request forgery** makes your server send a request the attacker chooses. Webhook URLs, "import from URL", image fetchers and PDF renderers are the usual entry. From inside your network the attacker can reach services that the internet cannot: admin consoles, databases, and above all the **cloud metadata service** (`http://169.254.169.254/...`), which can hand out the credentials of the machine's role.
+**Server-side request forgery** makes your server send a request the attacker chooses. The usual way in is a feature that fetches a URL: webhook URLs, "import from URL", image fetchers and PDF renderers.
 
-Defences, in order of strength:
+From inside your network, the attacker can reach services the internet cannot: admin consoles, databases, and above all the **cloud metadata service** (`http://169.254.169.254/...`). That service can hand out the credentials of the machine's role.
+
+Defences, strongest first:
 
 1. **Do not fetch user URLs.** If you must, accept only **allow-listed hosts** (`api.partner.example`).
-2. Allow only `https:` (and `http:` if needed), no credentials in the URL, and no unusual ports.
-3. **Resolve the name and reject private addresses**: loopback (`127.0.0.0/8`, `::1`), private ranges (`10/8`, `172.16/12`, `192.168/16`), link-local (`169.254/16`, `fe80::/10`), unique local IPv6 (`fc00::/7`), carrier-grade NAT, and IPv4-mapped IPv6.
-4. **Do not follow redirects automatically** (`redirect: 'error'` or check each hop), because a public URL can redirect to an internal one.
-5. Set **timeouts and a maximum response size**, and do not return the fetched body to the caller verbatim.
-6. **Network controls**: egress rules so the service cannot reach the metadata endpoint or internal ranges anyway, and the **IMDSv2** requirement on AWS (a session token header that a simple SSRF cannot add).
+2. Allow only `https:` (and `http:` if needed). Allow no credentials in the URL, and no unusual ports.
+3. **Resolve the name, and reject private addresses**:
+   - loopback: `127.0.0.0/8`, `::1`;
+   - private ranges: `10/8`, `172.16/12`, `192.168/16`;
+   - link-local: `169.254/16`, `fe80::/10`;
+   - unique local IPv6: `fc00::/7`;
+   - carrier-grade NAT, and IPv4 addresses mapped into IPv6.
+4. **Do not follow redirects automatically.** Use `redirect: 'error'`, or check each hop, because a public URL can redirect to an internal one.
+5. Set **timeouts and a maximum response size**. Do not return the fetched body to the caller as it is.
+6. **Network controls.** Add egress rules, so the service cannot reach the metadata endpoint or internal ranges anyway. On AWS, require **IMDSv2**, which needs a session token header that a simple SSRF cannot add.
 
 ```javascript
 import { lookup } from 'node:dns/promises';
@@ -261,7 +323,9 @@ const url = await assertPublicHttpUrl(req.body.callbackUrl, { allowedHosts: part
 const res = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(3000) });
 ```
 
-I tested this: `localhost`, `169.254.169.254`, `10.x`, `fd00::1`, `::ffff:127.0.0.1` and `file:///etc/passwd` are rejected, a URL with credentials is rejected, a host outside the allow-list is rejected, and a public address passes. One subtle gap remains: **DNS rebinding**. The name can resolve to a public address during the check and to a private one when `fetch` resolves it again. The strongest fix is to **connect to the address you checked** (a custom `lookup` function in the HTTP agent that performs the check), or to rely on egress network rules.
+I tested this. These are all rejected: `localhost`, `169.254.169.254`, `10.x`, `fd00::1`, `::ffff:127.0.0.1`, `file:///etc/passwd`, a URL with credentials, and a host outside the allow-list. A public address passes.
+
+One subtle gap remains: **DNS rebinding**. The name can resolve to a public address during the check, and to a private one when `fetch` resolves it again. The strongest fix is to **connect to the address you checked**: give the HTTP agent a custom `lookup` function that performs the check. Or rely on egress network rules.
 
 ## Files, paths and uploads {#files}
 
@@ -280,25 +344,32 @@ export function safeJoin(baseDir, userPath) {
 }
 ```
 
-I tested this against `../secret.txt`, `..\..\x`, `../../etc/passwd`, `a/../../b`, an absolute path, an empty path and a path with a null byte: all throw, and `2026/11/a.pdf` is accepted. Better still, **do not use user text as a path at all**: store files under generated ids (a UUID) and look the name up in the database. If symbolic links are possible, also check `fs.realpath` of the result. `express.static` handles traversal and ignores dotfiles by default, so use it for static content instead of writing your own. **Zip slip** is the same problem inside archives: check every entry name before extracting.
+I tested this. These all throw: `../secret.txt`, `..\..\x`, `../../etc/passwd`, `a/../../b`, an absolute path, an empty path, and a path with a null byte. `2026/11/a.pdf` is accepted.
 
-**Uploads** (statements, ID documents) need their own rules:
+Better still:
 
-- A **maximum size** and number of files (multer `limits`, a streaming parser), and a request timeout.
-- Check the **content**, not the file name or the `Content-Type` header: look at the magic bytes, allow only the types you expect, and re-encode images.
-- Store files **outside the web root** under a **random name**, with private object storage (S3) and short-lived signed URLs for download. Serve with `Content-Disposition: attachment` and `X-Content-Type-Options: nosniff`.
-- **Scan** for malware where the risk justifies it, and never execute or `require` uploaded content.
+- **Do not use user text as a path at all.** Store files under generated ids, such as a UUID, and look the name up in the database.
+- If symbolic links are possible, also check the `fs.realpath` of the result.
+- Use `express.static` for static content, instead of writing your own. It handles traversal, and ignores dotfiles by default.
+- **Zip slip** is the same problem inside archives. Check every entry name before extracting.
+
+**Uploads**, such as statements and ID documents, need their own rules:
+
+- Set a **maximum size** and number of files (multer `limits`, or a streaming parser), and a request timeout.
+- Check the **content**, not the file name or the `Content-Type` header. Look at the magic bytes, allow only the types you expect, and re-encode images.
+- Store files **outside the web root**, under a **random name**. Use private object storage (S3), with short-lived signed URLs for downloads. Serve them with `Content-Disposition: attachment` and `X-Content-Type-Options: nosniff`.
+- **Scan** for malware where the risk justifies it. Never run or `require` uploaded content.
 
 ## Protecting the browser: XSS, CSP, CORS and CSRF {#browser}
 
-Most of these are front-end issues, but the API sets the headers and the cookies, so a Node developer must know them.
+Most of these are front-end issues. But the API sets the headers and the cookies, so a Node developer must know them.
 
-**Cross-site scripting (XSS)**: attacker text runs as script in a victim's browser, so it can read pages and act as the user.
+**Cross-site scripting (XSS)**: attacker text runs as script in a victim's browser. It can then read pages and act as the user.
 
-- **Encode output** for its context (HTML, attribute, URL, JavaScript, CSS). React escapes text by default. The dangers are `dangerouslySetInnerHTML`, `innerHTML`, `document.write`, building HTML strings on the server, and putting JSON inside a `<script>` tag without escaping `<`.
-- **Sanitise rich text** that you must allow with a maintained library (DOMPurify, `sanitize-html`) on a strict allow-list. Never write your own regular expression sanitiser.
+- **Encode output** for its context: HTML, attribute, URL, JavaScript or CSS. React escapes text by default. The dangers are `dangerouslySetInnerHTML`, `innerHTML`, `document.write`, HTML strings built on the server, and JSON put inside a `<script>` tag without escaping `<`.
+- **Sanitise rich text** you must allow, with a maintained library (DOMPurify, `sanitize-html`) on a strict allow-list. Never write your own regular expression sanitiser.
 - A strict **Content Security Policy** limits what an injected script can do (see below).
-- Keep tokens out of JavaScript's reach: `HttpOnly` cookies ([authentication](lesson:node-authentication#sessions)).
+- Keep tokens out of JavaScript's reach, with `HttpOnly` cookies ([authentication](lesson:node-authentication#sessions)).
 
 **helmet** sets a sensible group of headers in one call:
 
@@ -320,20 +391,29 @@ app.use(helmet({
 }));
 ```
 
-Other headers helmet sets: `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Cross-Origin-Opener-Policy` and `Cross-Origin-Resource-Policy`. For a JSON API a tight `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` is enough, and the real CSP matters on the server that serves the HTML (the front end's host or CDN). Roll a new CSP out in `Content-Security-Policy-Report-Only` mode first.
+helmet also sets `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Cross-Origin-Opener-Policy` and `Cross-Origin-Resource-Policy`.
 
-**CORS** tells browsers which other origins may read your API's responses. It is **not** an authentication mechanism and does not stop a request from being sent, only from being read ([CORS in Express](lesson:node-express-middleware#common)). Rules:
+For a JSON API, a tight `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` is enough. The real CSP matters on the server that serves the HTML, such as the front end's host or CDN. Roll out a new CSP in `Content-Security-Policy-Report-Only` mode first.
 
-- Use an **allow-list of exact origins**. Never reflect the `Origin` header blindly, and never combine `Access-Control-Allow-Origin: *` with credentials (browsers refuse, and reflecting any origin with credentials is a vulnerability).
-- Match origins **exactly**: `origin.endsWith('bank.example')` also matches `evilbank.example`, and a loose regular expression has the same flaw.
-- Treat the `null` origin (sandboxed iframes, `file:`) as untrusted.
-- Allow only the methods and headers you need, and keep `Access-Control-Max-Age` modest.
+**CORS** tells browsers which other origins may read your API's responses. It is **not** authentication. It does not stop a request from being sent; it only stops the response being read ([CORS in Express](lesson:node-express-middleware#common)). Rules:
 
-**CSRF**: with cookie authentication the browser attaches the cookie to a request from any site, so a hostile page can submit a form to your transfer endpoint. Defences: `SameSite=Lax` or `Strict` cookies, an **anti-CSRF token** or a custom request header (a cross-site form cannot add one without a CORS preflight that you refuse), checking `Origin` and `Sec-Fetch-Site` on state-changing requests, and never changing state with `GET`. Bearer tokens in an `Authorization` header are not sent automatically, so they are not CSRF-prone but must be stored carefully ([session or token](lesson:node-authentication#attacks)).
+- Use an **allow-list of exact origins**. Never reflect the `Origin` header blindly. Never combine `Access-Control-Allow-Origin: *` with credentials. Browsers refuse that, and reflecting any origin with credentials is a vulnerability.
+- Match origins **exactly**. `origin.endsWith('bank.example')` also matches `evilbank.example`, and a loose regular expression has the same flaw.
+- Treat the `null` origin, from sandboxed iframes and `file:` pages, as untrusted.
+- Allow only the methods and headers you need. Keep `Access-Control-Max-Age` modest.
+
+**CSRF** (cross-site request forgery): with cookie authentication, the browser attaches the cookie to a request from any site. So a hostile page can submit a form to your transfer endpoint. Defences:
+
+- `SameSite=Lax` or `Strict` cookies;
+- an **anti-CSRF token**, or a custom request header. A cross-site form cannot add one without a CORS preflight, which you refuse;
+- checking `Origin` and `Sec-Fetch-Site` on requests that change state;
+- never changing state with `GET`.
+
+Bearer tokens in an `Authorization` header are not sent automatically, so they are not open to CSRF. But they must be stored carefully ([session or token](lesson:node-authentication#attacks)).
 
 ## Abuse and denial of service {#abuse}
 
-Some requests are hostile and others are just expensive. The goal is that **no single caller can cost more than their share**:
+Some requests are hostile, and others are just expensive. The goal: **no single caller can cost more than their share**.
 
 | Risk | Control |
 | --- | --- |
@@ -346,7 +426,7 @@ Some requests are hostile and others are just expensive. The goal is that **no s
 | hashing as a weapon | limit login attempts, run password hashing off the main thread |
 | resource exhaustion | connection and concurrency limits, timeouts on every outbound call, load shedding ([shedding](lesson:node-performance#shedding)) |
 
-A rate limiter with a shared store, so every instance sees the same counters:
+Here is a rate limiter with a shared store, so every instance sees the same counters:
 
 ```javascript
 import rateLimit from 'express-rate-limit';
@@ -366,20 +446,34 @@ app.use('/api', apiLimiter);
 app.post('/login', loginLimiter, loginHandler);
 ```
 
-An in-memory limiter works only for a single process, so use Redis (or the gateway's limiter) when you run several pods. Respond with `429` and `Retry-After`.
+An in-memory limiter only works for a single process. When you run several pods, use Redis, or the gateway's limiter. Respond with `429` and `Retry-After`.
 
-**ReDoS**: a regular expression with nested quantifiers backtracks exponentially on crafted input. I measured `/^(a+)+$/` against `'a'` repeated n times followed by `b`: 54 ms at n = 20, 601 ms at n = 26, and about **3 seconds at n = 28**, during which the process serves nobody, while the linear pattern `/^a+$/` took 2 ms on a million characters. Avoid nested or overlapping quantifiers, limit the input length before matching, prefer parsers to regular expressions for structured data, and use a linear-time engine such as `re2` for user-supplied patterns.
+**ReDoS** (regular expression denial of service): a pattern with nested quantifiers backtracks exponentially on crafted input. I measured `/^(a+)+$/` against `'a'` repeated n times, followed by `b`:
+
+- 54 ms at n = 20;
+- 601 ms at n = 26;
+- about **3 seconds at n = 28**. All that time, the process serves nobody.
+
+The linear pattern `/^a+$/` took 2 ms on a million characters.
+
+So:
+
+- avoid nested or overlapping quantifiers;
+- limit the input length before matching;
+- prefer parsers to regular expressions for structured data;
+- use a linear-time engine such as `re2` for patterns that users supply.
 
 ## Cryptography and secrets in code {#crypto}
 
-Most mistakes are **using the right primitive wrongly**. Use `node:crypto` and well-known libraries, never your own scheme ([cryptography in practice](lesson:cryptography#practice)).
+Most mistakes come from **using the right primitive wrongly**. Use `node:crypto` and well-known libraries, never your own scheme ([cryptography in practice](lesson:cryptography#practice)).
 
-- **Randomness for secrets**: `crypto.randomBytes`, `crypto.randomUUID`, `crypto.randomInt`. **Never `Math.random()`** for tokens, ids that must not be guessed, reset codes or session ids.
-- **Compare secrets in constant time**: `crypto.timingSafeEqual` on equal-length buffers (check the length first), so response time does not reveal how many characters matched (see the helper in [authentication](lesson:node-authentication#login)).
-- **Passwords**: argon2id, scrypt or bcrypt, never a fast hash ([passwords](lesson:node-authentication#passwords)). **Data integrity and webhook signatures**: HMAC-SHA-256 with a secret, compared in constant time, plus a timestamp to stop replays.
-- **Encrypting data**: use an **authenticated** mode, **AES-256-GCM**, with a fresh random 12-byte IV for every message and the tag checked on decryption. Never ECB, never a reused IV, never encryption without authentication, never a home-made algorithm.
-- **Keys**: generated with `randomBytes(32)`, stored in a KMS or secret manager, never in the code, rotated, and used through **envelope encryption** for bulk data (a data key encrypted by a master key in the KMS).
-- **TLS**: terminate with a current protocol version, and never set `rejectUnauthorized: false` or `NODE_TLS_REJECT_UNAUTHORIZED=0` to silence a certificate error. That turns off the check and allows a man-in-the-middle.
+- **Randomness for secrets.** Use `crypto.randomBytes`, `crypto.randomUUID` or `crypto.randomInt`. **Never `Math.random()`** for tokens, ids that must not be guessable, reset codes or session ids.
+- **Compare secrets in constant time.** Use `crypto.timingSafeEqual` on buffers of equal length; check the length first. Then the response time does not reveal how many characters matched (see the helper in [authentication](lesson:node-authentication#login)).
+- **Passwords**: argon2id, scrypt or bcrypt, never a fast hash ([passwords](lesson:node-authentication#passwords)).
+- **Data integrity and webhook signatures**: HMAC-SHA-256 with a secret, compared in constant time, plus a timestamp to stop replays.
+- **Encrypting data.** Use an **authenticated** mode, **AES-256-GCM**. Use a fresh random 12-byte IV (initialisation vector) for every message, and check the tag on decryption. Never use ECB, a reused IV, encryption without authentication, or a home-made algorithm.
+- **Keys.** Generate them with `randomBytes(32)`. Store them in a KMS or secret manager, never in the code. Rotate them. For bulk data, use **envelope encryption**: a data key, which is itself encrypted by a master key in the KMS.
+- **TLS.** Use a current protocol version. Never set `rejectUnauthorized: false` or `NODE_TLS_REJECT_UNAUTHORIZED=0` to silence a certificate error. That turns off the check, and allows a man-in-the-middle attack.
 
 ```javascript
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
@@ -403,15 +497,15 @@ export function decrypt(token, key, aad = '') {
 }
 ```
 
-I tested this: a round trip returns the original text, two encryptions of the same text differ (fresh IV), and decryption throws for a wrong key, a wrong associated-data value and a single flipped bit. In production the key comes from a KMS, and bulk data uses a data key that the KMS has encrypted.
+I tested this. A round trip returns the original text. Two encryptions of the same text differ, because of the fresh IV. Decryption throws for a wrong key, a wrong associated-data value, and a single flipped bit. In production, the key comes from a KMS, and bulk data uses a data key the KMS has encrypted.
 
-**Secrets handling**: no secrets in Git, images, build arguments, URLs, client bundles (`VITE_*` variables are public), or logs. Run **secret scanning** (gitleaks, GitHub secret scanning) in the pipeline and as a pre-commit hook, and **rotate** anything that leaked, because removing it from history does not make it secret again ([configuration and secrets](lesson:node-deployment#config)).
+**Handling secrets.** Keep secrets out of Git, images, build arguments, URLs, client bundles (`VITE_*` variables are public), and logs. Run **secret scanning** (gitleaks, GitHub secret scanning) in the pipeline and as a pre-commit hook. **Rotate** anything that leaked. Removing it from history does not make it secret again ([configuration and secrets](lesson:node-deployment#config)).
 
 ## Sensitive data, logging and errors {#data}
 
-- **Classify data**: card numbers (PAN), national ID numbers, account numbers, and personal data (covered by Singapore's PDPA and similar laws) need extra care. A bank also follows PCI DSS for cards and its regulator's technology risk guidelines. Do not collect or keep what you do not need, and do **not store** the card verification value at all.
-- **Encrypt** sensitive fields at rest (database and disk encryption, plus field-level AES-GCM for the most sensitive), and use TLS everywhere in transit, also inside the network.
-- **Mask and redact**: show only the last four digits, and keep sensitive fields out of logs, error reports, analytics and URLs (query strings end up in access logs). With pino, `redact` removes paths from log lines.
+- **Classify data.** Card numbers (PAN), national ID numbers, account numbers and personal data need extra care. Personal data is covered by Singapore's PDPA and similar laws. A bank also follows PCI DSS for cards, and its regulator's technology risk guidelines. Do not collect or keep what you do not need. Do **not store** the card verification value at all.
+- **Encrypt** sensitive fields at rest: database and disk encryption, plus field-level AES-GCM for the most sensitive. Use TLS everywhere in transit, inside the network too.
+- **Mask and redact.** Show only the last four digits. Keep sensitive fields out of logs, error reports, analytics and URLs, because query strings end up in access logs. With pino, `redact` removes paths from log lines.
 
 ```javascript
 import pino from 'pino';
@@ -425,33 +519,40 @@ export const maskPan = (s) => String(s).replace(/\b(\d{4})[ -]?(\d{4,8})[ -]?(\d
 maskPan('card 4111 1111 1111 1111 ok');      // 'card **** **** **** 1111 ok'
 ```
 
-- **Errors**: return a generic message and a **correlation id** to the client, and keep the details and stack trace in the logs. In production never send `err.stack`, SQL text, file paths or library versions (set `NODE_ENV=production`, use a central error handler, see [error handling](lesson:node-express-middleware#errors)). Return the same response for "not found" and "not yours" when existence is itself secret.
-- **Authorisation on every object** (broken object-level authorisation, **IDOR**): `GET /accounts/:id` must check that the caller owns or may see **that** account, not only that they are logged in. Put the check in the service next to the data access, and add a test that user B gets 403 or 404 for user A's account. Predictable ids (1, 2, 3) make guessing easy, but they are not the fix.
-- **Least-privilege data access**: separate database users for the application, migrations and reporting, row-level security where it fits, and no shared admin credentials.
-- **Audit log** for sign-ins, authorisation failures, changes to payees and limits, and every money movement: who, what, when, from where, and the outcome, in an append-only store, without secrets. See [observability](lesson:fullstack-integration#observability).
-- **Retention**: delete data you no longer need, and make backups encrypted and access-controlled.
+- **Errors.** Return a generic message and a **correlation id** to the client. Keep the details and the stack trace in the logs. In production, never send `err.stack`, SQL text, file paths or library versions. Set `NODE_ENV=production`, and use a central error handler (see [error handling](lesson:node-express-middleware#errors)). When even the existence of a record is secret, return the same response for "not found" and "not yours".
+- **Authorisation on every object.** This failure is called broken object-level authorisation, or **IDOR**. `GET /accounts/:id` must check that the caller owns or may see **that** account, not only that they are logged in. Put the check in the service, next to the data access. Add a test that user B gets 403 or 404 for user A's account. Predictable ids (1, 2, 3) make guessing easy, but changing the ids is not the fix.
+- **Least-privilege data access.** Use separate database users for the application, migrations and reporting. Add row-level security where it fits. Never share admin credentials.
+- **Audit log.** Record sign-ins, authorisation failures, changes to payees and limits, and every money movement: who, what, when, from where, and the outcome. Keep it in an append-only store, without secrets. See [observability](lesson:fullstack-integration#observability).
+- **Retention.** Delete data you no longer need. Encrypt backups, and control who can access them.
 
 ## The supply chain {#supply}
 
-A typical Node service contains hundreds of transitive packages. That is where many real breaches happen: **typosquatting** (`expresss`), a **hijacked maintainer account** or a malicious update, **dependency confusion** (a private package name taken on the public registry), and **install scripts** that run code on `install`.
+A typical Node service contains hundreds of indirect packages. Many real breaches happen there:
 
-- **Lockfile committed and a frozen install** (`pnpm install --frozen-lockfile`) so the build uses exactly the reviewed versions.
-- **Audit**: `pnpm audit --prod` in CI, an alert on new advisories, and **automated update pull requests** (Renovate, Dependabot) that go through review and tests. Recent pnpm versions do not run dependency install scripts unless you allow-list them, which blocks a whole class of attacks. With other tools use `--ignore-scripts` and enable scripts only where needed.
-- **Choose dependencies carefully**: maintained, widely used, small. Replace a trivial package with a few lines of your own. Check new packages by name, publisher and download history.
-- **Private registry or proxy** with an allow-list, and scoped package names (`@bank/...`) registered on the public registry to prevent confusion.
-- **Provenance and signing**: npm provenance for packages you publish, signed container images, **SBOM** generation, and pinning GitHub Actions to a commit SHA, because a CI action runs with your secrets.
-- **Protect the pipeline**: least-privilege CI tokens, no long-lived cloud keys (use OIDC federation), protected branches and required reviews, and separate build and deploy permissions.
-- **Know where each package runs**: a vulnerability only in a dev dependency is far less urgent than one in a production request path. Have a process to update fast when a critical advisory appears.
+- **typosquatting**: a look-alike name, such as `expresss`;
+- a **hijacked maintainer account**, or a malicious update;
+- **dependency confusion**: someone takes the name of your private package on the public registry;
+- **install scripts** that run code during `install`.
+
+Defences:
+
+- **Commit the lockfile, and install it frozen** (`pnpm install --frozen-lockfile`). The build then uses exactly the reviewed versions.
+- **Audit.** Run `pnpm audit --prod` in CI, alert on new advisories, and take **automated update pull requests** (Renovate, Dependabot) through review and tests. Recent pnpm versions do not run dependency install scripts unless you allow-list them, which blocks a whole class of attacks. With other tools, use `--ignore-scripts`, and enable scripts only where needed.
+- **Choose dependencies carefully**: maintained, widely used and small. Replace a trivial package with a few lines of your own. Check new packages by name, publisher and download history.
+- **A private registry or proxy**, with an allow-list. Register your scoped package names (`@bank/...`) on the public registry, to prevent confusion.
+- **Provenance and signing.** Use npm provenance for packages you publish, signed container images, and **SBOM** generation. Pin GitHub Actions to a commit SHA, because a CI action runs with your secrets.
+- **Protect the pipeline.** Use least-privilege CI tokens, and no long-lived cloud keys (use OIDC federation instead). Protect branches, require reviews, and separate build and deploy permissions.
+- **Know where each package runs.** A vulnerability in a dev dependency only is far less urgent than one in a production request path. Have a process to update fast when a critical advisory appears.
 
 ## Runtime hardening {#runtime}
 
-- **Container and process**: non-root user, read-only filesystem, no extra capabilities, minimal image ([Docker image security](lesson:docker#security), [deployment](lesson:node-deployment#docker)).
-- **`NODE_ENV=production`**, no debug endpoints or `--inspect` exposed (the inspector gives remote code execution), no `/metrics` or `/health` details on the public ingress.
-- **Node's permission model** in recent versions (`node --permission --allow-fs-read=/app`) restricts file system, child process and worker access of a process. Useful as an extra layer, but not a substitute for the controls above.
-- **Network**: Kubernetes NetworkPolicies (default deny), egress restrictions, private subnets for databases, TLS between services, and a WAF in front of public APIs.
-- **Process errors**: log and exit on `uncaughtException` and `unhandledRejection` and let the orchestrator restart, rather than running in an unknown state.
-- **Do not trust `vm`, `eval`, `Function` or `require` of user-influenced paths**, and be cautious with `JSON` reviver functions, `yaml` loaders that allow custom types, and deserialisers that can instantiate arbitrary classes (the same class of problem as Java deserialisation).
-- **Keep Node and the OS patched**: run a supported LTS version, and rebuild images regularly.
+- **Container and process**: a non-root user, a read-only filesystem, no extra capabilities, and a minimal image ([Docker image security](lesson:docker#security), [deployment](lesson:node-deployment#docker)).
+- **Set `NODE_ENV=production`.** Expose no debug endpoints, and never expose `--inspect`: the inspector allows remote code execution. Keep `/metrics` and `/health` details off the public ingress.
+- **Node's permission model**, in recent versions (`node --permission --allow-fs-read=/app`), restricts a process's access to the file system, child processes and workers. It is a useful extra layer, but it does not replace the controls above.
+- **Network**: Kubernetes NetworkPolicies that deny by default, egress restrictions, private subnets for databases, TLS between services, and a WAF in front of public APIs.
+- **Process errors**: on `uncaughtException` and `unhandledRejection`, log and exit, and let the orchestrator restart. Do not keep running in an unknown state.
+- **Do not trust `vm`, `eval`, `Function`, or `require` of paths the user influences.** Be careful with `JSON` reviver functions, with `yaml` loaders that allow custom types, and with deserialisers that can create arbitrary classes. That is the same class of problem as Java deserialisation.
+- **Keep Node and the OS patched.** Run a supported LTS version, and rebuild images regularly.
 
 ## Security testing and process {#testing}
 
@@ -467,7 +568,15 @@ A typical Node service contains hundreds of transitive packages. That is where m
 | **penetration test** and **bug bounty** | logic flaws and chained issues | external testers |
 | **threat modelling and design review** | design flaws | STRIDE sessions |
 
-Write **abuse-case tests** next to the happy path: user B cannot read user A's account (403 or 404), a body with `role: 'admin'` is rejected, a path with `..` is rejected, the 121st request in a minute gets 429, an expired or tampered token fails. Make security checks **pipeline gates**, and agree on how quickly critical findings must be fixed. Keep a short **incident response plan**: contain, rotate secrets, investigate with the audit log, notify (regulators and customers where required), and learn.
+Write **abuse-case tests** next to the happy path:
+
+- user B cannot read user A's account (403 or 404);
+- a body with `role: 'admin'` is rejected;
+- a path with `..` is rejected;
+- the 121st request in a minute gets 429;
+- an expired or tampered token fails.
+
+Make security checks **pipeline gates**, and agree how quickly critical findings must be fixed. Keep a short **incident response plan**: contain, rotate secrets, investigate with the audit log, notify (regulators and customers where required), and learn.
 
 ## Common mistakes {#mistakes}
 
@@ -543,67 +652,184 @@ Try it in the lab: [Defending a Node API in layers](lab:node-security-layers).
 
 ### [basic] What is injection and what is the general defence? {#injection-q}
 
-Injection is untrusted data being interpreted as code or a command by another system: SQL, NoSQL operators, shell commands, templates, LDAP, log lines. The general defence is to keep data and code apart: parameterised queries, argument arrays instead of shell strings, output encoding, and allow-listing anything that cannot be a parameter. Add schema validation of input and least-privilege accounts so a missed case does less damage.
+Injection is when another system reads untrusted data as code or as a command. It covers SQL, NoSQL operators, shell commands, templates, LDAP and log lines.
+
+The general defence is to keep data and code apart:
+
+- parameterised queries;
+- argument arrays instead of shell strings;
+- output encoding;
+- allow-lists for anything that cannot be a parameter.
+
+Add schema validation of input, and least-privilege accounts, so a missed case does less damage.
 
 ### [basic] How do you prevent SQL injection in Node.js? {#sql-q}
 
-Use parameterised queries (`pool.query('... WHERE owner = $1', [owner])`) in the driver and in every ORM or builder raw-query path, so the value is sent separately from the SQL text. Allow-list identifiers such as sort columns, escape `LIKE` wildcards, validate types at the edge, and connect as a least-privilege database user. String concatenation or template literals with user values are the bug.
+Use parameterised queries, such as `pool.query('... WHERE owner = $1', [owner])`. Do it in the driver, and in every raw-query path of an ORM or query builder. Then the value is sent separately from the SQL text.
+
+Also:
+
+- allow-list identifiers, such as sort columns;
+- escape `LIKE` wildcards;
+- validate types at the edge;
+- connect as a least-privilege database user.
+
+String concatenation, or template literals with user values, are the bug.
 
 ### [basic] What is the difference between input validation and output encoding? {#validate-encode-q}
 
-Validation checks that incoming data is well formed and acceptable (type, length, range, format) at the trust boundary. Output encoding makes data safe for the context in which it is placed (HTML, attribute, URL, SQL parameter) so it is displayed as data and not executed. Both are needed: validation reduces what gets in, and encoding stops what remains from being interpreted as code.
+Validation checks, at the trust boundary, that incoming data is well formed and acceptable: type, length, range and format.
+
+Output encoding makes data safe for the place it is put, such as HTML, an attribute, a URL or an SQL parameter. Then it is shown as data, and never executed.
+
+You need both. Validation reduces what gets in. Encoding stops what remains from being read as code.
 
 ### [basic] What is mass assignment and how do you avoid it? {#mass-q}
 
-Copying a whole request body into a model or an update lets a caller set fields they must not control, such as `role`, `balance` or `owner`. Reject unknown keys with a strict schema and build the object from explicitly allowed fields, with server-controlled fields never accepted from the client. TypeScript types do not help because they disappear at runtime.
+Copying a whole request body into a model or an update lets a caller set fields they must not control, such as `role`, `balance` or `owner`.
+
+Reject unknown keys with a strict schema. Build the object from fields you explicitly allow. Never accept server-controlled fields from the client.
+
+TypeScript types do not help, because they disappear at runtime.
 
 ### [basic] Why is Math.random unsuitable for tokens, and what do you use? {#random-q}
 
-`Math.random` is a predictable pseudo-random generator, so an attacker who sees some output can predict later values. Use a cryptographically secure source: `crypto.randomBytes`, `crypto.randomUUID` or `crypto.randomInt`. Compare secrets with `timingSafeEqual`, not `===`.
+`Math.random` is a predictable pseudo-random generator. An attacker who sees some of its output can predict later values.
+
+Use a cryptographically secure source: `crypto.randomBytes`, `crypto.randomUUID` or `crypto.randomInt`. Compare secrets with `timingSafeEqual`, not `===`.
 
 ### [intermediate] What is prototype pollution and how do you prevent it? {#proto-q}
 
-A recursive merge, clone or path-set function that follows keys such as `__proto__` or `constructor.prototype` writes onto `Object.prototype`, so every object in the process gains attacker-chosen properties (for example `isAdmin`), which can bypass checks or crash the service. `JSON.parse` itself is safe, the danger is the code that processes the parsed data. Skip those keys, use `Object.hasOwn`, store dictionaries in a `Map` or `Object.create(null)`, validate with a schema that rejects unknown keys, keep libraries updated, and consider `--disable-proto=delete`.
+Some merge, clone or path-set functions follow keys such as `__proto__` or `constructor.prototype`. They then write onto `Object.prototype`. Every object in the process gains properties the attacker chose, such as `isAdmin`. That can bypass checks, or crash the service.
+
+`JSON.parse` itself is safe. The danger is the code that processes the parsed data.
+
+To prevent it:
+
+- skip those keys, and use `Object.hasOwn`;
+- store dictionaries in a `Map`, or `Object.create(null)`;
+- validate with a schema that rejects unknown keys;
+- keep libraries updated;
+- consider `--disable-proto=delete`.
 
 ### [intermediate] What is SSRF and how do you defend against it? {#ssrf-q}
 
-The server is made to send a request to an address chosen by the attacker, typically an internal service or the cloud metadata endpoint that exposes credentials. Defend by avoiding user-supplied URLs, allow-listing hosts, allowing only https, resolving the name and rejecting loopback, private, link-local and mapped addresses, not following redirects automatically, setting timeouts and size limits, and adding egress network rules and IMDSv2. Beware DNS rebinding, where the address changes between the check and the connection, so connect to the checked address or rely on egress rules.
+Server-side request forgery makes the server send a request to an address the attacker chose. The target is usually an internal service, or the cloud metadata endpoint, which exposes credentials.
+
+Defences:
+
+- avoid user-supplied URLs, and allow-list hosts;
+- allow only https;
+- resolve the name, and reject loopback, private, link-local and mapped addresses;
+- do not follow redirects automatically;
+- set timeouts and size limits;
+- add egress network rules, and require IMDSv2.
+
+Beware DNS rebinding, where the address changes between the check and the connection. So connect to the address you checked, or rely on egress rules.
 
 ### [intermediate] How do you prevent path traversal when serving files? {#traversal-q}
 
-Resolve the final path with `path.resolve(base, userPath)`, then verify with `path.relative` that it is still inside the base directory (not starting with `..` and not absolute), reject null bytes, and also check `realpath` if symlinks are possible. Better, avoid user-controlled paths: store files under generated ids and look names up in the database, and use `express.static` for static content. Check archive entry names to prevent zip slip.
+Resolve the final path with `path.resolve(base, userPath)`. Then check with `path.relative` that it is still inside the base directory: the result must not start with `..`, and must not be absolute. Reject null bytes. If symbolic links are possible, also check `realpath`.
+
+Better, avoid user-controlled paths. Store files under generated ids, and look names up in the database. Use `express.static` for static content. Check archive entry names, to prevent zip slip.
 
 ### [intermediate] How do helmet, CSP, CORS and CSRF protections differ? {#headers-q}
 
-helmet sets a set of security headers (HSTS, `nosniff`, frame protection, referrer policy, CSP). A Content Security Policy limits which scripts and resources a page may load, reducing the damage of XSS. CORS controls which other origins may read responses, and is not authentication. CSRF protection stops a hostile site from making the browser send an authenticated request, using SameSite cookies, anti-CSRF tokens or custom headers, and Origin checks. They address different attacks and are used together.
+They address different attacks, and you use them together:
+
+- **helmet** sets a group of security headers: HSTS, `nosniff`, frame protection, referrer policy and CSP.
+- **A Content Security Policy** limits which scripts and resources a page may load. That reduces the damage of XSS.
+- **CORS** controls which other origins may read responses. It is not authentication.
+- **CSRF protection** stops a hostile site making the browser send an authenticated request. It uses SameSite cookies, anti-CSRF tokens or custom headers, and Origin checks.
 
 ### [intermediate] How do you configure CORS safely? {#cors-q}
 
-Use an allow-list of exact origins, not `*` with credentials and not a reflected `Origin` header. Compare origins exactly (an `endsWith` check also accepts `evilbank.example`), treat the `null` origin as untrusted, allow only the needed methods and headers, and remember that CORS only restricts reading responses in browsers. It does not replace authentication or CSRF protection, and it does not protect against non-browser clients.
+Use an allow-list of exact origins. Do not use `*` with credentials, and do not reflect the `Origin` header.
+
+- Compare origins exactly. An `endsWith` check also accepts `evilbank.example`.
+- Treat the `null` origin as untrusted.
+- Allow only the methods and headers you need.
+
+Remember that CORS only restricts reading responses in browsers. It does not replace authentication or CSRF protection, and it does not protect against clients that are not browsers.
 
 ### [intermediate] How do you protect a Node.js API against denial of service? {#dos-q}
 
-Set body and upload size limits, server timeouts (`headersTimeout`, `requestTimeout`, keep-alive limits) and timeouts on every outbound call, apply rate limits per user, key and address with a shared store such as Redis (stricter on login and OTP endpoints), cap page sizes and query cost, avoid blocking the event loop (no synchronous work, ReDoS-safe regular expressions), limit concurrency and shed load when overloaded, and use the proxy or WAF for volumetric attacks. Respond with 413, 429 and 503 with `Retry-After`.
+Limit what any caller can cost:
+
+- body and upload size limits;
+- server timeouts (`headersTimeout`, `requestTimeout`, keep-alive limits), and a timeout on every outbound call;
+- rate limits per user, key and address, with a shared store such as Redis. Make them stricter on login and OTP endpoints;
+- caps on page size and query cost;
+- no blocking of the event loop: no synchronous work, and ReDoS-safe regular expressions;
+- concurrency limits, and load shedding when overloaded;
+- the proxy or WAF, for attacks based on sheer volume.
+
+Respond with 413, 429 and 503, with `Retry-After`.
 
 ### [intermediate] Explain ReDoS and how to avoid it. {#redos-q}
 
-A regular expression with nested or overlapping quantifiers, such as `^(a+)+$`, can take exponential time on a crafted input that almost matches, and while it runs the single JavaScript thread serves nobody. In a test it took about 3 seconds for 28 characters. Avoid nested quantifiers, limit input length before matching, use a parser for structured text, and use a linear-time engine like `re2` when users can supply patterns.
+A regular expression with nested or overlapping quantifiers, such as `^(a+)+$`, can take exponential time on a crafted input that almost matches. While it runs, the single JavaScript thread serves nobody. In a test, it took about 3 seconds for 28 characters.
+
+To avoid it:
+
+- avoid nested quantifiers;
+- limit the input length before matching;
+- use a parser for structured text;
+- use a linear-time engine like `re2` when users can supply patterns.
 
 ### [intermediate] How do you encrypt sensitive data correctly in Node.js? {#encrypt-q}
 
-Use an authenticated mode, AES-256-GCM through `crypto.createCipheriv`, with a fresh random 12-byte IV per message, store the IV and the authentication tag with the ciphertext, and verify the tag on decryption (an error means tampering or the wrong key). Keys come from a KMS or secret manager, are rotated, and bulk data uses envelope encryption. Never use ECB, a reused IV, encryption without authentication or a home-made scheme, and use hashing with a slow function for passwords, not encryption.
+Use an authenticated mode, AES-256-GCM, through `crypto.createCipheriv`.
+
+- Use a fresh random 12-byte IV for every message.
+- Store the IV and the authentication tag with the ciphertext.
+- Verify the tag on decryption. An error means tampering, or the wrong key.
+
+Keys come from a KMS or secret manager, and are rotated. Bulk data uses envelope encryption.
+
+Never use ECB, a reused IV, encryption without authentication, or a home-made scheme. For passwords, use a slow hash function, not encryption.
 
 ### [intermediate] What do you never log, and how do you enforce it? {#logging-q}
 
-Passwords, tokens, session ids, authorisation headers, full card numbers (PAN), card verification values, national ID numbers and secrets. Enforce it with structured logging and redaction (pino `redact` paths), masking helpers, keeping sensitive values out of URLs and query strings, scrubbing error reports, code review and tests that check log output, and secret scanning. Logs should still carry request ids, user ids and outcomes for the audit trail.
+Never log passwords, tokens, session ids, authorisation headers, full card numbers (PAN), card verification values, national ID numbers or other secrets.
+
+Enforce it with:
+
+- structured logging and redaction, such as pino `redact` paths;
+- masking helpers;
+- keeping sensitive values out of URLs and query strings;
+- scrubbing error reports;
+- code review, and tests that check log output;
+- secret scanning.
+
+Logs should still carry request ids, user ids and outcomes, for the audit trail.
 
 ### [deep] How would you review an Express endpoint for security problems? {#review-q}
 
-Follow the request. Authentication and then authorisation per object (can this user see this account?). Validation of every input source against a strict schema, including types and sizes. How data reaches the database (parameters, allow-listed identifiers, no operator objects) and other systems (`execFile`, URL fetching with SSRF checks, file paths). What is returned (only needed fields, no secrets, generic errors). Limits (body size, rate, timeouts, pagination). Headers, cookies, CORS and CSRF for browser use. Logging without secrets and an audit entry for important actions. Dependencies and their versions. Then test the abuse cases: another user's id, extra fields, wrong types, huge input, repeated calls.
+Follow the request through, and check at each step:
+
+1. **Authentication, then authorisation per object.** Can this user see this account?
+2. **Validation** of every input source against a strict schema, including types and sizes.
+3. **How data reaches the database**: parameters, allow-listed identifiers, no operator objects.
+4. **How it reaches other systems**: `execFile`, URL fetching with SSRF checks, file paths.
+5. **What is returned**: only the fields needed, no secrets, generic errors.
+6. **Limits**: body size, rate, timeouts, pagination.
+7. **Browser concerns**: headers, cookies, CORS and CSRF.
+8. **Logging** without secrets, and an audit entry for important actions.
+9. **Dependencies**, and their versions.
+
+Then test the abuse cases: another user's id, extra fields, wrong types, huge input, and repeated calls.
 
 ### [deep] Design the security controls for a bank's Node.js payments API. {#design-q}
 
-Edge: TLS, WAF and gateway rate limits, strict schema validation with unknown keys rejected, small body limits and timeouts. Identity: OIDC tokens verified with algorithm and audience checks, MFA and step-up for payee changes and large transfers, short-lived tokens. Authorisation: per-object ownership checks in the service, role and limit rules, idempotency keys, transfer limits and velocity checks. Data: parameterised SQL with a least-privilege database user, field-level AES-GCM for sensitive values with keys in a KMS, masking and log redaction, an append-only audit log. Platform: non-root read-only containers, network policies and egress restrictions, secrets from a manager, signed and scanned images, frozen lockfile and reviewed dependency updates, pinned CI actions with OIDC. Operations: SAST, DAST and dependency scanning as gates, abuse-case tests, alerts on 401, 403 and anomalies, and a rehearsed incident response with rotation of secrets.
+Work in layers:
+
+- **Edge**: TLS, a WAF and gateway rate limits. Strict schema validation that rejects unknown keys. Small body limits, and timeouts.
+- **Identity**: OIDC tokens, verified with algorithm and audience checks. MFA, and step-up for payee changes and large transfers. Short-lived tokens.
+- **Authorisation**: ownership checks per object, in the service. Role and limit rules, idempotency keys, transfer limits and velocity checks.
+- **Data**: parameterised SQL with a least-privilege database user. Field-level AES-GCM for sensitive values, with keys in a KMS. Masking, log redaction, and an append-only audit log.
+- **Platform**: non-root, read-only containers. Network policies and egress restrictions. Secrets from a manager. Signed and scanned images. A frozen lockfile and reviewed dependency updates. CI actions pinned, with OIDC.
+- **Operations**: SAST, DAST and dependency scanning as gates. Abuse-case tests. Alerts on 401, 403 and anomalies. A rehearsed incident response, including secret rotation.
 
 ### [coding] Implement `parseTransfer(input)`: strict validation of `from`, `to`, `amount` (integer cents) and `currency`, optional `reference`. Reject unknown fields, collect every issue, and return a new clean object. {#coding-validate}
 
@@ -657,7 +883,16 @@ export function parseTransfer(input) {
 }
 ```
 
-The function checks the body is a plain object, rejects every key outside the allow-list (which blocks mass assignment such as `role: 'admin'`), validates each field's type, format and range (integer cents, an upper bound, an enumerated currency, a maximum reference length), and collects all issues so the client can fix them at once. It never reads `__proto__` or other unexpected keys into the result, because it **builds a new object** from the validated fields only. Control characters in the free text are replaced so they cannot forge log lines. In my tests a good request produced a clean object, and an extra `role`, a string amount, a negative amount, `from: { $ne: null }`, an array body and a `__proto__` body were all rejected. A middleware turns `ValidationError` into a 422 response.
+Explain these points:
+
+- It checks that the body is a plain object.
+- It rejects every key outside the allow-list, which blocks mass assignment such as `role: 'admin'`.
+- It checks each field's type, format and range: integer cents with an upper bound, a currency from a fixed list, and a maximum reference length.
+- It collects every issue, so the client can fix them all at once.
+- It **builds a new object** from the validated fields only. So `__proto__` and other unexpected keys never reach the result.
+- It replaces control characters in the free text, so they cannot forge log lines.
+- In my tests, a good request produced a clean object. An extra `role`, a string amount, a negative amount, `from: { $ne: null }`, an array body and a `__proto__` body were all rejected.
+- A middleware turns `ValidationError` into a 422 response.
 
 ### [coding] Implement `safeJoin(baseDir, userPath)` that prevents path traversal, and `assertPublicHttpUrl(url)` that refuses URLs resolving to private addresses (SSRF). {#coding-safe}
 
@@ -705,7 +940,16 @@ export async function assertPublicHttpUrl(raw, { allowedHosts } = {}) {
 }
 ```
 
-`path.resolve` collapses `..` segments and absolute paths first, so the safety check is on the real result: `path.relative` must not start with `..` and must not be absolute. The URL check parses the URL, restricts scheme, credentials and host, then resolves **all** addresses of the name and rejects the request if any is loopback, private, link-local (including the metadata address `169.254.169.254`), carrier-grade NAT or an IPv4-mapped IPv6 address. Unknown values are refused (fail closed). Use the result with `fetch(url, { redirect: 'error', signal: AbortSignal.timeout(3000) })`, and add egress network rules because DNS rebinding can change the address after the check. My tests covered traversal strings with `..`, backslashes, absolute paths, empty and null-byte paths, and private, mapped, metadata and `file:` URLs.
+Explain these points:
+
+- `path.resolve` first collapses `..` segments and absolute paths. So the safety check runs on the real result.
+- `path.relative` must not start with `..`, and must not be absolute.
+- The URL check parses the URL, and restricts the scheme, credentials and host.
+- It then resolves **all** addresses of the name. It rejects the request if any one is loopback, private, link-local (including the metadata address `169.254.169.254`), carrier-grade NAT, or an IPv4-mapped IPv6 address.
+- Unknown values are refused, so it fails closed.
+- Use the result with `fetch(url, { redirect: 'error', signal: AbortSignal.timeout(3000) })`.
+- Add egress network rules too, because DNS rebinding can change the address after the check.
+- My tests covered traversal strings with `..`, backslashes, absolute paths, empty and null-byte paths, and private, mapped, metadata and `file:` URLs.
 
 ### [coding] Implement `encrypt` and `decrypt` with AES-256-GCM using Node's `crypto`: random IV per message, authentication tag, optional associated data, and tamper detection. {#coding-crypto}
 
@@ -738,4 +982,12 @@ decrypt(token, key, 'acct-1');        // '4111111111111111'
 decrypt(token, key, 'acct-2');        // throws: the ciphertext was moved to another record
 ```
 
-GCM gives confidentiality and integrity together. A new random 12-byte IV is generated for every message (reusing an IV under one key breaks GCM), the 16-byte tag authenticates both the ciphertext and the optional associated data (the account id here, which is not secret but ties the ciphertext to its record), and `decipher.final()` throws if anything was altered, so a failure must be treated as tampering, never ignored. The token stores `iv | tag | ciphertext` in base64url. In my tests the round trip worked, two encryptions of the same text differed, and a wrong key, a wrong associated-data value and a single flipped bit all made decryption throw. In production the key is held by a KMS and rotated, and large data uses a data key encrypted by the KMS (envelope encryption).
+Explain these points:
+
+- GCM gives confidentiality and integrity together.
+- A new random 12-byte IV is made for every message. Reusing an IV under one key breaks GCM.
+- The 16-byte tag authenticates both the ciphertext and the optional associated data. Here that is the account id: not secret, but it ties the ciphertext to its record.
+- `decipher.final()` throws if anything was changed. Treat that failure as tampering; never ignore it.
+- The token stores `iv | tag | ciphertext` in base64url.
+- In my tests, the round trip worked, and two encryptions of the same text differed. A wrong key, a wrong associated-data value, and a single flipped bit all made decryption throw.
+- In production, a KMS holds and rotates the key. Large data uses a data key encrypted by the KMS (envelope encryption).

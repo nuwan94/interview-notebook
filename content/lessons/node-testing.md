@@ -6,21 +6,35 @@ summary: Testing a Node.js API with the built-in node:test runner (test, describ
 tags: [Node.js, Testing, node:test, Mocking, Integration tests, Testcontainers, Contract tests, Backend, Full stack]
 order: 73
 topic: Full stack / Node.js
-updated: 2026-11-18
+updated: 2026-11-26
 subnav: true
 ---
 
-Testing questions in a Node.js interview are about judgement. They ask *what you test at which level, what a mock is and when mocking goes wrong, how you make code testable without a framework, how you test an HTTP API and a database, how you test time and retries without waiting, how you stop tests being flaky, and what you run in CI.* This lesson uses Node's built-in test runner, so every example runs with `node --test` and no packages, and shows the Vitest and Jest equivalents. It builds on [Express testing](lesson:node-express#testing), [testing middleware](lesson:node-express-middleware#testing) and [testing streams](lesson:node-streams#testing). The front end side is in [React performance and testing](lesson:react-performance#testing). Examples use banking transfers. Play the four scenes: what to test where, test doubles, design for testability, and real database tests.
+Testing questions in a Node.js interview test your judgement. Expect questions like these:
+
+- What do you test at which level?
+- What is a mock, and when does mocking go wrong?
+- How do you make code testable without a framework?
+- How do you test an HTTP API and a database?
+- How do you test time and retries without waiting?
+- How do you stop tests being flaky?
+- What do you run in CI?
+
+This lesson uses Node's built-in test runner. Every example runs with `node --test` and no packages. It also shows the Vitest and Jest versions.
+
+It builds on [Express testing](lesson:node-express#testing), [testing middleware](lesson:node-express-middleware#testing) and [testing streams](lesson:node-streams#testing). The front end side is in [React performance and testing](lesson:react-performance#testing). The examples use bank transfers. Play the four scenes: what to test where, test doubles, design for testability, and real database tests.
 
 ```demo
 name: node-test-walk
 ```
 
-> **One sentence to remember:** *Test behaviour through the public interface, pass dependencies in so you can replace the ones you do not control (network, clock, randomness) and use real objects for the rest, run the database tests against the real engine, keep every test independent, and treat a flaky test as a bug.*
+> **One sentence to remember:** *Test behaviour through the public interface, and fake only what you do not control.*
+
+That means the network, the clock and randomness. Pass those in, so a test can replace them, and use real objects for the rest. Run database tests against the real engine. Keep every test independent. Treat a flaky test as a bug.
 
 ## What to test, and where {#why}
 
-A test is worth writing when it can fail for a reason you care about, cheaply. A backend has layers, and each is best tested one way:
+A test is worth writing when it can fail cheaply, for a reason you care about. A backend has layers, and each is best tested in its own way:
 
 | Level | What it covers | Collaborators | Speed | Count |
 | --- | --- | --- | --- | --- |
@@ -30,13 +44,23 @@ A test is worth writing when it can fail for a reason you care about, cheaply. A
 | **contract** | the agreement between two services | stubbed counterpart | fast | per integration |
 | **end to end** | a journey through the deployed system | everything | seconds to minutes | few |
 
-This is the **test pyramid**: many fast tests at the bottom, few slow ones at the top. For services that mostly glue things together (a controller, a repository, a queue), a **testing trophy** shape is also common: fewer isolated unit tests and more integration tests that exercise real wiring. Either way the rule is the same: **the lower the level, the faster and more precise a failure is, the higher the level, the more realistic the test is**. Use both.
+This is the **test pyramid**: many fast tests at the bottom, and a few slow ones at the top.
 
-What *not* to test: the framework (Express already parses JSON), getters and setters, and private functions. Test through the public interface, so refactoring does not break the tests.
+Some services mostly glue parts together, such as a controller, a repository and a queue. For them, a **testing trophy** shape is also common. It has fewer isolated unit tests, and more integration tests that exercise the real wiring.
+
+Either way, the rule is the same. **The lower the level, the faster and more precise a failure is. The higher the level, the more realistic the test is.** Use both.
+
+What *not* to test:
+
+- the framework, because Express already parses JSON;
+- getters and setters;
+- private functions.
+
+Test through the public interface. Then refactoring does not break the tests.
 
 ## The node:test runner {#runner}
 
-Node has a built-in runner and an assertion library. No installation, no configuration:
+Node has a built-in test runner and an assertion library. There is nothing to install or configure:
 
 ```javascript
 import { test, describe, it, before, after, beforeEach, afterEach, mock } from 'node:test';
@@ -72,19 +96,25 @@ node --test --test-reporter=spec     # or dot, tap, junit, lcov
 | TypeScript, JSX | needs a loader or Node's type stripping | built in | needs Babel or `ts-jest` |
 | watch, UI, coverage | basic | very good | good |
 
-Which to pick? `node:test` has no dependencies and starts fast, which suits a service or a library. **Vitest** is the usual choice when you share a toolchain with a Vite and React project and want module mocking and a great watch mode. **Jest** is the incumbent in many codebases. The concepts below are identical in all three, and an interviewer cares that you know them, not the syntax.
+Which should you pick?
+
+- **`node:test`** has no dependencies and starts fast. It suits a service or a library.
+- **Vitest** is the usual choice when you share tools with a Vite and React project. It has module mocking and a great watch mode.
+- **Jest** is already in place in many codebases.
+
+The ideas below are the same in all three. An interviewer cares that you know the ideas, not the syntax.
 
 Useful details:
 
-- Tests in one file run **in order**, test files run **in parallel in separate processes** (so they do not share memory).
-- A test is a promise: return it or `await` it. A test that finishes before its async work is a false pass.
-- `t.mock` (the test context) **restores mocks automatically** when the test ends. Prefer it to the global `mock`.
-- `it.skip`, `it.todo` and `it.only` (with `--test-only`) help while developing. Never commit `only`.
-- Subtests: `await t.test('name', ...)` inside a test, useful for tables of cases and shared setup.
+- Tests in one file run **in order**. Test files run **in parallel, in separate processes**, so they do not share memory.
+- A test is a promise. Return it or `await` it. If a test finishes before its async work does, it passes falsely.
+- `t.mock`, from the test context, **restores mocks automatically** when the test ends. Prefer it to the global `mock`.
+- `it.skip`, `it.todo` and `it.only` (with `--test-only`) help while you develop. Never commit `only`.
+- Subtests: call `await t.test('name', ...)` inside a test. This is useful for tables of cases and shared setup.
 
 ## Test doubles {#doubles}
 
-A **test double** replaces a real collaborator in a test, like a stunt double. Gerard Meszaros' vocabulary is worth knowing because interviews use it:
+A **test double** stands in for a real collaborator in a test, like a stunt double in a film. Interviews use Gerard Meszaros' names for them, so learn them:
 
 | Double | What it does | Use it for |
 | --- | --- | --- |
@@ -94,7 +124,7 @@ A **test double** replaces a real collaborator in a test, like a stunt double. G
 | **mock** | a spy with expectations built in (fails if not used as expected) | when the interaction *is* the behaviour |
 | **fake** | a working, simplified implementation | an in-memory repository, a fake clock, a fake queue |
 
-Tools blur the words (`mock.fn` is a stub, a spy and a mock at once), but the **ideas** differ: a stub is about *inputs* to the code under test, a spy or mock is about its *outputs to others*.
+Tools blur these words. `mock.fn` is a stub, a spy and a mock at once. But the **ideas** differ. A stub is about the *inputs* to the code under test. A spy or mock is about what that code *sends to others*.
 
 ```javascript
 const gateway = { authorise: mock.fn(async () => ({ approved: true })) };   // stub that is also a spy
@@ -104,7 +134,7 @@ gateway.authorise.mock.calls[0].arguments;               // [{ from: 'A', to: 'B
 gateway.authorise.mock.mockImplementation(async () => ({ approved: false })); // change the answer in one test
 ```
 
-`mock.method(object, 'name', impl)` replaces a method on an existing object and restores it afterwards, which suits a logger or `Date`-like global:
+`mock.method(object, 'name', impl)` replaces a method on an existing object, and restores it afterwards. It suits a logger, or a global such as `Date`:
 
 ```javascript
 test('warns on a low balance', (t) => {
@@ -117,7 +147,7 @@ test('warns on a low balance', (t) => {
 
 ### Prefer fakes over mocks for your own code
 
-A fake keeps tests short and readable and lets you test **behaviour across several steps** (transfer, then read the balances) instead of the order of calls:
+A fake keeps tests short and readable. It lets you test **behaviour across several steps**, such as a transfer followed by reading the balances. You no longer test the order of calls.
 
 ```javascript
 // fake-accounts.js: an in-memory fake that really stores and finds data
@@ -144,17 +174,22 @@ export function createFakeAccounts(initial = []) {
 }
 ```
 
-A fake can drift away from the real database (for example, it forgets a unique constraint). Prevent that with **contract tests that run against both** (see [real database tests](#database)).
+A fake can drift away from the real database. For example, it may forget a unique constraint. Prevent that with **contract tests that run against both** (see [real database tests](#database)).
 
 ### Over-mocking
 
-The most common testing mistake. A test that mocks every collaborator and asserts every call sequence:
+This is the most common testing mistake. Picture a test that mocks every collaborator and asserts every call in order. It has three problems:
 
-- repeats the implementation, so it **breaks on every refactor** although behaviour is unchanged,
-- passes while the real wiring is broken (it proved only that you called your mocks),
-- is hard to read.
+- It repeats the implementation. So it **breaks on every refactor**, even when behaviour is unchanged.
+- It passes while the real wiring is broken. It only proved that you called your mocks.
+- It is hard to read.
 
-Rules of thumb: **mock at the edges you do not control** (network calls, the clock, randomness, a payment provider), **use real objects for your own code**, **assert on outcomes** (state, return values, responses) and only assert on calls when the call is itself the requirement ("the gateway is called exactly once", "no gateway call when funds are insufficient").
+Rules of thumb:
+
+- **Mock the edges you do not control**: network calls, the clock, randomness, a payment provider.
+- **Use real objects for your own code.**
+- **Assert on outcomes**: state, return values and responses.
+- Assert on calls only when the call is itself the requirement. Examples: "the gateway is called exactly once", or "no gateway call when funds are insufficient".
 
 ## Design for testability {#design}
 
@@ -171,7 +206,7 @@ export async function transfer(from, to, amount) {
 }
 ```
 
-It needs a database, depends on the real time, and cannot be run twice in parallel without clashes. Instead **pass the dependencies in**, with a factory (or a class constructor):
+This needs a database, and depends on the real time. Two copies cannot run in parallel without clashing. Instead, **pass the dependencies in**, with a factory or a class constructor:
 
 ```javascript
 // transfer-service.js
@@ -206,17 +241,31 @@ export function createTransferService({ accounts, gateway, clock = { now: () => 
 }
 ```
 
-Production passes the real `accounts`, `gateway` and clock in one place (the **composition root**, usually `main.js`), a test passes fakes. This is plain **dependency injection**: no container and no module patching. It is the same idea as constructor injection in Spring, without the framework. Three dependencies that are always worth injecting: **the clock** (`Date.now()`), **randomness and ids** (`randomUUID`), and **I/O clients** (HTTP, database, queue).
+Production passes the real `accounts`, `gateway` and clock, in one place. That place is the **composition root**, usually `main.js`. A test passes fakes.
+
+This is plain **dependency injection**. There is no container and no module patching. It is the same idea as constructor injection in Spring, without the framework.
+
+Three dependencies are always worth injecting:
+
+- **the clock**, meaning `Date.now()`;
+- **randomness and ids**, such as `randomUUID`;
+- **I/O clients**: HTTP, database and queue.
 
 ### Arrange, act, assert
 
-Every test has the same shape:
+Every test has the same three steps:
 
 1. **Arrange**: build the fakes and the data.
 2. **Act**: call the thing under test, once.
 3. **Assert**: check the visible result.
 
-A good test has **one reason to fail**, a **name that states the behaviour** ("rejects a transfer above the balance", not "test2"), and **no logic of its own** (no loops and ifs that need their own tests). **Test data builders** keep the arrange step short and hide the irrelevant fields:
+A good test has:
+
+- **one reason to fail**;
+- a **name that states the behaviour**, such as "rejects a transfer above the balance", not "test2";
+- **no logic of its own**, meaning no loops or ifs that would need their own tests.
+
+**Test data builders** keep the arrange step short, and hide the fields that do not matter:
 
 ```javascript
 const anAccount = (overrides = {}) => ({ id: 'A', balance: 1000, ...overrides });
@@ -226,7 +275,7 @@ const accounts = createFakeAccounts([anAccount({ balance: 500 }), anAccount({ id
 
 ## Unit-testing a service {#unit}
 
-All together. This file passes with `node --test`:
+Here it is all together. This file passes with `node --test`:
 
 ```javascript
 // transfer-service.test.js
@@ -289,13 +338,28 @@ describe('TransferService', () => {
 });
 ```
 
-Points to notice: `beforeEach` gives **every test its own state**, so order does not matter. Errors are asserted with `assert.rejects` and a **matcher object** (`{ code: ... }`), which checks the contract and not the message text. **Table-driven tests** (a loop over cases that creates one `it` each) give one clear failure per case. Money is checked with the fake's state, not by counting calls.
+Points to notice:
 
-Useful assertions: `assert.equal` (strict equality), `assert.deepEqual` (structure), `assert.throws` and `assert.rejects` (errors, sync and async), `assert.match(string, /regex/)`, `assert.ok`. A floating point comparison needs a tolerance, so keep money in integers (cents), as the example does.
+- `beforeEach` gives **every test its own state**, so the order does not matter.
+- Errors are checked with `assert.rejects` and a **matcher object**, such as `{ code: ... }`. This checks the contract, not the message text.
+- **Table-driven tests** loop over cases and create one `it` for each. Each case then fails on its own, with a clear name.
+- Money is checked through the fake's state, not by counting calls.
+
+Useful assertions:
+
+- `assert.equal`, for strict equality;
+- `assert.deepEqual`, for structure;
+- `assert.throws` and `assert.rejects`, for sync and async errors;
+- `assert.match(string, /regex/)`;
+- `assert.ok`.
+
+Comparing floating point numbers needs a tolerance. So keep money in integers (cents), as the example does.
 
 ## Async code, errors, events, streams and time {#async}
 
-**Async functions**: `await` them, and for errors use `assert.rejects`, never a `try`/`catch` that silently passes when nothing is thrown (if the function does not throw, the `catch` assertion never runs and the test passes). Do not use `setTimeout` to wait for something. Wait for the thing itself:
+**Async functions.** `await` them. For errors, use `assert.rejects`. Never use a `try`/`catch` that asserts inside the `catch`. If the function does not throw, that assertion never runs, and the test passes.
+
+Do not use `setTimeout` to wait for something. Wait for the thing itself:
 
 ```javascript
 import { once } from 'node:events';
@@ -308,7 +372,7 @@ test('emits posted when a transfer completes', async () => {
 });
 ```
 
-**Streams**: collect with `for await`, or use `pipeline` and assert on the output (see [testing streams](lesson:node-streams#testing)).
+**Streams.** Collect the output with `for await`, or use `pipeline`, then assert on the result (see [testing streams](lesson:node-streams#testing)).
 
 ```javascript
 const out = [];
@@ -316,7 +380,7 @@ for await (const chunk of Readable.from(['a', 'b', 'c']).pipe(upperCaseTransform
 assert.deepEqual(out, ['A', 'B', 'C']);
 ```
 
-**Time**: a test that really waits for 3 seconds is slow and flaky. Use **fake timers**, which let you move time by hand:
+**Time.** A test that really waits 3 seconds is slow and flaky. Use **fake timers** instead, which let you move time forward by hand:
 
 ```javascript
 // retry.js
@@ -363,16 +427,21 @@ test('retries with exponential backoff, without real waiting', async (t) => {
 });
 ```
 
-`mock.timers` can fake `setTimeout`, `setInterval`, `setImmediate` and `Date` (`enable({ apis: ['Date'], now: 1_700_000_000_000 })`), and `tick(ms)` moves the clock. Fake timers do not flush promise callbacks, so after `tick` you often need `await` or a `setImmediate` turn, as above. When you only need a fixed "now", **inject a clock** instead (as `createTransferService` does): it needs no fake timers at all.
+How fake timers work:
 
-**Do not leave timers or handles open**: a test file that never ends usually has a server, a database pool or a timer that was not closed in `after`.
+- `mock.timers` can fake `setTimeout`, `setInterval`, `setImmediate` and `Date`. For example: `enable({ apis: ['Date'], now: 1_700_000_000_000 })`.
+- `tick(ms)` moves the clock forward.
+- Fake timers do not run promise callbacks for you. So after `tick`, you often need an `await` or a `setImmediate` turn, as above.
+- When you only need a fixed "now", **inject a clock** instead, as `createTransferService` does. Then you need no fake timers at all.
+
+**Do not leave timers or handles open.** If a test file never ends, a server, database pool or timer was usually not closed in `after`.
 
 ## Testing an HTTP API {#http}
 
 Export the app from a function that does **not** call `listen()` (see [Express testing](lesson:node-express#testing)). A test then has two options:
 
-1. **supertest** sends the request to the app in memory (`await request(app).post('/transfers')`). It is concise and common.
-2. **An ephemeral real server** on **port 0** with the built-in `fetch`. No extra package, and it tests real HTTP, including headers and `fetch` behaviour.
+1. **supertest** sends the request to the app in memory: `await request(app).post('/transfers')`. It is short and common.
+2. **A temporary real server** on **port 0**, called with the built-in `fetch`. It needs no extra package, and it tests real HTTP, including headers and `fetch` behaviour.
 
 ```javascript
 import { describe, it, before, after } from 'node:test';
@@ -405,15 +474,25 @@ describe('GET /accounts/:id', () => {
 });
 ```
 
-(`createApp` returns an Express app, `app.listen(0)` returns the Node server. The pattern was run with a plain `http.createServer` handler, which behaves the same.)
+`createApp` returns an Express app, and `app.listen(0)` returns the Node server. The pattern was run with a plain `http.createServer` handler, which behaves the same.
 
-What an HTTP-level test should cover that a unit test cannot: **status codes and the error format** (including the central error handler), **validation** (bad bodies give 400 or 422 with details), **authentication and authorisation** (no token gives 401, wrong role gives 403), **headers** (`Location`, `Cache-Control`, `Retry-After`), **content negotiation** and body limits. Replace the *service* with a fake or stub when you test the route, and the *route* is exercised with the real middleware stack.
+An HTTP-level test should cover what a unit test cannot:
 
-**Port 0** is important: a fixed port such as 3000 makes two test files running in parallel fail with `EADDRINUSE`.
+- **status codes and the error format**, including the central error handler;
+- **validation**, where bad bodies get 400 or 422 with details;
+- **authentication and authorisation**, where no token gets 401 and the wrong role gets 403;
+- **headers**, such as `Location`, `Cache-Control` and `Retry-After`;
+- **content negotiation** and body limits.
+
+When you test the route, replace the *service* with a fake or a stub. The *route* then runs with the real middleware stack.
+
+**Port 0** matters. With a fixed port such as 3000, two test files running in parallel fail with `EADDRINUSE`.
 
 ## Testing against a real database {#database}
 
-A repository test against **SQLite in memory** or a mocked `pg` client can pass while the real PostgreSQL query fails: different SQL dialect, different types, no `FOR UPDATE`, no `ON CONFLICT`, no JSONB, no real constraints. The advice is to **test against the same engine as production**. **Testcontainers** starts a throwaway container (PostgreSQL, Redis, Kafka) for the test run and removes it afterwards:
+A repository test can pass against **SQLite in memory**, or a mocked `pg` client, while the real PostgreSQL query fails. The SQL dialect and the types differ. There is no `FOR UPDATE`, no `ON CONFLICT`, no JSONB, and no real constraints.
+
+So **test against the same engine as production**. **Testcontainers** starts a throwaway container, such as PostgreSQL, Redis or Kafka, for the test run. It removes it afterwards:
 
 ```javascript
 // repository.test.js (needs Docker and the packages testcontainers and pg)
@@ -451,14 +530,17 @@ describe('AccountRepository (real PostgreSQL)', () => {
 
 Notes:
 
-- **Start the container once** (per file or per run) and apply the migrations, because starting one per test is far too slow. Then give each test a **clean state**: truncate the tables (simple, works with any code), or wrap the test in a **transaction that is rolled back** (fast, but the code under test must use the same connection).
-- A global setup that starts one container for the whole run is faster still. Make each test file use its own database or schema if files run in parallel.
-- Tests that run Docker need Docker in CI (GitHub Actions and most runners have it). Mark them as a separate step or folder (`test:integration`) so developers can still run unit tests alone.
-- **Migrations** are code: running them in the tests catches a broken migration before production.
+- **Start the container once**, per file or per run, and apply the migrations. Starting one per test is far too slow.
+- Then give each test a **clean state**. There are two ways:
+  - truncate the tables, which is simple and works with any code;
+  - wrap the test in a **transaction that is rolled back**, which is fast, but the code under test must use the same connection.
+- One global setup that starts one container for the whole run is faster still. If files run in parallel, give each test file its own database or schema.
+- Tests that run Docker need Docker in CI. GitHub Actions and most runners have it. Put them in a separate step or folder, such as `test:integration`, so developers can still run the unit tests alone.
+- **Migrations** are code. Running them in the tests catches a broken migration before production.
 
 ### Contract tests for fakes
 
-To stop the in-memory fake from drifting away from the real repository, write the tests **once** and run them against both:
+The in-memory fake must not drift away from the real repository. So write the tests **once**, and run them against both:
 
 ```javascript
 export function accountRepositoryContract(name, makeRepo) {
@@ -478,39 +560,46 @@ The fast tests then rely on a fake that is **proven to behave like the real thin
 
 ## Mocking modules {#modules}
 
-In Jest and Vitest you can replace an imported module (`vi.mock('./gateway.js')`). In ES modules, imports are bound at load time, so this needs support from the runner. Node has `mock.module()` (experimental, behind `--experimental-test-module-mocks`), and its use is more restricted than in Jest.
+Jest and Vitest can replace an imported module: `vi.mock('./gateway.js')`. In ES modules, imports are bound when the module loads, so this needs support from the runner. Node has `mock.module()`. It is experimental, behind `--experimental-test-module-mocks`, and more limited than Jest's.
 
 ```javascript
 // Vitest
 vi.mock('./gateway.js', () => ({ authorise: vi.fn().mockResolvedValue({ approved: true }) }));
 ```
 
-Prefer **injection over module mocking**: if a function takes the gateway as an argument or from a factory, no patching is needed and the test is plain code. Reserve module mocks for code you cannot change (a third-party SDK used deep inside) and for process-wide things such as `fs` or `child_process`, ideally wrapped in your own small module so that only one place is mocked.
+Prefer **injection over module mocking**. If a function receives the gateway as an argument, or from a factory, nothing needs patching. The test is plain code.
 
-For HTTP calls to other services, an alternative to mocking your client is **intercepting the network**: `nock` or **MSW** (Mock Service Worker) fake the server, and your real client code, including its serialisation and retries, runs unchanged. `undici`'s `MockAgent` does the same for `fetch`.
+Keep module mocks for two cases:
+
+- code you cannot change, such as a third-party SDK used deep inside;
+- process-wide modules, such as `fs` or `child_process`.
+
+Ideally, wrap these in your own small module, so only one place is mocked.
+
+For HTTP calls to other services, you can **intercept the network** instead of mocking your client. `nock` or **MSW** (Mock Service Worker) fake the server. Your real client code then runs unchanged, including its serialisation and retries. `undici`'s `MockAgent` does the same for `fetch`.
 
 ## Contract and end-to-end tests {#contract}
 
-Services agree on message shapes. A **consumer-driven contract test** (Pact) catches a breaking change before deployment:
+Services agree on the shape of their messages. A **consumer-driven contract test** (Pact) catches a breaking change before deployment:
 
-1. The **consumer** (the front end or another service) writes a test saying "when I call `GET /accounts/A`, I need `id` and `balance` as a number". Running it against a Pact mock produces a **contract file**.
-2. The **provider** runs that contract against its real code in CI (provider verification) and fails if it no longer returns those fields.
+1. The **consumer**, the front end or another service, writes a test. It says "when I call `GET /accounts/A`, I need `id`, and `balance` as a number". Running it against a Pact mock produces a **contract file**.
+2. The **provider** runs that contract against its real code in CI. This is provider verification. It fails if the provider no longer returns those fields.
 
-It is cheaper than running both services together, and it finds "I renamed a field" the moment it happens. For events, the same idea applies to message schemas (JSON Schema or Avro, with compatibility rules in the schema registry). Compare [microservices communication](lesson:microservice-communication#contracts).
+This is cheaper than running both services together. It finds "I renamed a field" the moment it happens. For events, the same idea applies to message schemas, such as JSON Schema or Avro, with compatibility rules in the schema registry. Compare [microservices communication](lesson:microservice-communication#contracts).
 
-**End-to-end tests** (Playwright, Cypress, or an API-level suite against a staging environment) cover a few critical journeys only: log in, make a transfer, see it in the history. They are slow, depend on every system, and fail for reasons unrelated to your change, so keep them **few and stable**, and let the lower levels carry most of the coverage.
+**End-to-end tests** cover a few critical journeys only: log in, make a transfer, see it in the history. Tools include Playwright, Cypress, or an API-level suite against a staging environment. These tests are slow, depend on every system, and fail for reasons unrelated to your change. So keep them **few and stable**, and let the lower levels carry most of the coverage.
 
 ## Coverage, snapshots, property and mutation tests {#quality}
 
-- **Coverage** (`--experimental-test-coverage`, `c8`, Vitest `--coverage`) shows which lines **ran**, not whether they were **checked**. It finds untested code, but 100% coverage can still contain tests with no assertions. Use it as a floor (for example 80% on new code), not a target to game.
-- **Snapshot tests** store output (a response body, a rendered string) and compare it on later runs. They are quick for large stable output but easy to approve without reading. Keep snapshots small and review their diffs.
-- **Property-based testing** (**fast-check**) states a rule and the library tries hundreds of generated inputs and **shrinks** a failure to a minimal example. Good for rules such as "transfer then reverse leaves the balances unchanged" or "serialising then parsing returns the same value".
-- **Mutation testing** (**Stryker**) changes your code (`>` becomes `>=`, `+` becomes `-`) and checks that a test fails. Surviving mutants show tests that run the code but do not check it. It is slow, so run it on important modules or nightly.
-- **Linting tests**: `eslint-plugin-jest` or Vitest's equivalent catch `only`, missing assertions and duplicated titles.
+- **Coverage** (`--experimental-test-coverage`, `c8`, Vitest `--coverage`) shows which lines **ran**. It does not show whether they were **checked**. It finds untested code, but a test with no assertions still counts. Use it as a floor, for example 80% on new code. Do not treat it as a target to game.
+- **Snapshot tests** store output, such as a response body or a rendered string, and compare it on later runs. They are quick for large, stable output. But they are easy to approve without reading. Keep snapshots small, and review their diffs.
+- **Property-based testing** (**fast-check**) states a rule. The library tries hundreds of generated inputs. When one fails, it **shrinks** it to the smallest failing example. It suits rules such as "a transfer then its reversal leaves the balances unchanged", or "serialising then parsing returns the same value".
+- **Mutation testing** (**Stryker**) changes your code, for example `>` into `>=`, or `+` into `-`. Then it checks that some test fails. A change that no test notices is a "surviving mutant". It shows tests that run the code but do not check it. It is slow, so run it on important modules, or nightly.
+- **Linting tests.** `eslint-plugin-jest`, or Vitest's equivalent, catches `only`, missing assertions and duplicated titles.
 
 ## Flaky tests {#flaky}
 
-A **flaky test** passes and fails on the same code. It destroys trust, so people re-run and ignore red builds. Typical causes and cures:
+A **flaky test** passes and fails on the same code. It destroys trust: people re-run builds and ignore red ones. Typical causes and cures:
 
 | Cause | Cure |
 | --- | --- |
@@ -524,18 +613,22 @@ A **flaky test** passes and fails on the same code. It destroys trust, so people
 | test order and parallel runs | independent data (unique ids), isolated databases |
 | slow CI machines | generous timeouts only as a last step, never hide a race |
 
-When a test is flaky: **reproduce it** (run it in a loop, with a CPU limit), find the cause, and fix it. If you cannot fix it now, **quarantine** it (skip with a ticket) so it does not block everyone, but do not delete the signal.
+When a test is flaky:
+
+1. **Reproduce it.** Run it in a loop, with a CPU limit.
+2. Find the cause, and fix it.
+3. If you cannot fix it now, **quarantine** it: skip it, with a ticket. Then it does not block everyone. But do not delete the signal.
 
 ## Tests in CI {#ci}
 
-Run on every pull request: lint, unit tests, integration tests (with Docker), then build. Typical choices:
+On every pull request, run lint, unit tests, integration tests (with Docker), then the build. Typical choices:
 
-- **Fast feedback first**: unit tests before integration tests, and fail fast.
-- **Parallelism**: the runner runs files in parallel (`--test-concurrency`). Split slow suites across CI jobs (sharding).
-- **Deterministic environment**: pin the Node version (`.nvmrc`), use `pnpm install --frozen-lockfile`, set `TZ=UTC`.
-- **Reports**: JUnit XML for the CI dashboard (`--test-reporter=junit`), and a coverage report.
-- **A quality gate**: tests must pass and coverage on new code must not drop. See [CI/CD fundamentals](lesson:cicd-fundamentals#gates).
-- **Smoke tests after deploy** and the contract verification step before it.
+- **Fast feedback first.** Run unit tests before integration tests, and fail fast.
+- **Parallelism.** The runner runs files in parallel (`--test-concurrency`). Split slow suites across CI jobs, which is called sharding.
+- **A deterministic environment.** Pin the Node version (`.nvmrc`), use `pnpm install --frozen-lockfile`, and set `TZ=UTC`.
+- **Reports.** Produce JUnit XML for the CI dashboard (`--test-reporter=junit`), and a coverage report.
+- **A quality gate.** Tests must pass, and coverage on new code must not drop. See [CI/CD fundamentals](lesson:cicd-fundamentals#gates).
+- **Smoke tests after deploy**, and the contract verification step before it.
 
 ## Common mistakes {#mistakes}
 
@@ -607,67 +700,172 @@ Try it in the lab: [Testing a Node service in layers](lab:node-testing-layers).
 
 ### [basic] What is the test pyramid and why does the shape matter? {#pyramid-q}
 
-Many fast, cheap unit tests at the bottom, fewer integration tests (HTTP, database) in the middle, and a few slow end-to-end tests at the top. Lower tests fail fast and point at the exact function, higher tests are more realistic but slower, more fragile and harder to diagnose. An inverted pyramid (mostly end-to-end tests) gives a slow, flaky suite. For glue-heavy services a "trophy" with more integration tests is also reasonable, but the principle is the same: choose the cheapest level that can catch the bug.
+The pyramid has many fast, cheap unit tests at the bottom. In the middle are fewer integration tests, for HTTP and the database. At the top are a few slow end-to-end tests.
+
+Lower tests fail fast, and point at the exact function. Higher tests are more realistic, but slower, more fragile and harder to diagnose. An upside-down pyramid, with mostly end-to-end tests, gives a slow and flaky suite.
+
+For services that mostly glue parts together, a "trophy" with more integration tests is also reasonable. The principle stays the same: choose the cheapest level that can catch the bug.
 
 ### [basic] What is the difference between a stub, a spy, a mock and a fake? {#doubles-q}
 
-A stub returns canned answers so the code under test can run. A spy records how it was called (count, arguments). A mock is a spy with expectations that fail the test if they are not met. A fake is a working but simplified implementation, such as an in-memory repository. Stubs are about inputs, spies and mocks are about outputs to other objects, and fakes support behaviour tests over several steps. Tools such as `mock.fn` or `vi.fn` combine all three.
+- A stub returns canned answers, so the code under test can run.
+- A spy records how it was called: the count and the arguments.
+- A mock is a spy with expectations. It fails the test if they are not met.
+- A fake is a working but simplified implementation, such as an in-memory repository.
+
+Stubs are about inputs. Spies and mocks are about what the code sends to other objects. Fakes support behaviour tests over several steps. Tools such as `mock.fn` or `vi.fn` combine all three.
 
 ### [basic] How do you test an async function and an error it throws? {#async-q}
 
-Make the test `async` (or return the promise) and `await` the call, so the runner waits. For an error use `await assert.rejects(promise, { code: 'X' })` or `expect(promise).rejects`. A `try`/`catch` that asserts inside the `catch` is a trap, because when the function wrongly succeeds the assertion never runs and the test passes. Do not wait with `setTimeout`: wait for the event or the promise itself.
+Make the test `async`, or return the promise, and `await` the call. Then the runner waits for it.
+
+For an error, use `await assert.rejects(promise, { code: 'X' })`, or `expect(promise).rejects`.
+
+A `try`/`catch` that asserts inside the `catch` is a trap. If the function wrongly succeeds, the assertion never runs, and the test passes.
+
+Do not wait with `setTimeout`. Wait for the event or the promise itself.
 
 ### [basic] How do you run Node's built-in tests and what do they give you? {#runner-q}
 
-`node --test` finds `*.test.js` files and runs them, with `describe`, `it`, hooks, subtests, `node:assert`, mocking (`mock.fn`, `mock.method`, `mock.timers`), watch mode (`--watch`), name filtering and coverage (`--experimental-test-coverage`). Files run in parallel processes, tests inside a file run in order. It has no dependencies, which is good for services and libraries, while Vitest adds a richer watch mode, module mocking and TypeScript support.
+`node --test` finds `*.test.js` files and runs them. It gives you:
+
+- `describe`, `it`, hooks and subtests;
+- `node:assert`;
+- mocking with `mock.fn`, `mock.method` and `mock.timers`;
+- watch mode (`--watch`), name filtering, and coverage (`--experimental-test-coverage`).
+
+Files run in parallel processes, and tests inside a file run in order. It has no dependencies, which is good for services and libraries. Vitest adds a richer watch mode, module mocking and TypeScript support.
 
 ### [basic] Why should tests be independent and how do you achieve it? {#independent-q}
 
-So they can run alone, in any order and in parallel, and a failure points at one cause. Create the data each test needs in the test or in `beforeEach`, never rely on another test's leftovers, use unique ids, use port 0 for servers, reset fakes and databases between tests, and avoid mutable module-level state. Shared state is the main cause of flaky tests.
+So they can run alone, in any order and in parallel, and so a failure points at one cause.
+
+To achieve it:
+
+- create the data each test needs, in the test or in `beforeEach`;
+- never rely on what another test left behind;
+- use unique ids;
+- use port 0 for servers;
+- reset fakes and databases between tests;
+- avoid module-level state that changes.
+
+Shared state is the main cause of flaky tests.
 
 ### [intermediate] What is over-mocking and what is the alternative? {#overmock-q}
 
-Mocking every collaborator and asserting each call repeats the implementation. The test breaks on refactors that keep behaviour, passes while the real wiring is broken, and is hard to read. Mock only what you do not control (network, clock, randomness, a payment provider), use real objects or fakes for your own code, and assert on outcomes (return values, stored state, HTTP response). Assert on a call only when the call is the requirement, for example "the gateway is not called when funds are insufficient".
+Over-mocking means mocking every collaborator and asserting each call. It repeats the implementation. The test breaks on refactors that keep the behaviour. It passes while the real wiring is broken. And it is hard to read.
+
+The alternative:
+
+- mock only what you do not control: the network, the clock, randomness, a payment provider;
+- use real objects or fakes for your own code;
+- assert on outcomes: return values, stored state, the HTTP response.
+
+Assert on a call only when the call is the requirement. For example: "the gateway is not called when funds are insufficient".
 
 ### [intermediate] How do you make Node.js code testable without a mocking framework? {#di-q}
 
-Pass dependencies in instead of importing and creating them inside: a factory such as `createTransferService({ accounts, gateway, clock })`, or a constructor. Production wires real implementations in one composition root, tests pass fakes. Inject the clock, id generation and I/O clients. This avoids module patching, keeps tests plain code, and is the same idea as constructor injection in Spring.
+Pass dependencies in, instead of importing and creating them inside. Use a factory such as `createTransferService({ accounts, gateway, clock })`, or a constructor.
+
+Production wires the real implementations in one composition root. Tests pass fakes. Inject the clock, id generation and I/O clients.
+
+This avoids module patching, and keeps tests as plain code. It is the same idea as constructor injection in Spring.
 
 ### [intermediate] How do you test code that uses timers, retries or `Date.now()` without waiting? {#time-q}
 
-Either inject a clock (`{ now: () => fixed }`) so no timers are involved, or use fake timers: `mock.timers.enable({ apis: ['setTimeout'] })` and `tick(ms)` (Vitest `vi.useFakeTimers` and `advanceTimersByTime`). With fake timers, promise callbacks still need a turn of the event loop (`await` or `setImmediate`) after each tick. The test then runs in milliseconds and is deterministic. Real sleeps make tests slow and flaky.
+There are two ways.
+
+1. Inject a clock, such as `{ now: () => fixed }`. Then no timers are involved.
+2. Use fake timers: `mock.timers.enable({ apis: ['setTimeout'] })` and `tick(ms)`. In Vitest, these are `vi.useFakeTimers` and `advanceTimersByTime`.
+
+With fake timers, promise callbacks still need a turn of the event loop after each tick, such as an `await` or `setImmediate`.
+
+Either way, the test runs in milliseconds and gives the same result every time. Real sleeps make tests slow and flaky.
 
 ### [intermediate] How do you test an Express route? What should an HTTP-level test check? {#http-q}
 
-Export the app from a function that does not call `listen`, then use supertest, or start `app.listen(0)` and call it with `fetch`. Replace the service with a fake or stub so the test covers the route and the real middleware: status codes, error format from the central handler, validation failures (400 or 422), authentication and authorisation (401, 403), headers such as `Location`, and body limits. Business rules belong in the unit tests of the service.
+Export the app from a function that does not call `listen`. Then either use supertest, or start `app.listen(0)` and call it with `fetch`.
+
+Replace the service with a fake or a stub. The test then covers the route and the real middleware. Check:
+
+- status codes, and the error format from the central handler;
+- validation failures (400 or 422);
+- authentication and authorisation (401, 403);
+- headers such as `Location`;
+- body limits.
+
+Business rules belong in the unit tests of the service.
 
 ### [intermediate] Why is SQLite or a mocked client a poor substitute for the database in tests, and what do you use? {#realdb-q}
 
-The SQL dialect, types, constraints, locking and features (JSONB, `ON CONFLICT`, `FOR UPDATE`) differ, so tests pass while production queries fail, and a mocked client proves only that you called it. Use the production engine in a throwaway container with Testcontainers, apply the real migrations once, and give each test a clean state by truncating tables or rolling back a transaction. It is slower than a unit test, so keep these tests for repositories and queries.
+The SQL dialect, types, constraints, locking and features all differ. JSONB, `ON CONFLICT` and `FOR UPDATE` are examples. So tests pass while production queries fail. A mocked client only proves that you called it.
+
+Instead, run the production engine in a throwaway container with Testcontainers. Apply the real migrations once. Give each test a clean state, by truncating tables or rolling back a transaction.
+
+This is slower than a unit test. So keep these tests for repositories and queries.
 
 ### [intermediate] How do you keep an in-memory fake consistent with the real repository? {#fake-contract-q}
 
-Write the repository tests once as a shared contract function that takes a factory (`accountRepositoryContract('fake', makeFake)`), and run it against the fake and against the real PostgreSQL repository. Whenever a behaviour is added or found wrong, it is added to the contract and both must pass. The service tests then use a fake that is proven to act like the real one.
+Write the repository tests once, as a shared contract function that takes a factory: `accountRepositoryContract('fake', makeFake)`. Run it against the fake, and against the real PostgreSQL repository.
+
+When you add a behaviour, or find one wrong, add it to the contract. Both must pass. The service tests then use a fake that is proven to act like the real one.
 
 ### [intermediate] What causes flaky tests and how do you fix them? {#flaky-q}
 
-Shared state and order dependence, real time, sleeps, fixed ports and files, randomness, unawaited promises, external services, and races on slow machines. Fix the cause: isolate state, inject the clock, wait for events and conditions instead of sleeping, use port 0 and temporary directories, await everything, and replace external services with fakes or containers. Reproduce by running the test in a loop, quarantine it with a ticket if the fix is not immediate, and never normalise re-running red builds.
+Common causes:
+
+- shared state, and tests that depend on order;
+- real time and sleeps;
+- fixed ports and files;
+- randomness;
+- unawaited promises;
+- external services;
+- races on slow machines.
+
+Fix the cause. Isolate state, and inject the clock. Wait for events and conditions instead of sleeping. Use port 0 and temporary directories. Await everything. Replace external services with fakes or containers.
+
+To reproduce one, run the test in a loop. If you cannot fix it at once, quarantine it with a ticket. Never let re-running red builds become normal.
 
 ### [intermediate] What is a consumer-driven contract test and when is it better than an end-to-end test? {#contract-q}
 
-The consumer records what it needs from the provider (paths, fields, types) in a contract. The provider runs that contract against its real code in CI and fails if a change would break the consumer. It catches breaking API changes early, runs fast, and needs neither service deployed, so it is better than an end-to-end test for the question "do these two services still agree?". End-to-end tests are kept for a few critical journeys.
+The consumer records, in a contract, what it needs from the provider: paths, fields and types. The provider runs that contract against its real code in CI. It fails if a change would break the consumer.
+
+It catches breaking API changes early, runs fast, and needs neither service deployed. So for the question "do these two services still agree?", it beats an end-to-end test. Keep end-to-end tests for a few critical journeys.
 
 ### [deep] What does code coverage tell you and what does it not? {#coverage-q}
 
-It tells you which lines or branches ran during the tests, so it reveals untested code. It does not tell you whether the behaviour was checked: a test with no assertions gives full coverage. Use it as a minimum (for example on new code) and complement it with mutation testing (Stryker), which changes the code and shows which changes no test notices, so it measures the quality of the assertions. Chasing 100% leads to tests that check implementation details.
+It tells you which lines or branches ran during the tests. So it reveals untested code.
+
+It does not tell you whether the behaviour was checked. A test with no assertions still gives full coverage.
+
+Use coverage as a minimum, for example on new code. Add mutation testing with Stryker. It changes the code, and shows which changes no test notices. So it measures the quality of the assertions.
+
+Chasing 100% leads to tests that check implementation details.
 
 ### [deep] How would you design the test strategy for a Node.js payments service? {#strategy-q}
 
-Domain rules (limits, fees, idempotency, state transitions) as unit tests with fakes and a fixed clock, including table-driven and property-based tests for money arithmetic. Repository tests against a real PostgreSQL with Testcontainers and the real migrations, including constraint and concurrency cases (unique idempotency key, `FOR UPDATE`). HTTP tests for validation, authentication and the error format. Contract tests with the front end and with the payment gateway (or MSW stubs for the provider's sandbox responses). A handful of end-to-end tests for login and a transfer. In CI: unit tests first, integration tests in parallel jobs, coverage gate on new code, mutation tests nightly on the domain, and a smoke test after each deployment.
+Use each level for what it does best:
+
+- **Domain rules** such as limits, fees, idempotency and state changes: unit tests with fakes and a fixed clock. Add table-driven and property-based tests for money arithmetic.
+- **Repositories**: tests against real PostgreSQL with Testcontainers and the real migrations. Include constraint and concurrency cases, such as a unique idempotency key and `FOR UPDATE`.
+- **HTTP**: tests for validation, authentication and the error format.
+- **Contracts**: with the front end, and with the payment gateway. MSW can stub the provider's sandbox responses.
+- **End to end**: a handful of tests for login and a transfer.
+
+In CI, run unit tests first, then integration tests in parallel jobs. Add a coverage gate on new code, nightly mutation tests on the domain, and a smoke test after each deployment.
 
 ### [deep] When is mocking modules acceptable, and what are the drawbacks? {#module-mock-q}
 
-When you cannot inject the dependency: a third-party SDK used deep in the code, or process-wide modules such as `fs` and `child_process`. The drawbacks are tight coupling to import paths and module internals, differing support in ES modules (Node's `mock.module` is experimental, `vi.mock` is hoisted), hidden global state between tests if mocks are not reset, and tests that pass although the real module behaves differently. Prefer injection, wrap the third-party module in your own thin adapter, and mock that adapter or intercept the network with MSW or nock instead.
+It is acceptable when you cannot inject the dependency. Examples are a third-party SDK used deep in the code, or process-wide modules such as `fs` and `child_process`.
+
+The drawbacks:
+
+- tight coupling to import paths and module internals;
+- uneven support in ES modules: Node's `mock.module` is experimental, and `vi.mock` is hoisted;
+- hidden global state between tests, if mocks are not reset;
+- tests that pass although the real module behaves differently.
+
+Prefer injection. Wrap the third-party module in your own thin adapter, and mock that adapter. Or intercept the network with MSW or nock instead.
 
 ### [coding] Write unit tests with `node:test` for a `transfer` service that depends on `accounts` and `gateway`: success, insufficient funds without a gateway call, idempotent replay and invalid amounts. {#coding-service}
 
@@ -721,7 +919,13 @@ describe('TransferService', () => {
 });
 ```
 
-Each test builds fresh fakes in `beforeEach`, so they are independent. The service gets a fake repository, a stubbed gateway that doubles as a spy, and a fixed clock. Outcomes are checked through the fake's state, and the gateway call count is asserted only where the call is the requirement. The table-driven loop produces one test per invalid value.
+Explain these points:
+
+- Each test builds fresh fakes in `beforeEach`, so the tests are independent.
+- The service gets a fake repository, a stubbed gateway that also works as a spy, and a fixed clock.
+- Outcomes are checked through the fake's state.
+- The gateway call count is checked only where the call is the requirement.
+- The table-driven loop creates one test for each invalid value.
 
 ### [coding] Test `withRetry(fn, { attempts, delayMs })` (exponential backoff) without waiting for real time. Cover success after two failures and giving up. {#coding-retry}
 
@@ -766,7 +970,13 @@ test('gives up after the last attempt and throws the last error', async (t) => {
 });
 ```
 
-`t.mock.timers` fakes `setTimeout` and is restored when the test ends. `tick` moves time, and a turn of the event loop lets the promise callbacks run before the next assertion. In the second test the rejection handler is attached early, so an unhandled rejection is never reported. The whole file runs in a few milliseconds instead of seconds.
+Explain these points:
+
+- `t.mock.timers` fakes `setTimeout`, and is restored when the test ends.
+- `tick` moves time forward.
+- A turn of the event loop lets the promise callbacks run before the next assertion.
+- In the second test, the rejection handler is attached early. So Node never reports an unhandled rejection.
+- The whole file runs in a few milliseconds instead of seconds.
 
 ### [coding] Write an HTTP integration test that starts the app on a random port, calls it with `fetch`, and checks a 200 response and a 404 with the error format. {#coding-http}
 
@@ -804,4 +1014,9 @@ describe('GET /accounts/:id', () => {
 });
 ```
 
-The app comes from a factory with its repository injected, so the test needs no database and no patching. Port 0 lets many test files run in parallel without `EADDRINUSE`. The server is started in `before` and closed in `after`, and the test uses real HTTP, so headers, status codes and JSON serialisation are all exercised.
+Explain these points:
+
+- The app comes from a factory, with its repository injected. So the test needs no database and no patching.
+- Port 0 lets many test files run in parallel without `EADDRINUSE`.
+- The server starts in `before` and closes in `after`.
+- The test uses real HTTP. So headers, status codes and JSON serialisation are all exercised.

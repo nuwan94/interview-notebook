@@ -6,21 +6,37 @@ summary: Building REST APIs with Express on Node.js, the middleware chain and or
 tags: [Express, Node.js, REST, Middleware, Validation, CORS, JWT, supertest, Backend, Full stack]
 order: 70
 topic: Full stack / Node.js
-updated: 2026-11-18
+updated: 2026-11-26
 subnav: true
 ---
 
-Express questions test whether you can build a real API, not just a hello world. They ask *what middleware is and why order matters, how routing works, how you validate input, how errors in async code reach the error handler, what CORS and a preflight request are, how you authenticate with a JWT, how you structure a service, and how you test it.* This lesson builds on the [Node.js runtime](lesson:node-runtime#core) and on [REST API design](lesson:rest-api-design#resources), which covers resource naming, idempotency, pagination and versioning in detail. Examples are TypeScript-style JavaScript with banking endpoints. Play the four scenes: the middleware pipeline, validation and errors, CORS and authentication, and layers and testing.
+Express questions test whether you can build a real API, not just a hello world. Interviewers ask:
+
+- What is middleware, and why does order matter?
+- How does routing work?
+- How do you validate input?
+- How do errors in async code reach the error handler?
+- What are CORS and a preflight request?
+- How do you authenticate with a JWT?
+- How do you structure a service, and how do you test it?
+
+This lesson builds on the [Node.js runtime](lesson:node-runtime#core) and on [REST API design](lesson:rest-api-design#resources), which covers resource naming, idempotency, pagination and versioning in detail. The examples are TypeScript-style JavaScript with banking endpoints.
+
+The demo has four scenes: the middleware pipeline, validation and errors, CORS and authentication, and layers and testing.
 
 ```demo
 name: express-walk
 ```
 
-> **One sentence to remember:** *An Express app is an ordered chain of middleware: put security, parsing and auth before the routes, validate every input, route all errors to one error handler, and keep HTTP code thin so the business rules are testable.*
+> **One sentence to remember:** *An Express app is an ordered chain of middleware, and order is design.*
+
+Put security, parsing and authentication before the routes. Validate every input. Send all errors to one error handler. Keep HTTP code thin, so the business rules are easy to test.
 
 ## What Express is {#what}
 
-**Express** is a minimal web framework for Node.js on top of the built-in `http` module. It gives you **routing**, **middleware** and helpers for the request and response, and nothing else: no ORM, no validation, no dependency injection. You choose those libraries yourself. That freedom is why Express is everywhere, and why a project needs conventions.
+**Express** is a minimal web framework for Node.js, on top of the built-in `http` module. It gives you **routing**, **middleware** and helpers for the request and response. Nothing else: no ORM, no validation, no dependency injection. You choose those libraries yourself.
+
+That freedom is why Express is everywhere. It is also why a project needs conventions.
 
 ```js
 import express from 'express';
@@ -39,9 +55,21 @@ app.get('/accounts/:id', async (req, res) => {
 app.listen(3000);
 ```
 
-**Express 5** is the current major version (Node 18+). The main changes from 4: **rejected promises and thrown errors in async handlers go to the error handler automatically**, path syntax is stricter (`/*` becomes `/*splat`), `req.body` is `undefined` unless a body parser ran, and some removed deprecated methods. Many existing projects still run 4, so know both.
+**Express 5** is the current major version (Node 18+). The main changes from 4:
 
-**Alternatives:** **Fastify** (faster, built-in schema validation and serialisation, plugin system), **NestJS** (Angular-style, decorators, dependency injection, modules, runs on Express or Fastify, closest to Spring), **Koa** and **Hono** (small, modern), and meta-frameworks (Next.js route handlers) for full-stack apps.
+- **Rejected promises and thrown errors in async handlers go to the error handler automatically.**
+- The path syntax is stricter: `/*` becomes `/*splat`.
+- `req.body` is `undefined` unless a body parser ran.
+- Some deprecated methods were removed.
+
+Many existing projects still run Express 4, so know both.
+
+**Alternatives:**
+
+- **Fastify**: faster, with built-in schema validation and serialisation, and a plugin system.
+- **NestJS**: Angular-style, with decorators, dependency injection and modules. It runs on Express or Fastify, and is the closest to Spring.
+- **Koa** and **Hono**: small and modern.
+- Meta-frameworks (Next.js route handlers) for full-stack apps.
 
 ## Middleware {#middleware}
 
@@ -51,7 +79,7 @@ app.listen(3000);
 2. **end** the response (`res.status(401).json(...)`),
 3. **pass on** with `next()`, or pass an error with `next(err)`.
 
-The first scene shows the chain. They run **in the order registered**, so order is design.
+The first scene shows the chain. Middleware runs **in the order it was registered**, so order is design.
 
 ```js
 app.use(helmet());                       // 1. security headers
@@ -66,9 +94,20 @@ app.use(notFound);                       // 8. unmatched request -> 404
 app.use(errorHandler);                   // 9. errors, always last
 ```
 
-Types of middleware: **application-level** (`app.use`), **router-level** (`router.use`), **route-level** (passed to one route: `app.post('/x', authenticate, handler)`), **built-in** (`express.json`, `express.static`), **third-party** (`cors`, `helmet`, `morgan`, `compression`), and **error-handling** (four arguments).
+Kinds of middleware:
 
-Mistakes: forgetting `next()` or a response (the request **hangs**), calling `next()` **and** sending a response (error "headers already sent"), and registering a parser **after** the routes that need it.
+- **application-level**: `app.use`,
+- **router-level**: `router.use`,
+- **route-level**: passed to one route, as in `app.post('/x', authenticate, handler)`,
+- **built-in**: `express.json`, `express.static`,
+- **third-party**: `cors`, `helmet`, `morgan`, `compression`,
+- **error-handling**: with four arguments.
+
+Common mistakes:
+
+- forgetting both `next()` and a response: the request **hangs**,
+- calling `next()` **and** sending a response: the error "headers already sent",
+- registering a parser **after** the routes that need it.
 
 ```js
 // Writing your own: log how long each request takes
@@ -84,7 +123,7 @@ function timing(req, res, next) {
 
 ## Routing {#routing}
 
-Routes map a **method and a path** to handlers. Group them with a **`Router`**, mounted under a prefix, so each feature owns its file.
+A route maps a **method and a path** to handlers. Group routes with a **`Router`**, mounted under a prefix, so each feature owns its file.
 
 ```js
 // routes/accounts.js
@@ -97,32 +136,36 @@ accountsRouter.get('/:id', getAccount);                      // req.params.id
 accountsRouter.post('/:id/transfers', validate(transferSchema), makeTransfer);
 ```
 
-- **`req.params`** are path segments, **`req.query`** the query string (strings or arrays, always validate and convert), **`req.body`** the parsed body, **`req.headers`** the headers.
-- **Matching order:** first match wins, so register specific routes before parameterised ones (`/accounts/summary` before `/accounts/:id`).
+- **Request parts:**
+  - `req.params`: path segments,
+  - `req.query`: the query string (strings or arrays; always validate and convert),
+  - `req.body`: the parsed body,
+  - `req.headers`: the headers.
+- **Matching order:** the first match wins. Register specific routes before ones with parameters (`/accounts/summary` before `/accounts/:id`).
 - **`res` helpers:** `res.status(201).json(body)`, `res.set('Location', url)`, `res.sendStatus(204)`, `res.redirect(...)`, `res.download(...)`, `res.send(...)`. Send **exactly one response** per request.
 - **Static files:** `express.static('public')`. In production, serve them from a CDN or reverse proxy instead.
-- **Behind a proxy** (a load balancer, nginx), set `app.set('trust proxy', 1)` so `req.ip` and `req.protocol` use the forwarded values.
+- **Behind a proxy** (a load balancer, nginx), set `app.set('trust proxy', 1)`, so `req.ip` and `req.protocol` use the forwarded values.
 
 ## REST conventions in Express {#rest}
 
-See [REST API design](lesson:rest-api-design#resources) for the full rules. The Express-specific points:
+See [REST API design](lesson:rest-api-design#resources) for the full rules. The points specific to Express:
 
 | Concern | Do |
 | --- | --- |
-| create | `POST /accounts` returns **201** with a `Location` header and the new resource |
-| read | `GET` returns **200**, or **404** when missing |
-| update | `PUT` replaces, `PATCH` changes some fields, return 200 or 204 |
-| delete | `DELETE` returns **204** with no body, repeated deletes stay safe |
-| bad input | **400** (malformed) or **422** (well-formed but invalid) with field errors |
-| unauthenticated, forbidden | **401**, **403** |
-| conflict | **409** (duplicate, or a stale version with `If-Match` and an ETag) |
-| too many requests | **429** with `Retry-After` |
-| server error | **500** with a generic message and a request id, never a stack trace |
-| money | send amounts as **integers in minor units** (cents) or decimal strings, never floating point |
-| retries | accept an **`Idempotency-Key`** header on `POST /transfers` ([idempotency](lesson:rest-api-design#idempotency)) |
-| lists | **cursor or page-based pagination** with a maximum page size ([pagination](lesson:rest-api-design#pagination)) |
+| Create | `POST /accounts` returns **201**, with a `Location` header and the new resource. |
+| Read | `GET` returns **200**, or **404** when missing. |
+| Update | `PUT` replaces, `PATCH` changes some fields. Return 200 or 204. |
+| Delete | `DELETE` returns **204** with no body. Repeated deletes stay safe. |
+| Bad input | **400** (malformed) or **422** (well-formed but invalid), with field errors. |
+| Unauthenticated, forbidden | **401**, **403**. |
+| Conflict | **409**: a duplicate, or a stale version with `If-Match` and an ETag. |
+| Too many requests | **429** with `Retry-After`. |
+| Server error | **500** with a generic message and a request id. Never a stack trace. |
+| Money | Send amounts as **integers in minor units** (cents) or decimal strings. Never floating point. |
+| Retries | Accept an **`Idempotency-Key`** header on `POST /transfers` ([idempotency](lesson:rest-api-design#idempotency)). |
+| Lists | **Cursor or page-based pagination**, with a maximum page size ([pagination](lesson:rest-api-design#pagination)). |
 
-Use a single JSON error shape, such as RFC 9457 **problem details**:
+Use one JSON error shape, such as RFC 9457 **problem details**:
 
 ```json
 { "type": "https://api.bank.example/errors/insufficient-funds", "title": "Insufficient funds",
@@ -131,7 +174,7 @@ Use a single JSON error shape, such as RFC 9457 **problem details**:
 
 ## Validation {#validation}
 
-Never trust `req.body`, `req.query` or `req.params`. Validate at the edge with a **schema library** (**zod**, joi, ajv, valibot), and let the schema also give you **TypeScript types**.
+Never trust `req.body`, `req.query` or `req.params`. Validate at the edge with a **schema library** (**zod**, joi, ajv, valibot). The schema can also give you **TypeScript types**.
 
 ```js
 import { z } from 'zod';
@@ -159,11 +202,13 @@ export const validate = (schema) => (req, res, next) => {
 };
 ```
 
-Validation is about **shape and format** (types, ranges, lengths). **Business rules** (enough balance, account not frozen) belong in the service and produce 422 or 409. Whitelist fields (`strict()` or `pick`) to prevent **mass assignment**, for example a client setting `role: "admin"` or `balance`.
+- Validation checks **shape and format**: types, ranges, lengths.
+- **Business rules** (enough balance, account not frozen) belong in the service, and produce 422 or 409.
+- Whitelist fields (`strict()` or `pick`) to prevent **mass assignment**: a client setting fields it should not, such as `role: "admin"` or `balance`.
 
 ## Error handling {#errors}
 
-All errors should end in **one error-handling middleware**, registered last, with **four parameters** (Express recognises it by the arity):
+All errors should end in **one error-handling middleware**, registered last, with **four parameters**. Express recognises it by the number of parameters.
 
 ```js
 class AppError extends Error {
@@ -194,20 +239,22 @@ export function errorHandler(err, req, res, next) {
 
 **Async handlers.**
 
-- **Express 5:** a rejected promise (or a thrown error in an `async` handler) is passed to the error handler automatically.
-- **Express 4:** it is not, so the request hangs and you get an unhandled rejection. Wrap each handler or use a small helper, or the `express-async-errors` package:
+- **Express 5:** a rejected promise, or an error thrown in an `async` handler, is passed to the error handler automatically.
+- **Express 4:** it is not. The request hangs, and you get an unhandled rejection. Wrap each handler with a small helper, or use the `express-async-errors` package:
 
 ```js
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 app.get('/accounts/:id', asyncHandler(getAccount));
 ```
 
-- Errors thrown in a callback of `setTimeout`, an event handler or after the response ended are **not** caught by Express. They become `uncaughtException` ([error handling in Node](lesson:node-runtime#errors)).
-- Add a **404 middleware** before the error handler for unmatched routes, and never send stack traces to clients.
+- Express does **not** catch errors thrown in a `setTimeout` callback, in an event handler, or after the response ended. They become `uncaughtException` ([error handling in Node](lesson:node-runtime#errors)).
+- Add a **404 middleware** before the error handler, for unmatched routes. Never send stack traces to clients.
 
 ## CORS, security headers and rate limiting {#security}
 
-**CORS** (cross-origin resource sharing) is a **browser** rule: a page from `app.bank.com` may call `api.bank.com` only if the API says so with response headers. For non-simple requests (JSON body, `Authorization` header, `PUT`, `PATCH`, `DELETE`) the browser first sends an **`OPTIONS` preflight** (the third scene), and the real request goes ahead only if the answer allows it.
+**CORS** (cross-origin resource sharing) is a **browser** rule. A page from `app.bank.com` may read responses from `api.bank.com` only if the API allows it, with response headers.
+
+For non-simple requests (a JSON body, an `Authorization` header, `PUT`, `PATCH`, `DELETE`), the browser first sends an **`OPTIONS` preflight** (the third scene). The real request goes ahead only if the answer allows it.
 
 ```js
 import cors from 'cors';
@@ -224,16 +271,16 @@ CORS does **not** protect the API. `curl` and server code ignore it. It only sto
 
 Other basics:
 
-- **`helmet`** sets security headers (`Strict-Transport-Security`, `X-Content-Type-Options`, `Content-Security-Policy` and more).
-- **Rate limiting** with `express-rate-limit` (use a **Redis store** when you have several instances), and stricter limits on login and transfer endpoints.
+- **`helmet`** sets security headers: `Strict-Transport-Security`, `X-Content-Type-Options`, `Content-Security-Policy` and more.
+- **Rate limiting** with `express-rate-limit`. Use a **Redis store** when you have several instances. Set stricter limits on login and transfer endpoints.
 - **Body limits**: `express.json({ limit })` and timeouts, so one client cannot send gigabytes.
-- **`app.disable('x-powered-by')`** (helmet does it) to hide the framework.
-- **HTTPS** terminates at the load balancer or reverse proxy. Set `trust proxy` and secure cookies.
-- **CSRF**: needed when the API uses **cookies** for auth. With a bearer token in the `Authorization` header, a cross-site request cannot attach it, so CSRF does not apply. Use `SameSite` cookies and a CSRF token when you use cookie sessions.
+- **`app.disable('x-powered-by')`** (helmet does it) hides the framework.
+- **HTTPS** ends at the load balancer or reverse proxy. Set `trust proxy`, and use secure cookies.
+- **CSRF** matters when the API uses **cookies** for auth. A cross-site request cannot attach a bearer token in the `Authorization` header, so CSRF does not apply there. With cookie sessions, use `SameSite` cookies and a CSRF token.
 
 ## Authentication and authorisation {#auth}
 
-**Authentication** answers "who is calling?" and **authorisation** answers "what may they do?" (see [JWT](lesson:jwt#what) and [OAuth 2.0](lesson:oauth2#tokens)). A typical API validates a **bearer JWT** issued by an identity provider.
+**Authentication** answers "who is calling?". **Authorisation** answers "what may they do?" (see [JWT](lesson:jwt#what) and [OAuth 2.0](lesson:oauth2#tokens)). A typical API checks a **bearer JWT** issued by an identity provider.
 
 ```js
 import { createRemoteJWKSet, jwtVerify } from 'jose';
@@ -263,9 +310,14 @@ export const requireScope = (scope) => (req, res, next) =>
 accountsRouter.post('/:id/transfers', requireScope('transfers:write'), validate(transferSchema), makeTransfer);
 ```
 
-Rules: verify **signature, algorithm, expiry, issuer and audience**, never decode without verifying, keep access tokens short-lived, and check **object-level access** in the service (the caller owns this account), not just the role. Broken object-level authorisation (changing the id in the URL to read someone else's account) is the top API vulnerability. For passwords use **argon2** or **bcrypt**, never a fast hash.
+Rules:
 
-Passport.js is a strategy-based library that wraps many login methods, which you meet in older code.
+- Verify the **signature, algorithm, expiry, issuer and audience**. Never decode without verifying.
+- Keep access tokens short-lived.
+- Check **object-level access** in the service: does the caller own this account? The role alone is not enough. Broken object-level authorisation (changing the id in the URL to read someone else's account) is the top API vulnerability.
+- For passwords, use **argon2** or **bcrypt**, never a fast hash.
+
+Passport.js is a strategy-based library that wraps many login methods. You meet it in older code.
 
 ## Structure the project {#structure}
 
@@ -306,24 +358,29 @@ export async function transfer({ from, toAccount, amount, currency, userId, idem
 }
 ```
 
-The service can be unit tested without HTTP, and the same service can be called from a queue consumer or a CLI.
+The service can be unit tested without HTTP. A queue consumer or a CLI can call the same service.
 
-**Database:** use a connection **pool** (`pg`, `mysql2`) created once per process, **parameterised queries**, and transactions for multi-step changes. ORMs and query builders: Prisma, Drizzle, TypeORM, Sequelize, Knex. Close the pool on shutdown ([graceful shutdown](lesson:node-runtime#shutdown)).
+**Database:**
+
+- Use a connection **pool** (`pg`, `mysql2`), created once per process.
+- Use **parameterised queries**, and transactions for changes with several steps.
+- ORMs and query builders: Prisma, Drizzle, TypeORM, Sequelize, Knex.
+- Close the pool on shutdown ([graceful shutdown](lesson:node-runtime#shutdown)).
 
 ## Configuration, logging and operations {#ops}
 
-- **Config:** validated environment variables at startup ([process and config](lesson:node-runtime#process)). No secrets in the repository.
-- **Logging:** a structured JSON logger (**pino**, `pino-http`) with a **request id** (from `X-Request-Id` or generated) on every line, and no passwords, tokens or full card numbers in logs. Return the request id to the client in error responses so support can find the log line.
-- **Health endpoints:** `/health/live` (process is up) and `/health/ready` (dependencies reachable, and failing during shutdown).
-- **Metrics and tracing:** Prometheus metrics (`prom-client`) and **OpenTelemetry** auto-instrumentation for Express.
-- **Compression:** `compression` or, better, the reverse proxy does it.
-- **Timeouts:** set `server.requestTimeout`, `headersTimeout` and `keepAliveTimeout` (keep it above the load balancer's idle timeout), and timeouts on outgoing calls with `AbortSignal.timeout(3000)`.
+- **Config:** environment variables, validated at startup ([process and config](lesson:node-runtime#process)). No secrets in the repository.
+- **Logging:** a structured JSON logger (**pino**, `pino-http`), with a **request id** on every line (from `X-Request-Id`, or generated). No passwords, tokens or full card numbers in logs. Return the request id to the client in error responses, so support can find the log line.
+- **Health endpoints:** `/health/live` (the process is up) and `/health/ready` (dependencies are reachable; fails during shutdown).
+- **Metrics and tracing:** Prometheus metrics (`prom-client`), and **OpenTelemetry** auto-instrumentation for Express.
+- **Compression:** `compression`, or better, let the reverse proxy do it.
+- **Timeouts:** set `server.requestTimeout`, `headersTimeout` and `keepAliveTimeout`. Keep the last one above the load balancer's idle timeout. Put timeouts on outgoing calls too, with `AbortSignal.timeout(3000)`.
 - **Process model:** one Node process per container, scaled by the orchestrator, with SIGTERM handled.
 - **Streaming responses:** pipe large exports ([streams](lesson:node-runtime#streams)) instead of building arrays in memory, and paginate lists.
 
 ## Testing {#testing}
 
-Create the app in a function that **does not call `listen()`**. Tests import it and use **supertest** to send requests in memory, with no port.
+Create the app in a function that **does not call `listen()`**. Tests import it, and use **supertest** to send requests in memory, with no port.
 
 ```js
 // app.js
@@ -360,46 +417,52 @@ test('rejects a negative amount with 400', async () => {
 });
 ```
 
-Test layers separately: services as plain unit tests, the HTTP layer with supertest and a fake service, and a few **integration tests** against a real database (Testcontainers or a Docker Compose database) for repositories and transactions. See [React performance and testing](lesson:react-performance#testing) for the same pyramid on the front end.
+Test the layers separately:
+
+- services as plain unit tests,
+- the HTTP layer with supertest and a fake service,
+- a few **integration tests** against a real database (Testcontainers, or a Docker Compose database) for repositories and transactions.
+
+See [React performance and testing](lesson:react-performance#testing) for the same pyramid on the front end.
 
 ## Common mistakes {#mistakes}
 
 | Mistake | Fix |
 | --- | --- |
-| forgetting `next()` or a response | every path ends the response or calls `next` |
-| body parser registered after the routes | register parsers first |
-| async error in Express 4 not handled | wrap handlers, or use Express 5 |
-| sending a response twice | `return res...`, and check `res.headersSent` in the error handler |
-| trusting `req.body` | validate with a schema, reject unknown fields |
-| `cors({ origin: '*', credentials: true })` or reflecting any origin | use an allow-list |
-| stack traces in responses | log them, return a code and request id |
-| no body size limit | `express.json({ limit })` |
-| string-building SQL | parameterised queries |
-| checking only the role | also check the caller owns the object |
-| business rules inside the handler | move them to a service |
-| `app.listen` inside `app.js` | separate `createApp` from `server.js` |
-| float money, no idempotency on payments | integer minor units, `Idempotency-Key` |
-| a fresh database connection per request | one pool per process |
-| ignoring SIGTERM | drain and close on shutdown |
+| Forgetting `next()` or a response | Every path ends the response, or calls `next`. |
+| Body parser registered after the routes | Register parsers first. |
+| Async error in Express 4 not handled | Wrap handlers, or use Express 5. |
+| Sending a response twice | `return res...`, and check `res.headersSent` in the error handler. |
+| Trusting `req.body` | Validate with a schema, and reject unknown fields. |
+| `cors({ origin: '*', credentials: true })`, or reflecting any origin | Use an allow-list. |
+| Stack traces in responses | Log them. Return a code and a request id. |
+| No body size limit | `express.json({ limit })` |
+| SQL built from strings | Parameterised queries. |
+| Checking only the role | Also check that the caller owns the object. |
+| Business rules inside the handler | Move them to a service. |
+| `app.listen` inside `app.js` | Separate `createApp` from `server.js`. |
+| Float money, no idempotency on payments | Integer minor units, `Idempotency-Key`. |
+| A new database connection per request | One pool per process. |
+| Ignoring SIGTERM | Drain and close on shutdown. |
 
 ## For a Java developer {#java}
 
 | Spring MVC | Express |
 | --- | --- |
-| `DispatcherServlet` and the filter chain | the middleware chain |
+| `DispatcherServlet` and the filter chain | The middleware chain |
 | `@RestController`, `@GetMapping` | `Router`, `router.get(path, handler)` |
 | `@PathVariable`, `@RequestParam`, `@RequestBody` | `req.params`, `req.query`, `req.body` |
 | `@Valid` and Bean Validation | zod or joi in a validation middleware |
-| `@ControllerAdvice` and `@ExceptionHandler` | the four-argument error middleware |
-| `Filter`, `HandlerInterceptor` | application-level and router-level middleware |
+| `@ControllerAdvice` and `@ExceptionHandler` | The four-argument error middleware |
+| `Filter`, `HandlerInterceptor` | Application-level and router-level middleware |
 | Spring Security filter chain | `authenticate` and `authorize` middleware, Passport |
-| `@CrossOrigin` | the `cors` middleware |
-| dependency injection | functions and factories (`createApp({ service })`) or NestJS |
-| `@Service`, `@Repository` | plain modules and classes |
-| `application.yml` and profiles | validated environment variables |
-| Actuator | health routes, `prom-client`, OpenTelemetry |
+| `@CrossOrigin` | The `cors` middleware |
+| Dependency injection | Functions and factories (`createApp({ service })`), or NestJS |
+| `@Service`, `@Repository` | Plain modules and classes |
+| `application.yml` and profiles | Validated environment variables |
+| Actuator | Health routes, `prom-client`, OpenTelemetry |
 | `MockMvc` | supertest |
-| one thread per request | one event loop, never block it |
+| One thread per request | One event loop: never block it |
 
 Try it in the lab: [Express: routes, async handlers and errors](lab:express-routing-errors).
 
@@ -407,81 +470,171 @@ Try it in the lab: [Express: routes, async handlers and errors](lab:express-rout
 
 | Topic | Remember |
 | --- | --- |
-| middleware | `(req, res, next)`, ordered, end or `next()` |
-| order | helmet, cors, request id and logger, body parser, rate limit, auth, routes, 404, error handler |
-| routing | `Router`, first match wins, `params`, `query`, `body` |
-| response | one response per request, correct status code |
-| validation | schema at the edge, strict, 400 or 422 |
-| errors | one 4-argument error middleware, last, no stack traces |
-| async | Express 5 forwards rejections, Express 4 needs a wrapper |
-| CORS | browser rule, preflight `OPTIONS`, allow-list, not a security control |
-| auth | verify JWT signature, exp, iss, aud, 401 versus 403, check object ownership |
-| protection | helmet, rate limit, body limit, timeouts |
-| structure | router, controller, service, repository, `createApp` without `listen` |
-| ops | pino with request id, health routes, graceful shutdown |
-| testing | supertest on `createApp`, service unit tests, a few integration tests |
+| Middleware | `(req, res, next)`, ordered. End the response, or call `next()`. |
+| Order | helmet, cors, request id and logger, body parser, rate limit, auth, routes, 404, error handler. |
+| Routing | `Router`. The first match wins. `params`, `query`, `body`. |
+| Response | One response per request, with the correct status code. |
+| Validation | A schema at the edge, strict. 400 or 422. |
+| Errors | One error middleware with 4 arguments, last. No stack traces. |
+| Async | Express 5 forwards rejections. Express 4 needs a wrapper. |
+| CORS | A browser rule. Preflight `OPTIONS`. An allow-list. Not a security control. |
+| Auth | Verify the JWT signature, exp, iss, aud. 401 versus 403. Check object ownership. |
+| Protection | helmet, rate limit, body limit, timeouts. |
+| Structure | Router, controller, service, repository. `createApp` without `listen`. |
+| Ops | pino with a request id, health routes, graceful shutdown. |
+| Testing | supertest on `createApp`, service unit tests, a few integration tests. |
 
 ## Interview questions {#questions}
 
 ### [basic] What is Express and what does it give you? {#what-q}
 
-A minimal web framework on top of Node's `http` module. It provides routing, the middleware mechanism and helpers on the request and response objects. It does not include an ORM, validation or dependency injection, so you pick libraries for those. It is flexible and ubiquitous, but a team has to set conventions for structure, errors and validation.
+It is a minimal web framework on top of Node's `http` module. It provides routing, the middleware mechanism, and helpers on the request and response objects.
+
+It does not include an ORM, validation or dependency injection, so you pick libraries for those. It is flexible and used everywhere. But a team has to agree on conventions for structure, errors and validation.
 
 ### [basic] What is middleware and why does order matter? {#middleware-q}
 
-A middleware is a function `(req, res, next)` that runs in the request pipeline. It can modify the request or response, end the response, or call `next()` to continue. Middleware runs in the order registered, so a body parser must come before the routes that read `req.body`, authentication before protected routes, CORS before authentication (so preflights are answered), and the error handler last.
+A middleware is a function `(req, res, next)` that runs in the request pipeline. It can change the request or response, end the response, or call `next()` to continue.
+
+Middleware runs in the order it was registered. So:
+
+- a body parser must come before the routes that read `req.body`,
+- authentication must come before protected routes,
+- CORS must come before authentication, so preflights are answered,
+- the error handler must come last.
 
 ### [basic] What is the difference between `app.use` and `app.get`? {#use-get-q}
 
-`app.use(path?, fn)` mounts middleware for **all methods** and for any path that starts with the prefix. `app.get(path, handler)` handles only `GET` requests whose path matches. `app.use` is for cross-cutting concerns (parsing, logging, auth, routers). Method routes are for endpoints.
+- `app.use(path?, fn)` mounts middleware for **all methods**, and for any path that starts with the prefix. Use it for concerns that cut across requests: parsing, logging, auth, routers.
+- `app.get(path, handler)` handles only `GET` requests whose path matches. Use method routes for endpoints.
 
 ### [basic] How do you read path parameters, query parameters and the body? {#params-q}
 
-`req.params.id` for `/accounts/:id`, `req.query.limit` for `?limit=20` (always strings, so convert and validate), and `req.body` for the payload after `express.json()` has parsed it. In Express 5, `req.body` is `undefined` if no parser ran. Validate all three with a schema.
+- `req.params.id` for `/accounts/:id`.
+- `req.query.limit` for `?limit=20`. These are always strings, so convert and validate them.
+- `req.body` for the payload, after `express.json()` has parsed it. In Express 5, `req.body` is `undefined` if no parser ran.
+
+Validate all three with a schema.
 
 ### [basic] Which HTTP status codes would you return for create, validation failure, missing and conflicting resources? {#status-q}
 
-Create returns **201** with a `Location` header. Malformed or invalid input returns **400** (or **422** when the request is well-formed but breaks a rule). A missing resource returns **404**. A duplicate or stale-version update returns **409**. Missing or invalid credentials return **401**, and an authenticated caller without permission gets **403**. Too many requests get **429**, and an unexpected failure **500** with no internal details.
+- Create: **201**, with a `Location` header.
+- Malformed or invalid input: **400**. Use **422** when the request is well-formed but breaks a rule.
+- Missing resource: **404**.
+- Duplicate, or an update with a stale version: **409**.
+- Missing or invalid credentials: **401**. An authenticated caller without permission: **403**.
+- Too many requests: **429**.
+- Unexpected failure: **500**, with no internal details.
 
 ### [intermediate] How does error handling work in Express, including async handlers? {#errors-q}
 
-An error-handling middleware has four arguments `(err, req, res, next)` and is registered last. Synchronous throws and `next(err)` reach it. In **Express 5**, a rejected promise from an async handler is forwarded automatically. In **Express 4** it is not, so the request hangs and an unhandled rejection occurs unless you wrap the handler (`.catch(next)`) or use `express-async-errors`. The handler maps known errors (`AppError` with a status and code) to responses, logs the rest and returns a generic 500 with a request id. Errors thrown in timers or event handlers bypass Express.
+An error-handling middleware has four arguments, `(err, req, res, next)`, and is registered last. Synchronous throws and `next(err)` reach it.
+
+- In **Express 5**, a rejected promise from an async handler is forwarded automatically.
+- In **Express 4**, it is not. The request hangs and an unhandled rejection occurs, unless you wrap the handler (`.catch(next)`) or use `express-async-errors`.
+
+The handler maps known errors (an `AppError` with a status and code) to responses. It logs the rest, and returns a generic 500 with a request id. Errors thrown in timers or event handlers bypass Express.
 
 ### [intermediate] How do you validate input in an Express API? {#validation-q}
 
-With a schema library such as zod or joi in a reusable middleware that parses `body`, `params` and `query`, returns 400 with field errors on failure, and replaces the raw values with the parsed ones. Use strict objects to reject unknown fields (preventing mass assignment), set size limits on the body, and keep business-rule checks in the service. With TypeScript, zod also provides the inferred types.
+Use a schema library such as zod or joi, in a reusable middleware.
+
+1. It parses `body`, `params` and `query`.
+2. On failure, it returns 400 with the field errors.
+3. On success, it replaces the raw values with the parsed ones.
+
+Use strict objects to reject unknown fields, which prevents mass assignment. Set size limits on the body. Keep business-rule checks in the service. With TypeScript, zod also gives you the inferred types.
 
 ### [intermediate] What is CORS, what is a preflight, and does CORS secure an API? {#cors-q}
 
-CORS lets a browser page from one origin read responses from another origin if the server allows it with `Access-Control-Allow-*` headers. For non-simple requests (JSON content type, custom headers such as `Authorization`, methods other than GET, POST and HEAD) the browser first sends an `OPTIONS` preflight, and only sends the real request if the answer allows the origin, method and headers. It does not secure the API: it is enforced only by browsers, so `curl` or another server ignores it. Authentication and authorisation are still required, and the origin should be an allow-list, especially with credentials.
+CORS lets a browser page from one origin read responses from another origin, if the server allows it with `Access-Control-Allow-*` headers.
+
+For non-simple requests (a JSON content type, custom headers such as `Authorization`, methods other than GET, POST and HEAD), the browser first sends an `OPTIONS` preflight. It sends the real request only if the answer allows the origin, method and headers.
+
+CORS does not secure the API. Only browsers enforce it, so `curl` or another server ignores it. You still need authentication and authorisation. Set the origin from an allow-list, especially with credentials.
 
 ### [intermediate] How do you authenticate requests with a JWT in Express? {#jwt-q}
 
-A middleware reads the `Authorization: Bearer` header, verifies the token with the identity provider's public keys (JWKS), checks signature, algorithm, expiry, issuer and audience, and puts the claims on `req.user`. It returns 401 when the token is missing or invalid. A second middleware or the service checks authorisation: a required scope or role (403) and that the user owns the object being accessed. Keep tokens short-lived and never decode without verifying.
+A middleware:
+
+1. reads the `Authorization: Bearer` header,
+2. verifies the token with the identity provider's public keys (JWKS),
+3. checks the signature, algorithm, expiry, issuer and audience,
+4. puts the claims on `req.user`.
+
+It returns 401 when the token is missing or invalid.
+
+A second middleware, or the service, checks authorisation: a required scope or role (403), and that the user owns the object being accessed. Keep tokens short-lived, and never decode without verifying.
 
 ### [intermediate] What is the difference between 401 and 403, and where do you check each? {#401-403-q}
 
-401 means the caller is not authenticated (no valid credentials), checked in the authentication middleware. 403 means the caller is authenticated but not allowed, checked by an authorisation middleware for roles and scopes, and by the service for object ownership. Some APIs return 404 instead of 403 for objects the caller must not know exist.
+- **401** means the caller is not authenticated: no valid credentials. The authentication middleware checks it.
+- **403** means the caller is authenticated, but not allowed. An authorisation middleware checks roles and scopes, and the service checks object ownership.
+
+Some APIs return 404 instead of 403 for objects the caller must not know exist.
 
 ### [intermediate] How do you structure an Express project so it is testable? {#structure-q}
 
-Separate `createApp()` (builds the middleware and routers) from `server.js` (listens and handles signals). Layer the code: routers map URLs, controllers handle HTTP, services hold business rules and know nothing about `req` and `res`, repositories hold SQL. Pass dependencies in as arguments (a factory or a small container). Then services are unit tested directly, the HTTP layer is tested with supertest and fake services, and a few integration tests hit a real database.
+Separate `createApp()` (which builds the middleware and routers) from `server.js` (which listens and handles signals).
+
+Layer the code:
+
+- routers map URLs,
+- controllers handle HTTP,
+- services hold business rules, and know nothing about `req` and `res`,
+- repositories hold the SQL.
+
+Pass dependencies in as arguments (a factory, or a small container). Then you unit test services directly, test the HTTP layer with supertest and fake services, and run a few integration tests against a real database.
 
 ### [intermediate] How do you protect an Express API from abuse? {#abuse-q}
 
-Use `helmet` for headers, a strict CORS allow-list, body size limits and server timeouts, rate limiting per client or token with a shared Redis store across instances (and stricter limits on login and money movement), schema validation, parameterised queries, audit-checked dependencies, and a reverse proxy or API gateway in front. Return generic errors, log with request ids and alert on spikes of 401, 403 and 429.
+- `helmet` for headers.
+- A strict CORS allow-list.
+- Body size limits and server timeouts.
+- Rate limiting per client or token, with a shared Redis store across instances, and stricter limits on login and money movement.
+- Schema validation and parameterised queries.
+- Audited dependencies.
+- A reverse proxy or API gateway in front.
+
+Return generic errors, log with request ids, and alert on spikes of 401, 403 and 429.
 
 ### [deep] How would you make `POST /transfers` safe against client retries? {#idempotency-q}
 
-Require an `Idempotency-Key` header. In one database transaction, insert the key with a unique constraint together with the request fingerprint, and perform the transfer. If the key already exists with the same fingerprint, return the stored response (and 200 rather than 201). If it exists with a different payload, return 422. Store the result with the key, expire keys after a period, and make the ledger entry and the key insertion atomic, so a retry after a timeout never debits twice. See [idempotency](lesson:rest-api-design#idempotency).
+Require an `Idempotency-Key` header. Then, in one database transaction:
+
+1. insert the key, with a unique constraint, together with a fingerprint of the request,
+2. perform the transfer,
+3. store the result with the key.
+
+On a retry:
+
+- if the key exists with the same fingerprint, return the stored response (200, not 201),
+- if it exists with a different payload, return 422.
+
+Expire keys after a period. The ledger entry and the key insert must be atomic, so a retry after a timeout never debits twice. See [idempotency](lesson:rest-api-design#idempotency).
 
 ### [deep] Compare Express, Fastify and NestJS. {#compare-q}
 
-Express is minimal and has the largest ecosystem, but leaves structure, validation and typing to you and is slower. Fastify has a plugin system, built-in JSON-schema validation and fast serialisation, and better throughput, with a smaller but strong ecosystem. NestJS is an opinionated framework with modules, decorators, dependency injection and built-in patterns (guards, pipes, interceptors), running on Express or Fastify, and feels like Spring Boot, which suits large teams and Java developers. Choose Express for small services and teams who know it, Fastify for performance and schema-first APIs, and NestJS for large structured codebases.
+- **Express** is minimal and has the largest ecosystem. It leaves structure, validation and typing to you, and is slower.
+- **Fastify** has a plugin system, built-in JSON-schema validation, fast serialisation and better throughput. Its ecosystem is smaller, but strong.
+- **NestJS** is an opinionated framework with modules, decorators, dependency injection and built-in patterns (guards, pipes, interceptors). It runs on Express or Fastify, and feels like Spring Boot, which suits large teams and Java developers.
+
+Choose Express for small services and teams who know it, Fastify for performance and schema-first APIs, and NestJS for large, structured codebases.
 
 ### [deep] How would you take an Express service to production on Kubernetes? {#production-q}
 
-One Node process per container, a small image running as a non-root user, configuration from environment variables validated at start, secrets from the platform's secret store. Liveness and readiness probes (readiness fails during shutdown), SIGTERM handling that drains and closes the pool, a keep-alive timeout above the load balancer's, structured logs with request ids, metrics and traces, resource limits sized from load tests with event loop lag monitored, horizontal pod autoscaling, shared rate-limit and session state in Redis, and graceful rolling deployments. See [graceful shutdown](lesson:node-runtime#shutdown).
+- One Node process per container, in a small image running as a non-root user.
+- Configuration from environment variables, validated at start. Secrets from the platform's secret store.
+- Liveness and readiness probes. Readiness fails during shutdown.
+- SIGTERM handling that drains requests and closes the pool.
+- A keep-alive timeout above the load balancer's.
+- Structured logs with request ids, plus metrics and traces.
+- Resource limits sized from load tests, with event loop lag monitored.
+- Horizontal pod autoscaling.
+- Shared rate-limit and session state in Redis.
+- Graceful rolling deployments.
+
+See [graceful shutdown](lesson:node-runtime#shutdown).
 
 ### [coding] Write Express middleware that validates the body of `POST /accounts/:id/transfers` with zod and returns field-level 400 errors. {#coding-validate}
 
@@ -526,7 +679,11 @@ app.post(
 );
 ```
 
-A request with `{ "amount": -5 }` gets `400` with `errors: [{ field: "body.toAccount", ... }, { field: "body.amount", message: "Number must be greater than 0" }, ...]`, all in one response. Extra fields are rejected, so a client cannot set fields it should not, and the handler only sees parsed, typed data.
+Explain these points:
+
+- A request with `{ "amount": -5 }` gets `400`, with `errors: [{ field: "body.toAccount", ... }, { field: "body.amount", message: "Number must be greater than 0" }, ...]`, all in one response.
+- Extra fields are rejected, so a client cannot set fields it should not.
+- The handler only sees parsed, typed data.
 
 ### [coding] Write a central error handler with `AppError` classes that works in Express 4 and 5, including async handlers. {#coding-errors}
 
@@ -584,7 +741,12 @@ app.use(notFound);
 app.use(errorHandler);                                   // always last
 ```
 
-Known errors become precise status codes, unknown ones become a generic 500 with only a request id, stack traces stay in the logs, and a response that has already started is handed to Express instead of being sent twice.
+Explain these points:
+
+- Known errors become precise status codes.
+- Unknown errors become a generic 500 with only a request id.
+- Stack traces stay in the logs.
+- A response that has already started is handed to Express, instead of being sent twice.
 
 ### [coding] Implement a fixed-window rate limiter middleware keyed by client, and explain what must change to run it on several instances. {#coding-ratelimit}
 
@@ -622,4 +784,9 @@ app.use('/api', rateLimit({ limit: 100 }));
 app.use('/api/auth/login', rateLimit({ limit: 5, windowMs: 15 * 60_000, keyFn: (req) => req.ip }));
 ```
 
-This version keeps counters in memory, so each instance counts separately and a client gets `limit × instances` requests, and a restart resets the counts. For several instances store the counters in **Redis** with an atomic `INCR` and `EXPIRE` (or a Lua script), which is what `express-rate-limit` with `rate-limit-redis` does. Set `trust proxy` so `req.ip` is the real client address, not the load balancer's. A fixed window allows a burst at the boundary, so use a sliding window or token bucket when that matters.
+Explain these points:
+
+- This version keeps the counters in memory. Each instance counts separately, so a client gets `limit × instances` requests, and a restart resets the counts.
+- For several instances, store the counters in **Redis** with an atomic `INCR` and `EXPIRE` (or a Lua script). That is what `express-rate-limit` with `rate-limit-redis` does.
+- Set `trust proxy`, so `req.ip` is the real client address, not the load balancer's.
+- A fixed window allows a burst at the boundary. Use a sliding window or a token bucket when that matters.

@@ -6,21 +6,35 @@ summary: Express middleware in depth, how Express stores and runs layers, the (r
 tags: [Express, Node.js, Middleware, Routing, Error handling, AsyncLocalStorage, Backend, Full stack]
 order: 71
 topic: Full stack / Node.js
-updated: 2026-11-18
+updated: 2026-11-26
 subnav: true
 ---
 
-[The Express lesson](lesson:node-express#middleware) introduced middleware and its order. Interviews go further: *what exactly does `next` do, how does Express decide which layer runs, what is the difference between `next()`, `next(err)`, `next('route')` and `next('router')`, how does mounting change `req.url`, how do you write configurable middleware, how are async errors handled, how do you verify a webhook signature that needs the raw body, how do you keep a request id available in deep code, and could you write the middleware engine yourself?* Examples are JavaScript and TypeScript with banking APIs. Play the four scenes: the layer stack, the `next()` family, routers and mount paths, and context and the error path.
+[The Express lesson](lesson:node-express#middleware) introduced middleware and why its order matters. Interviews go deeper. They ask:
+
+- What exactly does `next` do?
+- How does Express decide which layer runs?
+- What is the difference between `next()`, `next(err)`, `next('route')` and `next('router')`?
+- How does mounting a router change `req.url`?
+- How do you write middleware that takes settings?
+- How are errors from async code handled?
+- How do you check a webhook signature that needs the raw body?
+- How do you keep a request id available in deep code?
+- Could you write the middleware engine yourself?
+
+The examples are JavaScript and TypeScript, with banking APIs. Play the four scenes: the layer stack, the `next()` family, routers and mount paths, and context, hooks and raw bodies.
 
 ```demo
 name: middleware-walk
 ```
 
-> **One sentence to remember:** *Express is a list of layers walked in registration order, `next` moves to the next matching layer, an error skips to the four-argument error handlers, and everything else (routing, parsing, auth) is just a layer.*
+> **One sentence to remember:** *Express walks a list of layers in the order you registered them.*
+
+`next` moves on to the next matching layer. An error skips ahead to the error handlers, which take four arguments. Everything else, such as routing, parsing and auth, is just another layer.
 
 ## What middleware is {#what}
 
-A **middleware** is a function with access to the request, the response and the `next` function:
+A **middleware** is a function that receives three things: the request, the response and a function called `next`.
 
 ```javascript
 function middleware(req, res, next) {
@@ -29,21 +43,34 @@ function middleware(req, res, next) {
 }
 ```
 
-It can do four things: **run any code**, **change `req` and `res`** (add `req.user`, parse a body), **end the request-response cycle** (send a response), or **call `next`** to pass control on. Routing itself is middleware: a route handler is a layer that matches a method and a path.
+It can do four things:
+
+- **Run any code.**
+- **Change `req` and `res`.** For example, it adds `req.user` or parses the body.
+- **End the request.** It sends a response, and nothing after it runs.
+- **Call `next`.** This passes control to the next layer.
+
+Routing is middleware too. A route handler is simply a layer that matches one method and one path.
 
 ## How Express runs it {#stack}
 
-Internally an application (and every `Router`) holds an **ordered array of layers**. Each layer has a **path matcher**, an optional **HTTP method** and a **function**. Every `app.use(...)`, `app.get(...)`, `router.use(...)` pushes a layer (the first scene).
+Inside, an application holds an **ordered array of layers**. Every `Router` holds one too. Each layer has three parts:
+
+- a **path matcher**, which checks the URL;
+- an optional **HTTP method**, such as `GET`;
+- a **function** to call.
+
+Every `app.use(...)`, `app.get(...)` and `router.use(...)` adds one layer to the array. The first scene shows this.
 
 When a request arrives, Express runs a loop:
 
 1. Take the next layer in the array.
-2. Does its path (and method) match the request? If not, go to 1.
+2. Check whether its path and method match the request. If not, go back to step 1.
 3. Call the layer's function with `(req, res, next)`.
-4. The function calls `next()` to go to step 1, ends the response, or throws or calls `next(err)`.
-5. If the array is exhausted with nobody responding, call the **final handler**: a 404, or a 500 if there was an error.
+4. The function now does one of three things. It calls `next()`, which goes back to step 1. It ends the response. Or it throws, or calls `next(err)`.
+5. If the array runs out and nobody responded, Express calls its **final handler**. This sends a 404, or a 500 if there was an error.
 
-So `next` is just "continue the loop from where we are". There is no separate "route table": registration order is the execution order, and **the first layer that ends the response wins**.
+So `next` just means "continue the loop from here". There is no separate route table. The order you register layers is the order they run. **The first layer that ends the response wins.**
 
 ```javascript
 app.use(logger);                          // layer 1: every request
@@ -57,13 +84,13 @@ app.use((err, req, res, next) => { /* ... */ });                        // layer
 
 **`app.use` versus `app.METHOD`.**
 
-- `app.use([path], fn)` matches **any method** and any URL that **starts with** `path` (default `/`). It is for cross-cutting layers and for mounting routers.
-- `app.get('/x', fn)` (and `post`, `put`, `patch`, `delete`) matches **one method and the whole path**.
+- `app.use([path], fn)` matches **any method**. It matches any URL that **starts with** `path`, which defaults to `/`. Use it for layers that apply to many routes, and for mounting routers.
+- `app.get('/x', fn)` matches **one method and the whole path**. The same goes for `post`, `put`, `patch` and `delete`.
 - `app.all('/x', fn)` matches any method on one exact path.
 - `app.route('/x').get(a).post(b)` chains several methods on one path.
-- You can pass **several handlers** or an **array**: `app.post('/transfers', authenticate, validate(schema), handler)`.
+- You can pass **several handlers**, or an **array** of them: `app.post('/transfers', authenticate, validate(schema), handler)`.
 
-**Order is a design decision** (the first scene's last frame):
+**Order is a design decision.** The last frame of the first scene shows what goes wrong:
 
 | Problem | Cause |
 | --- | --- |
@@ -76,7 +103,7 @@ app.use((err, req, res, next) => { /* ... */ });                        // layer
 
 ## The next() family {#next}
 
-The second scene. There are four ways to continue:
+This is the second scene. There are four ways to pass control on:
 
 | Call | Meaning |
 | --- | --- |
@@ -99,11 +126,11 @@ adminRouter.use((req, res, next) => (req.user?.roles.includes('admin') ? next() 
 
 Rules:
 
-- **Respond or call `next`, not both.** Sending a response and then calling `next()` runs later layers on a finished response and causes `ERR_HTTP_HEADERS_SENT`. Use `return res.status(401).json(...)` so the function stops.
-- **If you do neither, the request hangs** until a timeout.
-- A **synchronous throw** in a layer is caught by Express and treated as `next(err)`.
-- Calling `next` **twice** runs the rest of the chain twice.
-- `next(err)` with an **`Error`** (or any truthy value other than `'route'` and `'router'`) starts the error flow.
+- **Respond or call `next`, never both.** If you send a response and then call `next()`, later layers run on a finished response. That causes `ERR_HTTP_HEADERS_SENT`. Write `return res.status(401).json(...)`, so the function stops there.
+- **If you do neither, the request hangs** until it times out.
+- If a layer **throws synchronously**, Express catches it and treats it as `next(err)`.
+- If you call `next` **twice**, the rest of the chain runs twice.
+- `next(err)` starts the error flow when you pass an **`Error`**. Any other truthy value does the same, except `'route'` and `'router'`.
 
 ## Levels of middleware {#levels}
 
@@ -116,11 +143,11 @@ Rules:
 | **third-party** | `helmet()`, `cors()`, `compression()` | npm packages |
 | **error-handling** | `(err, req, res, next)` | only after `next(err)` or a throw |
 
-Use the **narrowest level**, so a public endpoint does not pay for admin checks and a heavy parser is not run for `GET`.
+Use the **narrowest level** that works. Then a public endpoint does not pay for admin checks. And a heavy body parser does not run for a `GET`.
 
 ## Mount paths, routers and req.url {#mount}
 
-(The third scene.) A **`Router`** is a mini application: its own stack of layers, mounted under a prefix.
+This is the third scene. A **`Router`** is a small application. It has its own stack of layers, and you mount it under a prefix.
 
 ```javascript
 const accounts = express.Router();
@@ -129,7 +156,7 @@ accounts.get('/:id', getOne);         // GET  /api/accounts/42
 app.use('/api/accounts', accounts);
 ```
 
-Inside a mounted router or middleware, Express **strips the mount path** from `req.url` so the code is independent of where it is mounted:
+Inside a mounted router or middleware, Express **removes the mount path** from `req.url`. So the code does not depend on where it is mounted.
 
 | For `GET /api/accounts/42?x=1` inside the router | Value |
 | --- | --- |
@@ -138,9 +165,13 @@ Inside a mounted router or middleware, Express **strips the mount path** from `r
 | `req.url` | `/42?x=1` (relative to the mount) |
 | `req.path` | `/42` |
 
-Consequences: log `req.originalUrl`, not `req.url`; build links with `req.baseUrl`; and a middleware mounted with `app.use('/static', ...)` sees paths without `/static`.
+This has three results:
 
-**Params in nested routers.** A child router does not see the parent's path parameters unless it is created with `mergeParams`:
+- Log `req.originalUrl`, not `req.url`.
+- Build links with `req.baseUrl`.
+- A middleware mounted with `app.use('/static', ...)` sees paths without `/static`.
+
+**Params in nested routers.** A child router does not see its parent's path parameters. To see them, create it with `mergeParams`:
 
 ```javascript
 const transfers = express.Router({ mergeParams: true });      // gets :accountId from the parent path
@@ -148,7 +179,7 @@ transfers.get('/', (req, res) => res.json(loadTransfers(req.params.accountId)));
 app.use('/accounts/:accountId/transfers', transfers);
 ```
 
-**`router.param`** runs once per request for a named parameter, wherever it appears in the router, so it is a good place to load and check the resource:
+**`router.param`** registers a function for one named parameter. It runs once per request, wherever that parameter appears in the router. So it is a good place to load the resource and check who owns it:
 
 ```javascript
 accounts.param('id', async (req, res, next, id) => {
@@ -161,11 +192,11 @@ accounts.get('/:id', (req, res) => res.json(req.account));
 accounts.get('/:id/balance', (req, res) => res.json({ balance: req.account.balance }));
 ```
 
-(In Express 5, wildcard paths use a named form such as `/*splat`, and path syntax is stricter than in 4.)
+In Express 5, wildcard paths need a name, such as `/*splat`. Path syntax is also stricter than in Express 4.
 
 ## Writing middleware {#writing}
 
-**Plain middleware** for a fixed behaviour, and a **factory** (a function that returns the middleware) when it needs configuration:
+Write **plain middleware** when the behaviour is fixed. Write a **factory** when it needs settings. A factory is a function that takes the settings and returns the middleware.
 
 ```javascript
 // factory: configuration in, middleware out
@@ -180,11 +211,11 @@ app.delete('/accounts/:id', authenticate, requireRole('admin', 'ops'), deleteAcc
 
 Guidelines:
 
-- **Small and single-purpose**: one concern per function, composed in a list.
-- **Do not block the event loop**: no synchronous file or crypto work. Use the async versions or a worker ([never block the loop](lesson:node-runtime#runtime)).
-- **Put results on `req` or `res.locals`**, with a documented name, not on global variables (requests overlap).
-- **Return after responding** (`return res.status(...)`) so the function does not continue.
-- **Failing fast:** cheap checks first (size limit, auth), expensive work (database lookup, validation) after.
+- **Keep each one small.** One job per function, and combine them in a list.
+- **Do not block the event loop.** Avoid synchronous file or crypto work. Use the async versions, or a worker thread ([never block the loop](lesson:node-runtime#runtime)).
+- **Put results on `req` or `res.locals`**, under a documented name. Never use global variables, because requests overlap.
+- **Return after responding** (`return res.status(...)`), so the function does not carry on.
+- **Fail fast.** Run cheap checks first, such as the size limit and auth. Run expensive work after, such as a database lookup or validation.
 - **Typing in TypeScript:**
 
 ```typescript
@@ -202,8 +233,8 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => { /* .
 
 **Async middleware.**
 
-- **Express 5**: an `async` middleware that throws or rejects is passed to `next(err)` **automatically**.
-- **Express 4**: it is not. The rejection is unhandled, and the request hangs. Wrap it with a helper or call `next` yourself:
+- **Express 5:** if an `async` middleware throws or rejects, Express passes the error to `next(err)` **for you**.
+- **Express 4:** it does not. The rejection goes unhandled, and the request hangs. Wrap the function with a helper, or call `next` yourself:
 
 ```javascript
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -214,9 +245,9 @@ app.use(asyncHandler(async (req, res, next) => {
 }));
 ```
 
-- Do not mix the styles: an `async` function that also calls `next` in a callback can call it twice.
+- Do not mix the two styles. An `async` function that also calls `next` from a callback can end up calling it twice.
 
-**Composition.** An array is a valid middleware list, so you can build reusable chains:
+**Composition.** An array is a valid middleware list. So you can build chains and reuse them:
 
 ```javascript
 const protect = [authenticate, requireRole('admin')];
@@ -225,13 +256,13 @@ app.use('/admin', protect, adminRouter);
 
 ## Context, hooks and logging {#context}
 
-(The fourth scene.)
+This is the fourth scene.
 
-**Per-request data.** Three places, in order of preference:
+**Per-request data.** There are three places to keep it. Prefer them in this order:
 
-1. **`req` properties** (`req.user`, `req.account`) for data the next handlers need.
-2. **`res.locals`** for data meant for the response or a template.
-3. **`AsyncLocalStorage`** for data that code **without access to `req`** needs, such as a request id in a deep service or a repository's log line. It carries a store through `await`s and callbacks:
+1. **Properties on `req`**, such as `req.user` or `req.account`. Use these for data the next handlers need.
+2. **`res.locals`**, for data meant for the response or a template.
+3. **`AsyncLocalStorage`**, for code that **cannot see `req`**. A request id needed in a deep service, or in a repository's log line, is the usual case. It keeps a store that follows the request through every `await` and callback.
 
 ```javascript
 import { AsyncLocalStorage } from 'node:async_hooks';
@@ -251,9 +282,9 @@ export const log = (msg, extra) =>
   console.log(JSON.stringify({ msg, ...extra, requestId: requestStore.getStore()?.requestId }));
 ```
 
-The `authenticate` middleware can later set `requestStore.getStore().userId`.
+Later, the `authenticate` middleware can set `requestStore.getStore().userId`.
 
-**Code after the handler.** A middleware cannot "wait for the handler" by awaiting `next()`, because `next()` returns before the response is sent. Listen to response events instead:
+**Code after the handler.** A middleware cannot wait for the handler by awaiting `next()`. This is because `next()` returns before the response is sent. Listen to the response's events instead:
 
 ```javascript
 export function accessLog(req, res, next) {
@@ -269,13 +300,14 @@ export function accessLog(req, res, next) {
 }
 ```
 
-- **`finish`**: the response was fully sent. **`close`**: the underlying connection ended, which also happens when the client disconnects before the end (check `res.writableFinished`).
-- Because the status code is known only at the end, **log in `finish`**.
-- Avoid overriding `res.json` or `res.end` to intercept the body unless you must, because it is fragile.
+- **`finish`** fires when the response has been fully sent.
+- **`close`** fires when the connection ends. That also happens when the client leaves before the end. Check `res.writableFinished` to tell the two apart.
+- The status code is only known at the end, so **log in `finish`**.
+- Avoid overriding `res.json` or `res.end` to catch the body. It is fragile, so do it only when you must.
 
 ## Error-handling middleware {#errors}
 
-A function with **four parameters** `(err, req, res, next)` is an error handler. Express detects it by `fn.length === 4`, so keep all four even if you do not use `next`.
+A function with **four parameters**, `(err, req, res, next)`, is an error handler. Express spots it by checking `fn.length === 4`. So keep all four, even if you never use `next`.
 
 ```javascript
 export class AppError extends Error {
@@ -304,12 +336,16 @@ app.use(errorHandler);                                  // last
 
 How the error flow works:
 
-- `next(err)` or a throw makes Express **skip every normal layer** and go to the **next error handler** after the current position. A normal handler is skipped while an error is in flight.
-- An error handler may call `next(err)` to pass to a later one (a chain: log, then format). Calling `next()` without an argument from an error handler **resumes the normal flow**, which is how you recover.
-- If no error handler exists, Express uses its **default**: it logs the stack (outside production), sends the `err.status` (or 500) and, in production, a generic message. If headers were already sent, it closes the connection.
-- **Where errors come from:** a sync throw, `next(err)`, a rejected promise in Express 5 (or a wrapped handler in 4), and errors emitted by body parsers (`entity.too.large`, `entity.parse.failed`).
-- **Not caught by Express:** an exception in a `setTimeout` or event callback, and a rejected promise nobody awaited. They become process-level `uncaughtException` or `unhandledRejection` ([error handling in Node](lesson:node-runtime#errors)).
-- You can have **different handlers per router** (an API error format versus an HTML one), registered after that router.
+- `next(err)` or a throw makes Express **skip every normal layer**. It goes to the **next error handler** after the current position.
+- An error handler can call `next(err)` to pass the error to a later one. This builds a chain, for example log first, then format. If an error handler calls `next()` with no argument, the **normal flow resumes**. That is how you recover.
+- If there is no error handler, Express uses its **default** one. It logs the stack, except in production. It sends `err.status`, or 500. In production it sends a generic message. If headers were already sent, it closes the connection.
+- **Where errors come from:**
+  - a synchronous throw;
+  - `next(err)`;
+  - a rejected promise in Express 5, or in a wrapped handler in Express 4;
+  - errors from body parsers, such as `entity.too.large` and `entity.parse.failed`.
+- **What Express does not catch:** an exception inside a `setTimeout` or an event callback, and a rejected promise that nobody awaited. These become process-level `uncaughtException` or `unhandledRejection` events ([error handling in Node](lesson:node-runtime#errors)).
+- Each router can have **its own error handler**, registered after that router. For example, one API router returns JSON errors and another returns HTML.
 
 ## Built-in and common middleware {#common}
 
@@ -329,7 +365,11 @@ How the error flow works:
 | `express-validator`, zod middleware | input validation | [validation](lesson:node-express#validation) |
 | `passport` | strategy-based login | |
 
-**Settings that act like middleware:** `app.set('trust proxy', 1)` behind a load balancer, `app.disable('x-powered-by')`, `app.set('etag', ...)`.
+**Settings that act like middleware:**
+
+- `app.set('trust proxy', 1)`, when the app runs behind a load balancer;
+- `app.disable('x-powered-by')`;
+- `app.set('etag', ...)`.
 
 **A typical production order:**
 
@@ -353,16 +393,16 @@ app.use(errorHandler);
 
 ## Body parsers and raw bodies {#bodies}
 
-`express.json()` reads the request stream, parses it and stores the result in `req.body`. Options that matter:
+`express.json()` reads the request stream, parses it, and stores the result in `req.body`. These options matter:
 
-- **`limit`**: reject bodies larger than this (413). Always set it.
-- **`type`**: which content types to parse (default `application/json`).
-- **`strict`**: accept only objects and arrays at the top level (default true).
-- **`verify(req, res, buf, encoding)`**: runs with the **raw bytes** before parsing, so you can keep them or throw to reject.
-- Parsing failures call `next(err)` with `entity.parse.failed` (400) or `entity.too.large` (413), handled by your error middleware.
-- A body can be consumed **once**. Two parsers on the same request means the second sees nothing. If a stream was already read, you cannot read it again.
+- **`limit`:** reject bodies larger than this, with a 413. Always set it.
+- **`type`:** which content types to parse. The default is `application/json`.
+- **`strict`:** accept only objects and arrays at the top level. The default is true.
+- **`verify(req, res, buf, encoding)`:** runs with the **raw bytes**, before parsing. You can keep the bytes, or throw to reject the request.
+- When parsing fails, the parser calls `next(err)`. The error is `entity.parse.failed` (400) or `entity.too.large` (413). Your error middleware handles it.
+- A body can be read **only once**. If two parsers run on the same request, the second sees nothing. Once a stream has been read, you cannot read it again.
 
-**Webhooks and signatures.** A payment provider signs the **exact bytes** it sends with an HMAC. If you parse the JSON and stringify it again, spacing and key order change and the signature no longer matches. So use the **raw body** for that route:
+**Webhooks and signatures.** A payment provider signs the **exact bytes** it sends, using an HMAC. An HMAC is a hash of the bytes mixed with a shared secret. If you parse the JSON and turn it back into a string, the spacing and key order change. Then the signature no longer matches. So that route must use the **raw body**:
 
 ```javascript
 import crypto from 'node:crypto';
@@ -389,11 +429,11 @@ app.post('/webhooks/payments',
 );
 ```
 
-Also use a **timestamp** in the signed payload and reject old ones (replay protection), and respond quickly then process the event asynchronously.
+Two more steps. Include a **timestamp** in the signed data, and reject old ones. This stops replays, where an attacker resends an old valid request. And respond quickly, then process the event in the background.
 
 ## Authentication and authorisation layers {#auth}
 
-Separate the two concerns and compose them:
+Keep the two concerns apart, and combine them:
 
 ```javascript
 // 1. who is calling? (401 when unknown)
@@ -418,11 +458,11 @@ accounts.param('id', ownedAccountLoader);
 accounts.post('/:id/transfers', requireScope('transfers:write'), validate(transferSchema), makeTransfer);
 ```
 
-**Public routes** are registered **before** `authenticate`, or authentication is mounted on `/api` only, so health checks and login are not blocked. A cleaner approach is to mount the protected routers behind it as a group. See [JWT validation](lesson:jwt#validation).
+**Public routes** must not be blocked by `authenticate`. Health checks and login are examples. Register them before `authenticate`, or mount `authenticate` on `/api` only. A cleaner way is to group the protected routers behind it. See [JWT validation](lesson:jwt#validation).
 
 ## Testing middleware {#testing}
 
-Two levels:
+Test at two levels:
 
 ```javascript
 // 1. Unit test: call the function with fake req, res and next
@@ -449,18 +489,24 @@ test('the error handler formats AppError', async () => {
 });
 ```
 
-Test the **order-sensitive** behaviour with the real `createApp()` ([supertest](lesson:node-express#testing)): a request without a token gets 401, a preflight gets 204, an oversize body gets 413, an unknown path gets the JSON 404, and a thrown error gets the error format.
+Test the behaviour that depends on order with the real `createApp()` ([supertest](lesson:node-express#testing)). Check each of these:
+
+- a request without a token gets 401;
+- a preflight gets 204;
+- a body that is too large gets 413;
+- an unknown path gets the JSON 404;
+- a thrown error gets the error format.
 
 ## Performance and pitfalls {#performance}
 
-- Every request walks the layer list, so keep **global** layers few and fast, and attach the rest to the routers and routes that need them.
-- Serve **static files first** (or from a CDN or proxy) so they skip logging, auth and parsing.
-- Parse bodies only where needed (`express.json()` on write routes), and always set a **limit**.
-- **No synchronous heavy work** in middleware, because it blocks every request. Hash passwords and compress with async or worker-based APIs.
-- **Async middleware that forgets `next`** hangs the request. In Express 4, an unhandled rejection also hangs it.
-- **Memory leaks:** storing data in module-level variables per request, or adding event listeners to a shared object on each request.
-- Keep **error middleware last**, and make sure the 404 layer is before it.
-- **Do not trust** headers you use for identity or logging (`X-Request-Id`, `X-Forwarded-For`) without validating or configuring `trust proxy`.
+- Every request walks the layer list. So keep **global** layers few and fast. Attach the rest to the routers and routes that need them.
+- Serve **static files first**, or from a CDN or proxy. Then they skip logging, auth and parsing.
+- Parse bodies only where needed, such as `express.json()` on write routes. Always set a **limit**.
+- **No heavy synchronous work** in middleware, because it blocks every request. Hash passwords and compress with async or worker-based APIs.
+- **Async middleware that forgets `next`** hangs the request. In Express 4, an unhandled rejection hangs it too.
+- **Memory leaks** come from two habits. One is storing per-request data in module-level variables. The other is adding event listeners to a shared object on each request.
+- Keep the **error middleware last**, with the 404 layer just before it.
+- **Do not trust** headers you use for identity or logging, such as `X-Request-Id` and `X-Forwarded-For`. Validate them, or configure `trust proxy`.
 
 ## Common mistakes {#mistakes}
 
@@ -527,63 +573,157 @@ Try it in the lab: [The Express middleware chain and why order matters](lab:expr
 
 ### [basic] What is middleware in Express? {#what-q}
 
-A function `(req, res, next)` that runs in the request pipeline. It can run any code, change `req` and `res`, end the cycle by sending a response, or call `next()` to pass control to the next matching layer. Parsing, logging, authentication and even route handlers are all middleware, registered in a list that Express walks in order.
+Middleware is a function `(req, res, next)` that runs in the request pipeline.
+
+It can do four things. It can run any code. It can change `req` and `res`. It can end the request by sending a response. Or it can call `next()` to pass control to the next matching layer.
+
+Parsing, logging, authentication and even route handlers are all middleware. They sit in one list, and Express walks that list in order.
 
 ### [basic] What does `next()` do and what happens if you forget it? {#next-q}
 
-`next()` tells Express to continue with the next matching layer in the list. If a middleware neither sends a response nor calls `next`, the request is never finished and hangs until a timeout. Calling it after responding is also wrong, because later layers then run against a finished response and cause `headers already sent` errors.
+`next()` tells Express to continue with the next matching layer in the list.
+
+If a middleware neither sends a response nor calls `next`, the request never finishes. It hangs until a timeout.
+
+Calling `next()` after responding is also wrong. Later layers then run against a finished response, which causes `headers already sent` errors.
 
 ### [basic] What is the difference between `app.use` and `app.get`? {#use-get-q}
 
-`app.use(path?, fn)` matches every HTTP method and any URL that starts with the path (default `/`), so it is used for cross-cutting layers and for mounting routers. `app.get(path, handler)` matches only `GET` requests for that exact path. Inside a `use` layer the matched prefix is removed from `req.url`.
+`app.use(path?, fn)` matches every HTTP method, and any URL that starts with the path. The path defaults to `/`. So it is used for layers that apply to many routes, and for mounting routers.
+
+`app.get(path, handler)` matches only `GET` requests for that exact path.
+
+Inside a `use` layer, the matched prefix is removed from `req.url`.
 
 ### [basic] Why does the order of middleware matter? {#order-q}
 
-Layers run in registration order and the first one that ends the response wins. A body parser must come before the routes that read `req.body`, CORS before authentication so preflights are answered, authentication before protected routes, `express.static` early so files skip everything else, and the 404 and error handlers last. Wrong order silently changes behaviour, such as unauthenticated access or empty bodies.
+Layers run in the order you register them, and the first one that ends the response wins.
+
+So each layer must come before the layers that depend on it:
+
+- a body parser before the routes that read `req.body`;
+- CORS before authentication, so preflights are answered;
+- authentication before protected routes;
+- `express.static` early, so files skip everything else;
+- the 404 and error handlers last.
+
+The wrong order changes behaviour without any error. For example, a route becomes open without auth, or a body arrives empty.
 
 ### [basic] How does Express recognise an error-handling middleware? {#error-mw-q}
 
-By its arity: a function declared with four parameters `(err, req, res, next)`. Express calls it only after `next(err)` or a throw, skipping normal layers on the way, and it must be registered after the layers that may fail. If you declare only three parameters it is treated as ordinary middleware, even if you meant it as an error handler.
+By its arity, meaning the number of parameters it declares. An error handler declares four: `(err, req, res, next)`.
+
+Express calls it only after `next(err)` or a throw, and skips normal layers on the way. It must be registered after the layers that may fail.
+
+If you declare only three parameters, Express treats it as ordinary middleware, even if you meant it as an error handler.
 
 ### [intermediate] What are the differences between `next()`, `next(err)`, `next('route')` and `next('router')`? {#next-family-q}
 
-`next()` continues to the next matching layer. `next(err)` signals an error: Express skips all normal layers and goes to the next error-handling middleware. `next('route')` skips the rest of the handlers of the current route and continues with the next matching route, useful when one of several handlers decides the route does not apply. `next('router')` exits the current router and returns to its parent, useful for a guard at the top of a router.
+- `next()` continues to the next matching layer.
+- `next(err)` signals an error. Express skips all normal layers, and goes to the next error-handling middleware.
+- `next('route')` skips the rest of the handlers on the current route, and continues with the next matching route. It is useful when one of several handlers decides the route does not apply.
+- `next('router')` leaves the current router, and returns to its parent. It is useful for a guard at the top of a router.
 
 ### [intermediate] How does mounting a router change `req.url`, and what are `baseUrl` and `originalUrl`? {#mount-q}
 
-Inside middleware or a router mounted at `/api/accounts`, Express removes the mount path from `req.url`, so a request for `/api/accounts/42` shows `req.url = '/42'`. `req.baseUrl` holds the mounted prefix (`/api/accounts`) and `req.originalUrl` always holds the full original URL. The router can therefore declare routes relative to itself. Use `originalUrl` for logging and `baseUrl` when building links.
+Inside a router mounted at `/api/accounts`, Express removes the mount path from `req.url`. So a request for `/api/accounts/42` shows `req.url = '/42'`.
+
+- `req.baseUrl` holds the mounted prefix, `/api/accounts`.
+- `req.originalUrl` always holds the full original URL.
+
+Because of this, the router can declare its routes relative to itself. Use `originalUrl` for logging, and `baseUrl` when building links.
 
 ### [intermediate] How do you share data from a middleware with later handlers, and with code that does not receive `req`? {#share-q}
 
-For later handlers, set a property on `req` (`req.user`) or `res.locals`, and declare the type in TypeScript. For code that does not receive `req` (a repository or logger deep in the call stack), use `AsyncLocalStorage`: a middleware calls `als.run(store, next)` and any code in that request, including after `await`s, reads `als.getStore()`. Do not use module-level variables, because concurrent requests would overwrite each other.
+For later handlers, set a property on `req`, such as `req.user`, or on `res.locals`. In TypeScript, declare its type.
+
+For code that never receives `req`, such as a repository or a logger deep in the call stack, use `AsyncLocalStorage`. A middleware calls `als.run(store, next)`. After that, any code in the same request can read `als.getStore()`, even after `await`s.
+
+Do not use module-level variables. Requests run at the same time, so they would overwrite each other's data.
 
 ### [intermediate] How do you run code after the handler has finished, for example to log the status code and duration? {#after-q}
 
-Record the start time before calling `next()` and listen to the response events: `res.on('finish')` fires when the response has been fully handed to the network, which is when the status code and duration are known, and `res.on('close')` fires when the connection ends, including when the client aborts before the end (check `res.writableFinished`). You cannot await `next()`, because it returns before the response is sent.
+Record the start time before calling `next()`. Then listen to the response's events.
+
+- `res.on('finish')` fires when the response has been fully sent. At that point the status code and duration are known.
+- `res.on('close')` fires when the connection ends. This includes a client that leaves before the end. Check `res.writableFinished` to tell the cases apart.
+
+You cannot await `next()` instead, because it returns before the response is sent.
 
 ### [intermediate] How do you handle async errors in Express 4 versus Express 5? {#async-q}
 
-In Express 5 a rejected promise (or a throw) from an async middleware or handler is passed to `next(err)` automatically. In Express 4 it is not, so the rejection is unhandled and the request hangs; you wrap handlers with a helper such as `fn(req, res, next).catch(next)` or use a package like `express-async-errors`. Errors in timer or event callbacks are not caught by Express in either version.
+In Express 5, a rejected promise or a throw from an async middleware goes to `next(err)` automatically.
+
+In Express 4 it does not. The rejection is unhandled, and the request hangs. So you wrap each handler with a helper such as `fn(req, res, next).catch(next)`, or use a package like `express-async-errors`.
+
+In both versions, Express does not catch errors inside timer or event callbacks.
 
 ### [intermediate] Why do webhook signature checks need `express.raw` and how do you compare the signature? {#webhook-q}
 
-The provider signs the exact bytes it sent. Parsing the JSON and serialising it again can change whitespace and key order, so the HMAC no longer matches. Capture the raw `Buffer` for that route with `express.raw({ type: 'application/json' })` (or the `verify` option of `express.json`), compute `HMAC-SHA256` with the shared secret, compare with `crypto.timingSafeEqual` (after checking equal lengths) to avoid timing attacks, check a timestamp against replays, and only then parse the JSON. Register the webhook route before the global JSON parser.
+The provider signs the exact bytes it sent. If you parse the JSON and serialise it again, the whitespace and key order can change. Then the HMAC no longer matches.
+
+So follow these steps:
+
+1. Capture the raw `Buffer` for that route with `express.raw({ type: 'application/json' })`. The `verify` option of `express.json` also works.
+2. Compute `HMAC-SHA256` with the shared secret.
+3. Check the lengths are equal, then compare with `crypto.timingSafeEqual`. This avoids timing attacks.
+4. Check a timestamp, to block replays.
+5. Only then parse the JSON.
+
+Register the webhook route before the global JSON parser.
 
 ### [intermediate] What does `router.param` do? {#param-q}
 
-It registers a callback that runs once per request for a named route parameter, before the route handlers, wherever the parameter appears in that router. It is used to load a resource (an account by `:id`), verify ownership, attach it to `req` and call `next(err)` when missing, so handlers do not repeat the lookup.
+It registers a callback for one named route parameter. The callback runs once per request, before the route handlers, wherever that parameter appears in the router.
+
+It is used to load a resource, such as an account by `:id`. It checks ownership, attaches the resource to `req`, and calls `next(err)` when it is missing. So the handlers do not repeat the lookup.
 
 ### [deep] How does Express route a request internally? {#internals-q}
 
-Each application and router holds an array of layers, each with a path matcher, an optional method and a handler function. On a request, Express calls a `next` function that loops through the array: it takes the next layer, skips it if the path or method does not match, otherwise calls its function with `(req, res, next)`. While an error is in flight it only calls layers whose function has four parameters, and without an error it skips those. Mounted routers do the same with their own array and strip the mount path from `req.url`, restoring it afterwards. If the array is exhausted the final handler responds with 404, or 500 for an error.
+Each application and router holds an array of layers. Each layer has a path matcher, an optional method and a handler function.
+
+On a request, Express calls a `next` function that loops through the array:
+
+1. It takes the next layer.
+2. It skips the layer if the path or method does not match.
+3. Otherwise it calls the layer's function with `(req, res, next)`.
+
+While an error is in flight, it only calls layers whose function has four parameters. Without an error, it skips those layers.
+
+Mounted routers do the same with their own array. They strip the mount path from `req.url`, and restore it afterwards.
+
+If the array runs out, the final handler responds with a 404, or a 500 for an error.
 
 ### [deep] Compare Express middleware with Java servlet filters and Spring interceptors. {#java-q}
 
-A servlet `Filter` wraps the rest of the chain: code before `chain.doFilter` runs on the way in and code after it on the way out, in the same stack frame, so a filter can time the full request. Express middleware has no "after" in the same function, because `next()` returns immediately and the response is sent later, so you use `res.on('finish')`. Spring interceptors split into `preHandle`, `postHandle` and `afterCompletion`. Express also unifies filters, routing and error handling in one list, uses arity to find error handlers instead of `@ControllerAdvice`, and uses `AsyncLocalStorage` where Java uses `ThreadLocal` and MDC, since Node has no thread per request.
+A servlet `Filter` wraps the rest of the chain. Code before `chain.doFilter` runs on the way in, and code after it runs on the way out, in the same stack frame. So one filter can time the whole request.
+
+Express middleware has no "after" inside the same function. `next()` returns at once, and the response is sent later. So you use `res.on('finish')`.
+
+Spring interceptors split the work into three methods: `preHandle`, `postHandle` and `afterCompletion`.
+
+Express also differs in three more ways:
+
+- It puts filters, routing and error handling in one list.
+- It finds error handlers by arity, instead of `@ControllerAdvice`.
+- It uses `AsyncLocalStorage` where Java uses `ThreadLocal` and MDC, because Node has no thread per request.
 
 ### [deep] How would you order the global middleware of a production API, and why? {#prod-order-q}
 
-Static files first so they skip everything else, then a request-context layer (request id), the access logger (so every API request is logged, even rejected ones), `helmet`, then CORS before authentication so preflights succeed, webhook routes with their raw body parser, `express.json` with a size limit, rate limiting, authentication on the protected routers, the feature routers (each with their own authorisation and validation), a 404 layer, and the error handler last. Each choice follows from what must see the request before the next layer can do its job.
+Each layer goes before the layers that need its work. The order is:
+
+1. Static files, so they skip everything else.
+2. A request-context layer, which sets the request id.
+3. The access logger, so every API request is logged, even rejected ones.
+4. `helmet`.
+5. CORS, before authentication, so preflights succeed.
+6. Webhook routes, with their own raw body parser.
+7. `express.json`, with a size limit.
+8. Rate limiting.
+9. Authentication on the protected routers.
+10. The feature routers, each with its own authorisation and validation.
+11. A 404 layer.
+12. The error handler, last.
 
 ### [coding] Implement a minimal Express-like app with `use`, `get`, `next`, error-handling middleware (detected by arity) and async support. {#coding-mini}
 
@@ -645,7 +785,14 @@ app.get('/async-boom', async () => { throw new Error('async boom'); });
 app.use((err, req, res, next) => { res.statusCode = 500; res.end(`handled: ${err.message}`); });
 ```
 
-The core idea is the recursive `next` over an array: it skips layers that do not match, skips error handlers while there is no error and normal layers while there is one, turns sync throws and rejected promises into `next(err)`, and falls through to a final 404 or 500. A real Express also strips mount paths, supports path parameters and `next('route')` with route-level stacks.
+Explain these points:
+
+- The core is a recursive `next` function over an array of layers.
+- It skips layers whose path or method does not match.
+- It skips error handlers when there is no error, and normal layers when there is one.
+- It turns synchronous throws and rejected promises into `next(err)`.
+- When the array runs out, it falls through to a final 404 or 500.
+- Real Express does more. It strips mount paths, supports path parameters, and supports `next('route')` with a stack per route.
 
 ### [coding] Write middleware that gives every request an id, stores it in `AsyncLocalStorage`, and logs method, URL, status and duration when the response finishes. {#coding-context}
 
@@ -697,7 +844,13 @@ app.use(requestContext);
 app.use(accessLog);
 ```
 
-`als.run(store, next)` starts the store for everything that runs after it, including across `await`s, so `findAccount` and every other function can read the id without it being passed down. The incoming id is validated before it is reused, so a client cannot inject odd characters or huge strings into logs.
+Explain these points:
+
+- `als.run(store, next)` starts the store for everything that runs after it, including across `await`s.
+- So `findAccount`, and every other function, can read the id without it being passed down.
+- The incoming id is validated before it is reused. A client cannot inject odd characters or huge strings into the logs.
+- The log line is written on `finish`, when the status and duration are known.
+- `close` without `writableFinished` records a client that left early.
 
 ### [coding] Write middleware that verifies a payment-provider webhook (HMAC SHA-256 of the raw body, with a timestamp tolerance) and mount it correctly. {#coding-webhook}
 
@@ -757,4 +910,11 @@ app.post(
 app.use(express.json({ limit: '100kb' }));   // everything else gets parsed JSON
 ```
 
-The signature covers the timestamp and the exact bytes, the comparison is constant-time after a length check, old timestamps are rejected, and the raw parser is route-level and mounted before `express.json`, which would otherwise consume the stream first and leave nothing to hash.
+Explain these points:
+
+- The signature covers the timestamp and the exact raw bytes.
+- The comparison is constant-time, after a length check.
+- Old timestamps are rejected, which blocks replays.
+- The raw parser is set on this route only, and mounted before `express.json`.
+- Otherwise `express.json` would read the stream first, and leave nothing to hash.
+- The handler acknowledges fast, and a queue processes the event later.

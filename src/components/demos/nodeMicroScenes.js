@@ -1,101 +1,221 @@
-// Frame data for the "Node.js microservices" walk-through (box-and-arrow player).
-// box.tone: ok | bad | warn | new | none.
+// Frame data for the "Node.js microservices" walk-through, drawn by BoardStage.
 
-const b = (id, title, lines = [], tone, badge) => ({ id, title, lines, tone, badge });
-const d = (from, to, label, tone) => ({ from, to, label, tone });
+import { BoardStage } from './BoardStage.jsx';
+
+const box = (id, x, y, w, title, lines, tone = 'none', o = {}) => ({ id, x, y, w, title, lines, mono: true, tone, ...o });
+const C1 = 14, C2 = 230, C3 = 446, W = 180;
+const W2 = 290, R2 = 336;
+
+/* ---------- service shape ---------- */
+const shapeFrames = [
+  {
+    h: 250,
+    line: 'modular monolith first',
+    result: { text: 'split one capability at a time', tone: 'ok' },
+    regions: [{ x: 6, y: 30, w: 300, h: 200, title: 'one deploy', tone: 'none' }],
+    cards: [
+      box('a', 18, 66, 130, 'accounts', ['module'], 'ok'),
+      box('t', 162, 66, 130, 'transfers', ['module'], 'ok'),
+      box('n', 18, 150, 130, 'notify', ['module'], 'warn', { badge: 'own rhythm' }),
+      box('s', 446, 120, W, 'notification-service', ['own team', 'own data', 'own deploy'], 'new'),
+    ],
+    arrows: [{ from: 'n', to: 's', fs: 'r', ts: 'l', tone: 'ok' }],
+    note: 'Start with a modular monolith with clear module boundaries. Extract a module only when it has a different team, release rhythm or scaling need. The rule for a boundary: one business capability, one team, one data owner.',
+  },
+  {
+    h: 250,
+    line: '@bank/common v3 → v4',
+    result: { text: 'every service upgrades together', tone: 'bad' },
+    cards: [
+      box('l', C2, 40, W, '@bank/common', ['models, helpers,', 'clients, rules'], 'bad', { badge: 'shared' }),
+      box('a', C1, 160, W, 'accounts', ['must upgrade'], 'bad'),
+      box('t', C2, 160, W, 'transfers', ['must upgrade'], 'bad'),
+      box('n', C3, 160, W, 'notify', ['must upgrade'], 'bad'),
+    ],
+    arrows: [
+      { from: 'l', to: 'a', fs: 'b', ts: 't', tone: 'bad' },
+      { from: 'l', to: 't', fs: 'b', ts: 't', tone: 'bad' },
+      { from: 'l', to: 'n', fs: 'b', ts: 't', tone: 'bad' },
+    ],
+    note: 'A shared library full of models and business helpers couples every service to every other. One change forces all of them to release together. Share only versioned contracts, such as API schemas and event types.',
+  },
+  {
+    h: 250,
+    line: 'ALTER TABLE accounts ...',
+    result: { text: 'the other service breaks', tone: 'bad' },
+    cards: [
+      box('a', C1, 50, W, 'account-service', ['owns the schema'], 'ok'),
+      box('r', C3, 50, W, 'report-service', ['reads the table', 'directly'], 'bad'),
+      box('d', C2, 150, W, 'accounts DB', ['column renamed'], 'warn'),
+    ],
+    arrows: [
+      { from: 'a', to: 'd', fs: 'b', ts: 'l', tone: 'ok' },
+      { from: 'r', to: 'd', fs: 'b', ts: 'r', tone: 'bad' },
+    ],
+    note: 'When two services share tables, a schema change by one breaks the other without warning. Neither team can deploy alone. Keep each database private, and share data through the owner\'s API or its events.',
+  },
+];
+
+/* ---------- calling services ---------- */
+const callFrames = [
+  {
+    h: 250,
+    line: "callJson('/accounts/1')",
+    result: { text: 'timeout, retry, breaker', tone: 'ok' },
+    cards: [
+      box('c', C1, 50, W, 'caller', ['AbortSignal', 'timeout 2 s'], 'new'),
+      box('r', C2, 50, W, 'retry', ['safe requests only', '100, 200, 400 ms', '+ jitter'], 'ok'),
+      box('s', C3, 50, W, 'account-service', ['503, 503, 200'], 'warn'),
+      box('b', C1, 170, 612, 'circuit breaker', ['after 3 failures: open, fail fast, no network call; later one trial call (half-open)'], 'warn'),
+    ],
+    arrows: [{ from: 'c', to: 'r', fs: 'r', ts: 'l', tone: 'ok' }, { from: 'r', to: 's', fs: 'r', ts: 'l', tone: 'warn' }],
+    note: 'A remote call can be slow, fail, or fail halfway. Give every call a deadline. Retry only safe or idempotent calls, with backoff and jitter. A circuit breaker stops calling a sick service, so it cannot drag its callers down.',
+  },
+  {
+    h: 250,
+    line: 'POST /transfers (no key)',
+    result: { text: 'not retried: it might run twice', tone: 'warn' },
+    cards: [
+      box('p', C1, 60, W2, 'POST without idempotency-key', ['1 attempt, error returned'], 'warn'),
+      box('k', R2, 60, W2, 'POST with idempotency-key', ['retried safely', 'server dedupes by key'], 'ok'),
+      box('x', C1, 170, 612, '400 Bad Request', ['never retried, and does not count against the breaker'], 'none'),
+    ],
+    note: 'A plain POST is not retried, because the first attempt may have worked. With an idempotency key the server can recognise a repeat, so a retry is safe. A 400 is the caller\'s fault, so it is not retried either.',
+  },
+  {
+    h: 260,
+    line: 'loadDashboard(user)',
+    result: { text: 'page shown, cards and offers degraded', tone: 'warn' },
+    cards: [
+      box('f', C2, 30, W, 'BFF', ['deadline 100 ms', 'allSettled'], 'new'),
+      box('a', C1, 150, W, 'accounts', ['ok in 20 ms'], 'ok', { badge: 'essential' }),
+      box('c', C2, 150, W, 'cards', ['too slow: aborted'], 'warn'),
+      box('o', C3, 150, W, 'offers', ['threw'], 'bad'),
+    ],
+    arrows: [
+      { from: 'f', to: 'a', fs: 'b', ts: 't', tone: 'ok' },
+      { from: 'f', to: 'c', fs: 'b', ts: 't', tone: 'warn' },
+      { from: 'f', to: 'o', fs: 'b', ts: 't', tone: 'bad' },
+    ],
+    note: 'A backend for frontend calls several services in parallel for one screen, under one shared deadline. It fails only if an essential call fails. Optional parts come back empty, listed in degraded. Pass the abort signal to every call.',
+  },
+  {
+    h: 250,
+    line: 'x-correlation-id: 7f3a',
+    result: { text: 'one search shows the whole journey', tone: 'ok' },
+    cards: [
+      box('g', C1, 60, W, 'gateway', ['creates id 7f3a'], 'new'),
+      box('t', C2, 60, W, 'transfer-service', ['AsyncLocalStorage', 'logs id=7f3a'], 'ok'),
+      box('l', C3, 60, W, 'ledger-service', ['header + message', 'logs id=7f3a'], 'ok'),
+      box('q', C1, 180, 612, 'log search: id=7f3a', ['gateway → transfer → ledger, with a traceparent for the trace'], 'ok'),
+    ],
+    arrows: [{ from: 'g', to: 't', fs: 'r', ts: 'l', tone: 'ok' }, { from: 't', to: 'l', fs: 'r', ts: 'l', tone: 'ok' }],
+    note: 'Give each request a correlation id at the edge. Pass it on every outbound call and message. Inside a service, AsyncLocalStorage carries it through the async code, so every log line has it.',
+  },
+];
+
+/* ---------- events and the outbox ---------- */
+const eventFrames = [
+  {
+    h: 250,
+    line: 'save(transfer); publish(event)',
+    result: { text: 'crash in between: event lost', tone: 'bad' },
+    cards: [
+      box('d', C1, 60, W, 'database', ['transfer saved'], 'ok'),
+      box('x', C2, 60, W, 'process', ['crash'], 'bad', { badge: 'here' }),
+      box('b', C3, 60, W, 'broker', ['no event'], 'bad'),
+    ],
+    arrows: [{ from: 'd', to: 'x', fs: 'r', ts: 'l', tone: 'ok' }, { from: 'x', to: 'b', fs: 'r', ts: 'l', tone: 'bad', cross: true }],
+    note: 'Saving and publishing are two separate writes. If the process crashes between them, the transfer exists but nobody hears about it. Nothing remembers that an event was owed, so a retry cannot fix it.',
+  },
+  {
+    h: 260,
+    line: 'BEGIN; INSERT transfer; INSERT outbox; COMMIT',
+    result: { text: 'data and event saved together', tone: 'ok' },
+    regions: [{ x: 6, y: 30, w: 300, h: 210, title: 'one transaction', tone: 'ok' }],
+    cards: [
+      box('t', 18, 66, 276, 'transfers', ['id 42, 500.00 SGD'], 'ok'),
+      box('o', 18, 150, 276, 'outbox', ['TransferCompleted 42', 'published_at: null'], 'new'),
+      box('r', C3, 66, W, 'relay', ['SKIP LOCKED batch', 'publish, mark done'], 'ok'),
+      box('b', C3, 170, W, 'broker', ['at least once'], 'warn'),
+    ],
+    arrows: [{ from: 'o', to: 'r', fs: 'r', ts: 'l', tone: 'ok' }, { from: 'r', to: 'b', fs: 'b', ts: 't', tone: 'ok' }],
+    note: 'The transactional outbox writes the business row and an outbox row in one transaction. A relay publishes unpublished rows and marks them done. A crash after publishing sends the event again, so delivery is at least once.',
+  },
+  {
+    h: 250,
+    line: 'message 9c1 arrives again',
+    result: { text: 'duplicate skipped and acknowledged', tone: 'ok' },
+    cards: [
+      box('m', C1, 60, W, 'message 9c1', ['second delivery'], 'warn'),
+      box('c', C2, 60, W, 'consumer tx', ['INSERT processed(9c1)', 'conflict → skip'], 'ok'),
+      box('q', C3, 60, W, 'dead-letter queue', ['poison messages', 'parked, alerted'], 'warn'),
+    ],
+    arrows: [{ from: 'm', to: 'c', fs: 'r', ts: 'l', tone: 'warn' }, { from: 'c', to: 'q', fs: 'r', ts: 'l', tone: 'warn' }],
+    note: 'Because duplicates happen, every consumer must be idempotent. It records the message id in the same transaction as its own change, so a repeat is skipped. Transient errors are retried; poison messages go to a dead-letter queue.',
+  },
+  {
+    h: 260,
+    line: 'saga 42: credit failed',
+    result: { text: 'compensate: refund the debit', tone: 'warn' },
+    cards: [
+      box('o', C2, 30, W, 'orchestrator', ['state in a table', 'step: CREDITING'], 'new'),
+      box('d', C1, 150, W, 'debit A', ['done'], 'ok'),
+      box('c', C2, 150, W, 'credit B', ['failed'], 'bad'),
+      box('r', C3, 150, W, 'refund A', ['compensation'], 'warn'),
+    ],
+    arrows: [
+      { from: 'o', to: 'd', fs: 'b', ts: 't', tone: 'ok' },
+      { from: 'o', to: 'c', fs: 'b', ts: 't', tone: 'bad' },
+      { from: 'o', to: 'r', fs: 'b', ts: 't', tone: 'warn' },
+    ],
+    note: 'A saga splits one business operation into local transactions, with a compensation for each. The orchestrator stores its state and reacts to each reply. It ignores duplicate and late replies, and sends stuck cases to manual review.',
+  },
+];
+
+/* ---------- run, secure, observe ---------- */
+const runFrames = [
+  {
+    h: 250,
+    line: 'rename amount → value',
+    result: { text: 'breaking: add a field instead', tone: 'warn' },
+    cards: [
+      box('b', C1, 60, W2, 'breaking change', ['remove or rename a field', 'old consumers fail'], 'bad'),
+      box('a', R2, 60, W2, 'additive change', ['new optional field', 'consumers ignore extras'], 'ok'),
+      box('p', C1, 170, 612, 'consumer-driven contract test (Pact)', ['the provider pipeline checks every consumer\'s contract before deploy'], 'new'),
+    ],
+    note: 'Services change independently, so contracts must stay backward compatible. Adding an optional field is safe. Removing or renaming one breaks consumers. Contract tests catch the break before deployment.',
+  },
+  {
+    h: 250,
+    line: 'transfer → ledger',
+    result: { text: 'authenticate and authorise every call', tone: 'ok' },
+    regions: [{ x: 6, y: 30, w: 620, h: 110, title: 'internal network: not trusted', tone: 'warn' }],
+    cards: [
+      box('t', C1, 66, W, 'transfer-service', ['client certificate'], 'ok'),
+      box('l', C3, 66, W, 'ledger-service', ['checks caller', 'checks user owns acct'], 'ok'),
+      box('n', C1, 170, 612, 'network policy', ['default deny; only the calls meant to exist are allowed'], 'new'),
+    ],
+    arrows: [{ from: 't', to: 'l', fs: 'r', ts: 'l', tone: 'ok' }],
+    note: 'The internal network is not a safe zone. Services prove who they are with mutual TLS or signed tokens, and pass the user\'s identity along. Every service authorises each request again.',
+  },
+  {
+    h: 250,
+    line: 'deploy notification-service',
+    result: { text: 'one service, released alone', tone: 'ok' },
+    cards: [
+      box('t', C1, 60, W, 'service template', ['health, shutdown,', 'logs, metrics'], 'new'),
+      box('p', C2, 60, W, 'own pipeline', ['image per commit', 'canary release'], 'ok'),
+      box('o', C3, 60, W, 'owning team', ['carries the pager'], 'warn'),
+    ],
+    arrows: [{ from: 't', to: 'p', fs: 'r', ts: 'l', tone: 'ok' }, { from: 'p', to: 'o', fs: 'r', ts: 'l', tone: 'ok' }],
+    note: 'Independence is the point. Each service has its own pipeline, image and release, built from a template that already includes the basics. The team that builds a service also runs it.',
+  },
+];
 
 export const NODE_MICRO_SCENES = [
-  {
-    id: 'shape',
-    label: 'Service shape',
-    title: 'Small services with clear owners',
-    frames: [
-      {
-        note: 'Start with a modular monolith and split only when a boundary has proved itself: a business capability such as payments or notifications, with its own team, its own release rhythm and its own data. Node suits the split well because services are small, start fast and make cheap I/O calls.',
-        boxes: [b('m', 'Modular monolith first', ['clear modules, one deploy'], 'ok'), b('c', 'Split by capability', ['payments, notifications'], 'new'), b('o', 'Own team and data', ['one owner each'], 'ok')],
-        deps: [d('Modular monolith first', 'Split by capability', 'then', 'ok'), d('Split by capability', 'Own team and data', 'gives', 'ok')],
-      },
-      {
-        note: 'A shared common library full of models and helpers quietly couples every service to every other. A change to it forces all of them to upgrade together. Share only versioned contracts, such as API schemas and event types, and keep business code inside each service.',
-        boxes: [b('l', 'Shared common library', ['models, helpers, clients'], 'bad'), b('k', 'Lockstep releases', ['all services upgrade'], 'bad'), b('p', 'Contracts-only package', ['schemas and types'], 'ok')],
-        deps: [d('Shared common library', 'Lockstep releases', 'causes', 'bad'), d('Lockstep releases', 'Contracts-only package', 'fixed by', 'ok')],
-      },
-      {
-        note: 'Each service owns its data. When two services read and write the same tables, a schema change breaks the other one without warning, and neither team can deploy alone. Expose the data through the owner API or through events, and keep the database private.',
-        boxes: [b('s', 'Shared database', ['two services, one schema'], 'bad'), b('h', 'Hidden coupling', ['change breaks the other'], 'bad'), b('o', 'Own data and API', ['database per service'], 'ok')],
-        deps: [d('Shared database', 'Hidden coupling', 'causes', 'bad'), d('Hidden coupling', 'Own data and API', 'fixed by', 'ok')],
-      },
-    ],
-  },
-  {
-    id: 'calls',
-    label: 'Calling services',
-    title: 'Every remote call can fail or be slow',
-    frames: [
-      {
-        note: 'A remote call needs a deadline, limited retries and a circuit breaker. Time out every call with an AbortSignal. Retry only idempotent calls, with exponential backoff and jitter. After repeated failures the breaker opens and calls fail at once, so a sick dependency does not drag its callers down.',
-        boxes: [b('r', 'Remote call', ['fetch with a deadline'], 'new'), b('t', 'Timeout and retry', ['backoff with jitter'], 'ok'), b('c', 'Circuit breaker', ['open after failures'], 'warn')],
-        deps: [d('Remote call', 'Timeout and retry', 'guarded by', 'ok'), d('Timeout and retry', 'Circuit breaker', 'then', 'warn')],
-      },
-      {
-        note: 'A backend for frontend calls several services in parallel for one screen. Use Promise.allSettled with a shared deadline, fail the page only when an essential call fails, and return a partial result with the missing parts marked when an optional service is slow or down.',
-        boxes: [b('b', 'Backend for frontend', ['one call per screen'], 'new'), b('p', 'Parallel calls', ['shared deadline'], 'ok'), b('r', 'Partial result', ['optional parts may be empty'], 'warn')],
-        deps: [d('Backend for frontend', 'Parallel calls', 'makes', 'ok'), d('Parallel calls', 'Partial result', 'returns', 'warn')],
-      },
-      {
-        note: 'Give every request a correlation id at the edge and pass it on every outbound call and message. AsyncLocalStorage carries it through the async code inside a service, and the traceparent header carries the trace across services, so one search shows the whole journey of a transfer.',
-        boxes: [b('c', 'Correlation id', ['set at the edge'], 'new'), b('h', 'Propagated in headers', ['http and message headers'], 'ok'), b('t', 'One trace', ['across all services'], 'ok')],
-        deps: [d('Correlation id', 'Propagated in headers', 'sent in', 'ok'), d('Propagated in headers', 'One trace', 'builds', 'ok')],
-      },
-    ],
-  },
-  {
-    id: 'events',
-    label: 'Events and the outbox',
-    title: 'Change data and publish the event together',
-    frames: [
-      {
-        note: 'Saving to the database and then publishing to the broker are two separate writes. If the process crashes between them the transfer exists but nobody hears about it. Retrying later cannot fix it, because the information that an event was owed is gone.',
-        boxes: [b('d', 'Dual write', ['save, then publish'], 'bad'), b('l', 'Lost event', ['crash in between'], 'bad'), b('o', 'Transactional outbox', ['event saved with the data'], 'ok')],
-        deps: [d('Dual write', 'Lost event', 'can cause', 'bad'), d('Lost event', 'Transactional outbox', 'fixed by', 'ok')],
-      },
-      {
-        note: 'The service writes the business row and an outbox row in one database transaction. A relay reads unpublished rows, using FOR UPDATE SKIP LOCKED so several relays do not clash, publishes them and marks them done. If it crashes after publishing, the event goes out again, so delivery is at least once.',
-        boxes: [b('r', 'Outbox relay', ['SKIP LOCKED batches'], 'new'), b('b', 'Broker', ['Kafka, RabbitMQ, SQS'], 'ok'), b('a', 'At-least-once delivery', ['duplicates possible'], 'warn')],
-        deps: [d('Outbox relay', 'Broker', 'publishes to', 'ok'), d('Broker', 'At-least-once delivery', 'means', 'warn')],
-      },
-      {
-        note: 'Because duplicates happen, every consumer must be idempotent. It records the message id in the same transaction as its own change, so a redelivered message is recognised and skipped. Transient errors are retried with backoff, and poison messages go to a dead-letter queue for people to inspect.',
-        boxes: [b('i', 'Idempotent consumer', ['message id in same tx'], 'ok'), b('d', 'Duplicate delivery', ['skipped, acknowledged'], 'warn'), b('q', 'Dead-letter queue', ['poison messages parked'], 'warn')],
-        deps: [d('Duplicate delivery', 'Idempotent consumer', 'handled by', 'ok'), d('Idempotent consumer', 'Dead-letter queue', 'gives up to', 'warn')],
-      },
-      {
-        note: 'A saga spreads one business operation over several services as a chain of local transactions with compensations. An orchestrator keeps the state in a table and reacts to each reply: debit, credit, notify, and on a failure a refund. Ignore duplicate and late replies, and send stuck cases to manual review.',
-        boxes: [b('o', 'Saga orchestrator', ['persisted state machine'], 'new'), b('l', 'Local transactions', ['debit, credit, notify'], 'ok'), b('c', 'Compensation', ['refund the debit'], 'warn')],
-        deps: [d('Saga orchestrator', 'Local transactions', 'drives', 'ok'), d('Local transactions', 'Compensation', 'on failure', 'warn')],
-      },
-    ],
-  },
-  {
-    id: 'run',
-    label: 'Run, secure, observe',
-    title: 'Contracts, trust and ownership',
-    frames: [
-      {
-        note: 'Services evolve independently, so changes must stay backward compatible. Adding an optional field is safe, removing or renaming one is a breaking change. Consumers read only what they need and ignore the rest, and consumer-driven contract tests prove that a provider change does not break a consumer before it is deployed.',
-        boxes: [b('b', 'Breaking change', ['rename or remove a field'], 'bad'), b('a', 'Additive change', ['new optional field'], 'ok'), b('c', 'Contract test', ['consumer states needs'], 'new')],
-        deps: [d('Breaking change', 'Additive change', 'replace with', 'warn'), d('Additive change', 'Contract test', 'verified by', 'ok')],
-      },
-      {
-        note: 'The internal network is not a safe zone. Services authenticate each other with mutual TLS or signed tokens, pass the end user identity along, and every service authorises each request again instead of trusting the caller. Network policies allow only the calls that are meant to exist.',
-        boxes: [b('t', 'Trusted network', ['anything inside is fine'], 'bad'), b('m', 'mTLS between services', ['both sides prove identity'], 'ok'), b('p', 'Token propagation', ['user and service identity'], 'ok')],
-        deps: [d('Trusted network', 'mTLS between services', 'replace with', 'warn'), d('mTLS between services', 'Token propagation', 'plus', 'ok')],
-      },
-      {
-        note: 'Independence is the point, so each service has its own pipeline, image and release, built from a common service template that already includes health checks, graceful shutdown, logging and metrics. The owning team carries the pager, because operating the service is part of owning it.',
-        boxes: [b('p', 'Independent pipeline', ['deploy one service alone'], 'ok'), b('t', 'Service template', ['health, logs, metrics built in'], 'new'), b('o', 'Ownership and on-call', ['you build it, you run it'], 'warn')],
-        deps: [d('Service template', 'Independent pipeline', 'speeds up', 'ok'), d('Independent pipeline', 'Ownership and on-call', 'with', 'warn')],
-      },
-    ],
-  },
+  { id: 'shape', label: 'Service shape', title: 'Small services with clear owners', stage: BoardStage, frames: shapeFrames },
+  { id: 'calls', label: 'Calling services', title: 'Every remote call can fail or be slow', stage: BoardStage, frames: callFrames },
+  { id: 'events', label: 'Events and the outbox', title: 'Change data and publish the event together', stage: BoardStage, frames: eventFrames },
+  { id: 'run', label: 'Run, secure, observe', title: 'Contracts, trust and ownership', stage: BoardStage, frames: runFrames },
 ];
