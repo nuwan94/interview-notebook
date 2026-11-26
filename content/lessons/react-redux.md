@@ -6,31 +6,44 @@ summary: State management with Redux, the store, actions and reducers, one-way d
 tags: [Redux, Redux Toolkit, RTK Query, React, State management, Selectors, Thunk, Full stack]
 order: 66
 topic: Full stack / React
-updated: 2026-11-18
+updated: 2026-11-26
 subnav: true
 ---
 
-Redux appears in most React interviews at companies with large front ends. They ask *what Redux is and why you would use it, what an action, a reducer and the store are, why reducers must be pure, what Redux Toolkit changed, how you do async work, what a selector is and how it avoids re-renders, what RTK Query is, and when you would not use Redux at all.* This lesson builds on [React hooks](lesson:react-hooks#reducer) (`useReducer` is Redux in small) and on [TypeScript](lesson:ts-essentials#generics). The examples are TypeScript and use banking data. Play the four scenes: the data flow, async thunks, selectors and re-renders, and RTK Query.
+Redux appears in most React interviews at companies with large front ends. Expect questions like these:
+
+- What is Redux, and why would you use it?
+- What are an action, a reducer and the store?
+- Why must reducers be pure?
+- What did Redux Toolkit change?
+- How do you do async work?
+- What is a selector, and how does it avoid re-renders?
+- What is RTK Query?
+- When would you not use Redux at all?
+
+This lesson builds on [React hooks](lesson:react-hooks#reducer) (`useReducer` is Redux in small) and on [TypeScript](lesson:ts-essentials#generics). The examples are TypeScript and use banking data. Play the four scenes: the data flow, async thunks, selectors and re-renders, and RTK Query.
 
 ```demo
 name: redux-walk
 ```
 
-> **One sentence to remember:** *Components dispatch actions, pure reducers return the next state, the store notifies subscribers, selectors pick what each component needs, and RTK Query keeps server data out of your reducers.*
+> **One sentence to remember:** *Components dispatch actions, and pure reducers return the next state.*
+
+In more detail: the store notifies subscribers, selectors pick what each component needs, and RTK Query keeps server data out of your reducers.
 
 ## What Redux is {#what}
 
-**Redux** is a predictable state container: one **store** holds the application state as a single plain object, and the only way to change it is to **dispatch an action**. A **reducer** (a pure function) computes the next state from the current state and the action. Any component can read from the store and re-render when the part it reads changes.
+**Redux** is a predictable state container. One **store** holds the application state as a single plain object. The only way to change it is to **dispatch an action**. A **reducer** (a pure function) computes the next state from the current state and the action. Any component can read from the store, and re-render when the part it reads changes.
 
-Three principles:
+There are three principles:
 
-1. **Single source of truth**: one store, one state tree.
-2. **State is read-only**: you never change it directly, you dispatch an action that describes what happened.
-3. **Changes are made with pure functions**: `(state, action) => newState`, with no side effects.
+1. **Single source of truth.** One store, one state tree.
+2. **State is read-only.** You never change it directly. You dispatch an action that describes what happened.
+3. **Changes are made with pure functions.** `(state, action) => newState`, with no side effects.
 
-Because every change is an action, you get a log of *what happened and in which order*. The Redux DevTools use this for time-travel debugging: step back and forth through actions and inspect the state after each.
+Every change is an action, so you get a log of *what happened and in which order*. The Redux DevTools use this for time-travel debugging: step back and forth through the actions and inspect the state after each.
 
-**Plain Redux versus Redux Toolkit.** Hand-written Redux needed a lot of boilerplate (action type constants, action creators, switch statements, spread copies, store setup). **Redux Toolkit (RTK)** is the official, recommended way to write Redux today. It removes that boilerplate and adds good defaults. New code should use RTK, and "Redux" in a job description normally means "Redux Toolkit".
+**Plain Redux versus Redux Toolkit.** Hand-written Redux needed a lot of boilerplate: action type constants, action creators, switch statements, spread copies and store setup. **Redux Toolkit (RTK)** is the official, recommended way to write Redux today. It removes that boilerplate and adds good defaults. New code should use RTK. "Redux" in a job description normally means "Redux Toolkit".
 
 ## The data flow {#flow}
 
@@ -38,26 +51,26 @@ The first scene shows one-way flow:
 
 1. A user event runs a handler, which calls `dispatch(action)`.
 2. The store passes the current state and the action to the **reducer**.
-3. The reducer returns the **new state**. The store saves it.
+3. The reducer returns the **new state**, and the store saves it.
 4. Subscribers are notified. Each `useSelector` re-runs and compares its result by **reference**. Components whose selected value changed render again.
-5. **Middleware** sits between `dispatch` and the reducer and can see every action.
+5. **Middleware** sits between `dispatch` and the reducer, and can see every action.
 
-An action is a plain object, by convention `{ type: 'domain/eventName', payload }`:
+An action is a plain object. By convention it is `{ type: 'domain/eventName', payload }`:
 
 ```ts
 dispatch({ type: 'cart/itemAdded', payload: { sku: 'CARD-GOLD', qty: 1 } });
 ```
 
-Name actions as **events that happened** (`cart/itemAdded`), not as setters (`setCart`). This keeps reducers in charge of how state changes and makes the log readable.
+Name actions as **events that happened** (`cart/itemAdded`), not as setters (`setCart`). Then the reducer stays in charge of how state changes, and the log is readable.
 
 ## Reducers must be pure {#pure}
 
 A reducer takes `(state, action)` and returns the next state. It must be:
 
-- **Pure**: the same inputs always give the same output. No network calls, no `Date.now()`, no `Math.random()`, no writing to the DOM.
-- **Immutable**: it never changes the `state` object it received. It returns a new object for what changed and reuses the rest.
+- **Pure.** The same inputs always give the same output. No network calls, no `Date.now()`, no `Math.random()`, no writing to the DOM.
+- **Immutable.** It never changes the `state` object it received. It returns a new object for what changed, and reuses the rest.
 
-Why: Redux and React detect change by **reference** (`===`). If you mutate the old object and return it, nothing looks changed, the selector returns the same reference, and the UI does not update. Pure reducers are also trivial to test and to replay.
+Here is why. Redux and React detect change by **reference** (`===`). If you mutate the old object and return it, nothing looks changed. The selector returns the same reference, and the UI does not update. Pure reducers are also easy to test and to replay.
 
 ```ts
 // Hand-written immutable update: copy every level you change
@@ -116,9 +129,13 @@ export const { accountSelected, accountFrozen } = accountsSlice.actions;
 export default accountsSlice.reducer;
 ```
 
-`createSlice` generates the action creators (`accountFrozen('A-1')` returns `{ type: 'accounts/accountFrozen', payload: 'A-1' }`) and the reducer.
+`createSlice` generates the action creators and the reducer. For example, `accountFrozen('A-1')` returns `{ type: 'accounts/accountFrozen', payload: 'A-1' }`.
 
-**Immer.** Inside `createSlice` reducers you may write "mutating" code. RTK wraps your reducer with Immer, which gives you a **draft** (a proxy), records what you changed, and produces a new immutable state with structural sharing (unchanged parts keep the same reference). Rules: either mutate the draft **or** return a new value, never both, and this only works inside `createSlice`, `createReducer` and `produce`, not in a hand-written reducer.
+**Immer.** Inside `createSlice` reducers you may write "mutating" code. RTK wraps your reducer with Immer. Immer gives you a **draft** (a proxy) and records what you changed. It then produces a new immutable state with structural sharing, so unchanged parts keep the same reference. Three rules:
+
+- Either mutate the draft **or** return a new value, never both.
+- This only works inside `createSlice`, `createReducer` and `produce`.
+- It does not work in a hand-written reducer.
 
 **The store:**
 
@@ -140,11 +157,16 @@ export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 ```
 
-`configureStore` combines the slice reducers, adds the **thunk** middleware, turns on the **Redux DevTools**, and in development adds checks that warn about **state mutation** and **non-serialisable values** in state or actions (a `Date`, a `Map`, a class instance, an `Error`).
+`configureStore` does four things:
+
+- it combines the slice reducers;
+- it adds the **thunk** middleware;
+- it turns on the **Redux DevTools**;
+- in development, it adds checks that warn about **state mutation** and **non-serialisable values** in state or actions (a `Date`, a `Map`, a class instance, an `Error`).
 
 ## React-Redux hooks {#hooks}
 
-Wrap the app once in a `Provider`, then read and write with hooks.
+Wrap the app once in a `Provider`. Then read and write with hooks.
 
 ```tsx
 import { Provider, useDispatch, useSelector } from 'react-redux';
@@ -157,7 +179,7 @@ createRoot(document.getElementById('root')!).render(
 );
 ```
 
-In TypeScript, define **typed hooks** once and use them everywhere, so you never repeat the types:
+In TypeScript, define **typed hooks** once and use them everywhere. Then you never repeat the types:
 
 ```ts
 // app/hooks.ts
@@ -183,11 +205,11 @@ function SelectedAccount() {
 }
 ```
 
-`useSyncExternalStore` ([hooks lesson](lesson:react-hooks#other)) is what React-Redux uses under the hood, so it is safe with concurrent rendering.
+React-Redux uses `useSyncExternalStore` ([hooks lesson](lesson:react-hooks#other)) under the hood, so it is safe with concurrent rendering.
 
 ## Async work: createAsyncThunk {#thunks}
 
-Reducers must be pure, so side effects such as a network call live outside them. The **thunk middleware** (included by default) lets you dispatch a **function** instead of an object. `createAsyncThunk` builds the usual pattern: it dispatches **pending**, then **fulfilled** or **rejected** (the second scene).
+Reducers must be pure, so side effects such as a network call live outside them. The **thunk middleware** (included by default) lets you dispatch a **function** instead of an object. `createAsyncThunk` builds the usual pattern. It dispatches **pending**, then **fulfilled** or **rejected** (the second scene).
 
 ```ts
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
@@ -219,22 +241,22 @@ Points to know:
 
 - `extraReducers` handles actions defined **outside** the slice (thunk lifecycle actions, other slices' actions). `reducers` defines the slice's own actions.
 - `dispatch(fetchAccounts())` returns a promise. `await dispatch(...).unwrap()` throws on rejection, which is handy in an event handler.
-- It passes an `AbortSignal` (`signal`) and the promise has `.abort()`, for [cancellation](lesson:js-async#cancellation).
+- The thunk receives an `AbortSignal` (`signal`), and the promise has `.abort()`. This supports [cancellation](lesson:js-async#cancellation).
 - A `condition` option can skip a call when the data is already loaded or loading.
 - Store a **serialisable** error message in state, not the `Error` object.
 
-For new code that only loads and caches server data, prefer **RTK Query** (below) over hand-written thunks. Thunks remain right for multi-step workflows that touch several slices.
+For new code that only loads and caches server data, prefer **RTK Query** (below) over hand-written thunks. Thunks remain the right tool for multi-step workflows that touch several slices.
 
 ## Selectors {#selectors}
 
-A **selector** is a function `(state) => value` that reads from the store. Keep them next to the slice and use them everywhere, so components do not know the shape of the state.
+A **selector** is a function `(state) => value` that reads from the store. Keep selectors next to the slice and use them everywhere, so components do not need to know the shape of the state.
 
 ```ts
 export const selectAccounts = (s: RootState) => s.accounts.items;
 export const selectSelectedId = (s: RootState) => s.accounts.selectedId;
 ```
 
-**Re-render rule.** After every dispatch `useSelector` re-runs and compares the result with the previous one using `===`. If it is the same reference, the component skips the render (the third scene).
+**The re-render rule.** After every dispatch, `useSelector` re-runs and compares the result with the previous one using `===`. If it is the same reference, the component skips the render (the third scene).
 
 The common bug is a selector that **creates a new reference every time**:
 
@@ -262,12 +284,12 @@ export const selectTotalBalance = createSelector(
 Other rules:
 
 - Select the **smallest** value you need. Selecting the whole `state.accounts` re-renders on any change inside it.
-- A selector that takes an argument (`selectAccountById(state, id)`) needs care, because a plain `createSelector` has a cache size of one. Use `createSelector` with an `id` argument for a small list, or `createEntityAdapter` selectors.
+- A selector that takes an argument (`selectAccountById(state, id)`) needs care, because a plain `createSelector` has a cache size of one. For a small list, use `createSelector` with an `id` argument. Otherwise use `createEntityAdapter` selectors.
 - Compute **derived data** in selectors, not in the store. Do not store `totalBalance` in state, because it can go out of sync.
 
 ## Normalised state and createEntityAdapter {#normalise}
 
-Storing a list as an array makes "find by id" and updating one item slow and clumsy. **Normalised** state stores items in an object keyed by id plus an ordered list of ids, like a database table. `createEntityAdapter` generates this shape, the reducers and the selectors.
+Storing a list as an array makes "find by id" and updating one item slow and clumsy. **Normalised** state stores the items in an object keyed by id, plus an ordered list of ids, like a database table. `createEntityAdapter` generates this shape, the reducers and the selectors.
 
 ```ts
 import { createEntityAdapter, createSlice } from '@reduxjs/toolkit';
@@ -290,11 +312,11 @@ export const { selectAll, selectById, selectIds } =
   accountsAdapter.getSelectors((s: RootState) => s.accounts);
 ```
 
-Normalise when the same entity appears in several places (an account shown in a list, a detail page and a payment form) so that there is **one copy** to update.
+Normalise when the same entity appears in several places (an account shown in a list, a detail page and a payment form). Then there is **one copy** to update.
 
 ## Middleware and listeners {#middleware}
 
-**Middleware** wraps `dispatch`. It receives every action before the reducer and can log it, change it, delay it, dispatch more actions, or stop it. Thunk is middleware. RTK adds the **listener middleware** for side effects triggered by actions, without a separate library:
+**Middleware** wraps `dispatch`. It receives every action before the reducer. It can log the action, change it, delay it, dispatch more actions, or stop it. Thunk is middleware. RTK adds the **listener middleware** for side effects triggered by actions, so you need no separate library:
 
 ```ts
 import { createListenerMiddleware, isAnyOf } from '@reduxjs/toolkit';
@@ -310,11 +332,11 @@ listeners.startListening({
 });
 ```
 
-Use it for "when X happens, also do Y" logic (audit logging, persisting a draft, analytics). Older code uses **redux-saga** (generators) or **redux-observable** (RxJS) for the same job, which you may meet in legacy projects.
+Use it for "when X happens, also do Y" logic, such as audit logging, saving a draft or analytics. Older code uses **redux-saga** (generators) or **redux-observable** (RxJS) for the same job. You may meet them in legacy projects.
 
 ## RTK Query {#rtkquery}
 
-**RTK Query** is a data-fetching and caching layer built into RTK. You describe endpoints, and it generates hooks that fetch, cache, de-duplicate and refetch, so you do not write thunks, loading flags or reducers for server data (the fourth scene).
+**RTK Query** is a data-fetching and caching layer built into RTK. You describe the endpoints, and it generates hooks that fetch, cache, de-duplicate and refetch. So you do not write thunks, loading flags or reducers for server data (the fourth scene).
 
 ```ts
 // services/api.ts
@@ -362,13 +384,13 @@ function AccountList() {
 
 How it works:
 
-- **Cache key** = endpoint name + serialised arguments. Components that ask for the same key **share one request and one cache entry**.
-- **Reference counting**: the entry is removed after `keepUnusedDataFor` seconds (default 60) once no component uses it.
-- **Tags**: queries `providesTags`, mutations `invalidatesTags`. When a mutation succeeds, every query that provides an invalidated tag is **refetched** automatically.
-- Options: `pollingInterval`, `refetchOnFocus`, `refetchOnReconnect`, `skip`, `selectFromResult`, **optimistic updates** with `onQueryStarted` and `updateQueryData`, and **streaming updates** with `onCacheEntryAdded` (for example a WebSocket).
-- `isLoading` is true only for the first load, `isFetching` is true for any request in flight.
+- **Cache key.** The key is the endpoint name plus the serialised arguments. Components that ask for the same key **share one request and one cache entry**.
+- **Reference counting.** Once no component uses an entry, it is removed after `keepUnusedDataFor` seconds (default 60).
+- **Tags.** Queries use `providesTags`, and mutations use `invalidatesTags`. When a mutation succeeds, every query that provides an invalidated tag is **refetched** automatically.
+- **Options.** `pollingInterval`, `refetchOnFocus`, `refetchOnReconnect`, `skip`, `selectFromResult`, **optimistic updates** with `onQueryStarted` and `updateQueryData`, and **streaming updates** with `onCacheEntryAdded` (for example a WebSocket).
+- **Flags.** `isLoading` is true only for the first load. `isFetching` is true for any request in flight.
 
-RTK Query and **TanStack Query** solve the same problem. RTK Query fits when you already use Redux and want the cache inside the store and visible in DevTools. TanStack Query is store-independent.
+RTK Query and **TanStack Query** solve the same problem. RTK Query fits when you already use Redux, and you want the cache inside the store and visible in DevTools. TanStack Query does not depend on a store.
 
 ## Redux or something else {#when}
 
@@ -383,14 +405,23 @@ RTK Query and **TanStack Query** solve the same problem. RTK Query fits when you
 | state that belongs in the URL (filters, page, tab) | the router and search params |
 | form state | React Hook Form or Formik, not Redux |
 
-Redux earns its cost when many parts of the UI **react to the same events**, state transitions are non-trivial, you want **DevTools and an action log**, or a big team needs one predictable convention. It is a poor fit for a small app, for server data that you copy into slices by hand, or for form fields. The modern advice: put **server state** in RTK Query or TanStack Query and keep **only real client state** in Redux, which usually shrinks the store to a few small slices.
+Redux earns its cost in these cases:
+
+- many parts of the UI **react to the same events**;
+- the state transitions are non-trivial;
+- you want **DevTools and an action log**;
+- a big team needs one predictable convention.
+
+It is a poor fit for a small app, for server data that you copy into slices by hand, or for form fields.
+
+The modern advice: put **server state** in RTK Query or TanStack Query, and keep **only real client state** in Redux. That usually shrinks the store to a few small slices.
 
 ## Testing {#testing}
 
-- **Reducers and slices**: call the reducer with a state and an action and assert the result. No React needed.
-- **Selectors**: pass a state object, assert the output (and that the same input gives the same reference).
-- **Thunks**: dispatch to a real store and check the final state, with `fetch` mocked (MSW is the usual tool).
-- **Components**: render with a real store through a small helper, not a mocked one, and assert what the user sees.
+- **Reducers and slices.** Call the reducer with a state and an action, and assert the result. No React is needed.
+- **Selectors.** Pass a state object and assert the output. Also assert that the same input gives the same reference.
+- **Thunks.** Dispatch to a real store and check the final state, with `fetch` mocked (MSW is the usual tool).
+- **Components.** Render with a real store through a small helper, not a mocked one. Then assert what the user sees.
 
 ```ts
 import { configureStore } from '@reduxjs/toolkit';
@@ -463,71 +494,158 @@ Try it in the lab: [Redux: dispatch, reducer, store, selector](lab:redux-data-fl
 
 ### [basic] What is Redux and what problem does it solve? {#what-q}
 
-Redux is a predictable state container with **one store** holding the application state. State changes only by dispatching **actions**, and **pure reducers** compute the next state. It solves the problem of state shared by many distant components: instead of passing props through many levels or having several components change shared data in ways that are hard to trace, all changes go through one path that is logged, testable and inspectable with DevTools. It costs boilerplate and indirection, so it is worth it when the shared client state is large and complex.
+Redux is a predictable state container. One **store** holds the application state. State changes only by dispatching **actions**, and **pure reducers** compute the next state.
+
+It solves the problem of state shared by many distant components. Without it, you pass props through many levels, or several components change shared data in ways that are hard to trace. With Redux, all changes go through one path that is logged, testable and inspectable with DevTools.
+
+It costs boilerplate and indirection. So it is worth it when the shared client state is large and complex.
 
 ### [basic] What are an action, a reducer and the store? {#parts-q}
 
-An **action** is a plain object that describes an event, `{ type: 'cart/itemAdded', payload }`. A **reducer** is a pure function `(state, action) => newState`. The **store** holds the state, runs the reducer when an action is dispatched, and notifies subscribers. Components read with selectors and write by dispatching.
+- An **action** is a plain object that describes an event, such as `{ type: 'cart/itemAdded', payload }`.
+- A **reducer** is a pure function `(state, action) => newState`.
+- The **store** holds the state, runs the reducer when an action is dispatched, and notifies subscribers.
+
+Components read with selectors and write by dispatching.
 
 ### [basic] Why must a reducer be pure and never mutate state? {#pure-q}
 
-Redux and React detect change by **reference comparison**. If a reducer mutates the existing state and returns it, the reference is the same, so selectors return the same value and the UI does not update. Impurity (network calls, random values, time) also makes the same action produce different results, which breaks testing, time-travel and replay. So a reducer computes the new state only from its two arguments and returns new objects for whatever changed.
+Redux and React detect change by **reference comparison**. If a reducer mutates the existing state and returns it, the reference is the same. Selectors then return the same value, and the UI does not update.
+
+Impurity (network calls, random values, time) also lets the same action produce different results. That breaks testing, time-travel and replay.
+
+So a reducer computes the new state only from its two arguments, and returns new objects for whatever changed.
 
 ### [basic] What is Redux Toolkit and why is it recommended? {#rtk-q}
 
-Redux Toolkit is the official toolset for writing Redux. `configureStore` sets up the store with the DevTools, thunk middleware and development checks. `createSlice` generates action creators and reducers from one definition, and uses **Immer** so you can write "mutating" code that is turned into immutable updates. It also provides `createAsyncThunk`, `createEntityAdapter`, `createSelector`, the listener middleware and **RTK Query**. It removes most boilerplate and common mistakes of hand-written Redux.
+Redux Toolkit is the official toolset for writing Redux.
+
+- `configureStore` sets up the store with the DevTools, thunk middleware and development checks.
+- `createSlice` generates action creators and reducers from one definition. It uses **Immer**, so you can write "mutating" code that is turned into immutable updates.
+- It also provides `createAsyncThunk`, `createEntityAdapter`, `createSelector`, the listener middleware and **RTK Query**.
+
+It removes most of the boilerplate and the common mistakes of hand-written Redux.
 
 ### [basic] How do you read from and write to the store in a React component? {#hooks-q}
 
-Wrap the app in `<Provider store={store}>`. Read with `useSelector((state) => state.slice.value)`, which re-renders the component when the selected value changes. Write with `const dispatch = useDispatch()` and `dispatch(action())`. In TypeScript you define `useAppSelector` and `useAppDispatch` once with `.withTypes<RootState>()` and `.withTypes<AppDispatch>()` and use those.
+Wrap the app in `<Provider store={store}>`.
+
+- Read with `useSelector((state) => state.slice.value)`. It re-renders the component when the selected value changes.
+- Write with `const dispatch = useDispatch()` and `dispatch(action())`.
+
+In TypeScript, define `useAppSelector` and `useAppDispatch` once, with `.withTypes<RootState>()` and `.withTypes<AppDispatch>()`, and use those.
 
 ### [basic] What is a selector and why use one? {#selector-q}
 
-A selector is a function that takes the state and returns a value. Using selectors hides the shape of the state from components (so you can reorganise it), puts derived-data logic in one place and, with `createSelector`, allows memoisation. Components should use selectors rather than reach into `state.a.b.c` directly.
+A selector is a function that takes the state and returns a value.
+
+- It hides the shape of the state from components, so you can reorganise the state.
+- It puts derived-data logic in one place.
+- With `createSelector`, it allows memoisation.
+
+Components should use selectors, and not reach into `state.a.b.c` directly.
 
 ### [intermediate] How does Immer let you write mutating code in a reducer? {#immer-q}
 
-Inside `createSlice`, RTK wraps each reducer with Immer's `produce`. The reducer receives a **draft**, a proxy of the state. Your assignments and `push` calls on the draft are recorded, and when the reducer finishes Immer builds a new immutable state that contains the changes and **shares unchanged parts** with the old one. Rules: mutate the draft **or** return a new value (not both), do not use it in a plain hand-written reducer, and do not keep references to the draft after the reducer returns.
+Inside `createSlice`, RTK wraps each reducer with Immer's `produce`. The reducer receives a **draft**, which is a proxy of the state. Your assignments and `push` calls on the draft are recorded. When the reducer finishes, Immer builds a new immutable state that contains the changes and **shares the unchanged parts** with the old one.
+
+Rules:
+
+- Mutate the draft **or** return a new value, not both.
+- Do not rely on it in a plain hand-written reducer.
+- Do not keep references to the draft after the reducer returns.
 
 ### [intermediate] How do you handle async operations in Redux? {#async-q}
 
-Reducers must stay pure, so async work lives outside them. The standard way is `createAsyncThunk`: you give it an async function, and it dispatches `pending`, then `fulfilled` (with the result) or `rejected` (with the error). The slice handles those in `extraReducers` to set loading, data and error. `unwrap()` turns the dispatch promise into one that throws on failure. For pure data fetching and caching, **RTK Query** is better. For "when this action happens, also do that", use the **listener middleware** (or saga in older code).
+Reducers must stay pure, so async work lives outside them.
+
+- The standard way is `createAsyncThunk`. You give it an async function. It dispatches `pending`, then `fulfilled` (with the result) or `rejected` (with the error). The slice handles these in `extraReducers` to set loading, data and error. `unwrap()` turns the dispatch promise into one that throws on failure.
+- For pure data fetching and caching, **RTK Query** is better.
+- For "when this action happens, also do that", use the **listener middleware** (or saga in older code).
 
 ### [intermediate] Why does my component re-render on every dispatch, and how do I fix it? {#rerender-q}
 
-`useSelector` runs after every dispatch and re-renders if the result is not `===` to the last one. A selector that builds a new array or object each time (`.filter`, `.map`, `{ ...a }`) always returns a new reference, so the component renders for every action in the app. Fix: select primitives or existing references, wrap derived data in `createSelector` so it returns the same reference when the inputs are unchanged, select the smallest value you need, or pass an equality function such as `shallowEqual`.
+`useSelector` runs after every dispatch. It re-renders the component if the result is not `===` to the last one.
+
+A selector that builds a new array or object each time (`.filter`, `.map`, `{ ...a }`) always returns a new reference. So the component renders for every action in the app.
+
+To fix it:
+
+- select primitives or existing references;
+- wrap derived data in `createSelector`, so it returns the same reference when the inputs are unchanged;
+- select the smallest value you need;
+- or pass an equality function such as `shallowEqual`.
 
 ### [intermediate] What does `createSelector` do and what is its limitation? {#reselect-q}
 
-It builds a **memoised** selector from input selectors and a result function. The result function re-runs only when an input selector returns a different value (by reference), otherwise the cached result is returned, which keeps the reference stable and avoids repeated work. Its default cache holds **one** result, so a selector used with different arguments in different components (for example by id) keeps recomputing. Use a selector factory per component, or `createEntityAdapter` selectors, for that.
+It builds a **memoised** selector from input selectors and a result function. The result function re-runs only when an input selector returns a different value (by reference). Otherwise the cached result is returned. That keeps the reference stable and avoids repeated work.
+
+Its default cache holds **one** result. So a selector used with different arguments in different components (for example by id) keeps recomputing. For that, use a selector factory per component, or `createEntityAdapter` selectors.
 
 ### [intermediate] What is normalised state and when do you need it? {#normalise-q}
 
-Normalised state stores entities in an object keyed by id (`entities`) plus an ordered list of ids (`ids`), like database tables, and references other entities by id instead of nesting them. It gives O(1) lookup, a single copy of each entity to update, and simple immutable updates. Use it when the same entity appears in many places or relations are deep. `createEntityAdapter` generates the shape, the reducers (`addOne`, `upsertMany`, `updateOne`) and the selectors.
+Normalised state stores entities in an object keyed by id (`entities`), plus an ordered list of ids (`ids`), like database tables. It refers to other entities by id instead of nesting them.
+
+It gives O(1) lookup, a single copy of each entity to update, and simple immutable updates.
+
+Use it when the same entity appears in many places, or the relations are deep. `createEntityAdapter` generates the shape, the reducers (`addOne`, `upsertMany`, `updateOne`) and the selectors.
 
 ### [intermediate] What is RTK Query and how does cache invalidation work? {#rtkq-q}
 
-RTK Query is the data-fetching layer of RTK. `createApi` defines endpoints and generates hooks. Results are cached by **endpoint and arguments**, shared by all components that ask, de-duplicated, and removed after a delay when unused. Queries declare `providesTags` and mutations declare `invalidatesTags`. When a mutation finishes, every query that provides an invalidated tag is refetched, so lists stay correct without manual code. It also supports polling, refetch on focus, optimistic updates and streaming.
+RTK Query is the data-fetching layer of RTK. `createApi` defines the endpoints and generates hooks.
+
+Results are cached by **endpoint and arguments**. All components that ask share them, requests are de-duplicated, and unused entries are removed after a delay.
+
+Queries declare `providesTags`, and mutations declare `invalidatesTags`. When a mutation finishes, every query that provides an invalidated tag is refetched. So lists stay correct without manual code.
+
+It also supports polling, refetch on focus, optimistic updates and streaming.
 
 ### [intermediate] Why must state be serialisable, and what does the serialisability check warn about? {#serial-q}
 
-DevTools, time-travel, persistence and replay need state and actions that can be turned into JSON and back. A `Date`, `Map`, `Set`, function, class instance or `Error` breaks that, and compares badly by reference. The check in `configureStore` warns in development. Store ISO strings, numbers, plain objects and arrays, and error messages as strings. If you really must (for example a form file object), configure `serializableCheck` to ignore that path rather than switching the check off.
+DevTools, time-travel, persistence and replay need state and actions that can be turned into JSON and back. A `Date`, `Map`, `Set`, function, class instance or `Error` breaks that, and also compares badly by reference.
+
+The check in `configureStore` warns about this in development.
+
+Store ISO strings, numbers, plain objects and arrays, and error messages as strings. If you really must keep something else (for example a form file object), configure `serializableCheck` to ignore that path. Do not switch the check off.
 
 ### [deep] When would you choose Redux, and when would you choose context, Zustand or TanStack Query? {#choose-q}
 
-I split state by kind. **Server state** (lists, details, caching, refetching) goes to RTK Query or TanStack Query, never into hand-written slices. **Local UI state** stays in `useState`. **Rarely changing global values** (theme, user, locale) go in context. For a **small global client store**, Zustand has less ceremony. Redux Toolkit fits when a large app has lots of shared client state, many components react to the same events, transitions are complex, a team needs one convention, and DevTools time-travel and an action log help debugging. The point is not "Redux or not" but keeping each kind of state in the right tool.
+I split state by kind.
+
+- **Server state** (lists, details, caching, refetching) goes to RTK Query or TanStack Query, never into hand-written slices.
+- **Local UI state** stays in `useState`.
+- **Rarely changing global values** (theme, user, locale) go in context.
+- For a **small global client store**, Zustand has less ceremony.
+- Redux Toolkit fits when a large app has lots of shared client state, many components react to the same events, transitions are complex, a team needs one convention, and DevTools time-travel and an action log help debugging.
+
+The point is not "Redux or not". It is keeping each kind of state in the right tool.
 
 ### [deep] How would you structure the store of a large application? {#structure-q}
 
-Feature folders: each feature has its slice, selectors, thunks or API endpoints and components together (`features/accounts`, `features/payments`). One slice per feature with a clear boundary, the shared `api` slice for server data, and a `listeners` middleware for cross-feature reactions. Keep state minimal and normalised, derive the rest with selectors, avoid slices that know about each other's internals (communicate through actions), export typed hooks from one `app/hooks.ts`, and lazy-load rarely used slices with `reducerManager` or `combineSlices` for code splitting.
+- Use feature folders. Each feature keeps its slice, selectors, thunks or API endpoints, and components together (`features/accounts`, `features/payments`).
+- Use one slice per feature, with a clear boundary. Add the shared `api` slice for server data, and a `listeners` middleware for cross-feature reactions.
+- Keep state minimal and normalised, and derive the rest with selectors.
+- Avoid slices that know about each other's internals. Let them communicate through actions.
+- Export typed hooks from one `app/hooks.ts`.
+- Lazy-load rarely used slices with `reducerManager` or `combineSlices`, for code splitting.
 
 ### [deep] How do you avoid performance problems in a large Redux app? {#perf-q}
 
-Select the smallest value and keep selector results reference-stable with `createSelector` and entity selectors. Normalise state so updating one item does not replace a whole list. Split components so a frequent update re-renders only a small leaf. Use `memo` for expensive children. Avoid putting rapidly changing values (mouse position, every keystroke) in the store. Keep RTK Query's `selectFromResult` to pick fields. Measure with the React Profiler and the Redux DevTools before optimising.
+- Select the smallest value, and keep selector results reference-stable with `createSelector` and entity selectors.
+- Normalise state, so updating one item does not replace a whole list.
+- Split components, so a frequent update re-renders only a small leaf.
+- Use `memo` for expensive children.
+- Avoid putting rapidly changing values (mouse position, every keystroke) in the store.
+- Use RTK Query's `selectFromResult` to pick fields.
+- Measure with the React Profiler and the Redux DevTools before optimising.
 
 ### [deep] How would you implement an optimistic update with RTK Query? {#optimistic-q}
 
-In the mutation's `onQueryStarted`, update the cached query data immediately with `dispatch(api.util.updateQueryData('getAccount', id, (draft) => { draft.frozen = true; }))`, which returns a patch result. Then `await queryFulfilled`. If it rejects, call `patchResult.undo()` to roll back. The UI changes at once, the server confirms in the background, and a failure restores the old value. Combine it with invalidation or `refetch` so the cache converges with the server.
+1. In the mutation's `onQueryStarted`, update the cached query data immediately with `dispatch(api.util.updateQueryData('getAccount', id, (draft) => { draft.frozen = true; }))`. It returns a patch result.
+2. Then `await queryFulfilled`.
+3. If it rejects, call `patchResult.undo()` to roll back.
+
+The UI changes at once, the server confirms in the background, and a failure restores the old value. Combine it with invalidation or `refetch`, so the cache converges with the server.
 
 ### [coding] Write a typed `accounts` slice with an async thunk, selectors and a memoised "frozen accounts" selector. {#coding-slice}
 
@@ -604,7 +722,12 @@ export const selectFrozenAccounts = createSelector(
 );
 ```
 
-The slice owns its state, the thunk handles the three phases, the error stored is a string (serialisable), and the memoised selector avoids a new array on every dispatch.
+Explain these points:
+
+- The slice **owns its state**.
+- The thunk handles the **three phases**: pending, fulfilled and rejected.
+- The stored error is a **string**, so it is serialisable.
+- The memoised selector **avoids a new array** on every dispatch.
 
 ### [coding] Write an RTK Query API for accounts with a list, a detail, an add mutation, and an optimistic freeze. {#coding-rtkq}
 
@@ -658,7 +781,12 @@ export const {
 } = api;
 ```
 
-Per-id tags mean freezing one account refetches only that account, adding one invalidates only the list, and the optimistic patch shows the change at once and is rolled back if the call fails.
+Explain these points:
+
+- **Per-id tags** mean freezing one account refetches only that account.
+- Adding an account invalidates only the **list**.
+- The **optimistic patch** shows the change at once.
+- If the call fails, `patch.undo()` **rolls it back**.
 
 ### [coding] Convert an array of accounts to normalised state with `createEntityAdapter` and write a selector for the total balance of frozen accounts. {#coding-entity}
 
@@ -699,4 +827,8 @@ export const selectFrozenBalance = createSelector([selectAllAccounts], (accounts
 );
 ```
 
-Updating one account by id is O(1), the list stays sorted, and `selectFrozenBalance` is memoised, so it recomputes only when the accounts change.
+Explain these points:
+
+- Updating one account by id is **O(1)**.
+- The list **stays sorted** by the adapter.
+- `selectFrozenBalance` is **memoised**, so it recomputes only when the accounts change.

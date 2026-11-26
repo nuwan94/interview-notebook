@@ -6,21 +6,31 @@ summary: Putting a React front end, an Express API and a database together, the 
 tags: [Full stack, React, Express, Node.js, PostgreSQL, Authentication, BFF, API contract, Deployment, Architecture]
 order: 78
 topic: Full stack / Integration
-updated: 2026-11-18
+updated: 2026-11-26
 subnav: true
 ---
 
-A full-stack interview ends with the question that joins everything: *walk me through what happens when a user clicks Send on a transfer, from the browser to the database and back.* They also ask *where you store the token, how the front end and back end share types, how you handle CORS, how you deploy the two halves, and how you debug a failure that spans both.* This lesson connects the earlier ones: [React core](lesson:react-core#state), [React hooks](lesson:react-hooks#fetching), [Redux and RTK Query](lesson:react-redux#rtkquery), the [Node.js runtime](lesson:node-runtime#what) and [Express](lesson:node-express#middleware). Examples are TypeScript and use a banking transfer. Play the four scenes: the big picture, login and sessions, one feature end to end, and build and deploy.
+A full-stack interview often ends with one question that joins everything: *walk me through what happens when a user clicks Send on a transfer, from the browser to the database and back.* Related questions:
+
+- Where do you store the token?
+- How do the front end and back end share types?
+- How do you handle CORS?
+- How do you deploy the two halves?
+- How do you debug a failure that spans both?
+
+This lesson connects the earlier ones: [React core](lesson:react-core#state), [React hooks](lesson:react-hooks#fetching), [Redux and RTK Query](lesson:react-redux#rtkquery), the [Node.js runtime](lesson:node-runtime#what) and [Express](lesson:node-express#middleware). The examples are TypeScript and use a banking transfer. Play the four scenes: the big picture, login and sessions, one feature end to end, and build and deploy.
 
 ```demo
 name: fullstack-walk
 ```
 
-> **One sentence to remember:** *The browser is untrusted and the API is the only place rules are enforced, so share the contract (types and schemas), keep tokens out of JavaScript, make every write idempotent and transactional, and ship the static front end and the API independently.*
+> **One sentence to remember:** *The browser is untrusted, so the API is the only place rules are enforced.*
+
+In more detail: share the contract (types and schemas), keep tokens out of JavaScript, make every write idempotent and transactional, and ship the static front end and the API independently.
 
 ## The architecture {#architecture}
 
-Three tiers (the first scene):
+There are three tiers (the first scene):
 
 | Tier | Runs | Responsibility |
 | --- | --- | --- |
@@ -31,11 +41,11 @@ Three tiers (the first scene):
 The rules that follow:
 
 - The **browser never talks to the database**, and everything it sends can be forged. All security decisions are made again on the server.
-- The built SPA is **static files** (HTML, JavaScript, CSS). Serve them from a **CDN or object storage** with long caching, because file names contain a content hash. Only the API needs compute.
-- A **reverse proxy or API gateway** routes `/api/*` to the API and everything else to the static files.
-- **Stateless API instances**: no session in memory, so any instance can handle any request and you can scale out and replace them freely. Shared state lives in the database, Redis or a signed cookie.
+- The built SPA is **static files** (HTML, JavaScript, CSS). Serve them from a **CDN or object storage** with long caching, because the file names contain a content hash. Only the API needs compute.
+- A **reverse proxy or API gateway** routes `/api/*` to the API, and everything else to the static files.
+- **Stateless API instances.** There is no session in memory, so any instance can handle any request. You can then scale out and replace instances freely. Shared state lives in the database, Redis or a signed cookie.
 
-**Same origin or two origins.**
+**Same origin or two origins.** An origin is the scheme, host and port together.
 
 | | One origin (`bank.example`) | Two origins (`app.` and `api.`) |
 | --- | --- | --- |
@@ -44,7 +54,7 @@ The rules that follow:
 | deployment | one proxy in front | independent hosts and domains |
 | CSRF exposure | cookies sent automatically, so protect them | same, plus cross-site cookie rules |
 
-Prefer **one origin** behind a proxy. In development the **Vite dev server proxies** `/api` to the local API, so the code behaves as it will in production:
+Prefer **one origin** behind a proxy. In development, the **Vite dev server proxies** `/api` to the local API, so the code behaves as it will in production:
 
 ```ts
 // vite.config.ts
@@ -54,11 +64,11 @@ export default defineConfig({
 });
 ```
 
-**Environment variables in the SPA are public.** `import.meta.env.VITE_API_URL` is replaced at **build time** and ends up in the bundle that every visitor downloads, so never put a secret there. Build once and configure the environment with a runtime `/config.json` or relative URLs, so the same artefact runs in test and production.
+**Environment variables in the SPA are public.** `import.meta.env.VITE_API_URL` is replaced at **build time**. It ends up in the bundle that every visitor downloads, so never put a secret there. Build once, and configure the environment with a runtime `/config.json` or with relative URLs, so the same artefact runs in test and production.
 
 ## Project structure and the shared contract {#structure}
 
-A **monorepo** with **pnpm workspaces** keeps the front end, the API and shared code together, versioned as one:
+A **monorepo** with **pnpm workspaces** keeps the front end, the API and the shared code together, versioned as one:
 
 ```text
 bank-app/
@@ -94,7 +104,7 @@ export const Transfer = CreateTransfer.extend({
 export type Transfer = z.infer<typeof Transfer>;
 ```
 
-The API imports `CreateTransfer` to validate requests, and the web app imports it for the form and for the types of the responses, so a change breaks the build on **both sides** instead of in production. Other ways to share a contract:
+The API imports `CreateTransfer` to validate requests. The web app imports it for the form and for the types of the responses. So a change breaks the build on **both sides**, instead of breaking in production. There are other ways to share a contract:
 
 | Approach | Idea | Fits |
 | --- | --- | --- |
@@ -104,11 +114,15 @@ The API imports `CreateTransfer` to validate requests, and the web app imports i
 | **GraphQL** | typed schema, clients ask for the fields they need | many clients with different data needs |
 | **contract tests** (Pact) | consumer states what it needs, provider verifies | separate teams and repositories |
 
-With a Spring Boot back end, generate the TypeScript client from its **OpenAPI** document. Keep the date and money rules explicit: dates as ISO 8601 strings, money as **integers in minor units or decimal strings**, never floats, and enums as strings.
+With a Spring Boot back end, generate the TypeScript client from its **OpenAPI** document. Keep the date and money rules explicit:
+
+- dates are ISO 8601 strings;
+- money is **integers in minor units, or decimal strings**, never floats;
+- enums are strings.
 
 ## Calling the API from React {#client}
 
-Wrap `fetch` once, so every call gets the same base URL, credentials, error handling and typing, then use **TanStack Query** or **RTK Query** for caching and loading state ([server state](lesson:react-redux#rtkquery)).
+Wrap `fetch` once, so every call gets the same base URL, credentials, error handling and typing. Then use **TanStack Query** or **RTK Query** for caching and loading state ([server state](lesson:react-redux#rtkquery)).
 
 ```ts
 // apps/web/src/api/client.ts
@@ -157,17 +171,17 @@ export function useSendTransfer() {
 
 Points to remember:
 
-- Pass the query's **`signal`** so navigating away **cancels** the request ([cancellation](lesson:js-async#cancellation)).
+- Pass the query's **`signal`**, so navigating away **cancels** the request ([cancellation](lesson:js-async#cancellation)).
 - `fetch` **does not reject on HTTP 4xx and 5xx**, so check `res.ok` yourself.
-- Separate **server state** (accounts, transactions: owned by the server, cached and refetched) from **client state** (the open modal, form input). Do not copy server data into Redux or `useState`.
+- Keep **server state** and **client state** apart. Server state (accounts, transactions) is owned by the server, and is cached and refetched. Client state is things like the open modal and form input. Do not copy server data into Redux or `useState`.
 - Show all four states for every request: **loading, error, empty, success**. Use an [error boundary](lesson:react-hooks#suspense) for unexpected failures.
-- Retry **idempotent reads**, not unsafe writes unless they carry an idempotency key.
+- Retry **idempotent reads**. Do not retry unsafe writes, unless they carry an idempotency key.
 
 ## Authentication end to end {#auth}
 
-Background: [OAuth 2.0](lesson:oauth2#grants), [OpenID Connect](lesson:oidc#flow) and [JWT](lesson:jwt#validation). A SPA is a **public client**: it cannot keep a secret, so it uses the **authorization code flow with PKCE** (the second scene).
+Background: [OAuth 2.0](lesson:oauth2#grants), [OpenID Connect](lesson:oidc#flow) and [JWT](lesson:jwt#validation). A SPA is a **public client**, which means it cannot keep a secret. So it uses the **authorization code flow with PKCE** (the second scene):
 
-1. The app creates a random **code verifier** and sends its hash (the **code challenge**) when it redirects the user to the identity provider (IdP).
+1. The app creates a random **code verifier**. It sends the hash of the verifier (the **code challenge**) when it redirects the user to the identity provider (IdP).
 2. The user signs in at the IdP (password, MFA). The app never sees the password.
 3. The IdP redirects back with a one-time **authorization code**.
 4. The code and the verifier are exchanged for tokens. PKCE proves that the party exchanging the code is the one that started the flow.
@@ -191,9 +205,9 @@ res.cookie('sid', sessionId, {
 });
 ```
 
-- **CSRF** applies to **cookie** authentication, because the browser attaches cookies automatically. Defend with `SameSite=Lax` or `Strict`, a CSRF token or a custom header the API requires (`X-Requested-With`), and by never changing state on `GET`. Bearer tokens in the `Authorization` header are not sent automatically, so they are not CSRF-prone but are exposed to XSS if stored badly.
+- **CSRF** applies to **cookie** authentication, because the browser attaches cookies automatically. Defend with `SameSite=Lax` or `Strict`, a CSRF token or a custom header the API requires (`X-Requested-With`), and by never changing state on `GET`. Bearer tokens in the `Authorization` header are not sent automatically, so they are not open to CSRF. But they are exposed to XSS if stored badly.
 - **XSS** (injected script) is prevented by React's default escaping, never using `dangerouslySetInnerHTML` with untrusted input, a strict **Content Security Policy**, sanitising any HTML, and auditing dependencies.
-- **Silent refresh and 401 handling:** when a call returns **401**, try **one** refresh, retry the original call, and if the refresh fails send the user to log in. Share one in-flight refresh between concurrent calls so ten failing requests trigger one refresh, not ten.
+- **Silent refresh and 401 handling.** When a call returns **401**, try **one** refresh and retry the original call. If the refresh fails, send the user to log in. Share one in-flight refresh between concurrent calls, so ten failing requests trigger one refresh, not ten.
 
 ```ts
 let refreshing: Promise<void> | null = null;
@@ -211,17 +225,17 @@ async function apiWithRefresh<T>(path: string, init?: Parameters<typeof api>[1])
 ```
 
 - **Route guards** in React Router hide screens from anonymous users, but they are **only UX**. The API must reject the call regardless.
-- **Logout** must clear the server session, delete the cookie, clear the query cache (so the next user does not see old data) and optionally end the IdP session.
-- **Authorisation:** show or hide buttons by role for a better experience, but enforce roles, scopes and **object ownership** on the server ([auth middleware](lesson:node-express#auth)).
+- **Logout** must do four things: clear the server session, delete the cookie, clear the query cache (so the next user does not see old data), and optionally end the IdP session.
+- **Authorisation.** Show or hide buttons by role for a better experience. But enforce roles, scopes and **object ownership** on the server ([auth middleware](lesson:node-express#auth)).
 
 ## One feature end to end: sending a transfer {#transfer}
 
-This is the walk-through question (the third scene). Each step:
+This is the walk-through question (the third scene). Here are the steps:
 
-1. **Form and validation.** A controlled form uses the shared `CreateTransfer` schema (React Hook Form with a zod resolver) and shows field errors at once. This is a convenience only.
-2. **Idempotency key.** Create one UUID when the form opens (`useRef(crypto.randomUUID())`) and reuse it for every retry of this submission. Disable the button while the mutation is pending.
+1. **Form and validation.** A controlled form uses the shared `CreateTransfer` schema (React Hook Form with a zod resolver) and shows field errors at once. This is only a convenience.
+2. **Idempotency key.** Create one UUID when the form opens (`useRef(crypto.randomUUID())`), and reuse it for every retry of this submission. Disable the button while the mutation is pending.
 3. **Request.** `POST /api/transfers` with the JSON body, the session cookie and the `Idempotency-Key` header. A request id is generated or forwarded (`X-Request-Id`).
-4. **Edge and middleware.** The proxy forwards to an API instance. Express runs helmet, the logger, the body parser with a size limit, rate limiting, authentication, then validates the body with the **same** schema.
+4. **Edge and middleware.** The proxy forwards to an API instance. Express runs helmet, the logger, the body parser with a size limit, rate limiting and authentication. Then it validates the body with the **same** schema.
 5. **Service.** Business rules run in a **database transaction**:
 
 ```ts
@@ -249,23 +263,31 @@ export async function transfer(userId: string, input: CreateTransfer, key: strin
 ```
 
 6. **Response.** `201` with `Location: /transfers/{id}` and the body (or `200` for a replay). Errors use the shared error shape: `422 INSUFFICIENT_FUNDS`, `409`, `400 VALIDATION_FAILED`.
-7. **Client.** On success the mutation **invalidates** the `accounts` and `transactions` queries, which refetch, so the screen shows the real balances. An error is mapped by its `code` to a message: field errors back onto the form, `INSUFFICIENT_FUNDS` on the amount, a network error with a retry that reuses the **same key**.
-8. **Optional optimistic update:** show the transfer in the list at once and roll back on failure (see [optimistic updates](lesson:react-redux#optimistic-q)). For money, prefer to wait for the server and show a pending state, because the server decides.
+7. **Client.** On success, the mutation **invalidates** the `accounts` and `transactions` queries, which refetch. So the screen shows the real balances. An error is mapped by its `code` to a message. Field errors go back onto the form, `INSUFFICIENT_FUNDS` goes on the amount, and a network error shows a retry that reuses the **same key**.
+8. **Optional optimistic update.** Show the transfer in the list at once, and roll back on failure (see [optimistic updates](lesson:react-redux#optimistic-q)). For money, prefer to wait for the server and show a pending state, because the server decides.
 
-Why each piece exists: validation on both sides (UX versus security), the idempotency key (network retries must not move money twice), the transaction (the two ledger entries and the key succeed or fail together), the row lock (two concurrent transfers cannot overdraw), and invalidation (the UI never invents balances). See [ACID](lesson:acid-base#acid) and [idempotency](lesson:rest-api-design#idempotency).
+Why each piece exists:
+
+- **Validation on both sides.** The client check is for UX. The server check is for security.
+- **The idempotency key.** Network retries must not move money twice.
+- **The transaction.** The two ledger entries and the key succeed or fail together.
+- **The row lock.** Two concurrent transfers cannot overdraw the account.
+- **Invalidation.** The UI never invents balances.
+
+See [ACID](lesson:acid-base#acid) and [idempotency](lesson:rest-api-design#idempotency).
 
 ## The data layer {#data}
 
-- **One connection pool per API process**, sized from the database limit divided by the number of instances. Too many instances times pool size exhausts PostgreSQL connections: use a pooler (PgBouncer, RDS Proxy) when you scale out.
+- **One connection pool per API process.** Size it from the database limit divided by the number of instances. Too many instances times the pool size exhausts PostgreSQL connections. Use a pooler (PgBouncer, RDS Proxy) when you scale out.
 - **Parameterised queries** always, through a query builder or ORM (**Prisma**, **Drizzle**, **Knex**, TypeORM). Learn the SQL the ORM generates.
-- **N+1 queries:** loading a list and then querying per row. Fix with a join or an `IN` query, and look at query counts in logs.
-- **Migrations** are versioned, reviewed scripts (`prisma migrate`, `drizzle-kit`, Flyway, node-pg-migrate) run by the pipeline, not by hand and not on random app start.
-- **Constraints do the last line of defence:** `NOT NULL`, foreign keys, `CHECK (balance >= 0)`, unique keys. Application validation can have bugs, constraints cannot be bypassed.
+- **N+1 queries.** This means loading a list and then querying once per row. Fix it with a join or an `IN` query, and watch query counts in the logs.
+- **Migrations** are versioned, reviewed scripts (`prisma migrate`, `drizzle-kit`, Flyway, node-pg-migrate). The pipeline runs them. Do not run them by hand, or at random on app start.
+- **Constraints are the last line of defence:** `NOT NULL`, foreign keys, `CHECK (balance >= 0)`, unique keys. Application validation can have bugs. Constraints cannot be bypassed.
 - **Pagination** with cursors, **indexes** for the filters you use, and **read replicas** or Redis ([caching](lesson:redis-caching#patterns)) when reads dominate. See [SQL versus NoSQL](lesson:sql-vs-nosql#sql).
 
 ## Errors across the layers {#errors}
 
-Agree one error contract (shared in `contracts`) and carry it through every layer:
+Agree one error contract (shared in `contracts`), and carry it through every layer:
 
 ```json
 { "code": "INSUFFICIENT_FUNDS", "message": "Balance 50.00 is below 120.00",
@@ -280,21 +302,25 @@ Agree one error contract (shared in `contracts`) and carry it through every laye
 | API client | throws `ApiError` with status, code and request id |
 | React | form field errors, toast for transient errors, an error boundary for crashes, a "try again" for network failures |
 
-The **request id** ties it together: the browser shows "Reference b3f1c2", support searches the logs and finds the full trace.
+The **request id** ties it together. The browser shows "Reference b3f1c2". Support searches the logs and finds the full trace.
 
 ## Caching, real-time and files {#more}
 
-- **Browser and CDN caching:** hashed static files `Cache-Control: public, max-age=31536000, immutable`, but **`index.html` with `no-cache`** so a new deployment is picked up. API responses: `Cache-Control: no-store` for personal data, `ETag` and `If-None-Match` for cheap revalidation.
+- **Browser and CDN caching.** Hashed static files use `Cache-Control: public, max-age=31536000, immutable`. But **`index.html` uses `no-cache`**, so a new deployment is picked up. For API responses, use `Cache-Control: no-store` for personal data, and `ETag` with `If-None-Match` for cheap revalidation.
 - **Client cache:** TanStack Query `staleTime` and invalidation. **Server cache:** Redis for hot reads, with explicit invalidation on writes.
-- **Real-time updates:** choose the simplest that works. **Polling** (`refetchInterval`) for a balance every 30 s. **Server-Sent Events** (one-way, over HTTP, auto-reconnect) for notifications and a live feed. **WebSockets** (two-way) for chat and trading screens, which need sticky or pub-sub scaling (Redis) across instances. Push an event that tells the client to refetch, rather than pushing full data, to keep one source of truth.
-- **File upload:** do not stream big files through the API. The API checks permission and returns a **presigned URL**, and the browser uploads **directly to object storage** (S3), then tells the API it finished. See [S3 upload patterns](lesson:aws-storage#patterns). Validate type and size on both sides and scan for malware.
-- **Pagination and forms:** use cursor pagination and infinite queries for long lists, and keep filters in the **URL** so a page is linkable and survives refresh.
+- **Real-time updates.** Choose the simplest that works.
+  - **Polling** (`refetchInterval`) fits a balance refreshed every 30 s.
+  - **Server-Sent Events** (one-way, over HTTP, auto-reconnect) fit notifications and a live feed.
+  - **WebSockets** (two-way) fit chat and trading screens. They need sticky sessions or pub-sub (Redis) to scale across instances.
+  - Push an event that tells the client to refetch, rather than pushing full data. Then there is one source of truth.
+- **File upload.** Do not stream big files through the API. The API checks permission and returns a **presigned URL**. The browser uploads **directly to object storage** (S3), then tells the API it finished. See [S3 upload patterns](lesson:aws-storage#patterns). Validate type and size on both sides, and scan for malware.
+- **Pagination and forms.** Use cursor pagination and infinite queries for long lists. Keep filters in the **URL**, so a page is linkable and survives a refresh.
 
 ## Observability {#observability}
 
-- A **request id** (or the W3C **`traceparent`** header) is created at the edge, passed from the browser through the API to downstream calls, and included in every log line.
-- **Structured logs** (pino) in JSON with the request id and user id (never tokens or full card numbers). **Metrics** (rate, errors, latency, event loop lag). **Traces** with **OpenTelemetry** from the browser (fetch instrumentation) through Express to the database.
-- **Front end monitoring:** an error tracker (Sentry) with source maps, **Web Vitals** from real users ([performance](lesson:react-performance#loading)), and a log of failed API calls with the request id.
+- A **request id** (or the W3C **`traceparent`** header) is created at the edge. It is passed from the browser through the API to downstream calls, and included in every log line.
+- **Structured logs** (pino) are JSON with the request id and user id (never tokens or full card numbers). **Metrics** cover rate, errors, latency and event loop lag. **Traces** use **OpenTelemetry** from the browser (fetch instrumentation) through Express to the database.
+- **Front end monitoring.** Use an error tracker (Sentry) with source maps, **Web Vitals** from real users ([performance](lesson:react-performance#loading)), and a log of failed API calls with the request id.
 - **Health and readiness** endpoints, and alerts on error rate and latency, not on CPU alone.
 
 ## Build, test and deploy {#deploy}
@@ -309,23 +335,23 @@ The **request id** ties it together: the browser shows "Reference b3f1c2", suppo
 | contract | OpenAPI diff, Pact | the API did not break its clients |
 | end-to-end | Playwright | login, transfer, history against a real deployment |
 
-**Pipeline** (the fourth scene, [CI/CD](lesson:cicd-fundamentals#stages)): install with `pnpm install --frozen-lockfile`, lint, type-check all workspaces, test, build, run end-to-end smoke tests on a preview environment, publish artefacts, deploy.
+**The pipeline** (the fourth scene, [CI/CD](lesson:cicd-fundamentals#stages)). Install with `pnpm install --frozen-lockfile`, lint, type-check all workspaces, test, build, run end-to-end smoke tests on a preview environment, publish artefacts, deploy.
 
 **The two halves ship separately.**
 
-- **API:** a **multi-stage Docker image** ([multi-stage builds](lesson:docker#multistage)), a small base image, non-root user, only production dependencies, `NODE_ENV=production`, health probes, a **rolling** or **blue-green** rollout ([deployment strategies](lesson:deployment-strategies#rolling)), graceful shutdown ([SIGTERM](lesson:node-runtime#shutdown)).
-- **SPA:** `vite build` produces hashed files. Upload them to object storage first, then `index.html` last, and invalidate the CDN for `index.html` only. Keep the previous hashed files for a while, so users with an old `index.html` do not get 404s for chunks. Add client-side routing fallback (`/*` to `index.html`).
-- **Version skew:** during a rollout a new front end may call an old API and the reverse. Keep API changes **backward compatible** (add fields, do not rename or remove), and version breaking changes (`/v2`).
+- **API.** Build a **multi-stage Docker image** ([multi-stage builds](lesson:docker#multistage)) with a small base image, a non-root user, only production dependencies and `NODE_ENV=production`. Add health probes, a **rolling** or **blue-green** rollout ([deployment strategies](lesson:deployment-strategies#rolling)), and graceful shutdown ([SIGTERM](lesson:node-runtime#shutdown)).
+- **SPA.** `vite build` produces hashed files. Upload them to object storage first, then `index.html` last, and invalidate the CDN for `index.html` only. Keep the previous hashed files for a while, so users with an old `index.html` do not get 404s for chunks. Add a client-side routing fallback (`/*` to `index.html`).
+- **Version skew.** During a rollout, a new front end may call an old API, and the reverse. Keep API changes **backward compatible** (add fields, do not rename or remove), and version breaking changes (`/v2`).
 
 **Database changes during a rollout** use **expand and contract** ([database changes in a release](lesson:deployment-strategies#database)):
 
-1. **Expand:** add the new nullable column or table. Old code ignores it.
-2. **Migrate:** deploy code that writes both and reads the new one, and backfill the old rows.
-3. **Contract:** in a later release, drop the old column when no version uses it.
+1. **Expand.** Add the new nullable column or table. Old code ignores it.
+2. **Migrate.** Deploy code that writes both and reads the new one, and backfill the old rows.
+3. **Contract.** In a later release, drop the old column when no version uses it.
 
-Run migrations as a separate pipeline step before the new code, and never as an automatic step that can run on ten instances at once.
+Run migrations as a separate pipeline step before the new code. Never run them as an automatic step that can start on ten instances at once.
 
-**Alternatives to a pure SPA and a separate API:** **Next.js** or **Remix** render React on the server (better first paint and SEO) and can host the API routes and a BFF in the same project. The trade-off is a server to run and more concepts (server components, caching rules). For a logged-in banking dashboard, an SPA with a BFF is common, and for public pages server rendering helps.
+**Alternatives to a pure SPA and a separate API.** **Next.js** or **Remix** render React on the server, which gives a better first paint and SEO. They can also host the API routes and a BFF in the same project. The trade-off is a server to run, and more concepts (server components, caching rules). For a logged-in banking dashboard, an SPA with a BFF is common. For public pages, server rendering helps.
 
 ## Security checklist {#security}
 
@@ -360,7 +386,7 @@ Run migrations as a separate pipeline step before the new code, and never as an 
 | JUnit and `MockMvc`, Selenium | Vitest, supertest, Testing Library, Playwright |
 | one deployable JAR | two artefacts: static files and an API image |
 
-If the back end stays in Spring Boot, the React part is the same: generate a typed client from OpenAPI and keep the BFF or cookie rules.
+If the back end stays in Spring Boot, the React part is the same. Generate a typed client from OpenAPI, and keep the BFF or cookie rules.
 
 Try it in the lab: [React to API across origins: CORS and preflight](lab:fullstack-cors-preflight).
 
@@ -389,63 +415,133 @@ Try it in the lab: [React to API across origins: CORS and preflight](lab:fullsta
 
 ### [basic] What are the tiers of a full-stack application and what does each do? {#tiers-q}
 
-The presentation tier is the React app in the browser (UI, local state, instant validation). The application tier is the API (authentication, authorisation, validation and business rules). The data tier is the database and its supporting stores. The browser is untrusted and never talks to the database, so every rule that matters is enforced again in the API.
+- The **presentation tier** is the React app in the browser. It handles the UI, local state and instant validation.
+- The **application tier** is the API. It handles authentication, authorisation, validation and business rules.
+- The **data tier** is the database and its supporting stores.
+
+The browser is untrusted and never talks to the database. So every rule that matters is enforced again in the API.
 
 ### [basic] What is CORS and how do you avoid dealing with it? {#cors-q}
 
-CORS is the browser rule that lets a page read responses from another origin only if the server allows it with headers. It appears when the front end and API have different origins. Avoid it by serving both from one origin behind a reverse proxy, and in development by proxying `/api` through the Vite dev server. When two origins are needed, configure an allow-list on the API and handle the preflight. See [CORS in Express](lesson:node-express#security).
+CORS is the browser rule that lets a page read responses from another origin only if the server allows it with headers. It appears when the front end and the API have different origins.
+
+Avoid it by serving both from one origin behind a reverse proxy. In development, proxy `/api` through the Vite dev server.
+
+When two origins are needed, configure an allow-list on the API and handle the preflight. See [CORS in Express](lesson:node-express#security).
 
 ### [basic] Why should you not put secrets in `VITE_` environment variables? {#env-q}
 
-Vite replaces `import.meta.env.VITE_*` at **build time** and the values end up in the JavaScript bundle that every visitor downloads, so they are public. Only put non-secret configuration there (an API base URL, a public client id). Secrets stay on the server, and the SPA gets what it needs through the API.
+Vite replaces `import.meta.env.VITE_*` at **build time**. The values end up in the JavaScript bundle that every visitor downloads, so they are public.
+
+Only put non-secret configuration there, such as an API base URL or a public client id. Secrets stay on the server. The SPA gets what it needs through the API.
 
 ### [basic] How do the front end and back end share types? {#types-q}
 
-In a TypeScript monorepo, a shared package exports zod schemas and the inferred types, which the API uses to validate and the web app uses for forms and responses. With a non-TypeScript or multi-client back end, generate the types and a client from an OpenAPI spec. tRPC infers types directly from server functions. Contract tests (Pact) protect the boundary between separate teams.
+- In a TypeScript monorepo, a shared package exports zod schemas and the inferred types. The API uses them to validate, and the web app uses them for forms and responses.
+- With a non-TypeScript or multi-client back end, generate the types and a client from an OpenAPI spec.
+- tRPC infers types directly from server functions.
+- Contract tests (Pact) protect the boundary between separate teams.
 
 ### [basic] Why is `fetch` not enough on its own for a real app? {#fetch-q}
 
-It does not reject on 4xx and 5xx responses, has no timeout by default, no caching, de-duplication, retries or loading state, and each call repeats the base URL, headers and error handling. So wrap it in one typed client that checks `res.ok` and throws a structured error, and use TanStack Query or RTK Query for server-state caching and loading flags.
+`fetch` does not reject on 4xx and 5xx responses. It has no timeout by default. It has no caching, de-duplication, retries or loading state. And each call repeats the base URL, headers and error handling.
+
+So wrap it in one typed client that checks `res.ok` and throws a structured error. Then use TanStack Query or RTK Query for server-state caching and loading flags.
 
 ### [intermediate] Where should a SPA store its authentication token? {#token-q}
 
-Not in `localStorage` or `sessionStorage`, because any injected script (XSS or a compromised dependency) can read it. Best for a bank is a backend for frontend: the server completes the authorization code flow, keeps the tokens, and gives the browser only an httpOnly, Secure, SameSite session cookie that JavaScript cannot read. Otherwise keep a short-lived access token in memory and renew it with a refresh token in an httpOnly cookie. Cookie sessions need CSRF protection, and all setups need XSS prevention.
+Not in `localStorage` or `sessionStorage`, because any injected script (XSS or a compromised dependency) can read it.
+
+The best choice for a bank is a backend for frontend (BFF). The server completes the authorization code flow and keeps the tokens. The browser gets only an httpOnly, Secure, SameSite session cookie that JavaScript cannot read.
+
+The alternative is a short-lived access token in memory, renewed with a refresh token in an httpOnly cookie.
+
+Cookie sessions need CSRF protection. All setups need XSS prevention.
 
 ### [intermediate] How does the authorization code flow with PKCE work for a SPA? {#pkce-q}
 
-The app creates a random code verifier and sends its hash (the code challenge) when redirecting the user to the identity provider. The user signs in there, and the provider redirects back with a one-time authorization code. The code and the original verifier are then exchanged for tokens, and the provider checks that the verifier matches the challenge. A stolen code is useless without the verifier, and a public client needs no secret. See [OIDC](lesson:oidc#flow).
+1. The app creates a random code verifier. It sends the hash of the verifier (the code challenge) when it redirects the user to the identity provider.
+2. The user signs in there, and the provider redirects back with a one-time authorization code.
+3. The code and the original verifier are exchanged for tokens. The provider checks that the verifier matches the challenge.
+
+A stolen code is useless without the verifier, and a public client needs no secret. See [OIDC](lesson:oidc#flow).
 
 ### [intermediate] How do you handle an expired token without logging the user out? {#refresh-q}
 
-On a 401, request a new access token once with the refresh token (a cookie or a BFF endpoint), then retry the original request. Share a single in-flight refresh promise so concurrent failing calls trigger one refresh. If the refresh fails, clear client state and redirect to login. Do not loop: retry only once, and never retry a refresh on 401.
+On a 401, request a new access token once with the refresh token (a cookie or a BFF endpoint). Then retry the original request.
+
+Share a single in-flight refresh promise, so concurrent failing calls trigger only one refresh.
+
+If the refresh fails, clear client state and redirect to login.
+
+Do not loop. Retry only once, and never retry a refresh on 401.
 
 ### [intermediate] What is CSRF, and does it affect a SPA with a JWT? {#csrf-q}
 
-CSRF tricks a logged-in user's browser into sending a request to your site, relying on the browser attaching cookies automatically. It affects cookie-based authentication, which is defended with `SameSite=Lax` or `Strict`, a CSRF token or a required custom header, and no state changes on GET. A JWT sent in the `Authorization` header is not attached automatically, so CSRF does not apply, but if the JWT is stored in `localStorage` an XSS attack can steal it, so the choice trades one risk for another.
+CSRF tricks a logged-in user's browser into sending a request to your site. It relies on the browser attaching cookies automatically.
+
+It affects cookie-based authentication. Defend with `SameSite=Lax` or `Strict`, a CSRF token or a required custom header, and no state changes on GET.
+
+A JWT sent in the `Authorization` header is not attached automatically, so CSRF does not apply. But if the JWT is stored in `localStorage`, an XSS attack can steal it. So the choice trades one risk for another.
 
 ### [intermediate] Walk through what happens when a user clicks Send on a transfer. {#walk-q}
 
-The form validates with the shared schema and the mutation sends `POST /api/transfers` with the cookie and an `Idempotency-Key`. The proxy forwards it to an API instance, where middleware logs it with a request id, parses the body, rate limits, authenticates and validates it again. The service opens a transaction, checks idempotency, locks the source account, checks ownership and funds, writes the transfer and ledger entries and stores the key, then commits. The API returns 201 with `Location`. The client invalidates the accounts and transactions queries, which refetch, so the screen shows the true state. Errors return a coded body that the UI maps to a field error or a retry that reuses the same key.
+1. The form validates with the shared schema. The mutation sends `POST /api/transfers` with the cookie and an `Idempotency-Key`.
+2. The proxy forwards it to an API instance. Middleware logs it with a request id, parses the body, rate limits, authenticates and validates it again.
+3. The service opens a transaction. It checks idempotency, locks the source account, and checks ownership and funds. It writes the transfer and ledger entries, stores the key, and commits.
+4. The API returns 201 with `Location`.
+5. The client invalidates the accounts and transactions queries, which refetch. So the screen shows the true state.
+
+Errors return a coded body. The UI maps it to a field error, or to a retry that reuses the same key.
 
 ### [intermediate] How do you stop a double-click or a retry from sending money twice? {#double-q}
 
-Disable the button while pending, and make the request idempotent: the client creates one key per submission and sends it as `Idempotency-Key` on every retry. The server stores the key with a unique constraint in the same transaction as the transfer and, when it sees the key again, returns the saved result instead of repeating the work. A database transaction and a row lock stop concurrent requests from overdrawing the account.
+Disable the button while the request is pending. Then make the request idempotent.
+
+The client creates one key per submission, and sends it as `Idempotency-Key` on every retry. The server stores the key with a unique constraint, in the same transaction as the transfer. When it sees the key again, it returns the saved result instead of repeating the work.
+
+A database transaction and a row lock stop concurrent requests from overdrawing the account.
 
 ### [intermediate] How do you deploy the front end and the API, and why separately? {#deploy-q}
 
-The API is a container image rolled out gradually behind health checks. The SPA is static files uploaded to object storage and served by a CDN, with hashed file names cached for a year and `index.html` uncached. They change at different rates and need different infrastructure, so they deploy independently. Because versions overlap during a rollout, keep API changes backward compatible, keep the old hashed files available briefly, and use expand and contract for database changes.
+The API is a container image, rolled out gradually behind health checks. The SPA is static files uploaded to object storage and served by a CDN. Hashed file names are cached for a year, and `index.html` is not cached.
+
+They change at different rates and need different infrastructure, so they deploy independently.
+
+Versions overlap during a rollout. So keep API changes backward compatible, keep the old hashed files available briefly, and use expand and contract for database changes.
 
 ### [deep] How do you change a database column used by a running API without downtime? {#migration-q}
 
-Use expand and contract. Expand: add the new column as nullable, an additive change that old code ignores. Deploy code that writes both columns and reads the new one, and backfill existing rows in batches. Verify, then in a later release remove the old column and the dual-write code. Run migrations as a separate, reviewed pipeline step that executes once, not on each instance start, and make sure a rollback of the application is still possible at each stage.
+Use expand and contract.
+
+1. **Expand.** Add the new column as nullable. This is an additive change that old code ignores.
+2. Deploy code that writes both columns and reads the new one. Backfill the existing rows in batches.
+3. Verify. Then, in a later release, remove the old column and the dual-write code.
+
+Run migrations as a separate, reviewed pipeline step that executes once, not on each instance start. Make sure a rollback of the application is still possible at each stage.
 
 ### [deep] How would you make debugging a failure across the browser, API and database easy? {#debug-q}
 
-Create a request id (or W3C `traceparent`) at the edge or in the browser, send it with every request, return it in error bodies and show it to the user as a reference. Include it in every log line through structured logging, and propagate it to downstream calls and database query comments. Use OpenTelemetry for traces from the browser through Express to the database, track front-end errors with source maps, and alert on error rate and latency. Then one id leads from a user's screenshot to the exact trace.
+- Create a request id (or W3C `traceparent`) at the edge or in the browser. Send it with every request, return it in error bodies, and show it to the user as a reference.
+- Include it in every log line through structured logging. Propagate it to downstream calls and database query comments.
+- Use OpenTelemetry for traces from the browser through Express to the database.
+- Track front-end errors with source maps, and alert on error rate and latency.
+
+Then one id leads from a user's screenshot to the exact trace.
 
 ### [deep] When would you choose Next.js or server rendering over a React SPA with a separate API? {#ssr-q}
 
-Choose server rendering when first paint and SEO matter (public marketing and content pages), when you want less client JavaScript, or when a BFF and the UI naturally live in one project. A logged-in dashboard that is not indexed gets less benefit from it, and a SPA with a separate API is simpler to host (a CDN plus containers) and lets other clients (mobile, partners) reuse the API. Server rendering adds a Node server to run and operate, and more rules for caching and data fetching. Many teams use both: server-rendered public pages and an SPA behind login.
+Choose server rendering in these cases:
+
+- first paint and SEO matter (public marketing and content pages);
+- you want less client JavaScript;
+- a BFF and the UI naturally live in one project.
+
+A logged-in dashboard that is not indexed gets less benefit from it. A SPA with a separate API is simpler to host (a CDN plus containers), and lets other clients (mobile, partners) reuse the API.
+
+Server rendering adds a Node server to run and operate, and more rules for caching and data fetching.
+
+Many teams use both: server-rendered public pages, and a SPA behind login.
 
 ### [coding] Write a typed `api()` client with a base path, timeout, structured error, and a single shared token refresh on 401. {#coding-client}
 
@@ -505,7 +601,13 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
 }
 ```
 
-The client sends cookies, times out, returns typed data, throws a structured `ApiError` with the server's code and request id, and refreshes once even when many calls fail together. Refresh calls never trigger another refresh, so there is no loop.
+Explain these points:
+
+- The client sends cookies, has a **timeout**, and returns **typed data**.
+- It throws a structured **`ApiError`** with the server's code and request id.
+- It refreshes **once**, even when many calls fail together, because they share one promise.
+- Refresh calls never trigger another refresh, so there is **no loop**.
+- If the refresh fails, the user goes to the login page.
 
 ### [coding] Write the Express route and service for `POST /transfers` with idempotency and a database transaction, using the shared `CreateTransfer` schema. {#coding-transfer}
 
@@ -576,7 +678,13 @@ async function makeTransfer(userId: string, input: CreateTransfer, key: string) 
 }
 ```
 
-The same schema validates here and in the browser. The row lock and the transaction stop double spending, the key has a unique constraint `(user_id, key)` that also protects against two simultaneous retries, parameterised queries prevent injection, and the connection is released in `finally`.
+Explain these points:
+
+- The **same schema** validates here and in the browser.
+- The **row lock** and the **transaction** stop double spending.
+- The key has a unique constraint `(user_id, key)`. It also protects against two simultaneous retries.
+- **Parameterised queries** prevent injection.
+- The connection is released in `finally`, so the pool never leaks.
 
 ### [coding] Write the React transfer form: shared schema validation, a stable idempotency key, pending state, and server error mapping. {#coding-form}
 
@@ -645,4 +753,9 @@ export function TransferForm({ fromAccount }: { fromAccount: string }) {
 }
 ```
 
-The form reuses the contract schema, so browser and server agree. The idempotency key lives in a ref, so re-renders keep it, a retry after a network failure reuses it, and only a successful transfer creates a new one. The button is disabled while pending, and server error codes map to the right field or a message that includes the request id for support.
+Explain these points:
+
+- The form reuses the **contract schema**, so the browser and the server agree.
+- The idempotency key lives in a **ref**. Re-renders keep it, and a retry after a network failure reuses it. Only a successful transfer creates a new one.
+- The button is **disabled while pending**.
+- Server error codes map to the right **field**, or to a message that includes the **request id** for support.

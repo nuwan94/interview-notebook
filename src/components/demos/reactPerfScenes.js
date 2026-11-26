@@ -1,101 +1,196 @@
-// Frame data for the "React performance and testing" walk-through (box-and-arrow player).
-// box.tone: ok | bad | warn | new | none.
+// Frame data for the "React performance and testing" walk-through, drawn by BoardStage.
 
-const b = (id, title, lines = [], tone, badge) => ({ id, title, lines, tone, badge });
-const d = (from, to, label, tone) => ({ from, to, label, tone });
+import { BoardStage } from './BoardStage.jsx';
+
+const box = (id, x, y, w, title, lines, tone = 'none', o = {}) => ({ id, x, y, w, title, lines, mono: true, tone, ...o });
+const C1 = 14, C2 = 230, C3 = 446, W = 180;
+const W2 = 290, R2 = 336;
+
+/* ---------- why it re-renders ---------- */
+const rendersFrames = [
+  {
+    h: 250,
+    line: 'setQuery("visa")',
+    result: { text: 'children render too, by default', tone: 'warn' },
+    cards: [
+      box('s', C1, 70, W, 'state changes', ['setQuery("visa")'], 'warn'),
+      box('p', C2, 70, W, 'parent renders', ['the function runs', 'again'], 'ok'),
+      box('c', C3, 70, W, 'children render', ['even with the', 'same props'], 'warn'),
+      box('n', C1, 180, 612, 'a render is a function call that builds a new element tree', ['it is cheap and does not touch the DOM yet'], 'none'),
+    ],
+    arrows: [{ from: 's', to: 'p', fs: 'r', ts: 'l', tone: 'warn' }, { from: 'p', to: 'c', fs: 'r', ts: 'l', tone: 'warn' }],
+    note: 'A state change makes React render that component. By default every child renders again too, even with the same props.',
+  },
+  {
+    h: 250,
+    line: 'render, then commit',
+    result: { text: 'only the changed nodes are written', tone: 'ok' },
+    cards: [
+      box('n', C1, 70, W, 'new element tree', ['the output of render'], 'new'),
+      box('r', C2, 70, W, 'reconciliation', ['diff against the', 'old tree'], 'ok'),
+      box('d', C3, 70, W, 'DOM commit', ['only the changed', 'nodes'], 'ok'),
+      box('x', C1, 180, 612, 'an extra render is wasted JavaScript time', ['it is not a DOM rewrite'], 'none'),
+    ],
+    arrows: [{ from: 'n', to: 'r', fs: 'r', ts: 'l', tone: 'ok' }, { from: 'r', to: 'd', fs: 'r', ts: 'l', tone: 'ok' }],
+    note: 'React compares the new tree with the old one (reconciliation) and writes only the differences to the DOM, in the commit phase.',
+  },
+  {
+    h: 250,
+    line: 'a keystroke at the top of the tree',
+    result: { text: 'slow render, laggy typing', tone: 'bad' },
+    cards: [
+      box('k', C1, 70, W, 'keystroke', ['state lives at', 'the top'], 'warn'),
+      box('l', C2, 70, W, 'big list renders', ['5,000 rows,', '80 ms'], 'bad'),
+      box('f', C3, 70, W, 'laggy typing', ['the frame is missed'], 'bad'),
+      box('x', C1, 180, 612, 'the browser cannot paint until the render finishes', ['it matters only when a render is slow or very frequent'], 'none'),
+    ],
+    arrows: [{ from: 'k', to: 'l', fs: 'r', ts: 'l', tone: 'bad' }, { from: 'l', to: 'f', fs: 'r', ts: 'l', tone: 'bad' }],
+    note: 'The cost is real when a render is slow or runs very often. One slow component makes typing feel laggy.',
+  },
+];
+
+/* ---------- fixing slow renders ---------- */
+const fixesFrames = [
+  {
+    h: 250,
+    line: 'measure first',
+    result: { text: 'fix what is slow and frequent', tone: 'ok' },
+    cards: [
+      box('r', C1, 70, W, 'record in Profiler', ['type in the', 'search box'], 'new'),
+      box('f', C2, 70, W, 'flame graph', ['why did it render?'], 'ok'),
+      box('s', C3, 70, W, 'slow component', ['TransactionTable'], 'warn'),
+      box('x', C1, 180, 612, 'use a production build, change one thing, record again', ['if the number did not improve, undo the change'], 'none'),
+    ],
+    arrows: [{ from: 'r', to: 'f', fs: 'r', ts: 'l', tone: 'ok' }, { from: 'f', to: 's', fs: 'r', ts: 'l', tone: 'warn' }],
+    note: 'Record the interaction in the React Profiler and read the flame graph. Do not guess.',
+  },
+  {
+    h: 270,
+    line: 'move state down',
+    result: { text: 'the table no longer re-renders', tone: 'ok' },
+    cards: [
+      box('p', C2, 40, W, 'page', ['holds no search state'], 'ok'),
+      box('a', C1, 150, W2, 'search box', ['owns its own state'], 'ok'),
+      box('t', R2, 150, W2, 'transaction table', ['unaffected by typing'], 'ok'),
+    ],
+    arrows: [{ from: 'p', to: 'a', fs: 'b', ts: 't', tone: 'ok' }, { from: 'p', to: 't', fs: 'b', ts: 't', tone: 'ok' }],
+    note: 'The cheapest fix is structural. Keep the state in the small component that uses it. Or pass the slow part as children, which keep the same reference.',
+  },
+  {
+    h: 250,
+    line: 'when the structure cannot change',
+    result: { text: 'memoise, defer, or let the Compiler do it', tone: 'ok' },
+    cards: [
+      box('m', C1, 70, W, 'memo + stable props', ['skip equal renders'], 'new'),
+      box('d', C2, 70, W, 'useDeferredValue', ['the list lags behind', 'typing'], 'new'),
+      box('c', C3, 70, W, 'React Compiler', ['automatic', 'memoisation'], 'new'),
+      box('x', C1, 180, 612, 'typing stays urgent, the list updates a moment later', ['these keep the work from blocking input'], 'none'),
+    ],
+    note: 'Next options: memo on the slow child, useMemo for a costly calculation, and useDeferredValue or useTransition so typing stays smooth.',
+  },
+  {
+    h: 250,
+    line: '50,000 transactions',
+    result: { text: 'render only what is visible', tone: 'ok' },
+    cards: [
+      box('a', C1, 70, W, 'full list', ['50,000 rows in', 'the DOM'], 'bad'),
+      box('v', C2, 70, W, 'virtualised list', ['about 20 rows', 'in the DOM'], 'ok'),
+      box('s', C3, 70, W, 'scroll position', ['decides the', 'visible slice'], 'new'),
+      box('x', C1, 180, 612, 'TanStack Virtual or react-window', ['for huge data, also page it on the server'], 'none'),
+    ],
+    arrows: [{ from: 'a', to: 'v', fs: 'r', ts: 'l', tone: 'ok' }, { from: 's', to: 'v', fs: 't', ts: 't', tone: 'ok' }],
+    note: 'A virtualised list keeps about 20 rows in the DOM and swaps them as you scroll, so the cost depends on the window, not the data.',
+  },
+];
+
+/* ---------- loading performance ---------- */
+const loadingFrames = [
+  {
+    h: 250,
+    line: 'one big bundle',
+    result: { text: 'late first paint', tone: 'bad' },
+    cards: [
+      box('b', C1, 70, W, 'one big bundle', ['2.4 MB of', 'JavaScript'], 'bad'),
+      box('p', C2, 70, W, 'download and parse', ['slow on mobile'], 'warn'),
+      box('u', C3, 70, W, 'late first paint', ['the user waits'], 'bad'),
+      box('x', C1, 180, 612, 'the browser loads code for screens the user has not opened', ['a bundle analyser shows what is heavy'], 'none'),
+    ],
+    arrows: [{ from: 'b', to: 'p', fs: 'r', ts: 'l', tone: 'warn' }, { from: 'p', to: 'u', fs: 'r', ts: 'l', tone: 'bad' }],
+    note: 'One big bundle makes the first page slow. The analyser often points to a charting or date library.',
+  },
+  {
+    h: 250,
+    line: 'React.lazy(() => import("./Reports"))',
+    result: { text: 'load a route only when needed', tone: 'ok' },
+    cards: [
+      box('r', C1, 70, W, 'route /reports', ['React.lazy and', 'import()'], 'new'),
+      box('s', C2, 70, W, 'Suspense fallback', ['spinner while', 'it loads'], 'warn'),
+      box('c', C3, 70, W, 'reports chunk', ['downloaded on', 'demand'], 'ok'),
+      box('x', C1, 180, 612, 'split at the route level first', ['then lazy-load rare heavy parts, such as a PDF viewer'], 'none'),
+    ],
+    arrows: [{ from: 'r', to: 's', fs: 'r', ts: 'l', tone: 'warn' }, { from: 's', to: 'c', fs: 'r', ts: 'l', tone: 'ok' }],
+    note: 'Code splitting loads a route only when it is opened. Suspense shows a fallback while the chunk downloads.',
+  },
+  {
+    h: 250,
+    line: 'measure what users feel',
+    result: { text: 'LCP, INP and CLS', tone: 'ok' },
+    cards: [
+      box('v', C1, 70, W, 'Web Vitals', ['LCP, INP, CLS'], 'new'),
+      box('i', C2, 70, W, 'optimised images', ['sized, lazy,', 'modern format'], 'ok'),
+      box('n', C3, 70, W, 'CDN and caching', ['hashed file names'], 'ok'),
+      box('x', C1, 180, 612, 'LCP under 2.5 s, INP under 200 ms, CLS under 0.1', ['server rendering gives a faster first paint'], 'none'),
+    ],
+    note: 'Track the metrics users feel, then optimise images, cache static files with hashed names, and use a CDN.',
+  },
+];
+
+/* ---------- testing ---------- */
+const testingFrames = [
+  {
+    h: 250,
+    line: 'the testing pyramid',
+    result: { text: 'many unit, some component, few end-to-end', tone: 'ok' },
+    cards: [
+      box('u', C1, 70, W, 'unit tests', ['many, milliseconds'], 'ok'),
+      box('c', C2, 70, W, 'component tests', ['React Testing', 'Library'], 'ok'),
+      box('e', C3, 70, W, 'end-to-end tests', ['few, real browser'], 'warn'),
+      box('x', C1, 180, 612, 'Vitest for logic, Testing Library for screens, Playwright for journeys', ['TypeScript and ESLint sit under all of them'], 'none'),
+    ],
+    arrows: [{ from: 'u', to: 'c', fs: 'r', ts: 'l', tone: 'ok' }, { from: 'c', to: 'e', fs: 'r', ts: 'l', tone: 'warn' }],
+    note: 'Many fast unit tests, a good number of component tests, and a few end-to-end tests of key journeys.',
+  },
+  {
+    h: 250,
+    line: 'test what the user sees',
+    result: { text: 'refactors do not break the test', tone: 'ok' },
+    cards: [
+      box('r', C1, 70, W, 'render(form)', ['a real DOM', 'in jsdom'], 'new'),
+      box('q', C2, 70, W, 'getByRole,', ['getByLabelText', 'find like a user'], 'ok'),
+      box('a', C3, 70, W, 'userEvent + expect', ['click, type,', 'assert the text'], 'ok'),
+      box('x', C1, 180, 612, 'do not test state, props passed to children, or class names', ['those are implementation details'], 'none'),
+    ],
+    arrows: [{ from: 'r', to: 'q', fs: 'r', ts: 'l', tone: 'ok' }, { from: 'q', to: 'a', fs: 'r', ts: 'l', tone: 'ok' }],
+    note: 'Testing Library renders the component and queries it like a user would: by role, label and text.',
+  },
+  {
+    h: 250,
+    line: 'mock the network, not your code',
+    result: { text: 'the real fetch code runs', tone: 'ok' },
+    cards: [
+      box('c', C1, 70, W, 'component', ['calls fetch', '/accounts'], 'none'),
+      box('m', C2, 70, W, 'MSW handler', ['returns fake JSON'], 'new'),
+      box('s', C3, 70, W, 'assertion', ['table shows', 'two rows'], 'ok'),
+      box('x', C1, 180, 612, 'the same handlers serve tests, Storybook and local development', ['do not mock your own components, hooks or store'], 'none'),
+    ],
+    arrows: [{ from: 'c', to: 'm', fs: 'r', ts: 'l', tone: 'ok' }, { from: 'm', to: 's', fs: 'r', ts: 'l', tone: 'ok' }],
+    note: 'Mock Service Worker intercepts the request at the network level, so the component runs its real fetching code.',
+  },
+];
 
 export const REACT_PERF_SCENES = [
-  {
-    id: 'renders',
-    label: 'Why it re-renders',
-    title: 'State change, render, commit',
-    frames: [
-      {
-        note: 'A state change makes React render that component: it calls the function and builds a new element tree. By default every child component renders again too, even if its props are the same. Rendering is cheap and does not touch the DOM yet.',
-        boxes: [b('s', 'State changes', ['setQuery("visa")'], 'warn'), b('p', 'Parent renders', ['function runs again'], 'ok'), b('c', 'Children render', ['even with same props'], 'warn')],
-        deps: [d('State changes', 'Parent renders', 'triggers', 'warn'), d('Parent renders', 'Children render', 'by default', 'warn')],
-      },
-      {
-        note: 'React compares the new tree with the previous one, which is called reconciliation, and finds the smallest set of changes. Only those changes are written to the DOM in the commit phase. So an extra render is wasted work, but not a DOM rewrite.',
-        boxes: [b('n', 'New element tree', ['output of render'], 'new'), b('r', 'Reconciliation', ['diff against the old tree'], 'ok'), b('d', 'DOM commit', ['only the changed nodes'], 'ok')],
-        deps: [d('New element tree', 'Reconciliation', 'compared', 'ok'), d('Reconciliation', 'DOM commit', 'minimal updates', 'ok')],
-      },
-      {
-        note: 'The cost is real when a render is slow or runs very often: a big list, an expensive calculation, or a state that changes on every keystroke high in the tree. One slow component makes typing feel laggy because the browser cannot paint until it finishes.',
-        boxes: [b('k', 'Keystroke', ['state at the top'], 'warn'), b('l', 'Big list renders', ['5,000 rows, 80 ms'], 'bad'), b('f', 'Laggy typing', ['frame is missed'], 'bad')],
-        deps: [d('Keystroke', 'Big list renders', 'whole subtree', 'bad'), d('Big list renders', 'Laggy typing', 'blocks the paint', 'bad')],
-      },
-    ],
-  },
-  {
-    id: 'fixes',
-    label: 'Fixing slow renders',
-    title: 'Measure first, then the cheapest fix',
-    frames: [
-      {
-        note: 'Start with the React Profiler in DevTools. Record the interaction, then read the flame graph: which component rendered, why it rendered, and how long it took. Fix the one that is both slow and frequent. Do not guess.',
-        boxes: [b('r', 'Record in Profiler', ['type in the search box'], 'new'), b('f', 'Flame graph', ['why did it render?'], 'ok'), b('s', 'Slow component', ['TransactionTable'], 'warn')],
-        deps: [d('Record in Profiler', 'Flame graph', 'shows', 'ok'), d('Flame graph', 'Slow component', 'points to', 'warn')],
-      },
-      {
-        note: 'The cheapest fix is structural. Move state down to the component that uses it, so the typing state no longer lives above the table. Or pass the slow part as children, which are created by the parent and keep the same reference.',
-        boxes: [b('a', 'Search box', ['owns its own state'], 'ok'), b('t', 'TransactionTable', ['no longer re-renders'], 'ok'), b('p', 'Page', ['holds no search state'], 'ok')],
-        deps: [d('Page', 'Search box', 'renders', 'ok'), d('Page', 'TransactionTable', 'unaffected', 'ok')],
-      },
-      {
-        note: 'Next options: memo on the slow child (with stable props), useMemo for an expensive calculation, and useDeferredValue or useTransition so typing stays urgent and the list updates later. The React Compiler can add much of the memoisation for you.',
-        boxes: [b('m', 'memo + stable props', ['skip equal renders'], 'new'), b('d', 'useDeferredValue', ['list lags behind typing'], 'new'), b('c', 'React Compiler', ['automatic memoisation'], 'new')],
-        deps: [d('memo + stable props', 'useDeferredValue', 'then', 'ok'), d('useDeferredValue', 'React Compiler', 'or', 'ok')],
-      },
-      {
-        note: 'For very long lists, render only what is visible. Virtualisation (react-window, TanStack Virtual) keeps about 20 rows in the DOM and swaps them as you scroll, so 50,000 transactions cost the same as 20.',
-        boxes: [b('a', 'Full list', ['50,000 transactions'], 'bad'), b('v', 'Virtualised list', ['about 20 rows in the DOM'], 'ok'), b('s', 'Scroll position', ['decides the visible slice'], 'new')],
-        deps: [d('Scroll position', 'Virtualised list', 'selects rows', 'ok'), d('Full list', 'Virtualised list', 'replaced by', 'ok')],
-      },
-    ],
-  },
-  {
-    id: 'loading',
-    label: 'Loading performance',
-    title: 'Ship less, load it later',
-    frames: [
-      {
-        note: 'One big bundle makes the first page slow: the browser downloads and parses code for screens the user has not opened. The bundle analyser shows what is heavy, often a charting or date library.',
-        boxes: [b('b', 'One big bundle', ['2.4 MB of JavaScript'], 'bad'), b('p', 'Download and parse', ['slow on mobile'], 'warn'), b('u', 'Late first paint', ['the user waits'], 'bad')],
-        deps: [d('One big bundle', 'Download and parse', 'before anything', 'warn'), d('Download and parse', 'Late first paint', 'delays', 'bad')],
-      },
-      {
-        note: 'Code splitting with React.lazy and dynamic import loads a route or heavy component only when needed. Suspense shows a fallback while the chunk downloads. Splitting at the route level is the usual first step.',
-        boxes: [b('r', 'Route /reports', ['React.lazy(() => import)'], 'new'), b('s', 'Suspense fallback', ['spinner while loading'], 'warn'), b('c', 'Reports chunk', ['loaded on demand'], 'ok')],
-        deps: [d('Route /reports', 'Suspense fallback', 'shows', 'warn'), d('Route /reports', 'Reports chunk', 'downloads', 'ok')],
-      },
-      {
-        note: 'Also measure what users feel: Largest Contentful Paint, Interaction to Next Paint and Cumulative Layout Shift. Optimise images (size, format, lazy loading), cache static files with hashed names, and use a CDN. Frameworks add server rendering for a faster first paint.',
-        boxes: [b('v', 'Web Vitals', ['LCP, INP, CLS'], 'new'), b('i', 'Optimised images', ['sized, lazy, modern format'], 'ok'), b('n', 'CDN + caching', ['hashed file names'], 'ok')],
-        deps: [d('Web Vitals', 'Optimised images', 'guides', 'ok'), d('Web Vitals', 'CDN + caching', 'guides', 'ok')],
-      },
-    ],
-  },
-  {
-    id: 'testing',
-    label: 'Testing',
-    title: 'Test what the user sees',
-    frames: [
-      {
-        note: 'Use a pyramid. Many fast unit tests for pure logic (reducers, selectors, helpers) with Vitest or Jest. A good number of component tests with React Testing Library. A few end-to-end tests of key journeys with Playwright or Cypress.',
-        boxes: [b('u', 'Unit tests', ['many, milliseconds'], 'ok'), b('c', 'Component tests', ['React Testing Library'], 'ok'), b('e', 'End-to-end tests', ['few, real browser'], 'warn')],
-        deps: [d('Unit tests', 'Component tests', 'then', 'ok'), d('Component tests', 'End-to-end tests', 'then', 'warn')],
-      },
-      {
-        note: 'React Testing Library renders the component and queries it like a user would: by role, label and text, not by class name or internal state. userEvent clicks and types. Then you assert on what is on the screen, so refactors do not break the test.',
-        boxes: [b('r', 'render(Transfer form)', ['real DOM in jsdom'], 'new'), b('q', 'getByRole, getByLabelText', ['find like a user'], 'ok'), b('a', 'userEvent + expect', ['click, type, assert text'], 'ok')],
-        deps: [d('render(Transfer form)', 'getByRole, getByLabelText', 'query', 'ok'), d('getByRole, getByLabelText', 'userEvent + expect', 'act and assert', 'ok')],
-      },
-      {
-        note: 'Components call the network. Mock Service Worker (MSW) intercepts the request at the network level and returns a fake response, so the component runs its real fetch code. The same handlers serve tests, Storybook and local development.',
-        boxes: [b('c', 'Component', ['calls fetch /accounts'], 'none'), b('m', 'MSW handler', ['returns fake JSON'], 'new'), b('s', 'Assertion', ['table shows two rows'], 'ok')],
-        deps: [d('Component', 'MSW handler', 'request intercepted', 'ok'), d('MSW handler', 'Assertion', 'renders result', 'ok')],
-      },
-    ],
-  },
+  { id: 'renders', label: 'Why it re-renders', title: 'State change, render, commit', stage: BoardStage, frames: rendersFrames },
+  { id: 'fixes', label: 'Fixing slow renders', title: 'Measure first, then the cheapest fix', stage: BoardStage, frames: fixesFrames },
+  { id: 'loading', label: 'Loading performance', title: 'Ship less, load it later', stage: BoardStage, frames: loadingFrames },
+  { id: 'testing', label: 'Testing', title: 'Test what the user sees', stage: BoardStage, frames: testingFrames },
 ];

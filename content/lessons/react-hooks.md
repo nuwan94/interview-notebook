@@ -6,21 +6,34 @@ summary: React hooks beyond useState, useEffect with dependencies, cleanup, race
 tags: [React, Hooks, useEffect, useMemo, useCallback, useReducer, Context, Custom hooks, Performance, Full stack]
 order: 65
 topic: Full stack / React
-updated: 2026-11-18
+updated: 2026-11-26
 subnav: true
 ---
 
-Hooks are where most React interview questions go deep. They ask *what `useEffect` is for and what its dependency array means, why an effect needs a cleanup, how to avoid a race when fetching, what `useMemo` and `useCallback` really do, when a component re-renders and how context changes that, when to use `useReducer`, how to write a custom hook, and what a stale closure is.* This lesson builds on [React core](lesson:react-core#state) and on [closures](lesson:js-essentials#closures) and [async code](lesson:js-async#cancellation), because every hook bug is one of those. The examples are TypeScript. Play the four scenes: `useEffect`, memoization, reducer and context, and custom hooks.
+Hooks are where most React interview questions go deep. Expect questions like these:
+
+- What is `useEffect` for, and what does its dependency array mean?
+- Why does an effect need a cleanup?
+- How do you avoid a race when fetching?
+- What do `useMemo` and `useCallback` really do?
+- When does a component re-render, and how does context change that?
+- When do you use `useReducer`?
+- How do you write a custom hook?
+- What is a stale closure?
+
+This lesson builds on [React core](lesson:react-core#state), [closures](lesson:js-essentials#closures) and [async code](lesson:js-async#cancellation). Every hook bug is one of those. The examples are TypeScript. Play the four scenes: `useEffect`, memoization, reducer and context, and custom hooks.
 
 ```demo
 name: react-hooks-walk
 ```
 
-> **One sentence to remember:** *Render is pure, effects synchronise with the outside world and clean up after themselves, memoization only helps when references matter, shared state goes in a reducer or context, and shared logic goes in a custom hook.*
+> **One sentence to remember:** *Render is pure, and effects clean up after themselves.*
+
+In more detail: memoization only helps when references matter. Shared state goes in a reducer or context. Shared logic goes in a custom hook.
 
 ## What hooks are {#hooks}
 
-A **hook** is a function that lets a function component use React features (state, effects, context, refs). Their names start with `use`. Rules recap ([Rules of Hooks](lesson:react-core#bugs)): call them **at the top level**, in the **same order** every render, only in components or other hooks.
+A **hook** is a function that lets a function component use React features: state, effects, context and refs. Their names start with `use`. The rules recap ([Rules of Hooks](lesson:react-core#bugs)): call them **at the top level**, in the **same order** every render, and only in components or other hooks.
 
 | Hook | Purpose |
 | --- | --- |
@@ -33,11 +46,11 @@ A **hook** is a function that lets a function component use React features (stat
 | `useId`, `useSyncExternalStore`, `useDebugValue` | accessibility ids, external stores, DevTools labels |
 | `useActionState`, `useFormStatus`, `useOptimistic` | form Actions in React 19 |
 
-**Why hooks:** class components spread related logic across `componentDidMount`, `componentDidUpdate` and `componentWillUnmount`, and sharing logic needed render props or higher-order components. Hooks group code by **concern** and let you reuse it with **custom hooks**. Class components still work but new code uses hooks.
+**Why hooks.** Class components spread related logic across `componentDidMount`, `componentDidUpdate` and `componentWillUnmount`. Sharing logic needed render props or higher-order components. Hooks group code by **concern**, and let you reuse it with **custom hooks**. Class components still work, but new code uses hooks.
 
 ## useEffect {#effect}
 
-An **effect** runs code **after the component has rendered and the DOM is updated** (the first scene). It is for **synchronising the component with something outside React**: a subscription, a timer, a network request, a browser API, a non-React widget.
+An **effect** runs code **after the component has rendered and the DOM is updated** (the first scene). It is for **synchronising the component with something outside React**: a subscription, a timer, a network request, a browser API, or a non-React widget.
 
 ```tsx
 useEffect(() => {
@@ -47,21 +60,25 @@ useEffect(() => {
 }, [roomId]);                                      // dependencies: run again when roomId changes
 ```
 
-- **Dependency array:** `[a, b]` runs after the first render and whenever `a` or `b` changed (compared with `Object.is`). **`[]`** runs only on mount (and cleanup on unmount). **No array** runs after **every** render. Include **every reactive value** the effect reads (props, state, values derived from them), which the `exhaustive-deps` lint rule checks. **Do not silence it:** a missing dependency means a **stale closure**.
-- **Cleanup:** return a function that undoes the setup (unsubscribe, clear the timer, abort the request). React runs it **before re-running** the effect and **on unmount**.
-- **Timing:** effects run **after paint**, so they do not block rendering. `useLayoutEffect` runs **before the paint**, for measuring the DOM and changing it without a flicker (it blocks painting, so use it rarely).
-- **StrictMode** (development) mounts, cleans up and mounts again to check that setup and cleanup are a matching pair (the fourth frame). It only runs in development.
+- **Dependency array.**
+  - `[a, b]` runs after the first render, and whenever `a` or `b` changed (compared with `Object.is`).
+  - **`[]`** runs only on mount, with the cleanup on unmount.
+  - **No array** runs after **every** render.
+  - Include **every reactive value** the effect reads: props, state, and values derived from them. The `exhaustive-deps` lint rule checks this. **Do not silence it.** A missing dependency means a **stale closure**.
+- **Cleanup.** Return a function that undoes the setup: unsubscribe, clear the timer, abort the request. React runs it **before re-running** the effect, and **on unmount**.
+- **Timing.** Effects run **after paint**, so they do not block rendering. `useLayoutEffect` runs **before the paint**. Use it for measuring the DOM and changing it without a flicker. It blocks painting, so use it rarely.
+- **StrictMode** (development) mounts, cleans up and mounts again, to check that setup and cleanup are a matching pair (the fourth frame). It only runs in development.
 - **Effects are not for everything.** React's guidance is **"You might not need an effect"**:
-  - **Derived data:** compute it during render (`const total = items.reduce(...)`), not in an effect that calls `setState`.
-  - **Reacting to a user action:** put the code in the **event handler** (it knows what happened), not in an effect watching state.
-  - **Resetting state when a prop changes:** use a **`key`** ([keys](lesson:react-core#keys)).
-  - **Sharing logic or state between components:** lift state up or use a custom hook.
-  - **Fetching data:** use a data library or a framework loader, or an effect with cleanup (below).
-- **`useEffectEvent`** (stable from React 19.2) lets an effect call a function that always sees the **latest** props and state without becoming a dependency, for example logging the latest value inside an effect that should not re-run when it changes.
+  - **Derived data.** Compute it during render (`const total = items.reduce(...)`), not in an effect that calls `setState`.
+  - **Reacting to a user action.** Put the code in the **event handler**, which knows what happened. Do not use an effect that watches state.
+  - **Resetting state when a prop changes.** Use a **`key`** ([keys](lesson:react-core#keys)).
+  - **Sharing logic or state between components.** Lift state up, or use a custom hook.
+  - **Fetching data.** Use a data library or a framework loader, or an effect with cleanup (below).
+- **`useEffectEvent`** (stable from React 19.2) lets an effect call a function that always sees the **latest** props and state, without becoming a dependency. An example is logging the latest value inside an effect that should not re-run when it changes.
 
 ### Fetching in an effect without a race {#fetching}
 
-The second and third frames show the problem: responses can arrive out of order, and an old response can overwrite a new one. Clean up by **aborting** the old request:
+The second and third frames show the problem. Responses can arrive out of order, and an old response can overwrite a new one. Clean up by **aborting** the old request:
 
 ```tsx
 useEffect(() => {
@@ -75,20 +92,24 @@ useEffect(() => {
 }, [userId]);
 ```
 
-An **ignore flag** (`let ignore = false; ... if (!ignore) setUser(...); return () => { ignore = true; }`) also works when the API cannot be aborted. In real applications prefer **TanStack Query**, SWR, RTK Query or a framework data layer, which add caching, de-duplication, retries and refetching, so you do not rewrite them ([fetch pitfalls](lesson:js-async#fetch)).
+An **ignore flag** also works when the API cannot be aborted: `let ignore = false; ... if (!ignore) setUser(...); return () => { ignore = true; }`.
+
+In real applications, prefer **TanStack Query**, SWR, RTK Query or a framework data layer. They add caching, de-duplication, retries and refetching, so you do not rewrite them ([fetch pitfalls](lesson:js-async#fetch)).
 
 ## useRef and useLayoutEffect {#ref}
 
-`useRef` is a mutable `{ current }` that persists across renders and **does not trigger a render** ([refs](lesson:react-core#refs)). Use it for DOM nodes, timer ids, the previous value, or a flag. Reading or writing `ref.current` belongs in **handlers and effects**, not in render. A ref is also the escape hatch for a stale closure: store the latest callback in a ref and read it from a long-lived effect.
+`useRef` is a mutable `{ current }` that persists across renders and **does not trigger a render** ([refs](lesson:react-core#refs)). Use it for DOM nodes, timer ids, the previous value, or a flag. Reading or writing `ref.current` belongs in **handlers and effects**, not in render.
+
+A ref is also the escape hatch for a stale closure. Store the latest callback in a ref, and read it from a long-lived effect.
 
 ## Memoization: useMemo, useCallback, memo {#memo}
 
-React re-renders a component when its **state changes**, its **parent re-renders**, or a **context changes**. A re-render is usually cheap, so memoization is an optimisation, not a default.
+React re-renders a component when its **state changes**, its **parent re-renders**, or a **context changes**. A re-render is usually cheap. So memoization is an optimisation, not a default.
 
-- **`useMemo(() => compute(a, b), [a, b])`** caches a **value** until a dependency changes. Use it for an **expensive calculation** or to keep an **object or array reference stable**.
-- **`useCallback(fn, deps)`** caches a **function** (it is `useMemo(() => fn, deps)`). Use it when the function is a prop of a `memo` child or a dependency of an effect.
+- **`useMemo(() => compute(a, b), [a, b])`** caches a **value** until a dependency changes. Use it for an **expensive calculation**, or to keep an **object or array reference stable**.
+- **`useCallback(fn, deps)`** caches a **function**. It is `useMemo(() => fn, deps)`. Use it when the function is a prop of a `memo` child, or a dependency of an effect.
 - **`memo(Component)`** skips re-rendering when the props are **shallowly equal**.
-- **Referential equality is the point** (the second scene): `{}`, `[]` and `() => {}` are **new objects every render**, so `memo` sees a changed prop. `useMemo` and `useCallback` give the same reference while the dependencies are unchanged.
+- **Referential equality is the point** (the second scene). `{}`, `[]` and `() => {}` are **new objects every render**, so `memo` sees a changed prop. `useMemo` and `useCallback` give the same reference while the dependencies are unchanged.
 
 ```tsx
 const Row = memo(function Row({ payment, onSelect }: { payment: Payment; onSelect: (id: string) => void }) {
@@ -103,13 +124,18 @@ function PaymentList({ payments }: { payments: Payment[] }) {
 }
 ```
 
-- **Do not memoize everything.** Memoization costs code, memory and comparisons, and a missing dependency causes a **stale value**. Measure with the **React DevTools Profiler** and fix real problems.
-- **Better fixes first:** **move state down** to the component that needs it, **pass `children`** so unchanged parts are not re-created, split a slow component, **virtualise** long lists (react-window, TanStack Virtual), and debounce input.
-- **React Compiler** (a build-time plugin) adds memoization automatically for components that follow the rules of React, so manual `useMemo`, `useCallback` and `memo` are mostly unnecessary in new code, but you still see them in existing code and in interviews.
+- **Do not memoize everything.** Memoization costs code, memory and comparisons. A missing dependency causes a **stale value**. Measure with the **React DevTools Profiler**, and fix real problems.
+- **Better fixes first:**
+  - **move state down** to the component that needs it;
+  - **pass `children`**, so unchanged parts are not re-created;
+  - split a slow component;
+  - **virtualise** long lists (react-window, TanStack Virtual);
+  - debounce input.
+- **React Compiler** (a build-time plugin) adds memoization automatically for components that follow the rules of React. So manual `useMemo`, `useCallback` and `memo` are mostly unnecessary in new code. But you still see them in existing code and in interviews.
 
 ## useReducer {#reducer}
 
-`useReducer(reducer, initialState)` returns `[state, dispatch]`. Components **dispatch actions** (descriptions of what happened) and a **pure reducer** computes the next state (the third scene).
+`useReducer(reducer, initialState)` returns `[state, dispatch]`. Components **dispatch actions**, which describe what happened. A **pure reducer** computes the next state (the third scene).
 
 ```tsx
 type Action = { type: 'add'; item: Item } | { type: 'remove'; id: string } | { type: 'clear' };
@@ -126,13 +152,13 @@ const [items, dispatch] = useReducer(reducer, []);
 dispatch({ type: 'add', item });
 ```
 
-- **When:** many related transitions, state that depends on the previous state, or logic you want to **test as a plain function** (the reducer needs no React). For one value, `useState` is simpler.
-- **`dispatch` is stable** (the same function every render), so it is safe to pass down or use in effect dependencies.
-- The reducer **must be pure** and **must not mutate** its arguments. With TypeScript a **discriminated union** of actions makes the `switch` exhaustive ([narrowing](lesson:ts-essentials#narrowing)). This is the same idea as Redux, which is covered in the next lesson.
+- **When to use it.** Use it for many related transitions, for state that depends on the previous state, or for logic you want to **test as a plain function**. The reducer needs no React. For one value, `useState` is simpler.
+- **`dispatch` is stable.** It is the same function every render, so it is safe to pass down or use in effect dependencies.
+- The reducer **must be pure** and **must not mutate** its arguments. With TypeScript, a **discriminated union** of actions makes the `switch` exhaustive ([narrowing](lesson:ts-essentials#narrowing)). This is the same idea as Redux, which is covered in the next lesson.
 
 ## useContext {#context}
 
-**Context** lets a component pass a value to **all descendants** without threading props through every level (**prop drilling**).
+**Context** lets a component pass a value to **all descendants**, without threading props through every level. That threading is called **prop drilling**.
 
 ```tsx
 const ThemeContext = createContext<'light' | 'dark'>('light');            // a default for components without a provider
@@ -152,17 +178,17 @@ function Button() {
 }
 ```
 
-- **Every consumer re-renders when the provider's value changes** (the second frame), even if it uses a part that did not change, and `memo` does not stop that.
+- **Every consumer re-renders when the provider's value changes** (the second frame). That happens even if it uses a part that did not change, and `memo` does not stop it.
 - **Avoid a re-render storm:**
-  - **Memoise the value** (`useMemo`) so it is not a new object every render.
-  - **Split contexts**: one for the **state** (changes often) and one for the **dispatch** or actions (stable), so components that only trigger changes do not re-render (the third frame).
-  - **Keep the state close** to where it is used, and put only truly global data in context (current user, theme, locale, feature flags).
-- **Context is not a state manager.** It transports a value, and the state still lives in `useState` or `useReducer`. For frequently changing global state use a store (Redux Toolkit, Zustand) with selectors, covered next.
-- **Providers go at the top**, and nested providers override outer ones for their subtree.
+  - **Memoise the value** (`useMemo`), so it is not a new object every render.
+  - **Split contexts.** Use one for the **state**, which changes often, and one for the **dispatch** or actions, which are stable. Then components that only trigger changes do not re-render (the third frame).
+  - **Keep the state close** to where it is used. Put only truly global data in context: the current user, theme, locale, feature flags.
+- **Context is not a state manager.** It transports a value, and the state still lives in `useState` or `useReducer`. For frequently changing global state, use a store (Redux Toolkit, Zustand) with selectors, covered next.
+- **Providers go at the top.** Nested providers override outer ones for their subtree.
 
 ## Custom hooks {#custom}
 
-A **custom hook** is a function whose name starts with `use` that calls other hooks. It **shares logic**, not state: every call has **its own state** (the second frame of the last scene).
+A **custom hook** is a function whose name starts with `use` and that calls other hooks. It **shares logic**, not state. Every call has **its own state** (the second frame of the last scene).
 
 ```tsx
 function useDebounce<T>(value: T, delayMs: number): T {
@@ -185,28 +211,29 @@ function useLocalStorage<T>(key: string, initial: T) {
 ```
 
 - **Typical custom hooks:** `useFetch` or `useQuery`, `useDebounce`, `useLocalStorage`, `useMediaQuery`, `useOnClickOutside`, `useForm`, `usePrevious`, `useInterval`.
-- **Naming matters:** the `use` prefix lets React and the linter apply the Rules of Hooks.
-- **Return** a tuple (`as const`) for two or three values, or an object for more, so callers can rename.
-- **Test** with `renderHook` from React Testing Library, and keep the logic in plain functions where possible.
-- **Hook, component or utility?** If it uses hooks, it is a hook. If it returns JSX, it is a component. If it is pure calculation, it is a plain function.
+- **Naming matters.** The `use` prefix lets React and the linter apply the Rules of Hooks.
+- **What to return.** Return a tuple (`as const`) for two or three values. Return an object for more, so callers can rename.
+- **Testing.** Test with `renderHook` from React Testing Library. Keep the logic in plain functions where possible.
+- **Hook, component or utility?** If it uses hooks, it is a hook. If it returns JSX, it is a component. If it is a pure calculation, it is a plain function.
 
 ## Other hooks worth knowing {#other}
 
-- **`useTransition`** marks a state update as **non-urgent**, so urgent updates (typing) stay responsive while a heavy re-render happens in the background, and it gives `isPending`. **`useDeferredValue`** gives a lagging copy of a value for the same purpose, for example a big filtered list that follows the input.
-- **`useId`** creates stable unique ids for `htmlFor`/`aria-*` that match between server and client rendering.
-- **`useSyncExternalStore`** subscribes to an external store (Redux, browser APIs such as `navigator.onLine`) in a way that is safe with concurrent rendering. Libraries use it.
-- **`useImperativeHandle`** exposes a small imperative API from a component through a ref (rarely needed).
-- **`use`** (React 19) reads a promise or a context during render and can be called conditionally, with `<Suspense>` showing a fallback while the promise is pending.
-- **`useOptimistic`, `useActionState`, `useFormStatus`:** forms and optimistic updates ([React 19](lesson:react-core#react19)).
+- **`useTransition`** marks a state update as **non-urgent**. Urgent updates, such as typing, stay responsive while a heavy re-render happens in the background. It also gives `isPending`.
+- **`useDeferredValue`** gives a lagging copy of a value, for the same purpose. An example is a big filtered list that follows the input.
+- **`useId`** creates stable unique ids for `htmlFor` and `aria-*`, which match between server and client rendering.
+- **`useSyncExternalStore`** subscribes to an external store (Redux, or browser APIs such as `navigator.onLine`) in a way that is safe with concurrent rendering. Libraries use it.
+- **`useImperativeHandle`** exposes a small imperative API from a component through a ref. It is rarely needed.
+- **`use`** (React 19) reads a promise or a context during render, and can be called conditionally. `<Suspense>` shows a fallback while the promise is pending.
+- **`useOptimistic`, `useActionState`, `useFormStatus`** are for forms and optimistic updates ([React 19](lesson:react-core#react19)).
 
 ## Suspense and error boundaries {#suspense}
 
-- **`<Suspense fallback={<Spinner />}>`** shows a fallback while a child is waiting (lazy-loaded code with `React.lazy`, or data read with `use` or a library that supports it). It enables **code splitting** and streaming server rendering.
-- **Error boundaries** catch errors thrown **during rendering** of their children and show a fallback UI instead of a blank page. They are class components, or use `react-error-boundary`. They do **not** catch errors in event handlers, async code or effects (handle those yourself), so combine them with `try/catch` and error state.
+- **`<Suspense fallback={<Spinner />}>`** shows a fallback while a child is waiting. The child may be lazy-loaded code with `React.lazy`, or data read with `use` or a library that supports it. It enables **code splitting** and streaming server rendering.
+- **Error boundaries** catch errors thrown **during rendering** of their children, and show a fallback UI instead of a blank page. They are class components, or use `react-error-boundary`. They do **not** catch errors in event handlers, async code or effects. Handle those yourself, so combine boundaries with `try/catch` and error state.
 
 ## Stale closures and common mistakes {#mistakes}
 
-A component function runs again on every render, and each run's handlers and effects **close over that render's values** ([closures](lesson:js-essentials#closures)). A callback that lives longer than one render sees **old** values:
+A component function runs again on every render. Each run's handlers and effects **close over that render's values** ([closures](lesson:js-essentials#closures)). A callback that lives longer than one render sees **old** values:
 
 ```tsx
 useEffect(() => {
@@ -268,67 +295,156 @@ Try it in the lab: [useEffect: dependencies, cleanup and stale values](lab:react
 
 ### [basic] What is `useEffect` and when does it run? {#effect-q}
 
-A hook for running side effects that synchronise a component with something outside React, such as a subscription, a timer, a network request or a browser API. It runs after the component has rendered and the DOM is updated, normally after the paint. The dependency array controls when: after every render with no array, only once with `[]`, and when a listed value changed otherwise. It can return a cleanup function that React runs before the next run and when the component unmounts.
+`useEffect` is a hook for running side effects that synchronise a component with something outside React. Examples: a subscription, a timer, a network request or a browser API.
+
+It runs after the component has rendered and the DOM is updated, normally after the paint. The dependency array controls when:
+
+- with no array, after every render;
+- with `[]`, only once;
+- otherwise, when a listed value changed.
+
+It can return a cleanup function. React runs it before the next run, and when the component unmounts.
 
 ### [basic] What does the dependency array do and what happens if you leave out a dependency? {#deps-q}
 
-React compares each listed value to its value from the previous render with `Object.is` and re-runs the effect only if one changed. If you leave out a value the effect uses, the effect keeps a closure over an old value (a stale closure) and works with out-of-date data, which causes subtle bugs. Include every reactive value the effect reads and fix the cause (updater form, moving the function inside, a ref or `useEffectEvent`) instead of suppressing the lint rule.
+React compares each listed value with its value from the previous render, using `Object.is`. It re-runs the effect only if one changed.
+
+If you leave out a value the effect uses, the effect keeps a closure over an old value. That is a stale closure. The effect then works with out-of-date data, which causes subtle bugs.
+
+Include every reactive value the effect reads. Fix the cause (updater form, moving the function inside, a ref, or `useEffectEvent`) instead of suppressing the lint rule.
 
 ### [basic] Why does an effect need a cleanup function? {#cleanup-q}
 
-So that what the effect set up is undone: unsubscribe, clear the timer, close the connection, abort the request. React runs the cleanup before the effect runs again and when the component unmounts. Without it you get memory leaks, duplicate subscriptions and races where an old request updates state after a new one. StrictMode in development mounts, cleans up and mounts again to reveal missing cleanups.
+So that what the effect set up is undone: unsubscribe, clear the timer, close the connection, abort the request.
+
+React runs the cleanup before the effect runs again, and when the component unmounts.
+
+Without it you get memory leaks, duplicate subscriptions, and races where an old request updates state after a new one.
+
+StrictMode in development mounts, cleans up and mounts again, to reveal missing cleanups.
 
 ### [basic] What is the difference between `useMemo` and `useCallback`? {#memo-q}
 
-`useMemo` caches the result of a calculation, a value, until its dependencies change. `useCallback` caches a function instance, and `useCallback(fn, deps)` is the same as `useMemo(() => fn, deps)`. Both exist to keep a reference stable between renders, which matters when the value is a prop of a `memo` child or a dependency of an effect, or when the calculation is expensive. They are optimisations to apply after measuring, not defaults.
+`useMemo` caches the result of a calculation, a value, until its dependencies change. `useCallback` caches a function instance. `useCallback(fn, deps)` is the same as `useMemo(() => fn, deps)`.
+
+Both exist to keep a reference stable between renders. That matters when the value is a prop of a `memo` child, or a dependency of an effect, or when the calculation is expensive.
+
+They are optimisations to apply after measuring. They are not defaults.
 
 ### [basic] When would you use `useReducer` instead of `useState`? {#reducer-q}
 
-When state has several related fields or many kinds of transitions, when the next state depends on the previous one in complex ways, or when you want the update logic in one pure, testable function. Components dispatch descriptive actions and the reducer computes the next state. `dispatch` is stable, so it is easy to pass down. For a single independent value `useState` is simpler.
+Use `useReducer`:
+
+- when state has several related fields, or many kinds of transitions;
+- when the next state depends on the previous one in complex ways;
+- when you want the update logic in one pure, testable function.
+
+Components dispatch descriptive actions, and the reducer computes the next state. `dispatch` is stable, so it is easy to pass down.
+
+For a single independent value, `useState` is simpler.
 
 ### [basic] What is a custom hook? {#custom-q}
 
-A function whose name starts with `use` and that calls other hooks, used to share stateful logic between components, such as `useFetch`, `useDebounce` or `useLocalStorage`. It shares the logic, not the state: each call has its own state. The `use` prefix lets React and the linter enforce the Rules of Hooks.
+A custom hook is a function whose name starts with `use` and that calls other hooks. It shares stateful logic between components, such as `useFetch`, `useDebounce` or `useLocalStorage`.
+
+It shares the logic, not the state: each call has its own state.
+
+The `use` prefix lets React and the linter enforce the Rules of Hooks.
 
 ### [intermediate] How do you fetch data in `useEffect` safely? {#fetch-q}
 
-Start the request inside the effect with an `AbortController` and pass its signal to `fetch`. Return a cleanup that aborts it, so when the dependency changes or the component unmounts the old request is cancelled and cannot overwrite newer state, and ignore the resulting `AbortError`. Check `res.ok`, track loading and error state, and include every input of the request in the dependencies. For anything beyond a simple case use TanStack Query or a framework loader, which add caching, de-duplication and retries.
+1. Start the request inside the effect, with an `AbortController`, and pass its signal to `fetch`.
+2. Return a cleanup that aborts it. When the dependency changes or the component unmounts, the old request is cancelled and cannot overwrite newer state.
+3. Ignore the resulting `AbortError`.
+4. Check `res.ok`, track loading and error state, and include every input of the request in the dependencies.
+
+For anything beyond a simple case, use TanStack Query or a framework loader. They add caching, de-duplication and retries.
 
 ### [intermediate] What are the cases where you do not need an effect? {#no-effect-q}
 
-Deriving data from props or state, which you compute during render. Responding to a user action, which belongs in the event handler. Resetting state when a prop changes, which you do with a `key`. Updating state from other state in a chain of effects, which causes extra renders and loops. Sharing logic, which is a custom hook. Subscribing to an external store, which is `useSyncExternalStore`. Effects are for synchronising with the outside world.
+- Deriving data from props or state. Compute it during render.
+- Responding to a user action. That belongs in the event handler.
+- Resetting state when a prop changes. Use a `key`.
+- Updating state from other state in a chain of effects. That causes extra renders and loops.
+- Sharing logic. Use a custom hook.
+- Subscribing to an external store. Use `useSyncExternalStore`.
+
+Effects are for synchronising with the outside world.
 
 ### [intermediate] Why does `memo` not help when I pass an inline function or object prop? {#memo-ref-q}
 
-`memo` compares props shallowly by reference. An inline function, array or object literal is a new reference on every render of the parent, so the props always look changed and the child re-renders. Keep the references stable with `useCallback` and `useMemo`, define constants outside the component, or let the React Compiler do it. Only memoize when profiling shows a real cost.
+`memo` compares props shallowly, by reference. An inline function, array or object literal is a new reference on every render of the parent. So the props always look changed, and the child re-renders.
+
+Keep the references stable with `useCallback` and `useMemo`. Or define constants outside the component. Or let the React Compiler do it.
+
+Only memoize when profiling shows a real cost.
 
 ### [intermediate] A component re-renders although its props did not change. Why? {#rerender-q}
 
-Because its parent re-rendered (children re-render with their parent unless wrapped in `memo`), or because it reads a context whose value changed, or its own state changed. Props being equal does not stop a re-render unless `memo` is used. Check what changed with the Profiler's "why did this render", move state down, pass children, or memoise.
+Possible reasons:
+
+- Its parent re-rendered. Children re-render with their parent unless they are wrapped in `memo`.
+- It reads a context whose value changed.
+- Its own state changed.
+
+Equal props do not stop a re-render unless `memo` is used.
+
+To find the cause, use the Profiler's "why did this render". Then move state down, pass children, or memoise.
 
 ### [intermediate] Why does everything re-render when a context value changes, and how do you reduce it? {#context-q}
 
-Every component that calls `useContext` for that context re-renders when the provider's value changes by reference, even if it only uses a part of the value, and `memo` does not prevent it. Reduce it by memoising the value with `useMemo`, splitting the context into a state context and a stable dispatch context (or several smaller contexts), keeping state local where possible, and using a store with selectors (Redux Toolkit, Zustand) for frequently changing global state.
+Every component that calls `useContext` for that context re-renders when the provider's value changes by reference. That happens even if it only uses a part of the value, and `memo` does not prevent it.
+
+To reduce it:
+
+- memoise the value with `useMemo`;
+- split the context into a state context and a stable dispatch context, or several smaller contexts;
+- keep state local where possible;
+- use a store with selectors (Redux Toolkit, Zustand) for frequently changing global state.
 
 ### [intermediate] What is the stale closure problem with `setInterval` in an effect? {#stale-q}
 
-An effect created with `[]` captures the state and props of the first render, so a callback in `setInterval(() => setCount(count + 1))` always sees the initial `count` and the counter sticks. Fix it with the updater form `setCount(c => c + 1)`, which needs no dependency, by listing the dependency and restarting the interval, by reading the latest value from a ref, or with `useEffectEvent`.
+An effect created with `[]` captures the state and props of the first render. So a callback in `setInterval(() => setCount(count + 1))` always sees the initial `count`, and the counter sticks.
+
+To fix it:
+
+- use the updater form `setCount(c => c + 1)`, which needs no dependency;
+- or list the dependency, and restart the interval;
+- or read the latest value from a ref;
+- or use `useEffectEvent`.
 
 ### [intermediate] What is the difference between `useEffect` and `useLayoutEffect`? {#layout-q}
 
-`useEffect` runs after the browser has painted, so it does not delay what the user sees. `useLayoutEffect` runs synchronously after the DOM updates but before the paint, so you can measure layout and change it without a visible flicker, at the cost of blocking painting. Use `useEffect` by default and `useLayoutEffect` only for measurements and DOM adjustments. Neither runs during server rendering.
+`useEffect` runs after the browser has painted, so it does not delay what the user sees.
+
+`useLayoutEffect` runs synchronously after the DOM updates, but before the paint. So you can measure layout and change it without a visible flicker. The cost is that it blocks painting.
+
+Use `useEffect` by default. Use `useLayoutEffect` only for measurements and DOM adjustments. Neither runs during server rendering.
 
 ### [deep] How do `useTransition` and `useDeferredValue` help with slow renders? {#transition-q}
 
-They use concurrent rendering to keep the UI responsive. `useTransition` wraps a state update in `startTransition`, marking it non-urgent, so React can interrupt it for urgent updates such as typing and shows `isPending` meanwhile. `useDeferredValue` returns a copy of a value that lags behind, so an expensive list that depends on it re-renders in the background while the input stays fast. They do not make the work cheaper, they schedule it, and a slow component may still need memoisation or virtualisation.
+They use concurrent rendering to keep the UI responsive.
+
+- `useTransition` wraps a state update in `startTransition`, marking it non-urgent. React can interrupt it for urgent updates such as typing, and `isPending` shows meanwhile.
+- `useDeferredValue` returns a copy of a value that lags behind. An expensive list that depends on it re-renders in the background, while the input stays fast.
+
+They do not make the work cheaper. They schedule it. A slow component may still need memoisation or virtualisation.
 
 ### [deep] How would you design state management for a large React application? {#state-design-q}
 
-Keep state as local as possible with `useState` and `useReducer`, lift it only when siblings share it, and derive what can be computed. Treat server data as a separate cache managed by TanStack Query or RTK Query (loading, caching, invalidation), not copied into global state. Put truly shared client state, such as the current user, UI preferences and cross-page workflow, in context for rarely changing values or in a store (Redux Toolkit or Zustand) with selectors for frequently changing ones. Keep URL state in the router, form state in a form library, and avoid putting everything in one global object.
+- Keep state as local as possible with `useState` and `useReducer`. Lift it only when siblings share it. Derive what can be computed.
+- Treat server data as a separate cache, managed by TanStack Query or RTK Query (loading, caching, invalidation). Do not copy it into global state.
+- Put truly shared client state in context, for rarely changing values. Examples: the current user, UI preferences, a cross-page workflow. For frequently changing values, use a store (Redux Toolkit or Zustand) with selectors.
+- Keep URL state in the router, and form state in a form library.
+- Avoid putting everything in one global object.
 
 ### [deep] What changes with the React Compiler? {#compiler-q}
 
-It is a build-time plugin that analyses components and hooks and inserts memoization automatically, so values and functions keep stable references and unchanged parts skip rendering, without writing `useMemo`, `useCallback` or `memo`. It relies on the rules of React: pure render, no mutation of props or state, hooks at the top level. Code that breaks the rules is skipped or can behave wrongly. Manual memoization is still valid and appears in older code, and you still reach for effects, keys, state placement and virtualisation to solve performance problems.
+It is a build-time plugin. It analyses components and hooks, and inserts memoization automatically. So values and functions keep stable references, and unchanged parts skip rendering, without you writing `useMemo`, `useCallback` or `memo`.
+
+It relies on the rules of React: pure render, no mutation of props or state, hooks at the top level. Code that breaks the rules is skipped, or can behave wrongly.
+
+Manual memoization is still valid and appears in older code. And you still reach for effects, keys, state placement and virtualisation to solve performance problems.
 
 ### [coding] Write a `useFetch<T>` hook with loading, error, abort and no races. {#coding-usefetch}
 
@@ -375,7 +491,14 @@ function UserCard({ userId }: { userId: string }) {
 }
 ```
 
-Explain: the state is a **discriminated union**, so `data` exists only when `status` is `'ready'` and the component cannot read it too early; the effect depends on `url`, so changing it **aborts the old request in the cleanup** and starts a new one, which prevents a slow old response from overwriting a new one (the race); an `AbortError` is ignored because it is expected; the async work is in an **inner async function**, since `useEffect` must return a cleanup function and not a promise; `res.ok` is checked because `fetch` does not reject on HTTP errors; and for real applications **TanStack Query** adds caching, de-duplication, retries and refetching on top of this idea.
+Explain these points:
+
+- The state is a **discriminated union**. So `data` exists only when `status` is `'ready'`, and the component cannot read it too early.
+- The effect depends on `url`. Changing it **aborts the old request in the cleanup** and starts a new one. That prevents a slow old response from overwriting a new one (the race).
+- An `AbortError` is ignored, because it is expected.
+- The async work is in an **inner async function**, because `useEffect` must return a cleanup function, not a promise.
+- `res.ok` is checked, because `fetch` does not reject on HTTP errors.
+- For real applications, **TanStack Query** adds caching, de-duplication, retries and refetching on top of this idea.
 
 ### [coding] Write a `useDebounce` hook and use it for a search box that queries only after the user pauses typing. {#coding-debounce}
 
@@ -411,7 +534,14 @@ export function AccountSearch() {
 }
 ```
 
-Explain: the input stays **controlled and instant** by using the raw `text` state, while the request uses the **debounced** value, so one request is sent after the user stops typing instead of one per keystroke; the effect's **cleanup clears the timer**, so only the last value wins; `useDebounce` is generic and reusable and works for any value; the search reuses `useFetch`, whose **abort on cleanup** drops the responses for earlier queries; the query is passed through `encodeURIComponent`; and `useDeferredValue` is the built-in alternative for deferring rendering work, but it does not reduce the number of network requests, which is why debouncing is used here.
+Explain these points:
+
+- The input stays **controlled and instant**, because it uses the raw `text` state. The request uses the **debounced** value. So one request is sent after the user stops typing, instead of one per keystroke.
+- The effect's **cleanup clears the timer**, so only the last value wins.
+- `useDebounce` is generic and reusable, and works for any value.
+- The search reuses `useFetch`, whose **abort on cleanup** drops the responses for earlier queries.
+- The query is passed through `encodeURIComponent`.
+- `useDeferredValue` is the built-in alternative for deferring rendering work. But it does not reduce the number of network requests, which is why debouncing is used here.
 
 ### [coding] Build a typed shopping-cart store with `useReducer` and context, split into state and dispatch contexts. {#coding-cart}
 
@@ -485,4 +615,12 @@ export function AddButton({ product }: { product: Omit<CartItem, 'qty'> }) {
 }
 ```
 
-Explain: the reducer is a **pure function** over a **discriminated union** of actions, so it can be tested without React and the `never` check forces every new action to be handled; updates create **new arrays and objects**; **two contexts** separate the state (changes often) from `dispatch` (stable), so `AddButton`, which only reads `dispatch`, **does not re-render** when the cart changes; the custom hooks give a **typed, null-checked** way to read each context and fail with a clear message outside the provider; the total is **derived with `useMemo`** and not stored; React 19 lets the context be used directly as the provider; and for a cart that many distant components read in small parts, a store with selectors (Zustand or Redux Toolkit) avoids re-rendering all consumers.
+Explain these points:
+
+- The reducer is a **pure function** over a **discriminated union** of actions. So it can be tested without React, and the `never` check forces every new action to be handled.
+- Updates create **new arrays and objects**.
+- **Two contexts** separate the state (changes often) from `dispatch` (stable). So `AddButton`, which only reads `dispatch`, **does not re-render** when the cart changes.
+- The custom hooks give a **typed, null-checked** way to read each context. They fail with a clear message outside the provider.
+- The total is **derived with `useMemo`** and not stored.
+- React 19 lets the context be used directly as the provider.
+- For a cart that many distant components read in small parts, a store with selectors (Zustand or Redux Toolkit) avoids re-rendering all consumers.
