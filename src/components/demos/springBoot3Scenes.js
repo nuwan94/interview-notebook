@@ -1,84 +1,171 @@
-// Frame data for the Spring Boot 3 and Spring 6 changes walk-through (box-and-arrow player with icons).
-// box.tone: ok | bad | warn | new | none.
+// Frame data for the Spring Boot 3 and Spring 6 changes walk-through, drawn by BoardStage.
 
-const b = (id, title, lines = [], tone, badge) => ({ id, title, lines, tone, badge });
-const d = (from, to, label, tone) => ({ from, to, label, tone });
+import { BoardStage } from './BoardStage.jsx';
+
+/* ---------- migration path ---------- */
+const MIG = ['2.7 + JDK 17', 'jakarta', 'security', 'properties', 'new features'];
+const before = (title, lines, o = {}) => ({ id: 'before', x: 16, y: 40, w: 260, title, lines, mono: true, tone: 'warn', badge: 'before', ...o });
+const after = (title, lines, o = {}) => ({ id: 'after', x: 364, y: 40, w: 260, title, lines, mono: true, tone: 'ok', badge: 'after', ...o });
+
+const migrateFrames = [
+  {
+    h: 290,
+    line: 'Boot 2.7.18  →  Boot 3.x',
+    cards: [before('build', ['Spring Boot 2.7.18', 'Java 11']), after('build', ['Spring Boot 3.x', 'Java 17 (21 recommended)'])],
+    arrows: [{ from: 'before', to: 'after', label: 'JDK first' }],
+    steps: { items: MIG, at: 0 },
+    note: 'Start from the latest 2.7.x, so every deprecation warning is visible. Make sure the build runs on Java 17 or later, because Boot 3 requires it. Boot 3 is built on Spring Framework 6.',
+  },
+  {
+    h: 290,
+    line: 'javax.*  →  jakarta.*',
+    cards: [
+      before('imports', [{ t: 'javax.persistence.Entity', strike: true }, { t: 'javax.validation.Valid', strike: true }, { t: 'javax.servlet.Filter', strike: true }]),
+      after('imports', ['jakarta.persistence.Entity', 'jakarta.validation.Valid', 'jakarta.servlet.Filter']),
+    ],
+    arrows: [{ from: 'before', to: 'after', label: 'OpenRewrite' }],
+    steps: { items: MIG, at: 1 },
+    note: 'The biggest breaking change is Jakarta EE 9+. Every javax package for servlets, persistence, validation and annotations became jakarta. This changes imports in your code and in your libraries. OpenRewrite does most of the renaming for you.',
+  },
+  {
+    h: 290,
+    line: 'WebSecurityConfigurerAdapter  →  SecurityFilterChain',
+    cards: [
+      before('security config', [{ t: 'extends WebSecurityConfigurerAdapter', strike: true }, { t: '.antMatchers("/public/**")', strike: true }, { t: '@EnableGlobalMethodSecurity', strike: true }]),
+      after('security config', ['@Bean SecurityFilterChain', '.requestMatchers("/public/**")', '@EnableMethodSecurity']),
+    ],
+    arrows: [{ from: 'before', to: 'after', label: 'rewrite' }],
+    steps: { items: MIG, at: 2 },
+    note: 'Every dependency must support Jakarta: Hibernate 6, Spring Security 6, Flyway, Jackson and your own libraries. Spring Security 6 removed WebSecurityConfigurerAdapter, so you declare a SecurityFilterChain bean instead.',
+  },
+  {
+    h: 290,
+    line: 'spring-boot-properties-migrator',
+    cards: [
+      before('application.yml', [{ t: 'spring.redis.host', strike: true }, { t: 'spring.redis.port', strike: true }]),
+      after('application.yml', ['spring.data.redis.host', 'spring.data.redis.port']),
+    ],
+    arrows: [{ from: 'before', to: 'after', label: 'renamed' }],
+    steps: { items: MIG, at: 3 },
+    note: 'Some property names and defaults changed too. Add spring-boot-properties-migrator for a while: it reports renamed keys at startup. Remove it once they are all fixed.',
+  },
+  {
+    h: 290,
+    line: 'adopt on purpose, one at a time',
+    result: { text: 'migration done', tone: 'ok' },
+    cards: [
+      { id: 'n1', x: 16, y: 40, w: 196, title: 'ProblemDetail', lines: ['standard error bodies'], tone: 'ok' },
+      { id: 'n2', x: 222, y: 40, w: 196, title: 'RestClient', lines: ['and @HttpExchange clients'], tone: 'ok' },
+      { id: 'n3', x: 428, y: 40, w: 196, title: 'Observation API', lines: ['metrics and traces at once'], tone: 'ok' },
+      { id: 'n4', x: 119, y: 120, w: 196, title: 'Virtual threads', lines: ['Java 21, one property'], tone: 'ok' },
+      { id: 'n5', x: 325, y: 120, w: 196, title: 'AOT + native image', lines: ['fast start, optional'], tone: 'ok' },
+    ],
+    steps: { items: MIG, at: 4 },
+    note: 'Then use what is new: ProblemDetail for errors, RestClient and @HttpExchange clients, the Observation API, virtual threads on Java 21, and optional native images through Spring AOT. Upgrade in small steps and run the tests after each one.',
+  },
+];
+
+/* ---------- the Observation API ---------- */
+const svc = (o = {}) => ({ id: 'svc', x: 16, y: 116, w: 176, title: 'TransferService', lines: ['transfer()'], tone: 'new', ...o });
+
+const observationFrames = [
+  {
+    line: 'three separate APIs',
+    result: { text: 'they drift apart', tone: 'warn' },
+    cards: [
+      svc(),
+      { id: 't', x: 300, y: 30, w: 220, title: 'Timer.record(...)', lines: ['metrics library'], tone: 'warn' },
+      { id: 's', x: 300, y: 116, w: 220, title: 'tracer.nextSpan(...)', lines: ['tracing library'], tone: 'warn' },
+      { id: 'l', x: 300, y: 202, w: 220, title: 'log.info(...)', lines: ['logging'], tone: 'warn' },
+    ],
+    arrows: [
+      { from: 'svc', to: 't', fs: 'r', ts: 'l', fo: -10 },
+      { from: 'svc', to: 's', fs: 'r', ts: 'l' },
+      { from: 'svc', to: 'l', fs: 'r', ts: 'l', fo: 10 },
+    ],
+    note: 'Before Boot 3 you instrumented the same code three times: a timer for metrics, a span for tracing, and log statements. Each used its own library, and over time they disagreed with each other.',
+  },
+  {
+    line: '@Observed(name = "transfer.execute")',
+    cards: [svc({ lines: ['@Observed', 'transfer()'] }), { id: 'obs', x: 300, y: 108, w: 200, title: 'Observation', lines: ['name: transfer.execute', 'tag: type=domestic'], tone: 'new', badge: 'instrument once' }],
+    arrows: [{ from: 'svc', to: 'obs', label: 'start / stop' }],
+    note: 'Spring Framework 6 brings the Observation API from Micrometer. You put one observation around an operation, or simply add @Observed, and attach tags. You write it once.',
+  },
+  {
+    line: 'ObservationHandler  ×  3',
+    result: { text: 'one source, three outputs', tone: 'ok' },
+    cards: [
+      svc({ lines: ['@Observed', 'transfer()'] }),
+      { id: 'obs', x: 228, y: 108, w: 176, title: 'Observation', lines: ['transfer.execute'], tone: 'ok' },
+      { id: 'm', x: 460, y: 24, w: 164, title: 'Prometheus', lines: ['timer metric'], tone: 'ok' },
+      { id: 'tr', x: 460, y: 112, w: 164, title: 'Tempo / Zipkin', lines: ['tracing span'], tone: 'ok' },
+      { id: 'lg', x: 460, y: 200, w: 164, title: 'Logs', lines: ['trace ID in every line'], tone: 'ok' },
+    ],
+    arrows: [
+      { from: 'svc', to: 'obs' },
+      { from: 'obs', to: 'm', fs: 'r', ts: 'l', fo: -10 },
+      { from: 'obs', to: 'tr', fs: 'r', ts: 'l' },
+      { from: 'obs', to: 'lg', fs: 'r', ts: 'l', fo: 10 },
+    ],
+    note: 'Handlers turn that one observation into a timer metric for Prometheus, a tracing span for Tempo or Zipkin through OpenTelemetry, and a trace ID in the logs. Spring MVC, WebClient, RestClient, JDBC and messaging are already instrumented this way.',
+  },
+];
+
+/* ---------- AOT and native image ---------- */
+const nativeFrames = [
+  {
+    h: 210,
+    line: 'java -jar bank.jar',
+    result: { text: 'about 2.5 s to start', tone: 'warn' },
+    regions: [{ x: 16, y: 20, w: 608, h: 112, title: 'at startup, on the JVM', tone: 'warn' }],
+    cards: [
+      { id: 'a', x: 32, y: 66, w: 136, title: 'scan', lines: ['read the classpath'], tone: 'warn' },
+      { id: 'b', x: 182, y: 66, w: 136, title: 'conditions', lines: ['auto-config checks'], tone: 'warn' },
+      { id: 'c', x: 332, y: 66, w: 136, title: 'reflection', lines: ['read annotations'], tone: 'warn' },
+      { id: 'd', x: 482, y: 66, w: 126, title: 'proxies', lines: ['generate classes'], tone: 'warn' },
+    ],
+    arrows: [{ from: 'a', to: 'b' }, { from: 'b', to: 'c' }, { from: 'c', to: 'd' }],
+    note: 'On the JVM, Spring does a lot of work when it starts: it scans the classpath, reads annotations, checks auto-configuration conditions and creates proxies through reflection. That is why a typical service takes a few seconds to start.',
+  },
+  {
+    h: 210,
+    line: './mvnw -Pnative package   (Spring AOT)',
+    regions: [{ x: 16, y: 20, w: 608, h: 128, title: 'at build time', tone: 'new' }],
+    cards: [
+      { id: 'a', x: 32, y: 66, w: 250, title: 'AOT processing', lines: ['runs the conditions now', 'decides every bean'], tone: 'new' },
+      { id: 'b', x: 358, y: 66, w: 250, title: 'Generated output', lines: ['Java code for bean definitions', 'reflection and proxy hints'], tone: 'ok' },
+    ],
+    arrows: [{ from: 'a', to: 'b', label: 'writes' }],
+    note: 'Spring AOT moves that work to build time. It runs the conditions and writes plain Java code for the bean definitions, plus hints about the reflection and resources the app needs. Nothing is discovered at run time any more.',
+  },
+  {
+    h: 210,
+    line: './bank   (native executable)',
+    result: { text: 'about 0.05 s to start', tone: 'ok' },
+    texts: [
+      { x: 16, y: 24, t: 'startup time, same service' },
+      { x: 96, y: 132, t: 'about 0.05 s, about 60 MB of memory' },
+    ],
+    cards: [
+      { id: 'jvm', x: 16, y: 40, w: 520, title: 'JVM', lines: ['about 2.5 s, about 300 MB of memory'], tone: 'warn', h: 46 },
+      { id: 'nat', x: 16, y: 104, w: 70, title: 'native', tone: 'ok', h: 46 },
+    ],
+    note: 'GraalVM native-image compiles the app and those hints into a native executable. It starts in tens of milliseconds and uses a fraction of the memory. That suits serverless and apps that scale to zero.',
+  },
+  {
+    h: 210,
+    line: 'what you give up',
+    result: { text: 'trade-offs', tone: 'warn' },
+    cards: [
+      { id: 'g', x: 16, y: 30, w: 296, title: 'You gain', lines: ['start in about 50 ms', 'low memory', 'good for serverless'], tone: 'ok' },
+      { id: 'c', x: 328, y: 30, w: 296, title: 'You pay', lines: ['much slower builds', 'reflection and proxies need hints', 'fewer compatible libraries', 'lower peak speed than the JIT'], tone: 'warn' },
+    ],
+    note: 'The costs: much longer builds, and everything must be known at build time, so reflection, dynamic proxies and run-time classpath scanning need hints. Fewer libraries work, debugging is harder, and peak speed is lower than a warmed-up JIT. Many teams keep the JVM and use CRaC or virtual threads instead.',
+  },
+];
 
 export const SPRING_BOOT3_SCENES = [
-  {
-    id: 'migrate',
-    label: 'Migrating to Boot 3',
-    title: 'The usual path from Spring Boot 2.7 to 3.x',
-    frames: [
-      {
-        note: 'Start from the latest 2.7.x so deprecations are visible, and make sure the build runs on Java 17 or later (Boot 3 requires it). Boot 3 is built on Spring Framework 6.',
-        boxes: [b('a', 'Config: build', ['Boot 2.7.18', 'Java 11 or 17'], 'warn', 'before'), b('t', 'Config: target', ['Boot 3.x', 'Java 17 minimum, 21 recommended'], 'new', 'after')],
-        deps: [d('Config: build', 'Config: target', 'upgrade JDK first', 'ok')],
-      },
-      {
-        note: 'The big breaking change is Jakarta EE 9+: every javax.* package for servlet, persistence, validation and annotations became jakarta.*. Imports in your code and in libraries change (javax.persistence.Entity becomes jakarta.persistence.Entity). Tools such as OpenRewrite automate most of it.',
-        boxes: [b('a', 'Config: imports', ['javax.persistence.Entity', 'javax.validation.Valid', 'javax.servlet.Filter'], 'warn', 'old'), b('t', 'Config: imports updated', ['jakarta.persistence.Entity', 'jakarta.validation.Valid', 'jakarta.servlet.Filter'], 'ok', 'new')],
-        deps: [d('Config: imports', 'Config: imports updated', 'rename packages', 'ok')],
-      },
-      {
-        note: 'Dependencies must be Jakarta-compatible: Hibernate 6, Spring Security 6, Flyway, Jackson and your own libraries. Spring Security 6 removed WebSecurityConfigurerAdapter, so you declare a SecurityFilterChain bean with the lambda DSL. Property names and some defaults also changed; the properties migrator helps find them.',
-        boxes: [b('s', 'Config: security', ['WebSecurityConfigurerAdapter removed', 'declare a SecurityFilterChain bean'], 'warn'), b('p', 'Config: properties', ['spring-boot-properties-migrator reports renamed keys'], 'ok')],
-        deps: [],
-      },
-      {
-        note: 'Then take advantage of what is new: ProblemDetail for errors, declarative @HttpExchange clients and RestClient, the Observation API for metrics and tracing, virtual threads on Java 21, and optional native images with GraalVM through Spring AOT. Upgrade in small steps and run the test suite after each.',
-        boxes: [b('n', 'Config: new features', ['ProblemDetail, RestClient, Observation API', 'virtual threads, AOT and native image'], 'ok', 'adopt')],
-        deps: [],
-      },
-    ],
-  },
-  {
-    id: 'observation',
-    label: 'Observation API',
-    title: 'One instrumentation point produces metrics, traces and logs',
-    frames: [
-      {
-        note: 'Before Boot 3 you instrumented code three times: a timer for metrics, a span for tracing and log statements. They drifted apart and each needed its own library calls.',
-        boxes: [b('a', 'Config: before', ['Timer.record(...)', 'tracer.nextSpan(...)', 'log.info(...)'], 'warn', 'three APIs')],
-        deps: [],
-      },
-      {
-        note: 'Spring Framework 6 introduces the Observation API (from Micrometer). You write one observation around an operation, or simply annotate it with @Observed, and register handlers that decide what to do with it.',
-        boxes: [b('o', 'Observation', ['observation: transfer.execute', 'low-cardinality tag: type=domestic'], 'new', 'instrument once'), b('s', 'Transfer service', ['@Observed(name = "transfer.execute")'], 'ok')],
-        deps: [d('Transfer service', 'Observation', 'start and stop', 'ok')],
-      },
-      {
-        note: 'Handlers turn the same observation into a timer metric (for Prometheus), a tracing span (for Zipkin or Tempo through OpenTelemetry) and correlated log context. Spring MVC, WebClient, RestClient, JDBC and messaging are already instrumented this way in Boot 3.',
-        boxes: [b('o', 'Observation', ['transfer.execute'], 'ok'), b('m', 'Metrics endpoint', ['timer and counter'], 'ok'), b('x', 'Trace backend', ['span with timings'], 'ok')],
-        deps: [d('Observation', 'Metrics endpoint', 'metric handler', 'ok'), d('Observation', 'Trace backend', 'tracing handler', 'ok')],
-      },
-    ],
-  },
-  {
-    id: 'native',
-    label: 'AOT and native image',
-    title: 'Ahead-of-time processing trades build time and flexibility for fast startup and low memory',
-    frames: [
-      {
-        note: 'On the JVM, Spring does a lot of work at startup: scanning the classpath, reading annotations, evaluating auto-configuration conditions, creating proxies by reflection. That is why a typical service starts in several seconds.',
-        boxes: [b('j', 'Application context', ['scans and reflects at startup', 'JVM warm-up'], 'warn', 'seconds to start')],
-        deps: [],
-      },
-      {
-        note: 'Spring AOT moves that work to build time. It evaluates conditions and generates plain Java source for the bean definitions plus hints about which reflection and resources are needed. Nothing is discovered at runtime any more.',
-        boxes: [b('a', 'Config: AOT build step', ['generates bean definition code', 'reflection and proxy hints'], 'new', 'build time'), b('j', 'Application context', ['fixed at build time'], 'ok')],
-        deps: [d('Config: AOT build step', 'Application context', 'generated code', 'ok')],
-      },
-      {
-        note: 'GraalVM native-image compiles the application and those hints into a native executable: start in tens of milliseconds, a fraction of the memory, ideal for serverless and scale-to-zero.',
-        boxes: [b('n', 'Native executable', ['starts in about 50 ms', 'low memory'], 'ok', 'fast'), b('j', 'Application context', ['no JVM warm-up'], 'ok')],
-        deps: [],
-      },
-      {
-        note: 'The costs: much longer builds, a closed-world assumption (dynamic proxies, reflection, classpath scanning and runtime conditions must be known at build time), fewer compatible libraries, harder debugging and lower peak throughput than a warmed-up JIT. Many teams keep the JVM, and use CRaC or virtual threads and tuned startup instead.',
-        boxes: [b('n', 'Native executable', ['slow build', 'reflection needs hints', 'peak speed lower than JIT'], 'warn', 'trade-offs')],
-        deps: [],
-      },
-    ],
-  },
+  { id: 'migrate', label: 'Migrating to Boot 3', title: 'The usual path from Spring Boot 2.7 to 3.x', stage: BoardStage, frames: migrateFrames },
+  { id: 'observation', label: 'Observation API', title: 'One instrumentation point produces metrics, traces and logs', stage: BoardStage, frames: observationFrames },
+  { id: 'native', label: 'AOT and native image', title: 'Ahead-of-time processing trades build time for fast startup and low memory', stage: BoardStage, frames: nativeFrames },
 ];

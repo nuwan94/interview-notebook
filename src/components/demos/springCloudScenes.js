@@ -1,99 +1,167 @@
-// Frame data for the Spring Cloud walk-through (box-and-arrow player with icons).
-// box.tone: ok | bad | warn | new | none.
+// Frame data for the Spring Cloud walk-through, drawn by BoardStage.
 
-const b = (id, title, lines = [], tone, badge) => ({ id, title, lines, tone, badge });
-const d = (from, to, label, tone) => ({ from, to, label, tone });
+import { BoardStage } from './BoardStage.jsx';
+
+/* ---------- gateway, discovery, load balancing ---------- */
+const client = (lines, o = {}) => ({ id: 'client', x: 14, y: 60, w: 150, title: 'Client', lines, tone: 'new', ...o });
+const gw = (lines, o = {}) => ({ id: 'gw', x: 196, y: 44, w: 196, title: 'Spring Cloud Gateway', lines, mono: true, tone: 'none', ...o });
+const reg = (lines, o = {}) => ({ id: 'reg', x: 196, y: 184, w: 196, title: 'Service registry', lines, mono: true, tone: 'none', ...o });
+const inst = (n, lines, o = {}) => ({ id: `i${n}`, x: 430, y: 30 + (n - 1) * 72, w: 196, title: `account-service #${n}`, lines, tone: 'none', ...o });
+const insts = (o = {}) => [inst(1, ['10.0.1.5'], o[1] || { dim: true }), inst(2, ['10.0.1.6'], o[2] || { dim: true }), inst(3, ['10.0.1.7'], o[3] || { dim: true })];
+const ROUTE = ['Path=/api/accounts/**', 'uri: lb://account-service'];
+
+const gatewayFrames = [
+  {
+    h: 280,
+    line: 'GET /api/accounts/42',
+    result: { text: 'route "accounts" matches', tone: 'ok' },
+    cards: [client(['GET /api/accounts/42']), gw(ROUTE, { tone: 'new', badge: 'entry point' }), reg(['not asked yet'], { dim: true }), ...insts()],
+    arrows: [{ from: 'client', to: 'gw', fs: 'r', ts: 'l', tone: 'new' }],
+    note: 'The client calls one public address. Spring Cloud Gateway is the single entry point. Each route has a predicate (Path=/api/accounts/**) that decides which requests it takes, and a uri that names the target.',
+  },
+  {
+    h: 280,
+    line: 'filters: JWT, rate limit, correlation id',
+    result: { text: 'passed all filters', tone: 'ok' },
+    cards: [
+      client(['GET /api/accounts/42']),
+      gw(['JWT valid', 'rate limit 20/s: ok', 'X-Correlation-Id added'], { tone: 'ok', badge: 'filters' }),
+      { id: 'rej', x: 14, y: 184, w: 150, title: 'If a filter fails', lines: ['bad token: 401', 'too many: 429'], tone: 'warn' },
+      ...insts(),
+    ],
+    arrows: [{ from: 'client', to: 'gw', fs: 'r', ts: 'l', tone: 'new' }, { from: 'gw', to: 'rej', fs: 'b', ts: 'r', tone: 'warn', dash: true }],
+    note: 'Gateway filters run before the request is forwarded: check the JWT, apply a rate limit (backed by Redis), add a correlation id. These edge concerns live here once, instead of in every service.',
+  },
+  {
+    h: 280,
+    line: 'lb://account-service  →  which instances?',
+    result: { text: '3 healthy instances', tone: 'ok' },
+    cards: [client(['waiting']), gw(['lb://account-service'], { tone: 'new' }), reg(['account-service:', '10.0.1.5  10.0.1.6', '10.0.1.7'], { tone: 'ok', badge: 'healthy' }), ...insts({ 1: { tone: 'ok' }, 2: { tone: 'ok' }, 3: { tone: 'ok' } })],
+    arrows: [{ from: 'gw', to: 'reg', fs: 'b', ts: 't', tone: 'ok', label: 'which instances?' }],
+    note: 'lb://account-service is a logical name, not an address. Instances come and go with autoscaling and deployments. So the gateway asks the registry (Eureka, Consul, or Kubernetes DNS) which instances are healthy now.',
+  },
+  {
+    h: 280,
+    line: 'LoadBalancer: round robin',
+    result: { text: 'forwarded to #2', tone: 'ok' },
+    cards: [client(['waiting']), gw(['LoadBalancer', 'round robin: pick #2'], { tone: 'ok' }), reg(['cached instance list'], { tone: 'none' }), ...insts({ 1: { tone: 'none' }, 2: { tone: 'ok', badge: 'chosen' }, 3: { tone: 'none' } })],
+    arrows: [{ from: 'gw', to: 'i2', fs: 'r', ts: 'l', tone: 'ok' }],
+    note: 'Spring Cloud LoadBalancer picks one instance on the client side, round robin by default. The next request may go to a different instance. That is why services should be stateless.',
+  },
+  {
+    h: 280,
+    line: 'restClient.get().uri("http://ledger-service/…")',
+    result: { text: 'same pattern inside', tone: 'ok' },
+    cards: [
+      { id: 'acc', x: 14, y: 52, w: 190, title: 'account-service #2', lines: ['RestClient (@LoadBalanced)', 'http://ledger-service'], tone: 'new' },
+      { id: 'dns', x: 270, y: 52, w: 170, title: 'Registry or K8s DNS', lines: ['ledger-service', '→ 10.0.2.4'], mono: true, tone: 'ok' },
+      { id: 'led', x: 270, y: 180, w: 170, title: 'ledger-service #1', lines: ['10.0.2.4'], tone: 'ok' },
+      { id: 'k8s', x: 480, y: 52, w: 146, title: 'On Kubernetes', lines: ['Services and DNS', 'already do this:', 'often no Eureka'], tone: 'none' },
+    ],
+    arrows: [{ from: 'acc', to: 'dns', fs: 'r', ts: 'l', tone: 'ok', label: 'resolve' }, { from: 'acc', to: 'led', fs: 'b', ts: 'l', tone: 'ok', label: 'call' }],
+    note: 'Calls between services use the same pattern. A RestClient or OpenFeign client calls http://ledger-service, and the load balancer resolves the name. On Kubernetes, Services and DNS already give discovery and load balancing.',
+  },
+];
+
+/* ---------- circuit breaker state machine ---------- */
+const closed = (lines, o = {}) => ({ id: 'closed', x: 14, y: 44, w: 180, title: 'CLOSED', lines, mono: true, tone: 'none', ...o });
+const open = (lines, o = {}) => ({ id: 'open', x: 446, y: 44, w: 180, title: 'OPEN', lines, mono: true, tone: 'none', ...o });
+const half = (lines, o = {}) => ({ id: 'half', x: 230, y: 176, w: 180, title: 'HALF_OPEN', lines, mono: true, tone: 'none', ...o });
+
+const breakerFrames = [
+  {
+    h: 260,
+    line: 'account-service  →  payment-service',
+    result: { text: 'calls pass through', tone: 'ok' },
+    cards: [closed(['last 10 calls:', '✓✓✓✓✓✓✓✓✓✓'], { tone: 'ok', badge: 'now' }), open(['fail fast'], { dim: true }), half(['trial calls'], { dim: true })],
+    note: 'Closed is the normal state. Calls to the payment service pass through. Resilience4j records successes and failures in a sliding window, here the last 10 calls.',
+  },
+  {
+    h: 260,
+    line: 'payment-service: timeouts and 503s',
+    result: { text: 'breaker trips', tone: 'bad' },
+    cards: [closed(['last 10 calls:', '✓✓✓✓✗✗✗✗✗✗', '6 of 10 failed'], { tone: 'warn' }), open(['fail fast'], { tone: 'bad', badge: 'now' }), half(['trial calls'], { dim: true })],
+    arrows: [{ from: 'closed', to: 'open', fs: 'r', ts: 'l', tone: 'bad', label: 'failure rate ≥ 50%' }],
+    note: 'The payment service gets slow and starts failing. When the failure rate in the window reaches the threshold (failureRateThreshold = 50 percent), the breaker opens.',
+  },
+  {
+    h: 260,
+    line: 'pay(request)   // while OPEN',
+    result: { text: 'fallback: payment pending', tone: 'warn' },
+    cards: [
+      closed(['…'], { dim: true }),
+      open(['CallNotPermitted', 'no call is made', 'waits 30 s'], { tone: 'bad', badge: 'now' }),
+      { id: 'caller', x: 14, y: 176, w: 180, title: 'account-service', lines: ['fallback runs at once', 'no thread waits'], tone: 'warn' },
+      { id: 'pay', x: 446, y: 176, w: 180, title: 'payment-service', lines: ['not called', 'time to recover'], tone: 'none' },
+    ],
+    arrows: [{ from: 'open', to: 'pay', fs: 'b', ts: 't', tone: 'bad', cross: true }],
+    note: 'While open, calls fail at once with CallNotPermittedException, without touching the payment service. No thread waits for a timeout, and the failing service gets time to recover. The caller runs its fallback.',
+  },
+  {
+    h: 260,
+    line: 'after waitDurationInOpenState = 30s',
+    result: { text: '3 trial calls', tone: 'warn' },
+    cards: [closed(['…'], { dim: true }), open(['waited 30 s'], { tone: 'none' }), half(['3 trial calls allowed', 'others still rejected'], { tone: 'warn', badge: 'now' }),
+      { id: 'pay', x: 446, y: 176, w: 180, title: 'payment-service', lines: ['gets the trial calls'], tone: 'new' }],
+    arrows: [{ from: 'open', to: 'half', fs: 'l', ts: 't', tone: 'warn', label: 'after 30 s' }, { from: 'half', to: 'pay', fs: 'r', ts: 'l', tone: 'warn' }],
+    note: 'After the wait, the breaker turns half-open. It lets a few trial calls through (permittedNumberOfCallsInHalfOpenState) to test whether the payment service has recovered.',
+  },
+  {
+    h: 260,
+    line: 'trial calls succeed',
+    result: { text: 'closed again', tone: 'ok' },
+    cards: [closed(['window reset:', '✓✓✓'], { tone: 'ok', badge: 'now' }), open(['if trials fail:', 'open again'], { tone: 'none' }), half(['3 of 3 succeeded'], { tone: 'ok' }),
+      { id: 'pay', x: 446, y: 176, w: 180, title: 'payment-service', lines: ['healthy'], tone: 'ok' }],
+    arrows: [{ from: 'half', to: 'closed', fs: 'l', ts: 'b', tone: 'ok', label: 'trials pass' }],
+    note: 'If the trial calls succeed, the breaker closes and traffic resumes. If they fail, it opens again for another wait. Combine it with timeouts, bounded retries and bulkheads; one annotation is not enough.',
+  },
+];
+
+/* ---------- central configuration ---------- */
+const git = (lines, o = {}) => ({ id: 'git', x: 14, y: 44, w: 196, title: 'Git repository', lines, mono: true, tone: 'ok', ...o });
+const srv = (lines, o = {}) => ({ id: 'srv', x: 250, y: 44, w: 160, title: 'Config Server', lines, tone: 'none', ...o });
+const svc = (lines, o = {}) => ({ id: 'svc', x: 456, y: 44, w: 170, title: 'account-service', lines, tone: 'none', ...o });
+const FILES = ['application.yml', 'account-service.yml', 'account-service-prod.yml'];
+
+const configFrames = [
+  {
+    h: 250,
+    line: 'config lives in Git',
+    result: { text: 'versioned and reviewed', tone: 'ok' },
+    cards: [git(FILES, { badge: 'source of truth' }), srv(['reads the repo', 'serves /{app}/{profile}'], { tone: 'new' }), svc(['not started'], { dim: true })],
+    arrows: [{ from: 'srv', to: 'git', fs: 'l', ts: 'r', tone: 'ok' }],
+    note: 'The settings for every service and environment live in a Git repository: application.yml is shared, account-service-prod.yml is for one service in production. Every change is versioned, reviewed and auditable.',
+  },
+  {
+    h: 250,
+    line: 'spring.config.import=configserver:',
+    result: { text: 'fee-rate: 0.01 loaded', tone: 'ok' },
+    cards: [git(FILES), srv(['merges the files', 'for account-service, prod'], { tone: 'ok' }), svc(['name: account-service', 'profile: prod', 'GET /account-service/prod'], { tone: 'new' })],
+    arrows: [{ from: 'svc', to: 'srv', fs: 'l', ts: 'r', tone: 'new' }],
+    note: 'On startup the service asks the Config Server for its settings, by application name and profile. It receives the merged properties. They take precedence over the files packaged in the jar.',
+  },
+  {
+    h: 250,
+    line: 'POST /actuator/refresh',
+    result: { text: 'fee-rate: 0.02 live', tone: 'ok' },
+    cards: [git([{ t: 'fee-rate: 0.01', strike: true }, 'fee-rate: 0.02'], { tone: 'warn', badge: 'new commit' }), srv(['serves the new value'], { tone: 'ok' }), svc(['@RefreshScope beans', 'rebuilt'], { tone: 'ok', badge: 'refreshed' }),
+      { id: 'bus', x: 250, y: 176, w: 376, title: 'Spring Cloud Bus (optional)', lines: ['broadcasts the refresh to every instance'], tone: 'none' }],
+    arrows: [{ from: 'srv', to: 'svc', fs: 'r', ts: 'l', tone: 'ok' }],
+    note: 'Someone changes a value in Git. Running instances see it only after a refresh: @RefreshScope beans are rebuilt on POST /actuator/refresh, or Spring Cloud Bus tells every instance. Otherwise a restart picks it up.',
+  },
+  {
+    h: 250,
+    line: 'secrets: never in plain Git',
+    result: { text: 'injected at runtime', tone: 'ok' },
+    cards: [git(['fee-rate: 0.02', 'no passwords here']), srv(['non-secret settings'], { tone: 'ok' }), svc(['reads secrets from', 'env vars or files'], { tone: 'ok' }),
+      { id: 'vault', x: 250, y: 176, w: 200, title: 'Vault or K8s Secret', lines: ['db password', 'API keys'], tone: 'new', badge: 'secrets' }],
+    arrows: [{ from: 'srv', to: 'svc', fs: 'r', ts: 'l', tone: 'ok' }, { from: 'vault', to: 'svc', fs: 'r', ts: 'b', tone: 'new' }],
+    note: 'Secrets do not belong in Git. Use Config Server encryption, Vault, or Kubernetes Secrets. On Kubernetes, many teams skip the Config Server and mount ConfigMaps and Secrets as files or environment variables.',
+  },
+];
 
 export const SPRING_CLOUD_SCENES = [
-  {
-    id: 'gateway',
-    label: 'Gateway and discovery',
-    title: 'A request through Spring Cloud Gateway, service discovery and client-side load balancing',
-    frames: [
-      {
-        note: 'The client calls one public address: GET /api/accounts/42. Spring Cloud Gateway is the single entry point. It matches the request against its routes: a predicate (Path=/api/accounts/**) decides which route applies.',
-        boxes: [b('c', 'Client', ['GET /api/accounts/42'], 'new'), b('g', 'API gateway', ['route: Path=/api/accounts/**', 'uri: lb://account-service'], 'new', 'entry point')],
-        deps: [d('Client', 'API gateway', 'one public address', 'ok')],
-      },
-      {
-        note: 'Gateway filters run before the request is forwarded: validate the JWT, apply a Redis-backed rate limit, add a correlation id, strip a prefix, retry on 503. Cross-cutting edge concerns live here once, instead of in every service.',
-        boxes: [b('g', 'API gateway', ['filter: validate JWT', 'filter: rate limit 20 per second', 'filter: add X-Correlation-Id'], 'ok', 'filters'), b('c', 'Client', ['rejected with 401 or 429 if a filter fails'], 'warn')],
-        deps: [d('API gateway', 'Client', '401 / 429 on failure', 'warn')],
-      },
-      {
-        note: 'The route target lb://account-service is a logical name, not an address. Instances come and go (autoscaling, deployments), so the gateway asks the service registry (Eureka, Consul or Kubernetes DNS) which instances of account-service are currently healthy.',
-        boxes: [b('g', 'API gateway', ['lb://account-service'], 'new'), b('r', 'Service registry', ['account-service:', '10.0.1.5:8080, 10.0.1.6:8080, 10.0.1.7:8080'], 'ok', 'healthy list')],
-        deps: [d('API gateway', 'Service registry', 'which instances?', 'ok'), d('Service registry', 'API gateway', 'instance list', 'ok')],
-      },
-      {
-        note: 'Spring Cloud LoadBalancer picks one instance on the client side (round robin by default) and the gateway forwards the request to it. The next request may go to a different instance, which is why services should be stateless.',
-        boxes: [b('g', 'API gateway', ['LoadBalancer: round robin'], 'ok'), b('i1', 'Account service instance 1', ['10.0.1.5'], 'none'), b('i2', 'Account service instance 2', ['10.0.1.6: chosen'], 'ok', 'selected'), b('i3', 'Account service instance 3', ['10.0.1.7'], 'none')],
-        deps: [d('API gateway', 'Account service instance 2', 'forward request', 'ok')],
-      },
-      {
-        note: 'Service-to-service calls use the same pattern: a RestClient or an OpenFeign interface calls http://ledger-service, the load balancer resolves it through the registry. On Kubernetes, the platform already provides discovery and load balancing (Services and DNS), so Eureka is often unnecessary.',
-        boxes: [b('i2', 'Account service instance 2', ['RestClient: GET http://ledger-service/entries'], 'new'), b('r', 'Service registry', ['resolves ledger-service'], 'ok'), b('l', 'Ledger service instance 1', ['10.0.2.4'], 'ok')],
-        deps: [d('Account service instance 2', 'Service registry', 'resolve', 'ok'), d('Account service instance 2', 'Ledger service instance 1', 'call', 'ok')],
-      },
-    ],
-  },
-  {
-    id: 'breaker',
-    label: 'Circuit breaker',
-    title: 'Resilience4j circuit breaker: closed, open, half-open',
-    frames: [
-      {
-        note: 'Closed (normal): calls from the account service to the payment service pass through while Resilience4j records successes and failures in a sliding window (for example the last 10 calls).',
-        boxes: [b('a', 'Account service instance 1', ['calls the payment service'], 'new'), b('cb', 'Circuit breaker', ['state: CLOSED', 'window: 10 calls, 0 failures'], 'ok', 'closed'), b('p', 'Payment service', ['healthy'], 'ok')],
-        deps: [d('Account service instance 1', 'Circuit breaker', 'call', 'ok'), d('Circuit breaker', 'Payment service', 'passes through', 'ok')],
-      },
-      {
-        note: 'The payment service becomes slow and starts failing. When the failure rate in the window passes the threshold (failureRateThreshold = 50 percent) the breaker trips.',
-        boxes: [b('p', 'Payment service', ['timeouts and 503 errors'], 'bad', 'failing'), b('cb', 'Circuit breaker', ['6 of 10 calls failed: 60 percent', 'threshold 50 percent exceeded'], 'warn', 'tripping')],
-        deps: [d('Payment service', 'Circuit breaker', 'failures', 'bad')],
-      },
-      {
-        note: 'Open: calls fail immediately with CallNotPermittedException without touching the payment service. Threads are not held waiting for timeouts, the struggling service gets breathing room, and the caller runs its fallback (cached data, a default, or a clear "try later").',
-        boxes: [b('a', 'Account service instance 1', ['fallback: "payment temporarily unavailable"'], 'warn'), b('cb', 'Circuit breaker', ['state: OPEN for 30 seconds', 'fail fast'], 'bad', 'open')],
-        deps: [d('Account service instance 1', 'Circuit breaker', 'call', 'warn'), d('Circuit breaker', 'Account service instance 1', 'rejected at once', 'bad')],
-      },
-      {
-        note: 'Half-open: after waitDurationInOpenState the breaker lets a few trial calls through (permittedNumberOfCallsInHalfOpenState). It is testing whether the payment service has recovered.',
-        boxes: [b('cb', 'Circuit breaker', ['state: HALF_OPEN', '3 trial calls allowed'], 'warn', 'probing'), b('p', 'Payment service', ['receives the trial calls'], 'new')],
-        deps: [d('Circuit breaker', 'Payment service', 'trial calls', 'warn')],
-      },
-      {
-        note: 'If the trial calls succeed the breaker closes and traffic resumes; if they fail it opens again for another wait period. Annotate with @CircuitBreaker(name = "payment", fallbackMethod = "..."), and combine with timeouts, retries (with backoff and jitter) and bulkheads. Order of decorators: retry wraps circuit breaker, which wraps rate limiter, bulkhead and time limiter.',
-        boxes: [b('cb', 'Circuit breaker', ['state: CLOSED again', 'trial calls succeeded'], 'ok', 'recovered'), b('p', 'Payment service', ['healthy'], 'ok')],
-        deps: [d('Circuit breaker', 'Payment service', 'normal traffic', 'ok')],
-      },
-    ],
-  },
-  {
-    id: 'config',
-    label: 'Central configuration',
-    title: 'Spring Cloud Config: services fetch their settings from one place',
-    frames: [
-      {
-        note: 'Configuration for every service and environment lives in a Git repository: application.yml (shared), account-service-prod.yml and so on. Changes are versioned, reviewed and auditable.',
-        boxes: [b('r', 'Git repository', ['application.yml', 'account-service.yml', 'account-service-prod.yml'], 'ok', 'source of truth'), b('s', 'Config server', ['Spring Cloud Config Server', 'serves /account-service/prod'], 'new')],
-        deps: [d('Config server', 'Git repository', 'clone and read', 'ok')],
-      },
-      {
-        note: 'On startup the account service contacts the Config server (spring.config.import=configserver:) with its application name and profile, and receives the merged properties. They sit in the Environment with higher precedence than the packaged files.',
-        boxes: [b('a', 'Account service instance 1', ['name: account-service', 'profile: prod'], 'new'), b('s', 'Config server', ['returns merged properties'], 'ok')],
-        deps: [d('Account service instance 1', 'Config server', 'GET /account-service/prod', 'ok'), d('Config server', 'Account service instance 1', 'properties', 'ok')],
-      },
-      {
-        note: 'Someone changes a value in Git. Running instances do not see it until refreshed: beans marked @RefreshScope are rebuilt on POST /actuator/refresh, or Spring Cloud Bus broadcasts a refresh to all instances. Otherwise a restart picks it up.',
-        boxes: [b('r', 'Git repository', ['fee-rate: 0.02 (changed)'], 'warn', 'new commit'), b('a', 'Account service instance 1', ['POST /actuator/refresh', '@RefreshScope beans rebuilt'], 'ok', 'refreshed')],
-        deps: [d('Config server', 'Account service instance 1', 'new values', 'ok')],
-      },
-      {
-        note: 'Secrets do not belong in Git. Use Config server encryption, Vault, or the platform: Kubernetes ConfigMaps and Secrets with the Spring Cloud Kubernetes or config tree import. On Kubernetes many teams skip the Config server entirely and mount ConfigMaps and environment variables.',
-        boxes: [b('v', 'Config: secret store', ['Vault or Kubernetes Secret', 'passwords and keys'], 'ok', 'secrets here'), b('a', 'Account service instance 1', ['reads secrets from the environment'], 'ok')],
-        deps: [d('Config: secret store', 'Account service instance 1', 'inject at runtime', 'ok')],
-      },
-    ],
-  },
+  { id: 'gateway', label: 'Gateway and discovery', title: 'A request through the gateway, discovery and client-side load balancing', stage: BoardStage, frames: gatewayFrames },
+  { id: 'breaker', label: 'Circuit breaker', title: 'Resilience4j circuit breaker: closed, open, half-open', stage: BoardStage, frames: breakerFrames },
+  { id: 'config', label: 'Central configuration', title: 'Spring Cloud Config: services fetch their settings from one place', stage: BoardStage, frames: configFrames },
 ];

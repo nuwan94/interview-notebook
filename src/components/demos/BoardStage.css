@@ -1,0 +1,48 @@
+/* BoardStage: hand-placed cards, regions and arrows for the Spring and Node walk-throughs */
+.bd-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.bd-line { font: 700 0.95rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff8d6; border: 1px solid #e8d77a; border-radius: 0.35rem; padding: 0.15rem 0.5rem; white-space: pre-wrap; }
+.bd-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+
+.bd-region { stroke-width: 1.5; stroke-dasharray: 6 5; }
+.bd-region.t-none { fill: rgba(255, 255, 255, 0.7); stroke: #b9c7d9; }
+.bd-region.t-ok { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.bd-region.t-bad { fill: var(--color-bad-soft); stroke: var(--color-bad); }
+.bd-region.t-warn { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.bd-region.t-new { fill: var(--color-pen-soft); stroke: var(--color-pen); }
+.bd-region.is-solid { stroke-dasharray: none; }
+.bd-region-title { font: 700 14px var(--font-hand, cursive); fill: var(--color-pen); }
+.bd-region-sub { font: 11px system-ui, sans-serif; fill: #5b6677; }
+
+.bd-card { stroke-width: 2; transition: fill 0.3s, stroke 0.3s, stroke-width 0.3s; }
+.bd-card.t-none { fill: #fff; stroke: #8d9bb0; }
+.bd-card.t-ok { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.bd-card.t-bad { fill: var(--color-bad-soft); stroke: var(--color-bad); }
+.bd-card.t-warn { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.bd-card.t-new { fill: var(--color-pen-soft); stroke: var(--color-pen); }
+.bd-card.is-dashed { stroke-dasharray: 5 4; fill: #fff; }
+.bd-card.is-focus { stroke-width: 3.25; }
+.bd-card.is-ghost { fill: none; stroke: #c9d3e0; stroke-width: 1.25; stroke-dasharray: 4 4; }
+.bd-card-title { font: 700 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.bd-card-line { font: 11.5px system-ui, sans-serif; fill: #46515f; }
+.bd-card-line.is-mono { font: 11.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.bd-card-line.is-strike { text-decoration: line-through; fill: var(--color-bad); }
+.bd-badge-text { font: 700 10.5px system-ui, sans-serif; fill: #fff; }
+
+.bd-wrap { fill: none; stroke-width: 2; stroke-dasharray: 6 4; }
+.bd-wrap-text { font: 700 11px system-ui, sans-serif; }
+
+.bd-edge-label { font: 700 11px system-ui, sans-serif; fill: #3d4a5c; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+.bd-edge-dash { stroke-dasharray: 6 5; }
+.bd-cross { stroke: var(--color-bad); stroke-width: 3; stroke-linecap: round; }
+
+.bd-steps-dot { stroke-width: 2; }
+.bd-steps-dot.is-done { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.bd-steps-dot.is-now { fill: var(--color-pen); stroke: var(--color-pen); }
+.bd-steps-dot.is-todo { fill: #fff; stroke: #b9c7d9; }
+.bd-steps-num { font: 700 11px system-ui, sans-serif; fill: #3d4a5c; }
+.bd-steps-num.is-now { fill: #fff; }
+.bd-steps-label { font: 11px system-ui, sans-serif; fill: #46515f; }
+.bd-steps-label.is-now { font-weight: 700; fill: var(--color-pen); }
+.bd-steps-rail { stroke: #c9d3e0; stroke-width: 2; }
+.bd-text { font: 12px system-ui, sans-serif; fill: #3d4a5c; }
+.bd-text.is-big { font: 700 14px system-ui, sans-serif; }

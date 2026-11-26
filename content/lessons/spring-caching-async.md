@@ -6,17 +6,28 @@ summary: Spring's cache abstraction with Caffeine and Redis (cache-aside, TTL, e
 tags: [Spring, Caching, Redis, Async, Scheduling, Executor]
 order: 91
 topic: Spring / Production and quality
-updated: 2026-11-13
+updated: 2026-11-26
 subnav: true
 ---
 
-Production Spring services lean on three annotations that look trivial and fail in subtle ways: *how does `@Cacheable` work and when is the cache wrong, what is the default thread pool behind `@Async`, why did my scheduled job run three times, and how do you keep a cache consistent?* All three are [proxy-based](lesson:spring-aop), so they share the self-invocation limits. This lesson pairs with [Spring transactions](lesson:spring-transactions) (async and transactions), [messaging](lesson:messaging) and the [distributed scheduler](lesson:distributed-scheduler) design. Play the three scenes: cache-aside, `@Async` with a thread pool, and scheduling in a cluster.
+Production Spring services rely on three annotations that look simple but fail in subtle ways. Expect:
+
+- How does `@Cacheable` work, and when is the cache wrong?
+- What thread pool runs `@Async` by default?
+- Why did my scheduled job run three times?
+- How do you keep a cache consistent?
+
+All three are [proxy-based](lesson:spring-aop), so they share the self-invocation limits. This lesson pairs with [Spring transactions](lesson:spring-transactions) (async and transactions), [messaging](lesson:messaging) and the [distributed scheduler](lesson:distributed-scheduler) design.
+
+The demo has three scenes: cache-aside, `@Async` with a thread pool, and scheduling in a cluster.
 
 ```demo
 name: spring-async-walk
 ```
 
-> **One sentence to remember:** *a cache trades freshness for speed, a thread pool trades latency for throughput, and a scheduler in a cluster needs a lock: each of them needs explicit limits (TTL, queue size, lock time) or it fails in production.*
+> **One sentence to remember:** *Caches, thread pools and schedulers all need explicit limits, or they fail in production.*
+
+Each one trades something away. A cache trades freshness for speed, so it needs a TTL. A thread pool trades latency for throughput, so it needs a bounded queue. A scheduler in a cluster needs a lock, with a lock time.
 
 ## Caching {#caching}
 
@@ -48,30 +59,40 @@ class RateService {
 }
 ```
 
-A caching **proxy** checks the cache before calling the method (**cache-aside** pattern). `@Cacheable` skips the method on a hit, `@CachePut` always runs it and stores the result, `@CacheEvict` removes entries (`allEntries = true` clears the cache). Keys default to the method arguments; set `key` with SpEL for multiple arguments. `condition` and `unless` decide whether to cache. Because it is a proxy: **self-invocation is not cached**, and only public methods on beans.
+A caching **proxy** checks the cache before calling the method. This is the **cache-aside** pattern.
+
+- `@Cacheable` skips the method when the value is cached (a *hit*).
+- `@CachePut` always runs the method and stores the result.
+- `@CacheEvict` removes entries. `allEntries = true` clears the whole cache.
+
+The key is built from the method arguments by default. With several arguments, set `key` with a SpEL expression. `condition` and `unless` decide whether a result is cached.
+
+Because it is a proxy, **self-invocation is not cached**, and it only works on public methods of beans.
 
 ### Local and distributed caches {#providers}
 
 | | Local (Caffeine) | Distributed (Redis) |
 | --- | --- | --- |
-| Speed | in-process, nanoseconds | network call, around a millisecond |
-| Consistency across instances | each instance has its own copy: they can disagree | one shared copy |
-| Capacity | JVM heap | cluster memory |
-| Failure | disappears with the instance | needs availability, timeouts and a fallback |
-| Use | small, hot, tolerant of slight staleness | shared, larger, must agree across instances |
+| Speed | In the same process: nanoseconds. | A network call: around a millisecond. |
+| Agreement between instances | Each instance has its own copy, so they can disagree. | One shared copy. |
+| Capacity | The JVM heap. | The cluster's memory. |
+| Failure | Disappears with the instance. | Must stay available, with timeouts and a fallback. |
+| Use | Small, hot data that tolerates being slightly stale. | Shared, larger data that all instances must agree on. |
 
-A **two-level** setup (Caffeine in front of Redis, invalidated by pub/sub) combines both at the cost of complexity. Always set a **TTL** and a **maximum size**; an unbounded cache is a memory leak.
+A **two-level** setup puts Caffeine in front of Redis, and invalidates it through pub/sub. It combines both, at the cost of complexity.
+
+Always set a **TTL** and a **maximum size**. A cache without limits is a memory leak.
 
 ### What goes wrong {#cache-problems}
 
-- **Stale data:** nothing tells the cache the source changed. Use TTL, evict or put on writes, and accept bounded staleness; never cache data that must always be exact (balances, permissions) without a clear invalidation story.
-- **Cache stampede:** a hot key expires and hundreds of requests hit the database at once. Mitigate with `@Cacheable(sync = true)` (one loader per key), jittered TTLs, refresh-ahead (Caffeine `refreshAfterWrite`) and request coalescing.
-- **Cache penetration:** repeated requests for keys that do not exist bypass the cache; cache the "not found" result briefly (negative caching) or use a Bloom filter.
-- **Serialisation and size:** values in Redis need a serialiser (JSON preferred over Java serialisation) and version tolerance across deployments; large values hurt.
-- **Mutable cached objects:** cache immutable values, or callers modify the shared instance.
-- **Key design and multi-tenancy:** include tenant or user in the key where results differ.
-- **Cache as a hidden dependency:** if Redis is down the call should fall back to the source (or fail fast with a timeout), not hang.
-- **Transactions:** an entry cached inside a transaction that later rolls back is wrong; evict after commit, or use `TransactionAwareCacheManagerProxy`.
+- **Stale data:** nothing tells the cache that the source changed. Use a TTL, evict or put on writes, and accept that data can be stale for a bounded time. Never cache data that must always be exact (balances, permissions) without a clear plan for invalidation.
+- **Cache stampede:** a hot key expires, and hundreds of requests hit the database at once. Reduce it with `@Cacheable(sync = true)` (one loader per key), random jitter on TTLs, refresh-ahead (Caffeine's `refreshAfterWrite`) and request coalescing.
+- **Cache penetration:** repeated requests for keys that do not exist always miss the cache. Cache the "not found" result briefly (*negative caching*), or use a Bloom filter.
+- **Serialisation and size:** values in Redis need a serialiser (prefer JSON to Java serialisation) that tolerates version changes across deployments. Large values hurt performance.
+- **Mutable cached objects:** cache immutable values. Otherwise callers change the shared instance.
+- **Key design and multi-tenancy:** include the tenant or user in the key when results differ per tenant or user.
+- **The cache as a hidden dependency:** if Redis is down, the call should fall back to the source (or fail fast with a timeout), not hang.
+- **Transactions:** an entry cached inside a transaction that later rolls back is wrong. Evict after the commit, or use `TransactionAwareCacheManagerProxy`.
 
 ## Async {#async}
 
@@ -107,12 +128,12 @@ class Notifier {
 }
 ```
 
-- `@Async` runs the method on an **executor** (a thread pool). Call it from **another bean** (proxy); self-invocation runs synchronously.
-- The return type is `void`, `Future` or `CompletableFuture`. **Exceptions in a `void` method** go to the `AsyncUncaughtExceptionHandler`; with a future the caller sees them.
-- **Configure the pool.** Defaults: Spring Boot provides a `ThreadPoolTaskExecutor` named `applicationTaskExecutor` (core 8, **unbounded queue**), so overload becomes memory pressure. Use explicit, bounded, **named** pools per purpose (so slow email cannot starve payment work, a **bulkhead**).
-- **Context does not propagate:** the transaction, security context, MDC (log correlation) and request attributes belong to the calling thread. Wrap the executor with `DelegatingSecurityContextExecutor` or a `TaskDecorator` to copy the MDC and security context.
+- `@Async` runs the method on an **executor** (a thread pool). Call it from **another bean**, so the call goes through the proxy. Self-invocation runs synchronously.
+- The return type is `void`, `Future` or `CompletableFuture`. **Exceptions in a `void` method** go to the `AsyncUncaughtExceptionHandler`. With a future, the caller sees them.
+- **Configure the pool.** Spring Boot provides a `ThreadPoolTaskExecutor` named `applicationTaskExecutor`, with 8 core threads and an **unbounded queue**. So overload turns into memory pressure. Use explicit, bounded, **named** pools for each purpose. Then slow email cannot starve payment work: this is a **bulkhead**.
+- **Context does not follow the task.** The transaction, the security context, the MDC (log correlation) and request attributes belong to the calling thread. Wrap the executor with `DelegatingSecurityContextExecutor`, or use a `TaskDecorator` to copy the MDC and security context.
 - **Not durable:** if the JVM stops, queued tasks are lost. Work that must not be lost goes to a message queue or an [outbox](lesson:microservice-patterns#outbox), not `@Async`.
-- With Java 21 `spring.threads.virtual.enabled=true` makes task executors use virtual threads, lifting the pool-size limit for blocking tasks ([reactive and virtual threads](lesson:spring-reactive)).
+- With Java 21, `spring.threads.virtual.enabled=true` makes task executors use virtual threads. That removes the pool-size limit for blocking tasks ([reactive and virtual threads](lesson:spring-reactive)).
 
 ## Scheduling {#scheduling}
 
@@ -133,20 +154,31 @@ class StatementJob {
 
 | Option | Meaning |
 | --- | --- |
-| `fixedRate` | every N ms from the start of the previous run (can overlap if slow, in async mode) |
-| `fixedDelay` | N ms after the previous run **finishes** |
-| `initialDelay` | wait before the first run |
-| `cron` | cron expression (seconds first in Spring), set a `zone` |
+| `fixedRate` | Every N ms, counted from the start of the previous run. Runs can overlap if one is slow (in async mode). |
+| `fixedDelay` | N ms after the previous run **finishes**. |
+| `initialDelay` | How long to wait before the first run. |
+| `cron` | A cron expression. In Spring the seconds come first. Set a `zone`. |
 
-- **Single thread by default:** `@Scheduled` methods share one scheduler thread, so a long job delays others. Set `spring.task.scheduling.pool.size` or use a dedicated `TaskScheduler`.
-- **Every instance runs it.** With three replicas the job runs three times. Use a **distributed lock** (**ShedLock**: a row or Redis key with a lock-until time), a leader election, or a clustered scheduler (Quartz with a JDBC job store). Set `lockAtMostFor` longer than the job and `lockAtLeastFor` to absorb clock skew.
-- **Make jobs idempotent and time-bounded:** a crashed run lets another instance retry after the lock expires; process in small batches and record progress.
-- **Heavy, retried or audited work:** Spring Batch (chunks, restart, skip) or a workflow engine; see the [distributed scheduler](lesson:distributed-scheduler) lesson for the design.
-- **Kubernetes alternative:** a `CronJob` runs one pod per schedule, removing the need for an in-app lock.
+- **One thread by default.** All `@Scheduled` methods share one scheduler thread, so a long job delays the others. Set `spring.task.scheduling.pool.size`, or use a dedicated `TaskScheduler`.
+- **Every instance runs it.** With three replicas, the job runs three times. Use:
+  - a **distributed lock**, such as **ShedLock** (a row or Redis key with a lock-until time),
+  - a leader election,
+  - or a clustered scheduler (Quartz with a JDBC job store).
+
+  Set `lockAtMostFor` longer than the job takes, and `lockAtLeastFor` to absorb clock differences between machines.
+- **Make jobs idempotent and time-bounded.** If a run crashes, another instance retries after the lock expires. Process in small batches and record progress.
+- **Heavy, retried or audited work:** use Spring Batch (chunks, restart, skip) or a workflow engine. See the [distributed scheduler](lesson:distributed-scheduler) lesson for the design.
+- **Kubernetes alternative:** a `CronJob` runs one pod per schedule, so you need no lock in the app.
 
 ## Application events {#events}
 
-In-process pub/sub decouples beans (`ApplicationEventPublisher`, `@EventListener`). Listeners run **synchronously on the publisher's thread and transaction** by default; add `@Async` to a listener to move it off-thread, and `@TransactionalEventListener(AFTER_COMMIT)` to react only after a commit ([after commit](lesson:spring-transactions#events)). Events are not durable and not distributed: use a broker for cross-service events ([messaging with Spring](lesson:spring-messaging)).
+Events let beans talk without knowing each other: in-process publish and subscribe, with `ApplicationEventPublisher` and `@EventListener`.
+
+- By default, listeners run **synchronously, on the publisher's thread and in its transaction**.
+- Add `@Async` to a listener to run it on another thread.
+- Use `@TransactionalEventListener(AFTER_COMMIT)` to react only after a commit ([after commit](lesson:spring-transactions#events)).
+
+Events are not durable and not distributed. For events between services, use a broker ([messaging with Spring](lesson:spring-messaging)).
 
 Try it in the lab: [@Cacheable and @Async: what the proxy does](lab:spring-cacheable-async).
 
@@ -154,76 +186,147 @@ Try it in the lab: [@Cacheable and @Async: what the proxy does](lab:spring-cache
 
 | Topic | Key point |
 | --- | --- |
-| `@Cacheable` | cache-aside through a proxy: skip the method on a hit |
-| `@CachePut`, `@CacheEvict` | refresh or remove entries on writes |
-| TTL and size | always set both; unbounded caches leak |
-| Stampede | `sync = true`, jittered TTL, refresh-ahead |
-| Local vs distributed | Caffeine fast but per-instance; Redis shared but a network hop |
-| Stale data | bounded by TTL and eviction; do not cache must-be-exact data |
-| `@Async` | executor thread; call via another bean; not durable |
-| Default pool | unbounded queue: configure bounded, named pools |
-| Context propagation | transaction, security, MDC do not follow: use a TaskDecorator |
-| `@Scheduled` | runs on every instance: add ShedLock or a CronJob |
-| `fixedRate` vs `fixedDelay` | from start vs after finish |
-| Events | in-process, synchronous by default, not durable |
+| `@Cacheable` | Cache-aside through a proxy. Skips the method on a hit. |
+| `@CachePut`, `@CacheEvict` | Refresh or remove entries when data is written. |
+| TTL and size | Always set both. Caches without limits leak. |
+| Stampede | `sync = true`, jittered TTLs, refresh-ahead. |
+| Local vs distributed | Caffeine is fast but per instance. Redis is shared but a network hop. |
+| Stale data | Bounded by the TTL and eviction. Do not cache data that must be exact. |
+| `@Async` | Runs on an executor thread. Call it through another bean. Not durable. |
+| Default pool | An unbounded queue. Configure bounded, named pools. |
+| Context propagation | Transaction, security and MDC do not follow. Use a TaskDecorator. |
+| `@Scheduled` | Runs on every instance. Add ShedLock, or use a CronJob. |
+| `fixedRate` vs `fixedDelay` | From the start of a run, or after it finishes. |
+| Events | In-process, synchronous by default, not durable. |
 
 ## Interview questions {#questions}
 
 ### [basic] How does @Cacheable work? {#cacheable-q}
 
-A caching proxy wraps the bean. On a call it builds a key from the arguments and looks in the named cache: on a hit it returns the cached value without calling the method; on a miss it calls the method, stores the result and returns it. It needs `@EnableCaching`, a `CacheManager`, and works only for calls through the proxy.
+A caching proxy wraps the bean. On each call, it builds a key from the arguments and looks in the named cache:
+
+- On a **hit**, it returns the cached value without calling the method.
+- On a **miss**, it calls the method, stores the result and returns it.
+
+It needs `@EnableCaching` and a `CacheManager`, and it only works for calls through the proxy.
 
 ### [basic] What is the difference between @Cacheable, @CachePut and @CacheEvict? {#annotations-q}
 
-`@Cacheable` skips the method when a value is cached. `@CachePut` always executes the method and updates the cache with the result (to keep entries fresh on writes). `@CacheEvict` removes one entry or all entries, used on delete or update to prevent stale reads.
+- `@Cacheable` skips the method when a value is cached.
+- `@CachePut` always runs the method and updates the cache with the result. It keeps entries fresh when data is written.
+- `@CacheEvict` removes one entry or all of them. Use it on delete or update, to prevent stale reads.
 
 ### [basic] What does @Async do and what must you configure? {#async-q}
 
-It runs the method on a separate thread from a `TaskExecutor` so the caller returns immediately. Enable it with `@EnableAsync`, call it through another bean, and configure a bounded, named thread pool (core, max, queue, rejection policy), an uncaught-exception handler and context propagation. Return `CompletableFuture` when the caller needs the result.
+It runs the method on a separate thread from a `TaskExecutor`, so the caller returns immediately.
+
+To use it safely:
+
+- turn it on with `@EnableAsync`,
+- call it through another bean,
+- configure a bounded, named thread pool: core size, max size, queue and rejection policy,
+- set an uncaught-exception handler,
+- propagate the context the task needs.
+
+Return a `CompletableFuture` when the caller needs the result.
 
 ### [basic] What is the difference between fixedRate and fixedDelay? {#rate-delay-q}
 
-`fixedRate` schedules runs at a fixed interval measured from the start of each run, so runs can pile up if one takes longer. `fixedDelay` waits the given time after the previous run completes, so runs never overlap. Use `fixedDelay` for jobs that must not overlap, `cron` for wall-clock times.
+`fixedRate` starts runs at a fixed interval, measured from the start of each run. So if one run is slow, runs can pile up.
+
+`fixedDelay` waits the given time after the previous run completes. So runs never overlap.
+
+Use `fixedDelay` for jobs that must not overlap, and `cron` for times on the clock.
 
 ### [intermediate] Why does my @Scheduled job run multiple times and how do you fix it? {#cluster-q}
 
-Every application instance runs its own scheduler, so N replicas run it N times. Use a distributed lock such as ShedLock (`@SchedulerLock`), a clustered Quartz store, leader election, or a Kubernetes CronJob. Make the job idempotent and set the lock's `lockAtMostFor` above the job duration so a crash does not block it forever.
+Every instance of the application runs its own scheduler, so N replicas run the job N times.
+
+Fix it with a distributed lock such as ShedLock (`@SchedulerLock`), a clustered Quartz store, leader election, or a Kubernetes CronJob.
+
+Make the job idempotent. Set the lock's `lockAtMostFor` above the job's duration, so a crash cannot block the job forever.
 
 ### [intermediate] What problems can a cache introduce? {#problems-q}
 
-Stale data, stampedes when hot keys expire together, penetration by non-existent keys, inconsistency between instances with local caches, memory growth without a size limit or TTL, serialisation and version issues in Redis, caching mutable objects, and a hidden dependency when the cache is down. Design TTLs, invalidation, bounds and a fallback deliberately.
+- stale data,
+- stampedes, when hot keys expire together,
+- penetration, by keys that do not exist,
+- disagreement between instances with local caches,
+- memory growth without a size limit or TTL,
+- serialisation and version problems in Redis,
+- caching mutable objects,
+- a hidden dependency when the cache is down.
+
+Design the TTLs, invalidation, limits and fallback on purpose.
 
 ### [intermediate] What is a cache stampede and how do you prevent it? {#stampede-q}
 
-When a popular entry expires, many concurrent requests miss and all hit the database at once. Prevent with `@Cacheable(sync = true)` (one thread loads while others wait), random jitter on TTLs, refresh-ahead before expiry, a lock or request coalescing around the loader, and a stale-while-revalidate approach.
+When a popular entry expires, many requests miss at the same moment, and they all hit the database at once.
+
+Prevent it with:
+
+- `@Cacheable(sync = true)`: one thread loads while the others wait,
+- random jitter on TTLs,
+- refreshing entries before they expire,
+- a lock or request coalescing around the loader,
+- serving the stale value while one request refreshes it (stale-while-revalidate).
 
 ### [intermediate] Local cache or Redis? {#local-vs-redis-q}
 
-A local cache (Caffeine) is fastest and needs no infrastructure, but each instance holds its own copy so values can differ and invalidation does not propagate. Redis is shared and consistent across instances and survives restarts, but costs a network call and must be highly available with timeouts and fallbacks. Use local for small, hot, staleness-tolerant data, Redis for shared data, or both layered.
+A **local cache** (Caffeine) is the fastest and needs no infrastructure. But each instance holds its own copy, so values can differ, and invalidation does not reach the other instances.
+
+**Redis** is shared, consistent across instances, and survives restarts. But it costs a network call, and it must be highly available, with timeouts and fallbacks.
+
+Use local for small, hot data that tolerates staleness. Use Redis for shared data. Or layer both.
 
 ### [intermediate] How do you keep a cache consistent with the database? {#consistency-q}
 
-Accept bounded staleness with a TTL, update or evict on writes (`@CachePut`/`@CacheEvict`) after the transaction commits, publish invalidation events for other instances, and avoid caching data that must always be exact. There is no free perfect consistency: cache-aside is eventually consistent, so choose TTLs from what the business tolerates.
+- Accept a bounded staleness, set by the TTL.
+- Update or evict on writes (`@CachePut`, `@CacheEvict`), after the transaction commits.
+- Publish invalidation events to the other instances.
+- Do not cache data that must always be exact.
+
+Perfect consistency is not free. Cache-aside is eventually consistent, so choose TTLs from what the business can tolerate.
 
 ### [intermediate] Why doesn't @Async work when I call the method from the same class? {#self-q}
 
-`@Async` is implemented by a proxy. A call from another method of the same object (`this.sendEmail()`) bypasses the proxy and runs synchronously on the caller's thread. Move the async method to another bean, or inject a reference that goes through the proxy.
+`@Async` is implemented by a proxy. A call from another method of the same object (`this.sendEmail()`) skips the proxy, so it runs synchronously on the caller's thread.
+
+Move the async method to another bean, or call it through a reference that goes through the proxy.
 
 ### [intermediate] What is the default executor for @Async and why is it risky? {#default-pool-q}
 
-Spring Boot auto-configures an `applicationTaskExecutor` thread pool with an unbounded queue, so a burst of tasks queues without limit and the application slowly runs out of memory instead of rejecting work, and all tasks share one pool. Define explicit bounded executors per workload with a rejection policy and monitor queue size.
+Spring Boot sets up an `applicationTaskExecutor` thread pool with an unbounded queue.
+
+- A burst of tasks queues without limit. The app slowly runs out of memory, instead of rejecting work.
+- All tasks share one pool.
+
+Define explicit, bounded executors for each workload, with a rejection policy, and monitor the queue size.
 
 ### [intermediate] What context is lost when running on another thread? {#context-q}
 
-The transaction and persistence context, the `SecurityContext`, the MDC used for log correlation, and request-scoped data are bound to the calling thread (ThreadLocals). The async task starts without them. Propagate explicitly with a `TaskDecorator` or security-context-aware executors, and pass needed data as parameters, not managed entities.
+These are stored per thread (in ThreadLocals), so the async task starts without them:
+
+- the transaction and persistence context,
+- the `SecurityContext`,
+- the MDC used for log correlation,
+- request-scoped data.
+
+Propagate them explicitly with a `TaskDecorator` or security-aware executors. Pass the data the task needs as parameters, not managed entities.
 
 ### [deep] Is @Async suitable for work that must not be lost? {#durable-q}
 
-No. Tasks live in an in-memory queue, so a restart or crash drops them, and failures are only logged. For reliable work use a message queue with acknowledgements and retries, or write the intent to an outbox table in the same transaction and let a relay process it ([outbox](lesson:microservice-patterns#outbox)).
+No. Tasks wait in a queue in memory, so a restart or crash drops them, and failures are only logged.
+
+For reliable work, use a message queue with acknowledgements and retries. Or write the intent to an outbox table in the same transaction, and let a relay process it ([outbox](lesson:microservice-patterns#outbox)).
 
 ### [deep] How do you protect a service from a slow asynchronous task? {#bulkhead-q}
 
-Give it its own bounded executor (a bulkhead) so it cannot starve other work, set a queue limit and a rejection policy (caller-runs or reject and shed load), add timeouts and circuit breakers around the slow dependency, monitor active threads and queue depth through Micrometer, and consider virtual threads for blocking-heavy tasks.
+- Give the task its own bounded executor (a bulkhead), so it cannot starve other work.
+- Set a queue limit and a rejection policy: caller-runs, or reject and shed load.
+- Add timeouts and circuit breakers around the slow dependency.
+- Monitor active threads and queue depth with Micrometer.
+- Consider virtual threads for tasks that block a lot.
 
 ### [coding] Cache exchange rates with a TTL and refresh on update. {#coding-cache}
 
@@ -248,7 +351,12 @@ class RateService {
 }
 ```
 
-Explain that the proxy implements the cache-aside, `sync = true` protects against a stampede, the TTL and maximum size bound staleness and memory, and `recordStats` exposes hit ratio metrics.
+Explain these points:
+
+- The proxy implements cache-aside.
+- `sync = true` protects against a stampede.
+- The TTL and maximum size limit staleness and memory.
+- `recordStats` exposes the hit ratio as a metric.
 
 ### [coding] Configure a bounded executor and a safe async method. {#coding-async}
 
@@ -276,7 +384,12 @@ class EmailSender {
 }
 ```
 
-Explain the bounded queue with abort policy (visible overload), the named pool as a bulkhead, the decorator copying the MDC, and calling `send` from another bean.
+Explain these points:
+
+- The bounded queue with the abort policy makes overload visible.
+- The named pool acts as a bulkhead.
+- The decorator copies the MDC into the pool thread.
+- `send` must be called from another bean.
 
 ### [coding] Run a nightly job once across several instances. {#coding-shedlock}
 
@@ -298,4 +411,9 @@ class StatementJob {
 }
 ```
 
-Explain that the first instance to insert or update the lock row runs the job, `lockAtMostFor` frees the lock if the instance dies, `lockAtLeastFor` stops a fast job being repeated by clock skew, and the job itself is idempotent.
+Explain these points:
+
+- The first instance to insert or update the lock row runs the job.
+- `lockAtMostFor` frees the lock if that instance dies.
+- `lockAtLeastFor` stops a fast job from running twice because of clock differences.
+- The job itself is idempotent.

@@ -1,0 +1,43 @@
+/* Spring at a glance stage (SpringMapStage): request layers, the container, the project stack */
+.smap-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.5rem 0.75rem 0; }
+.smap-line { font: 700 0.95rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff8d6; border: 1px solid #e8d77a; border-radius: 0.35rem; padding: 0.15rem 0.5rem; }
+.smap-result { font: 700 0.8rem system-ui, sans-serif; color: #fff; border-radius: 999px; padding: 0.15rem 0.65rem; }
+
+.smap-title { font: 700 14px var(--font-hand, cursive); fill: var(--color-pen); }
+.smap-sub { font: 11.5px system-ui, sans-serif; fill: #5b6677; }
+
+/* request layers */
+.smap-layer { fill: #fff; stroke: #c3cfdd; stroke-width: 1.5; transition: fill 0.3s, stroke 0.3s; }
+.smap-layer.is-active { fill: var(--color-pen-soft); stroke: var(--color-pen); stroke-width: 2.5; }
+.smap-layer.is-done { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.smap-layer-name { font: 700 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.smap-layer-detail { font: 11.5px system-ui, sans-serif; fill: #4d5869; }
+.smap-pending { opacity: 0.45; }
+.smap-tag { fill: #eef2f7; stroke: #b9c7d9; stroke-width: 1; }
+.smap-tag.is-active { fill: var(--color-pen); stroke: var(--color-pen); }
+.smap-tag-text { font: 700 11px system-ui, sans-serif; fill: #3d4a5c; }
+.smap-tag-text.is-active { fill: #fff; }
+
+/* the container */
+.smap-col { fill: rgba(255, 255, 255, 0.85); stroke: #c3cfdd; stroke-width: 1.5; }
+.smap-card { fill: #fff; stroke: #8d9bb0; stroke-width: 1.5; }
+.smap-card.is-recipe { stroke-dasharray: 5 4; }
+.smap-card.is-focus { stroke: var(--color-pen); stroke-width: 2.5; }
+.smap-card.is-bean { fill: var(--color-ok-soft); stroke: var(--color-ok); stroke-width: 2; }
+.smap-card-name { font: 700 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
+.smap-ctx { fill: var(--color-pen-soft); stroke: var(--color-pen); stroke-width: 2; }
+.smap-ctx.is-idle { fill: #f4f6f9; stroke: #b9c7d9; stroke-width: 1.5; }
+.smap-proxy { fill: none; stroke: var(--color-warn); stroke-width: 2; stroke-dasharray: 6 4; }
+.smap-proxy-text { font: 700 11px system-ui, sans-serif; fill: var(--color-warn); }
+.smap-edge-label { font: 700 11px system-ui, sans-serif; fill: #3d4a5c; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+
+/* project stack */
+.smap-block { stroke-width: 2; transition: opacity 0.3s; }
+.smap-block.is-core { fill: #e7eef8; stroke: #5b7aa6; }
+.smap-block.is-boot { fill: var(--color-ok-soft); stroke: var(--color-ok); }
+.smap-block.is-addon { fill: #fff; stroke: #8d9bb0; }
+.smap-block.is-cloud { fill: var(--color-warn-soft); stroke: var(--color-warn); }
+.smap-block.is-focus { stroke-width: 3.5; }
+.smap-block-name { font: 700 14px system-ui, sans-serif; fill: var(--color-ink, #1b2430); }
+.smap-block-detail { font: 11.5px system-ui, sans-serif; fill: #4d5869; }
+.smap-ghost { fill: none; stroke: #c9d3e0; stroke-width: 1.25; stroke-dasharray: 5 5; }

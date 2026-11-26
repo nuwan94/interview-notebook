@@ -6,27 +6,36 @@ summary: What Spring Boot adds on top of Spring, how starters and auto-configura
 tags: [Spring Boot, Auto-configuration, Configuration, Profiles, Starters]
 order: 81
 topic: Spring / Fundamentals
-updated: 2026-11-13
+updated: 2026-11-26
 subnav: true
 ---
 
-After the [Spring core](lesson:spring-core) container, the next interview question is *what does Spring Boot actually do, how does auto-configuration work, how do you configure an application per environment, and how is it packaged and run?* Boot is not a different framework: it is Spring plus **opinionated defaults, dependency management and an embedded runtime**. Next in the series: [AOP and proxies](lesson:spring-aop). Play the three scenes: startup, auto-configuration backing off, and property precedence.
+After the [Spring core](lesson:spring-core) container, the next interview questions are:
+
+- What does Spring Boot actually do?
+- How does auto-configuration work?
+- How do you configure an application for each environment?
+- How is it packaged and run?
+
+Boot is not a different framework. It is Spring plus three things: **sensible defaults already chosen, managed library versions, and a built-in server**. Next in the series: [AOP and proxies](lesson:spring-aop).
+
+The demo has three scenes: startup, auto-configuration stepping back, and which property value wins.
 
 ```demo
 name: spring-boot-walk
 ```
 
-> **One sentence to remember:** *Boot looks at your classpath and properties, creates the beans you would probably have written by hand, and steps aside wherever you define your own.*
+> **One sentence to remember:** *Boot creates the beans you would have written yourself, and steps back wherever you define your own.*
 
 ## What Boot adds {#what}
 
 | Plain Spring | Spring Boot |
 | --- | --- |
-| you configure the container, data source, MVC, JSON, transaction manager | **auto-configuration** creates sensible defaults from the classpath |
-| you pick compatible versions of dozens of libraries | **starters** and a managed **BOM** pick tested versions |
-| deploy a WAR to an external server | **embedded server**, run a jar with `java -jar` |
-| XML or lots of Java config | convention plus `application.properties` / `application.yml` |
-| add monitoring yourself | **Actuator** (health, metrics, info) |
+| You configure the container, data source, MVC, JSON and transaction manager yourself. | **Auto-configuration** creates sensible defaults based on what is on the classpath. |
+| You pick compatible versions of dozens of libraries. | **Starters** and a managed **BOM** (bill of materials, a list of tested versions) pick them for you. |
+| You deploy a WAR file to an external server. | An **embedded server** is inside the jar. You run it with `java -jar`. |
+| You write XML or a lot of Java configuration. | Conventions plus `application.properties` or `application.yml`. |
+| You add monitoring yourself. | **Actuator** gives health, metrics and info endpoints. |
 
 ### The main class {#main}
 
@@ -41,46 +50,60 @@ public class BankApplication {
 
 `@SpringBootApplication` is a shortcut for three annotations:
 
-- `@SpringBootConfiguration` (a `@Configuration` class);
-- `@EnableAutoConfiguration` (turns on auto-configuration);
-- `@ComponentScan` (scans this package and below).
+- `@SpringBootConfiguration`: marks this as a configuration class.
+- `@EnableAutoConfiguration`: turns on auto-configuration.
+- `@ComponentScan`: scans this package and every package below it.
 
-So **put the main class in the root package**, or beans in sub-packages are not found.
+So **put the main class in the root package**. Otherwise beans in other packages are not found.
 
 ### Starters {#starters}
 
-A **starter** is a dependency descriptor that pulls in a coherent set of libraries for a purpose: `spring-boot-starter-web` (Spring MVC, Jackson, embedded Tomcat), `-data-jpa` (Hibernate, Spring Data JPA, HikariCP), `-security`, `-validation`, `-actuator`, `-test`. The parent POM or the Gradle plugin imports the **Boot BOM** (`spring-boot-dependencies`), so you omit versions and get a tested combination. Pulling a starter in is what makes its auto-configuration activate.
+A **starter** is one dependency that pulls in a matching set of libraries for one purpose. Examples:
+
+- `spring-boot-starter-web` brings Spring MVC, Jackson and an embedded Tomcat.
+- `spring-boot-starter-data-jpa` brings Hibernate, Spring Data JPA and the HikariCP connection pool.
+- Others: `-security`, `-validation`, `-actuator` and `-test`.
+
+The Boot parent POM, or the Boot Gradle plugin, imports the **Boot BOM** (`spring-boot-dependencies`). So you leave out version numbers and get a combination that was tested together.
+
+Adding a starter is also what switches on its auto-configuration, because it puts the right classes on the classpath.
 
 ## Auto-configuration {#autoconfig}
 
 ### How it works {#how}
 
-1. `@EnableAutoConfiguration` imports a list of candidate classes, read from `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` in the jars on the classpath (older Boot versions used `spring.factories`).
-2. Each candidate is a normal `@Configuration` class guarded by **conditions**.
+1. `@EnableAutoConfiguration` loads a list of candidate classes. The list is in `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` inside the jars on the classpath. (Older Boot versions used `spring.factories`.)
+2. Each candidate is a normal `@Configuration` class, guarded by **conditions**.
 3. Only candidates whose conditions pass register their beans.
-4. They are processed **after** your own configuration, so user-defined beans take precedence.
+4. They are processed **after** your own configuration. So your own beans win.
 
-Common conditions:
+The common conditions:
 
 | Condition | Passes when |
 | --- | --- |
-| `@ConditionalOnClass` | a class is on the classpath (the library is present) |
-| `@ConditionalOnMissingBean` | you have not defined a bean of that type: **the back-off mechanism** |
-| `@ConditionalOnBean` | a given bean exists |
-| `@ConditionalOnProperty` | a property has a given value |
-| `@ConditionalOnWebApplication` | it is a (servlet or reactive) web app |
-| `@Profile` | a profile is active |
+| `@ConditionalOnClass` | A class is on the classpath, meaning the library is present. |
+| `@ConditionalOnMissingBean` | You have not defined a bean of that type. This is **how Boot steps back**. |
+| `@ConditionalOnBean` | A certain bean exists. |
+| `@ConditionalOnProperty` | A property has a certain value. |
+| `@ConditionalOnWebApplication` | The app is a web app (servlet or reactive). |
+| `@Profile` | A profile is active. |
 
 ### Seeing and controlling it {#control}
 
-- Run with `--debug` (or `debug=true`) to print the **conditions evaluation report**: positive matches, negative matches and why.
-- Actuator's `/actuator/conditions` shows the same at runtime.
-- Exclude one: `@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)` or `spring.autoconfigure.exclude=...`.
-- Override by defining your own bean of that type (the auto-configured one backs off).
+- **See what happened.** Run with `--debug` (or set `debug=true`). Boot prints the **conditions evaluation report**: which auto-configurations matched, which did not, and why.
+- **See it at run time.** Actuator's `/actuator/conditions` endpoint shows the same report.
+- **Turn one off.** Use `@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)` or `spring.autoconfigure.exclude=...`.
+- **Replace one.** Define your own bean of that type. The auto-configured one steps back.
 
 ### Writing your own starter {#own-starter}
 
-Provide a `@AutoConfiguration` class with `@ConditionalOnClass` and `@ConditionalOnMissingBean` beans, an optional `@ConfigurationProperties` class, and list it in the `.imports` file. Teams use this to share logging, security or HTTP-client defaults across services.
+You need three parts:
+
+- an `@AutoConfiguration` class whose beans use `@ConditionalOnClass` and `@ConditionalOnMissingBean`,
+- optionally, a `@ConfigurationProperties` class for its settings,
+- a line in the `.imports` file that lists the class.
+
+Teams use their own starters to share logging, security or HTTP-client defaults across services.
 
 ## Configuration {#config}
 
@@ -102,7 +125,7 @@ bank:
     daily: 5000
 ```
 
-Bind a group of properties to a typed object with `@ConfigurationProperties` (preferred over many `@Value`):
+Bind a group of properties to a typed object with `@ConfigurationProperties`. Prefer this over many separate `@Value` fields:
 
 ```java
 @ConfigurationProperties(prefix = "bank")
@@ -118,33 +141,35 @@ public class BankApplication { ... }
 
 | | `@Value("${bank.fee-rate}")` | `@ConfigurationProperties` |
 | --- | --- | --- |
-| Best for | one or two values | a group of related settings |
-| Type safety and nesting | manual | yes (objects, lists, maps, `Duration`, `DataSize`) |
-| Relaxed binding (`fee-rate`, `feeRate`, `FEE_RATE`) | limited | yes |
-| Validation | no | yes with `@Validated` |
-| IDE metadata | no | yes |
+| Best for | One or two values. | A group of related settings. |
+| Types and nesting | You convert values yourself. | Built in: objects, lists, maps, `Duration` and `DataSize`. |
+| Relaxed binding (`fee-rate`, `feeRate` and `FEE_RATE` all match) | Limited. | Yes. |
+| Validation | No. | Yes, with `@Validated`. |
+| IDE auto-complete | No. | Yes. |
 
 ### Property precedence {#precedence}
 
-Sources are layered, a later source overriding an earlier one. Roughly, from lowest to highest priority:
+Boot reads properties from many sources, in layers. A later source overrides an earlier one for the same key. From lowest to highest priority, roughly:
 
-1. defaults (`SpringApplication.setDefaultProperties`);
-2. `application.properties` / `.yml` packaged in the jar;
-3. profile-specific files (`application-prod.yml`) packaged in the jar;
-4. files next to the jar or in `./config/` (external, override the packaged ones);
-5. OS **environment variables** (`BANK_FEE_RATE`, relaxed binding);
-6. Java system properties (`-Dbank.fee-rate=...`);
-7. **command-line arguments** (`--bank.fee-rate=...`), highest.
+1. Defaults set with `SpringApplication.setDefaultProperties`.
+2. `application.properties` or `.yml` packaged inside the jar.
+3. Profile-specific files inside the jar, such as `application-prod.yml`.
+4. Files next to the jar or in `./config/`. These external files override the packaged ones.
+5. Operating system **environment variables**, such as `BANK_FEE_RATE` (relaxed binding maps it to `bank.fee-rate`).
+6. Java system properties, such as `-Dbank.fee-rate=...`.
+7. **Command-line arguments**, such as `--bank.fee-rate=...`. These win over everything.
 
-This is what lets one built image run in every environment: change values with environment variables, not by rebuilding. **Never commit secrets**: inject them from environment variables or a secret manager (Vault, Kubernetes secrets, cloud key stores).
+This is what lets one built image run in every environment. You change values with environment variables, not by rebuilding.
+
+**Never commit secrets.** Inject them from environment variables or a secret manager, such as Vault, Kubernetes secrets or a cloud key store.
 
 ### Profiles {#profiles}
 
-A **profile** names an environment (`dev`, `test`, `prod`). Activate with `spring.profiles.active=prod` (or `SPRING_PROFILES_ACTIVE`):
+A **profile** names an environment, such as `dev`, `test` or `prod`. You turn one on with `spring.profiles.active=prod` (or the `SPRING_PROFILES_ACTIVE` environment variable). Then:
 
-- `application-prod.yml` is loaded on top of `application.yml`;
-- beans annotated `@Profile("prod")` are registered only then;
-- one YAML can hold several documents separated by `---` with `spring.config.activate.on-profile`.
+- `application-prod.yml` is loaded on top of `application.yml`.
+- Beans marked `@Profile("prod")` are registered. Other profile beans are not.
+- One YAML file can also hold several documents, separated by `---`, each with `spring.config.activate.on-profile`.
 
 ```java
 @Configuration
@@ -158,21 +183,35 @@ class ClientConfig {
 
 ### Embedded server and packaging {#embedded}
 
-`spring-boot-starter-web` embeds **Tomcat** (swap to Jetty or Undertow by excluding it and adding the other starter); WebFlux uses Netty. The build produces an executable **fat jar** (all dependencies nested) run with `java -jar bank.jar`.
+`spring-boot-starter-web` includes **Tomcat**. To use Jetty or Undertow instead, exclude Tomcat and add the other server's starter. WebFlux uses Netty.
 
-For containers prefer **layered jars** (dependencies, snapshot dependencies, application classes in separate layers so Docker caches the stable ones) or buildpacks (`./mvnw spring-boot:build-image`). Set `server.shutdown=graceful` so in-flight requests finish before the container stops, and size memory for the container (`-XX:MaxRAMPercentage`).
+The build produces an executable **fat jar**: one jar that contains all its dependencies. You run it with `java -jar bank.jar`.
+
+For containers:
+
+- Prefer a **layered jar**. Dependencies, snapshot dependencies and your own classes go into separate layers, so Docker can cache the layers that rarely change. Buildpacks (`./mvnw spring-boot:build-image`) are another option.
+- Set `server.shutdown=graceful`, so requests in progress finish before the container stops.
+- Size the memory for the container, for example with `-XX:MaxRAMPercentage`.
 
 ### Actuator {#actuator}
 
-`spring-boot-starter-actuator` exposes operational endpoints under `/actuator`: `health` (with liveness and readiness probes for Kubernetes), `info`, `metrics`, `env`, `beans`, `conditions`, `loggers`, `threaddump`, `prometheus` (with Micrometer). Only `health` is exposed over HTTP by default; expose others deliberately (`management.endpoints.web.exposure.include=health,info,metrics`) and **secure them**, since `env`, `heapdump` and `beans` leak sensitive information. A separate management port (`management.server.port`) keeps them off the public listener.
+`spring-boot-starter-actuator` adds operational endpoints under `/actuator`. The main ones are:
+
+- `health`, including liveness and readiness probes for Kubernetes,
+- `info`, `metrics` and `prometheus` (with Micrometer),
+- `env`, `beans`, `conditions`, `loggers` and `threaddump`.
+
+Only `health` is exposed over HTTP by default. Expose others on purpose, for example `management.endpoints.web.exposure.include=health,info,metrics`.
+
+**Secure them.** `env`, `heapdump` and `beans` leak sensitive information. A separate management port (`management.server.port`) keeps them off the public listener.
 
 ### Other conveniences {#extras}
 
-- **Logging:** Logback by default; level per package in properties (`logging.level.com.bank=DEBUG`).
-- **DevTools:** automatic restart and live reload for development (never in production).
-- **Startup hooks:** `CommandLineRunner` / `ApplicationRunner` beans, `ApplicationReadyEvent` listeners.
-- **Testing:** `@SpringBootTest`, slice tests such as `@WebMvcTest` and `@DataJpaTest` (a later lesson).
-- **Configuration processor:** `spring-boot-configuration-processor` generates IDE metadata for your properties.
+- **Logging:** Logback is the default. You set the level per package in properties, for example `logging.level.com.bank=DEBUG`.
+- **DevTools:** restarts the app and reloads the browser during development. Never use it in production.
+- **Startup hooks:** `CommandLineRunner` and `ApplicationRunner` beans, or listeners for `ApplicationReadyEvent`, run code once the app has started.
+- **Testing:** `@SpringBootTest`, and slice tests such as `@WebMvcTest` and `@DataJpaTest` (covered in a later lesson).
+- **Configuration processor:** `spring-boot-configuration-processor` generates IDE auto-complete data for your own properties.
 
 Try it in the lab: [How auto-configuration decides what to create](lab:boot-autoconfiguration).
 
@@ -180,83 +219,182 @@ Try it in the lab: [How auto-configuration decides what to create](lab:boot-auto
 
 | Topic | Key point |
 | --- | --- |
-| Boot | Spring plus defaults: starters, auto-configuration, embedded server, Actuator |
-| `@SpringBootApplication` | `@SpringBootConfiguration` + `@EnableAutoConfiguration` + `@ComponentScan` |
-| Starter | dependency bundle plus the trigger for auto-configuration |
-| Auto-configuration | conditional `@Configuration` classes from `.imports`; back off with `@ConditionalOnMissingBean` |
-| Debug it | `--debug` conditions report, `/actuator/conditions` |
-| Exclude | `exclude = ...` or `spring.autoconfigure.exclude` |
-| `@ConfigurationProperties` | typed, validated, relaxed binding; prefer over `@Value` for groups |
-| Precedence (low to high) | packaged files, profile files, env variables, system properties, command line |
-| Profiles | per-environment files and beans; `spring.profiles.active` |
-| Packaging | executable fat jar; layered jar or buildpacks for containers |
-| Actuator | health, metrics, info; expose carefully and secure |
+| Boot | Spring plus defaults: starters, auto-configuration, an embedded server and Actuator. |
+| `@SpringBootApplication` | `@SpringBootConfiguration` + `@EnableAutoConfiguration` + `@ComponentScan`. |
+| Starter | A bundle of dependencies, and the trigger for auto-configuration. |
+| Auto-configuration | Conditional `@Configuration` classes listed in `.imports`. They step back with `@ConditionalOnMissingBean`. |
+| Debug it | The `--debug` conditions report, or `/actuator/conditions`. |
+| Turn one off | `exclude = ...` or `spring.autoconfigure.exclude`. |
+| `@ConfigurationProperties` | Typed, validated, relaxed binding. Prefer it over `@Value` for groups. |
+| Precedence (low to high) | Packaged files, profile files, environment variables, system properties, command line. |
+| Profiles | Files and beans per environment, chosen with `spring.profiles.active`. |
+| Packaging | An executable fat jar. Use a layered jar or buildpacks for containers. |
+| Actuator | Health, metrics and info. Expose carefully and secure. |
 
 ## Interview questions {#questions}
 
 ### [basic] What is Spring Boot and how does it differ from Spring? {#what-q}
 
-Spring Boot is not a separate framework but a layer on top of Spring that removes boilerplate: starters and a managed BOM for dependencies, auto-configuration that creates default beans from the classpath and properties, an embedded server so you run a plain jar, and production features such as Actuator. Plain Spring requires you to configure all of that yourself.
+Spring Boot is not a separate framework. It is a layer on top of Spring that removes setup work:
+
+- starters and a managed BOM choose your dependencies and versions,
+- auto-configuration creates default beans from the classpath and properties,
+- an embedded server lets you run a plain jar,
+- production features such as Actuator are built in.
+
+With plain Spring, you configure all of that yourself.
 
 ### [basic] What does @SpringBootApplication do? {#annotation-q}
 
-It combines `@SpringBootConfiguration` (marks a configuration class), `@EnableAutoConfiguration` (activates auto-configuration) and `@ComponentScan` (scans the main class's package and sub-packages for beans). That is why the main class belongs in the root package.
+It combines three annotations:
+
+- `@SpringBootConfiguration` marks the class as a configuration class.
+- `@EnableAutoConfiguration` turns on auto-configuration.
+- `@ComponentScan` scans the main class's package and its sub-packages for beans.
+
+That is why the main class belongs in the root package.
 
 ### [basic] What is a Spring Boot starter? {#starter-q}
 
-A dependency that bundles the libraries needed for a feature (for example `spring-boot-starter-web` brings Spring MVC, Jackson and Tomcat) with versions managed by the Boot BOM. Adding it also puts the classes on the classpath that make the matching auto-configuration activate.
+A starter is one dependency that bundles the libraries needed for a feature, with versions managed by the Boot BOM. For example, `spring-boot-starter-web` brings Spring MVC, Jackson and Tomcat.
+
+Adding it also puts the classes on the classpath that switch on the matching auto-configuration.
 
 ### [basic] What is the difference between application.properties and application.yml? {#yaml-q}
 
-They are two formats for the same configuration. Properties are flat key=value lines; YAML is hierarchical, more readable for nested settings and supports multiple profile documents in one file. Boot reads both (properties win if both define a key in the same location).
+They are two formats for the same configuration.
+
+- **Properties** files are flat `key=value` lines.
+- **YAML** is nested. It is easier to read for nested settings, and one file can hold a document per profile.
+
+Boot reads both. If both define the same key in the same location, the properties file wins.
 
 ### [basic] What are Spring profiles? {#profile-q}
 
-Named environment sets (dev, test, prod). Activating one (`spring.profiles.active`) loads `application-{profile}` properties on top of the base file and registers beans marked `@Profile`. They let the same build run with different configuration and beans, for example a fake payment gateway in dev and the real one in prod.
+A profile is a named environment, such as dev, test or prod.
+
+When you activate one with `spring.profiles.active`:
+
+- Boot loads `application-{profile}` properties on top of the base file,
+- beans marked `@Profile` for that profile are registered.
+
+So the same build runs with different settings and beans. For example, a fake payment gateway in dev and the real one in prod.
 
 ### [intermediate] How does auto-configuration work? {#autoconfig-q}
 
-`@EnableAutoConfiguration` loads candidate configuration classes listed in `AutoConfiguration.imports` from the starter jars. Each is a normal `@Configuration` guarded by conditions (`@ConditionalOnClass`, `@ConditionalOnMissingBean`, `@ConditionalOnProperty`). Those whose conditions pass register beans, and they are processed after the user's configuration so your own beans win.
+1. `@EnableAutoConfiguration` loads the candidate configuration classes listed in `AutoConfiguration.imports` inside the starter jars.
+2. Each candidate is a normal `@Configuration` class guarded by conditions, such as `@ConditionalOnClass`, `@ConditionalOnMissingBean` and `@ConditionalOnProperty`.
+3. Candidates whose conditions pass register their beans.
+4. They are processed after your own configuration, so your own beans win.
 
 ### [intermediate] How do you override or disable an auto-configured bean? {#override-q}
 
-Define your own bean of that type (the auto-configured one backs off through `@ConditionalOnMissingBean`), set the relevant `spring.*` properties, or exclude the auto-configuration class with `exclude` on `@SpringBootApplication` or `spring.autoconfigure.exclude`. Use `--debug` to see which auto-configurations matched and why.
+There are three ways:
+
+1. **Define your own bean** of that type. The auto-configured one steps back through `@ConditionalOnMissingBean`.
+2. **Set the related `spring.*` properties** to change how it is built.
+3. **Exclude the auto-configuration class**, with `exclude` on `@SpringBootApplication` or with `spring.autoconfigure.exclude`.
+
+Run with `--debug` to see which auto-configurations matched and why.
 
 ### [intermediate] How do you find out why a bean was or was not created? {#debug-q}
 
-Start with `--debug` (or `debug=true`) to print the conditions evaluation report listing positive matches, negative matches (with the failed condition) and exclusions, or call the Actuator `conditions` endpoint. For bean wiring, `/actuator/beans` lists all beans and dependencies.
+Start the app with `--debug` (or `debug=true`). Boot prints the conditions evaluation report. It lists:
+
+- positive matches,
+- negative matches, with the condition that failed,
+- exclusions.
+
+At run time, the Actuator `conditions` endpoint shows the same. For wiring, `/actuator/beans` lists every bean and its dependencies.
 
 ### [intermediate] @Value versus @ConfigurationProperties? {#value-q}
 
-`@Value` injects one property and suits a single value. `@ConfigurationProperties` binds a group of properties with a common prefix into a typed object (nested objects, lists, durations), supports relaxed binding and `@Validated` validation, fails fast at startup on bad values and gives IDE metadata. Prefer it for anything beyond a couple of settings.
+Use `@Value` for one value. Use `@ConfigurationProperties` for anything more.
+
+`@ConfigurationProperties` binds a group of properties with a common prefix into a typed object. It:
+
+- supports nested objects, lists and durations,
+- supports relaxed binding,
+- supports validation with `@Validated`,
+- fails at startup on bad values,
+- gives IDE auto-complete.
 
 ### [intermediate] What is the order of property sources? {#precedence-q}
 
-From lowest to highest: defaults, `application.properties` in the jar, profile-specific files in the jar, external config files, OS environment variables, JVM system properties, then command-line arguments. A later source overrides an earlier one for the same key, which is how environment variables configure a container without rebuilding.
+From lowest to highest priority:
+
+1. defaults,
+2. `application.properties` in the jar,
+3. profile-specific files in the jar,
+4. external config files,
+5. operating system environment variables,
+6. JVM system properties,
+7. command-line arguments.
+
+A later source overrides an earlier one for the same key. That is how environment variables configure a container without rebuilding it.
 
 ### [intermediate] How do you manage secrets in a Spring Boot application? {#secrets-q}
 
-Never commit them in property files. Supply them through environment variables or mounted files (Kubernetes secrets), or fetch from a secret manager (Vault, AWS Secrets Manager, Azure Key Vault) using Spring Cloud integrations or config-tree imports. Restrict the Actuator `env` endpoint and mask sensitive values.
+Never put them in property files that are committed.
+
+- Supply them through environment variables or mounted files, such as Kubernetes secrets.
+- Or fetch them from a secret manager, such as Vault, AWS Secrets Manager or Azure Key Vault, using Spring Cloud integrations or config-tree imports.
+- Restrict the Actuator `env` endpoint and mask sensitive values.
 
 ### [intermediate] How is a Spring Boot application packaged and run in a container? {#package-q}
 
-As an executable fat jar run with `java -jar`. For containers use a layered jar (so Docker caches dependency layers) or buildpacks (`spring-boot:build-image`), a slim JRE base image, container-aware memory settings, graceful shutdown (`server.shutdown=graceful`) and Actuator liveness and readiness probes. Native images are possible with GraalVM and Spring AOT.
+As an executable fat jar, run with `java -jar`. For a container:
+
+- Use a layered jar, so Docker caches the dependency layers, or build with buildpacks (`spring-boot:build-image`).
+- Use a slim JRE base image.
+- Use container-aware memory settings.
+- Turn on graceful shutdown (`server.shutdown=graceful`).
+- Expose Actuator liveness and readiness probes.
+
+Native images are also possible, with GraalVM and Spring AOT.
 
 ### [intermediate] How do you change the embedded server or port? {#server-q}
 
-Port with `server.port`. To switch from Tomcat to Jetty or Undertow exclude `spring-boot-starter-tomcat` from the web starter and add the other server's starter. Tune with `server.*` properties (threads, timeouts, compression, SSL).
+- **Port:** set `server.port`.
+- **Server:** to switch from Tomcat to Jetty or Undertow, exclude `spring-boot-starter-tomcat` from the web starter and add the other server's starter.
+- **Tuning:** use the `server.*` properties for threads, timeouts, compression and SSL.
 
 ### [deep] What happens during SpringApplication.run()? {#run-q}
 
-It determines the application type, loads initializers and listeners, prepares the environment (properties, profiles), creates the `ApplicationContext`, runs component scanning and auto-configuration (conditional bean registration), refreshes the context (creating singletons and starting the embedded server), runs `CommandLineRunner` and `ApplicationRunner` beans, and publishes `ApplicationReadyEvent`.
+In order, it:
+
+1. works out the application type (servlet, reactive or none),
+2. loads the initializers and listeners,
+3. prepares the environment: properties and profiles,
+4. creates the `ApplicationContext`,
+5. runs component scanning and auto-configuration, which register beans under conditions,
+6. refreshes the context: creates the singletons and starts the embedded server,
+7. runs the `CommandLineRunner` and `ApplicationRunner` beans,
+8. publishes `ApplicationReadyEvent`.
 
 ### [deep] How would you create a custom starter? {#own-starter-q}
 
-Make an autoconfigure module with an `@AutoConfiguration` class whose beans use `@ConditionalOnClass` and `@ConditionalOnMissingBean`, a `@ConfigurationProperties` class for settings, and register the class in `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`. A starter module depends on it and the needed libraries. Used to standardise logging, security or HTTP client defaults across services.
+Build two modules.
+
+- **An autoconfigure module.** It holds an `@AutoConfiguration` class whose beans use `@ConditionalOnClass` and `@ConditionalOnMissingBean`, plus a `@ConfigurationProperties` class for settings. Register the class in `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
+- **A starter module.** It depends on the autoconfigure module and on the libraries it needs.
+
+Teams use this to standardise logging, security or HTTP client defaults across services.
 
 ### [deep] Which Actuator endpoints are risky and how do you protect them? {#actuator-q}
 
-`env`, `configprops`, `beans`, `heapdump`, `threaddump`, `loggers` (changeable) and `shutdown` expose internals or allow changes. Expose only what is needed (`management.endpoints.web.exposure.include`), put them on a separate management port or behind authentication and network rules, and sanitise sensitive values.
+These endpoints show internals or allow changes:
+
+- `env`, `configprops` and `beans` show configuration,
+- `heapdump` and `threaddump` show memory and threads,
+- `loggers` lets callers change log levels,
+- `shutdown` stops the app.
+
+To protect them:
+
+1. Expose only what you need (`management.endpoints.web.exposure.include`).
+2. Put them on a separate management port, or behind authentication and network rules.
+3. Mask sensitive values.
 
 ### [coding] Bind and validate a group of properties. {#coding-props}
 
@@ -283,7 +421,12 @@ bank:
     max-retries: 3
 ```
 
-Explain that the record is bound by constructor, validated at startup (a bad value stops the application), that `5s` converts to a `Duration`, and that registering needs `@ConfigurationPropertiesScan` or `@EnableConfigurationProperties`.
+Explain four things:
+
+- The record is filled in through its constructor.
+- It is validated at startup, so a bad value stops the application.
+- `5s` is converted into a `Duration`.
+- To register it, you need `@ConfigurationPropertiesScan` or `@EnableConfigurationProperties`.
 
 ### [coding] Register a fake gateway in dev and the real one in prod. {#coding-profile}
 
@@ -301,7 +444,7 @@ class RealGateway implements PaymentGateway { ... }
 java -jar bank.jar --spring.profiles.active=prod
 ```
 
-Explain that exactly one bean is registered per environment, so injection stays unambiguous, and that the profile can also come from the `SPRING_PROFILES_ACTIVE` environment variable.
+Explain that exactly one bean is registered in each environment, so injection is never ambiguous. The profile can also come from the `SPRING_PROFILES_ACTIVE` environment variable.
 
 ### [coding] Write a conditional bean that backs off if the user defines one. {#coding-conditional}
 
@@ -320,4 +463,10 @@ public class AuditAutoConfiguration {
 }
 ```
 
-Explain that the class registers a default bean only if the library is present, the user has not defined their own and the property has not turned it off, and that it is listed in the `.imports` file.
+Explain that the class registers a default bean only when all three hold:
+
+- the library is on the classpath,
+- the user has not defined their own `AuditClient`,
+- the `audit.enabled` property has not turned it off.
+
+The class must also be listed in the `.imports` file.

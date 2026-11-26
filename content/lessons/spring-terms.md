@@ -6,149 +6,163 @@ summary: Short notes on every major Spring term (IoC, beans, AOP, MVC, WebFlux, 
 tags: [Spring, Overview, Glossary, Spring Boot, Spring Data, Spring MVC, JPA]
 order: 79
 topic: Spring / Fundamentals
-updated: 2026-11-14
+updated: 2026-11-26
 subnav: true
 ---
 
-"Spring" is not one library but a family of projects, and interviews mix the names freely: *what is the difference between Spring, Spring Boot and Spring MVC, where does JPA stop and Spring Data start, and what does Hibernate have to do with it?* This page gives a short note for each term: **what it is** and **what it contributes**. Each row links to the full lesson. Play the walk-through first: it follows one payment request through the layers, then shows the container and how the projects fit together.
+"Spring" is not one library. It is a family of projects, and interviewers mix the names freely. Typical questions are:
+
+- What is the difference between Spring, Spring Boot and Spring MVC?
+- Where does JPA stop and Spring Data start?
+- What does Hibernate have to do with it?
+
+This page gives a short note for each term. Each note says **what the term is** and **what it adds**. Each section links to the full lesson.
+
+Play the walk-through first. It follows one payment request through the layers. Then it shows the container and how the projects fit together.
 
 ```demo
 name: spring-map-walk
 ```
 
-> **One sentence to remember:** *Spring Framework is the core (a container that creates and wires your objects, plus AOP, transactions and the web layer); Spring Boot configures it for you; Spring Data, Security, Batch, Cloud and the rest are optional projects built on that core.*
+> **One sentence to remember:** *Spring Framework is the core, Spring Boot sets it up for you, and the other Spring projects are optional add-ons.*
 
 ## The core container {#core}
 
-| Term | What it means in Spring | What it contributes |
+The **container** is the part of Spring that creates your objects and connects them to each other.
+
+| Term | What it means in Spring | What it adds |
 | --- | --- | --- |
-| **Spring Framework** | the base project: container, AOP, transactions, MVC/WebFlux, JDBC, testing | the foundation every other Spring project builds on |
-| **IoC** (inversion of control) | the framework, not your code, creates objects and decides when | loose coupling: classes declare what they need, not how to get it |
-| **Dependency injection (DI)** | the way IoC is applied: collaborators are passed in, preferably by constructor | testable classes, swappable implementations |
-| **Bean** | an object created and managed by the container | the unit Spring wires, proxies and manages |
-| **ApplicationContext** | the container: reads bean definitions, creates beans, publishes events | the running "Spring" inside your application |
-| **`@Component` / `@Service` / `@Repository` / `@Controller`** | stereotype annotations that mark a class as a bean found by scanning | auto-detection; `@Repository` also translates persistence exceptions |
-| **`@Configuration` and `@Bean`** | Java configuration: methods that build beans explicitly | wiring for third-party classes and custom setup |
-| **Scope** | the life of a bean: singleton (default), prototype, request, session | control over sharing and state |
-| **Profile** | a named set of beans and properties (`dev`, `prod`) | environment-specific behaviour from one codebase |
-| **`Environment` and `@Value`** | the access point for properties and profiles | externalised configuration |
-| **SpEL** | Spring Expression Language, `#{...}` expressions | dynamic values in annotations, security rules and cache keys |
-| **Application event** | a publish/subscribe mechanism inside one application | decoupled reactions to things that happened |
+| **Spring Framework** | The base project. It holds the container, AOP, transactions, the web layer (MVC and WebFlux), JDBC support and testing support. | Every other Spring project is built on it. |
+| **IoC** (inversion of control) | The framework creates your objects and decides when, instead of your code calling `new`. | Classes say what they need, not how to get it. This keeps them loosely coupled. |
+| **Dependency injection (DI)** | The way IoC is done. The objects a class needs are passed in, best through the constructor. | Classes are easy to test, and one implementation can be swapped for another. |
+| **Bean** | An object that the container creates and manages. | It is the unit that Spring connects, wraps in proxies and manages. |
+| **ApplicationContext** | The container itself. It reads the bean definitions, creates the beans and publishes events. | It is the running "Spring" inside your application. |
+| **`@Component` / `@Service` / `@Repository` / `@Controller`** | Stereotype annotations. They mark a class as a bean, and Spring finds it by scanning packages. | Beans are found automatically. `@Repository` also converts database errors into Spring's own exceptions. |
+| **`@Configuration` and `@Bean`** | Java configuration. A `@Bean` method builds one bean by hand. | You can create beans from third-party classes and do custom setup. |
+| **Scope** | How long a bean lives. The default is singleton (one shared object). Others are prototype, request and session. | You control whether a bean is shared and whether it can hold state. |
+| **Profile** | A named group of beans and properties, such as `dev` or `prod`. | One codebase behaves differently in each environment. |
+| **`Environment` and `@Value`** | The way to read properties and active profiles. | Configuration lives outside the code. |
+| **SpEL** | Spring Expression Language: small expressions written as `#{...}`. | Annotations, security rules and cache keys can use computed values. |
+| **Application event** | Publish and subscribe inside one application. | One part of the app can react to something without the other part calling it directly. |
 
 Details: [Spring Core](lesson:spring-core).
 
 ## Cross-cutting concerns {#cross-cutting}
 
-| Term | What it means in Spring | What it contributes |
+A **cross-cutting concern** is a job needed in many places, such as transactions, logging or security checks. Spring adds these around your methods so you do not repeat them.
+
+| Term | What it means in Spring | What it adds |
 | --- | --- | --- |
-| **AOP** (aspect-oriented programming) | adding behaviour around method calls without editing them | one place for transactions, security checks, logging, caching |
-| **Proxy** | a generated wrapper object around a bean | the mechanism behind `@Transactional`, `@Cacheable`, `@Async`; explains the self-invocation trap |
-| **Aspect, advice, pointcut** | the module, the code to run, and the rule for where it runs | how custom cross-cutting logic is written |
-| **`@Transactional`** | declarative transaction boundary on a method | commit and rollback without boilerplate |
-| **Transaction manager** | the component that begins, commits and rolls back a transaction for a resource (JDBC, JPA, JMS) | one programming model over many technologies |
-| **`@Cacheable`, `@CacheEvict`** | cache abstraction annotations | caching with Caffeine or Redis without changing the method |
-| **`@Async`, `@Scheduled`** | run a method on another thread, or on a timer | background work |
-| **Bean Validation (`@Valid`)** | declarative constraints such as `@NotNull`, `@Size` | input checked before your code runs |
+| **AOP** (aspect-oriented programming) | Adding behaviour around method calls without editing those methods. | Transactions, security checks, logging and caching each live in one place. |
+| **Proxy** | A wrapper object that Spring generates around a bean. Callers talk to the wrapper, and it calls the real bean. | It is how `@Transactional`, `@Cacheable` and `@Async` work. It also explains the self-invocation trap: a call inside the same class skips the proxy. |
+| **Aspect, advice, pointcut** | The aspect is the module. The advice is the code to run. The pointcut is the rule that says where it runs. | This is how you write your own cross-cutting logic. |
+| **`@Transactional`** | Marks a method as one transaction. | Commit and rollback happen without boilerplate code. |
+| **Transaction manager** | The component that begins, commits and rolls back a transaction for one resource, such as JDBC, JPA or JMS. | The same programming model works over many technologies. |
+| **`@Cacheable`, `@CacheEvict`** | Annotations of the cache abstraction. | You add caching with Caffeine or Redis without changing the method body. |
+| **`@Async`, `@Scheduled`** | `@Async` runs a method on another thread. `@Scheduled` runs it on a timer. | Background work. |
+| **Bean Validation (`@Valid`)** | Rules on fields, such as `@NotNull` or `@Size`. | Input is checked before your code runs. |
 
 Details: [AOP](lesson:spring-aop), [transactions](lesson:spring-transactions), [caching and async](lesson:spring-caching-async).
 
 ## Web layer {#web}
 
-| Term | What it means in Spring | What it contributes |
+| Term | What it means in Spring | What it adds |
 | --- | --- | --- |
-| **Spring MVC** | the servlet-based web framework (one thread per request) | controllers, URL mapping, JSON binding, validation, error handling |
-| **DispatcherServlet** | the front controller that receives every request and routes it | the single entry point of MVC |
-| **`@RestController`** | a controller whose return values are written as the response body | the usual way to build a JSON API |
-| **`@RequestMapping` and friends** | map URL and method to a handler | routing |
-| **HttpMessageConverter** | converts between Java objects and JSON/XML | automatic request and response bodies (Jackson) |
-| **`@ControllerAdvice`** | global exception handling and model advice | consistent error responses (`ProblemDetail`) |
-| **Filter and interceptor** | code that runs around a request (servlet filter, MVC interceptor) | security, logging, correlation ids |
-| **Spring WebFlux** | the non-blocking, reactive web stack on Reactor | high concurrency with few threads, streaming |
-| **`WebClient` / `RestClient`** | HTTP clients (reactive, and a fluent blocking one) | calling other services |
-| **Spring HATEOAS, Spring REST Docs, springdoc** | hypermedia links, test-driven docs, OpenAPI | API documentation and discoverability |
-| **WebSocket and STOMP** | two-way connections and a messaging protocol on top | live updates, notifications |
+| **Spring MVC** | The web framework built on servlets. Each request gets its own thread. | Controllers, URL mapping, JSON binding, validation and error handling. |
+| **DispatcherServlet** | The front controller. It receives every request and sends it to the right controller method. | It is the single entry point of MVC. |
+| **`@RestController`** | A controller whose return value is written straight into the response body. | It is the usual way to build a JSON API. |
+| **`@RequestMapping` and friends** | Map a URL and an HTTP method to a handler method. | Routing. |
+| **HttpMessageConverter** | Converts between Java objects and JSON or XML. Jackson does the JSON part. | Request and response bodies are converted automatically. |
+| **`@ControllerAdvice`** | A class that handles exceptions for all controllers. | Every error response has the same shape (`ProblemDetail`). |
+| **Filter and interceptor** | Code that runs before and after a request. A filter belongs to the servlet layer. An interceptor belongs to MVC. | Security, logging and correlation IDs. |
+| **Spring WebFlux** | The non-blocking (reactive) web stack, built on Reactor. | It handles very many connections with few threads, and it supports streaming. |
+| **`WebClient` / `RestClient`** | HTTP clients. `WebClient` is reactive. `RestClient` is a fluent blocking client. | Calling other services. |
+| **Spring HATEOAS, Spring REST Docs, springdoc** | HATEOAS adds links to responses. REST Docs builds documentation from tests. springdoc generates OpenAPI documentation. | APIs are documented and easier to explore. |
+| **WebSocket and STOMP** | WebSocket keeps a two-way connection open. STOMP is a messaging protocol on top of it. | Live updates and notifications. |
 
 Details: [Spring MVC](lesson:spring-mvc), [REST API design](lesson:rest-api-design), [reactive](lesson:spring-reactive).
 
 ## Data access {#data}
 
-| Term | What it means in Spring | What it contributes |
-| --- | --- | --- |
-| **JDBC** | the Java API for SQL databases | the lowest layer everything else uses |
-| **`JdbcTemplate`** | Spring's helper over JDBC | no connection and exception boilerplate; you keep writing SQL |
-| **DataSource and connection pool (HikariCP)** | the source of reusable database connections | performance and limits on database load |
-| **JPA** (Jakarta Persistence) | the standard API for mapping objects to tables (`@Entity`, `EntityManager`, JPQL) | an ORM specification, not an implementation |
-| **Hibernate** | the most used JPA implementation (the provider) | the engine that generates SQL, tracks changes and caches |
-| **Entity and persistence context** | a mapped class, and the set of entities a session is tracking | dirty checking: changes are saved at flush without calling `save` |
-| **Spring Data** | the umbrella project for repository-style data access (JPA, JDBC, MongoDB, Redis, Cassandra, Elasticsearch, R2DBC) | one repository programming model across stores |
-| **Spring Data JPA** | Spring Data on top of JPA/Hibernate | repository interfaces with generated implementations |
-| **Repository interface** | `JpaRepository<Entity, Id>` | CRUD, paging and derived queries (`findByStatusOrderByCreatedAt`) with no code |
-| **`@Query`, Specification, projection** | custom queries, dynamic filters, partial results | flexibility where derived queries stop |
-| **Auditing** | `@CreatedDate`, `@LastModifiedBy` | automatic created/updated metadata |
-| **Spring Data REST** | exposes repositories as REST endpoints | quick CRUD APIs (rarely used for banking services) |
-| **R2DBC** | reactive database access | non-blocking SQL, used with WebFlux |
-| **Flyway / Liquibase** | versioned database migrations | repeatable schema changes |
+An **ORM** (object-relational mapper) maps Java objects to database tables, so you work with objects instead of writing every SQL statement.
 
-Relationship worth remembering: **Spring Data JPA → JPA (API) → Hibernate (implementation) → JDBC → database.** Details: [Spring Data JPA](lesson:spring-data-jpa), [normalisation](lesson:normalization), [SQL vs NoSQL](lesson:sql-vs-nosql).
+| Term | What it means in Spring | What it adds |
+| --- | --- | --- |
+| **JDBC** | The standard Java API for SQL databases. | It is the lowest layer. Everything else uses it. |
+| **`JdbcTemplate`** | Spring's helper on top of JDBC. | You still write SQL, but you skip the code for connections and error handling. |
+| **DataSource and connection pool (HikariCP)** | A DataSource hands out database connections. A pool keeps connections open and reuses them. | Faster queries, and a limit on how much load the database gets. |
+| **JPA** (Jakarta Persistence) | The standard API for mapping objects to tables (`@Entity`, `EntityManager`, JPQL). | It is a specification for an ORM, not an implementation. |
+| **Hibernate** | The most used JPA implementation (the "provider"). | It is the engine that writes the SQL, tracks changes and caches. |
+| **Entity and persistence context** | An entity is a mapped class. The persistence context is the set of entities that one session is tracking. | Dirty checking: when the session flushes, changed entities are saved without a `save` call. |
+| **Spring Data** | The umbrella project for repository-style data access. It has modules for JPA, JDBC, MongoDB, Redis, Cassandra, Elasticsearch and R2DBC. | One repository programming model across many stores. |
+| **Spring Data JPA** | Spring Data on top of JPA and Hibernate. | You write repository interfaces, and Spring generates the implementation. |
+| **Repository interface** | An interface such as `JpaRepository<Entity, Id>`. | Create, read, update, delete, paging and derived queries (such as `findByStatusOrderByCreatedAt`) with no code. |
+| **`@Query`, Specification, projection** | `@Query` is a custom query. A Specification builds a filter at run time. A projection returns only some fields. | Flexibility where derived queries are not enough. |
+| **Auditing** | Annotations such as `@CreatedDate` and `@LastModifiedBy`. | "Created" and "updated" fields are filled in automatically. |
+| **Spring Data REST** | Exposes repositories directly as REST endpoints. | Quick CRUD APIs. Banking services rarely use it. |
+| **R2DBC** | Reactive (non-blocking) database access. | Non-blocking SQL, used with WebFlux. |
+| **Flyway / Liquibase** | Versioned database migrations. | Schema changes run the same way in every environment. |
+
+The chain worth remembering is: **Spring Data JPA → JPA (the API) → Hibernate (the implementation) → JDBC → database.** Details: [Spring Data JPA](lesson:spring-data-jpa), [normalisation](lesson:normalization), [SQL vs NoSQL](lesson:sql-vs-nosql).
 
 ## Spring Boot and operations {#boot}
 
-| Term | What it means in Spring | What it contributes |
+| Term | What it means in Spring | What it adds |
 | --- | --- | --- |
-| **Spring Boot** | an opinionated layer over the Framework | production-ready apps with minimal setup |
-| **Starter** | a dependency (`spring-boot-starter-web`) that pulls a consistent set of libraries | no hunting for compatible versions |
-| **Auto-configuration** | beans created automatically from the classpath and properties, backing off when you define your own | the "it just works" behaviour |
-| **`@SpringBootApplication`** | combines `@Configuration`, `@EnableAutoConfiguration`, `@ComponentScan` | the single entry point annotation |
-| **Embedded server** | Tomcat, Jetty or Undertow inside the jar | run with `java -jar`, no server install |
-| **`application.yml` and `@ConfigurationProperties`** | externalised, typed configuration | the same build runs in every environment |
-| **Actuator** | production endpoints: health, metrics, info | health probes and monitoring |
-| **Micrometer** | a metrics facade (Prometheus, Datadog) and tracing bridge | vendor-neutral metrics and traces |
-| **DevTools** | automatic restart and live reload | faster development loop |
-| **Spring Initializr** | the project generator (start.spring.io) | a correct starting project |
-| **Native image (GraalVM)** | ahead-of-time compiled executable | fast start-up and low memory |
+| **Spring Boot** | A layer on top of the Framework with sensible defaults already chosen. | Production-ready apps with very little setup. |
+| **Starter** | One dependency, such as `spring-boot-starter-web`, that pulls in a matching set of libraries. | You do not have to find compatible versions yourself. |
+| **Auto-configuration** | Boot creates beans automatically based on the classpath and properties. It steps back when you define your own bean. | The "it just works" behaviour. |
+| **`@SpringBootApplication`** | One annotation that combines `@Configuration`, `@EnableAutoConfiguration` and `@ComponentScan`. | A single entry point annotation. |
+| **Embedded server** | Tomcat, Jetty or Undertow packed inside the jar. | You run the app with `java -jar` and install no server. |
+| **`application.yml` and `@ConfigurationProperties`** | Configuration kept outside the code and bound to typed Java classes. | The same build runs in every environment. |
+| **Actuator** | Built-in endpoints for production: health, metrics and info. | Health probes and monitoring. |
+| **Micrometer** | A metrics facade that sends data to Prometheus, Datadog and others, and also bridges tracing. | Metrics and traces that are not tied to one vendor. |
+| **DevTools** | Restarts the app and reloads the browser when code changes. | A faster development loop. |
+| **Spring Initializr** | The project generator at start.spring.io. | A correct starting project. |
+| **Native image (GraalVM)** | The app compiled ahead of time into a native executable. | Fast start-up and low memory use. |
 
 Details: [Spring Boot](lesson:spring-boot), [Boot 3](lesson:spring-boot-3), [observability](lesson:spring-observability).
 
 ## Security {#security}
 
-| Term | What it means in Spring | What it contributes |
+| Term | What it means in Spring | What it adds |
 | --- | --- | --- |
-| **Spring Security** | the security framework: a chain of servlet filters | authentication, authorisation, CSRF, headers |
-| **Authentication and authorisation** | who you are, and what you may do | access control on URLs and methods |
-| **`SecurityFilterChain`** | the configuration bean that defines the rules | declarative security setup |
-| **`@PreAuthorize`** | method-level rule using SpEL | fine-grained checks close to the business logic |
-| **OAuth2 resource server / client** | validates bearer tokens (JWT), or obtains tokens | integration with an identity provider ([OAuth2](lesson:oauth2), [OIDC](lesson:oidc), [JWT](lesson:jwt)) |
-| **Spring Authorization Server** | issues tokens | build your own identity provider |
+| **Spring Security** | The security framework. It works as a chain of servlet filters in front of your controllers. | Authentication, authorisation, CSRF protection and security headers. |
+| **Authentication and authorisation** | Authentication checks who you are. Authorisation decides what you may do. | Access control on URLs and on methods. |
+| **`SecurityFilterChain`** | The configuration bean that defines the security rules. | Security is set up in one declared place. |
+| **`@PreAuthorize`** | A rule on a method, written in SpEL. | Fine-grained checks close to the business logic. |
+| **OAuth2 resource server / client** | A resource server checks incoming bearer tokens (JWT). A client gets tokens from an identity provider. | Integration with an identity provider ([OAuth2](lesson:oauth2), [OIDC](lesson:oidc), [JWT](lesson:jwt)). |
+| **Spring Authorization Server** | A project that issues tokens. | You can build your own identity provider. |
 
 Details: [Spring Security](lesson:spring-security), [authentication vs authorisation](lesson:authn-authz).
 
 ## Distributed systems and integration {#distributed}
 
-| Term | What it means in Spring | What it contributes |
+| Term | What it means in Spring | What it adds |
 | --- | --- | --- |
-| **Spring Cloud** | a set of projects for microservice problems | gateway, configuration, resilience, discovery |
-| **Spring Cloud Gateway** | a reactive API gateway | routing, rate limiting, token relay at the edge |
-| **Config Server** | central, versioned configuration | change configuration without redeploying |
-| **Service discovery (Eureka, Consul)** | a registry of service instances | find services by name; often replaced by Kubernetes DNS |
-| **Resilience4j** | circuit breaker, retry, bulkhead, rate limiter | stop failures spreading between services |
-| **Spring Kafka / Spring AMQP** | templates and listeners for Kafka and RabbitMQ | messaging with error handling and retries |
-| **Spring Cloud Stream** | binder abstraction over messaging systems | write consumers and producers as functions |
-| **Spring Integration** | enterprise integration patterns (channels, routers, transformers) | message-driven integration of systems |
-| **Spring Batch** | chunk-oriented jobs with restart and skip | reliable bulk processing (statements, reconciliation) |
-| **Spring Session** | externalises HTTP sessions (Redis, JDBC) | sessions that survive instance changes |
-| **Spring Modulith** | module boundaries inside a monolith | structured monolith, an easier path to services |
+| **Spring Cloud** | A set of projects for problems that appear with microservices. | Gateway, central configuration, resilience and service discovery. |
+| **Spring Cloud Gateway** | A reactive API gateway that sits in front of your services. | Routing, rate limiting and token relay at the edge. |
+| **Config Server** | One central, versioned store for configuration. | You change configuration without redeploying. |
+| **Service discovery (Eureka, Consul)** | A registry of running service instances. | Services find each other by name. Kubernetes DNS often replaces it. |
+| **Resilience4j** | A library for circuit breaker, retry, bulkhead and rate limiter. | One failing service does not bring down the others. |
+| **Spring Kafka / Spring AMQP** | Templates and listeners for Kafka and RabbitMQ. | Messaging with error handling and retries. |
+| **Spring Cloud Stream** | A layer over messaging systems, where each system plugs in as a "binder". | You write producers and consumers as plain functions. |
+| **Spring Integration** | Enterprise integration patterns: channels, routers and transformers. | Systems are connected through messages. |
+| **Spring Batch** | Jobs that process data in chunks, with restart and skip. | Reliable bulk processing, such as statements and reconciliation. |
+| **Spring Session** | Stores HTTP sessions outside the app, in Redis or a database. | A session survives when an instance stops or changes. |
+| **Spring Modulith** | Module boundaries inside one application (a monolith). | A well-structured monolith that is easier to split into services later. |
 
 Details: [Spring Cloud](lesson:spring-cloud), [Spring messaging](lesson:spring-messaging), [microservice patterns](lesson:microservice-patterns), [distributed scheduler](lesson:distributed-scheduler), [Redis caching](lesson:redis-caching).
 
 ## Testing {#testing}
 
-| Term | What it means in Spring | What it contributes |
+| Term | What it means in Spring | What it adds |
 | --- | --- | --- |
-| **Spring TestContext** | loads and caches an ApplicationContext for tests | integration tests with real wiring |
-| **`@SpringBootTest`** | starts the full application context | end-to-end style tests |
-| **Slice tests (`@WebMvcTest`, `@DataJpaTest`)** | load only one layer | fast, focused tests |
-| **`@MockBean` / `@MockitoBean`** | replace a bean with a mock | isolate the unit under test |
-| **MockMvc, Testcontainers** | HTTP-level tests without a server, real databases in containers | realistic tests |
+| **Spring TestContext** | Loads an ApplicationContext for tests and caches it between tests. | Integration tests with real wiring. |
+| **`@SpringBootTest`** | Starts the full application context. | End-to-end style tests. |
+| **Slice tests (`@WebMvcTest`, `@DataJpaTest`)** | Load only one layer of the app. | Fast, focused tests. |
+| **`@MockBean` / `@MockitoBean`** | Replace one bean with a mock. | The code under test is isolated from its neighbours. |
+| **MockMvc, Testcontainers** | MockMvc sends HTTP requests without starting a server. Testcontainers runs a real database in a container. | Realistic tests. |
 
 Details: [Spring testing](lesson:spring-testing).
 
@@ -156,16 +170,16 @@ Details: [Spring testing](lesson:spring-testing).
 
 | I need to... | Use |
 | --- | --- |
-| create and wire objects, add transactions and caching | Spring Framework (Core, AOP) |
+| create and connect objects, and add transactions and caching | Spring Framework (Core, AOP) |
 | start an app quickly with sensible defaults | Spring Boot |
 | build a blocking JSON API | Spring MVC |
-| handle very many concurrent, I/O-heavy connections | WebFlux (or virtual threads with MVC) |
+| handle very many concurrent connections that mostly wait on I/O | WebFlux, or virtual threads with MVC |
 | read and write a relational database through entities | Spring Data JPA (Hibernate) |
 | write SQL by hand with less boilerplate | `JdbcTemplate` or Spring Data JDBC |
 | use MongoDB or Redis | Spring Data MongoDB or Spring Data Redis |
 | protect endpoints and methods | Spring Security |
 | process millions of records in a scheduled job | Spring Batch |
-| route, secure and limit calls across services | Spring Cloud Gateway, Resilience4j |
+| route, secure and limit calls between services | Spring Cloud Gateway, Resilience4j |
 | watch health and metrics | Actuator and Micrometer |
 
 Try it in the lab: [Where a Spring property value comes from](lab:spring-profiles-config).
@@ -174,60 +188,153 @@ Try it in the lab: [Where a Spring property value comes from](lab:spring-profile
 
 ### [basic] What is the difference between Spring, Spring Boot and Spring MVC? {#spring-boot-mvc-q}
 
-Spring (the Framework) is the core: the container, dependency injection, AOP, transactions and support for many technologies. Spring MVC is one module inside it, the servlet-based web framework. Spring Boot is a layer on top that configures all of this automatically (starters, auto-configuration, an embedded server, Actuator). Boot adds convenience, not new capabilities, and you can still use the Framework without it.
+They are three layers of the same stack.
+
+- **Spring (the Framework)** is the core: the container, dependency injection, AOP, transactions and support for many technologies.
+- **Spring MVC** is one module inside the Framework. It is the web framework built on servlets.
+- **Spring Boot** sits on top and sets all of this up for you: starters, auto-configuration, an embedded server and Actuator.
+
+Boot adds convenience, not new abilities. You can still use the Framework without Boot.
 
 ### [basic] What are inversion of control and dependency injection? {#ioc-di-q}
 
-IoC means the framework controls object creation and wiring instead of your code calling `new`. Dependency injection is the technique: a class declares its dependencies (preferably as constructor parameters) and the container supplies them. The benefits are loose coupling and easy testing, because a test can pass a fake in.
+**IoC** means the framework creates and connects your objects, instead of your code calling `new`. **Dependency injection** is how this is done: a class lists what it needs, best as constructor parameters, and the container passes those objects in.
+
+The benefits:
+
+1. Classes are loosely coupled, because they do not build their own collaborators.
+2. Classes are easy to test, because a test can pass in a fake.
 
 ### [basic] What is a Spring bean and what is the ApplicationContext? {#bean-context-q}
 
-A bean is an object instantiated, assembled and managed by the Spring container. The `ApplicationContext` is that container: it reads bean definitions (annotations and `@Bean` methods), creates the beans, injects dependencies, applies proxies, publishes events and resolves properties.
+A **bean** is an object that the Spring container creates, connects and manages.
+
+The **`ApplicationContext`** is that container. It:
+
+- reads the bean definitions (annotations and `@Bean` methods),
+- creates the beans and injects their dependencies,
+- wraps beans in proxies where needed,
+- publishes events and resolves properties.
 
 ### [basic] What does Spring Boot's auto-configuration do? {#autoconfig-q}
 
-On start-up Boot inspects the classpath, properties and existing beans and registers sensible default beans: a `DataSource` if a database driver and URL are present, Jackson, an embedded Tomcat when the web starter is there. Each configuration is conditional (`@ConditionalOnClass`, `@ConditionalOnMissingBean`) and backs off when you define your own bean.
+It creates sensible default beans for you when the app starts.
+
+Boot looks at the classpath, the properties and the beans you already have. For example:
+
+- If a database driver and a URL are present, it creates a `DataSource`.
+- If Jackson is present, it configures JSON conversion.
+- If the web starter is present, it starts an embedded Tomcat.
+
+Each piece of configuration has a condition, such as `@ConditionalOnClass` or `@ConditionalOnMissingBean`. So when you define your own bean, Boot steps back and uses yours.
 
 ### [basic] What is a starter? {#starter-q}
 
-A starter is a dependency descriptor that pulls in a curated, version-compatible set of libraries for one purpose, such as `spring-boot-starter-web` (MVC, Jackson, Tomcat) or `spring-boot-starter-data-jpa` (Spring Data JPA, Hibernate, a connection pool). It removes dependency hunting and version conflicts.
+A starter is one dependency that pulls in a tested, version-compatible set of libraries for one purpose.
+
+- `spring-boot-starter-web` brings MVC, Jackson and Tomcat.
+- `spring-boot-starter-data-jpa` brings Spring Data JPA, Hibernate and a connection pool.
+
+You no longer hunt for libraries or fight version conflicts.
 
 ### [basic] What is the difference between JPA, Hibernate and Spring Data JPA? {#jpa-hibernate-data-q}
 
-JPA is a specification (an API: `@Entity`, `EntityManager`, JPQL). Hibernate is the most common implementation of that specification and does the actual SQL generation and change tracking. Spring Data JPA is a Spring layer on top that generates repository implementations from interfaces, so you rarely use the `EntityManager` directly. The chain is Spring Data JPA, then JPA, then Hibernate, then JDBC.
+They are three layers, each on top of the next.
+
+- **JPA** is a specification: an API with `@Entity`, `EntityManager` and JPQL. It has no code that runs by itself.
+- **Hibernate** is the most common implementation of JPA. It writes the SQL and tracks changes.
+- **Spring Data JPA** is a Spring layer on top. It generates repository implementations from your interfaces, so you rarely use the `EntityManager` directly.
+
+The chain is Spring Data JPA → JPA → Hibernate → JDBC.
 
 ### [basic] What is the difference between Spring Data and Spring Data JPA? {#data-vs-jpa-q}
 
-Spring Data is the umbrella project that defines a common repository model and has modules per store (JPA, JDBC, MongoDB, Redis, Cassandra, Elasticsearch, R2DBC). Spring Data JPA is the module for relational databases through JPA. The repository interfaces look alike across modules, but the features (such as JPQL or derived query support) depend on the store.
+**Spring Data** is the umbrella project. **Spring Data JPA** is one module inside it.
+
+- Spring Data defines a common repository model and has one module per store: JPA, JDBC, MongoDB, Redis, Cassandra, Elasticsearch and R2DBC.
+- Spring Data JPA is the module for relational databases through JPA.
+
+The repository interfaces look alike in every module. The features, such as JPQL or derived queries, depend on the store.
 
 ### [basic] What is Spring MVC and what does the DispatcherServlet do? {#mvc-q}
 
-Spring MVC is the servlet-based web framework in the Spring Framework. The `DispatcherServlet` is the front controller: it receives each request, uses handler mapping to find the controller method, invokes it (binding path variables, query parameters and the JSON body), and renders the result through message converters, or sends exceptions to exception handlers. See [Spring MVC](lesson:spring-mvc).
+**Spring MVC** is the web framework in the Spring Framework, built on servlets. The **`DispatcherServlet`** is its front controller: every request goes through it.
+
+For each request it:
+
+1. finds the controller method that matches the URL (handler mapping),
+2. calls that method, filling in path variables, query parameters and the JSON body,
+3. turns the return value into the response through message converters,
+4. or, if an exception is thrown, passes it to the exception handlers.
+
+See [Spring MVC](lesson:spring-mvc).
 
 ### [intermediate] What is the difference between Spring MVC and WebFlux? {#mvc-vs-webflux-q}
 
-MVC is blocking, thread-per-request on the servlet API: simple, and ideal with blocking libraries such as JDBC and JPA. WebFlux is non-blocking on Reactor and Netty, handling many concurrent connections with few threads, but requires the whole call chain to be reactive and is harder to debug. With virtual threads (Java 21) MVC scales much further, which removes the main reason to choose WebFlux for ordinary services. See [reactive Spring](lesson:spring-reactive).
+MVC is blocking, and WebFlux is non-blocking.
+
+- **MVC** gives each request its own thread, on the servlet API. It is simple, and it fits blocking libraries such as JDBC and JPA.
+- **WebFlux** runs on Reactor and Netty. It handles many connections with few threads. But the whole call chain must be reactive, and it is harder to debug.
+
+With virtual threads (Java 21), MVC scales much further. That removes the main reason to choose WebFlux for an ordinary service. See [reactive Spring](lesson:spring-reactive).
 
 ### [intermediate] How does Spring AOP contribute to the framework? {#aop-contribution-q}
 
-It is the mechanism that lets Spring add behaviour around beans without changing them. Transactions, caching, security annotations, `@Async` and metrics are all implemented as advice applied through proxies. The consequence is that these annotations only work on calls that go through the proxy, so a call from one method to another in the same class bypasses them. See [AOP](lesson:spring-aop).
+AOP is how Spring adds behaviour around beans without changing their code.
+
+Transactions, caching, security annotations, `@Async` and metrics are all advice, applied through proxies.
+
+The catch: these annotations only work when the call goes through the proxy. If one method calls another method in the same class, the call skips the proxy and the annotation does nothing. See [AOP](lesson:spring-aop).
 
 ### [intermediate] What happens from the moment an HTTP request arrives until the database is queried? {#request-flow-q}
 
-The embedded server hands the request to the security filter chain, which authenticates and authorises. The `DispatcherServlet` maps it to a controller, converts the JSON body and validates it. The controller calls a service bean through a proxy that starts a transaction. The service calls a Spring Data repository, whose generated implementation uses JPA and Hibernate to create SQL, sent over a pooled JDBC connection. The response travels back, converted to JSON, with errors handled by `@ControllerAdvice`. The walk-through above shows this.
+The request passes through these steps in order:
+
+1. The embedded server receives the request.
+2. The security filter chain checks who the caller is and whether they are allowed.
+3. The `DispatcherServlet` picks the controller method, converts the JSON body and validates it.
+4. The controller calls a service bean through a proxy. The proxy starts a transaction.
+5. The service calls a Spring Data repository. Its generated implementation uses JPA and Hibernate to build the SQL.
+6. The SQL goes to the database over a JDBC connection taken from the pool.
+
+The response travels back the same way and is converted to JSON. If anything fails, `@ControllerAdvice` turns the error into a response. The walk-through above shows these steps.
 
 ### [intermediate] What is Spring Cloud and do you always need it? {#spring-cloud-q}
 
-A collection of projects solving distributed-system problems: gateway, central configuration, discovery, client-side load balancing and resilience patterns. You only need it with several services, and on Kubernetes many parts (discovery, configuration, load balancing) are provided by the platform, so teams often keep just the gateway and Resilience4j. See [Spring Cloud](lesson:spring-cloud).
+No, you need it only when you run several services.
+
+Spring Cloud is a set of projects for distributed-system problems: a gateway, central configuration, service discovery, client-side load balancing and resilience patterns.
+
+On Kubernetes, the platform already provides discovery, configuration and load balancing. So teams often keep only the gateway and Resilience4j. See [Spring Cloud](lesson:spring-cloud).
 
 ### [intermediate] When would you use Spring Batch instead of a @Scheduled method? {#batch-q}
 
-`@Scheduled` only triggers code. Spring Batch provides what a large job needs: chunked reading, processing and writing with a transaction per chunk, restart from the failure point, skip and retry rules, job history and parallel partitions. Use it for statement runs or reconciliation over millions of rows; use `@Scheduled` (with a lock in a cluster) for small periodic tasks.
+Use Spring Batch for large jobs, and `@Scheduled` for small periodic tasks.
+
+`@Scheduled` only starts your code on a timer. Spring Batch gives a large job what it needs:
+
+- it reads, processes and writes in chunks, with one transaction per chunk,
+- it restarts from the point where it failed,
+- it has skip and retry rules,
+- it keeps a history of every job run,
+- it can split the work into parallel partitions.
+
+So use Spring Batch for statement runs or reconciliation over millions of rows. Use `@Scheduled`, with a lock when several instances run, for small tasks.
 
 ### [intermediate] What is the difference between @Component, @Service, @Repository and @Controller? {#stereotypes-q}
 
-All four make a class a Spring bean found by component scanning. The difference is meaning: `@Service` marks business logic, `@Controller` and `@RestController` mark web handlers, and `@Repository` marks data access and additionally translates persistence exceptions into Spring's `DataAccessException` hierarchy. Using the right one documents intent and lets tooling and aspects target layers.
+All four make a class a Spring bean that component scanning finds. The difference is meaning.
+
+- `@Service` marks business logic.
+- `@Controller` and `@RestController` mark web handlers.
+- `@Repository` marks data access. It also converts database errors into Spring's `DataAccessException` hierarchy.
+
+Using the right one documents intent. It also lets tools and aspects target a whole layer.
 
 ### [intermediate] What is the difference between Spring Security authentication and authorisation, and where do they run? {#security-q}
 
-Authentication establishes who the caller is (a password, a JWT) and authorisation decides what they may do (roles, permissions). Both run in the `SecurityFilterChain`, a chain of servlet filters in front of the `DispatcherServlet`, so unauthenticated requests never reach a controller. Method security (`@PreAuthorize`) adds rules at the service layer using the same security context. See [Spring Security](lesson:spring-security).
+**Authentication** finds out who the caller is, for example from a password or a JWT. **Authorisation** decides what that caller may do, for example from roles or permissions.
+
+Both run in the `SecurityFilterChain`. This is a chain of servlet filters in front of the `DispatcherServlet`, so a request without valid credentials never reaches a controller.
+
+Method security (`@PreAuthorize`) adds more rules at the service layer, using the same security context. See [Spring Security](lesson:spring-security).

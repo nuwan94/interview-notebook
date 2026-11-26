@@ -1,94 +1,154 @@
-// Frame data for the Spring transactions walk-through (box-and-arrow player with icons).
-// box.tone: ok | bad | warn | new | none.
+// Frame data for the Spring transactions walk-through, drawn by BoardStage.
+// Transactions are drawn as regions; the methods that run inside a transaction sit inside its region.
 
-const b = (id, title, lines = [], tone, badge) => ({ id, title, lines, tone, badge });
-const d = (from, to, label, tone) => ({ from, to, label, tone });
+import { BoardStage } from './BoardStage.jsx';
+
+/* ---------- REQUIRED vs REQUIRES_NEW ---------- */
+const txA = (title, tone) => ({ x: 14, y: 30, w: 300, h: 196, title, tone });
+const txB = (title, tone) => ({ x: 340, y: 30, w: 286, h: 196, title, tone });
+const transfer = (lines, o = {}) => ({ id: 'transfer', x: 30, y: 74, w: 268, title: 'TransferService.transfer()', lines, tone: 'new', ...o });
+const recordIn = (lines, o = {}) => ({ id: 'record', x: 30, y: 152, w: 268, title: 'AuditService.record()', lines, tone: 'new', ...o });
+const recordOut = (lines, o = {}) => ({ id: 'record', x: 356, y: 74, w: 254, title: 'AuditService.record()', lines, tone: 'new', ...o });
+const held = (n) => ({ x: 14, y: 250, t: `connections held by this thread: ${n}` });
+
+const propFrames = [
+  {
+    h: 264,
+    line: 'transfer() calls auditService.record()',
+    regions: [txA('Transaction A', 'new')],
+    texts: [held(1)],
+    cards: [transfer(['@Transactional', 'started Transaction A']), recordOut(['@Transactional(propagation = ?)'], { tone: 'none' })],
+    arrows: [{ from: 'transfer', to: 'record', fs: 'r', ts: 'l', tone: 'new' }],
+    note: 'transfer() is @Transactional, so it started Transaction A. It calls record() on another bean. The call goes through that bean\'s proxy, so Spring must decide what record() does with the transaction that already exists.',
+  },
+  {
+    h: 264,
+    line: 'propagation = REQUIRED   (the default)',
+    result: { text: 'one transaction', tone: 'ok' },
+    regions: [txA('Transaction A', 'ok')],
+    texts: [held(1)],
+    cards: [transfer(['writes the transfer rows'], { tone: 'ok' }), recordIn(['joins A', 'writes the audit row'], { tone: 'ok' })],
+    arrows: [{ from: 'transfer', to: 'record', fs: 'b', ts: 't', tone: 'ok' }],
+    note: 'With REQUIRED, record() joins Transaction A. There is one physical transaction, so the audit row and the transfer rows commit or roll back together.',
+  },
+  {
+    h: 264,
+    line: 'catch (RuntimeException e) { }   // swallowed',
+    result: { text: 'UnexpectedRollbackException', tone: 'bad' },
+    regions: [txA('Transaction A: marked rollback-only', 'bad')],
+    texts: [held(1)],
+    cards: [transfer(['catches it, returns normally', 'then tries to commit'], { tone: 'warn' }), recordIn(['throws RuntimeException'], { tone: 'bad', badge: 'dooms A' })],
+    arrows: [{ from: 'record', to: 'transfer', fs: 't', ts: 'b', tone: 'bad' }],
+    note: 'The trap: record() throws, and transfer() catches the exception and carries on. But the shared transaction was already marked rollback-only. When transfer() returns and Spring tries to commit, it throws UnexpectedRollbackException and rolls everything back.',
+  },
+  {
+    h: 264,
+    line: 'propagation = REQUIRES_NEW',
+    regions: [txA('Transaction A: suspended', 'warn'), txB('Transaction B: its own connection', 'new')],
+    texts: [held(2)],
+    cards: [transfer(['waits for record()'], { tone: 'warn' }), recordOut(['writes the audit row'], { tone: 'new' })],
+    arrows: [{ from: 'transfer', to: 'record', fs: 'r', ts: 'l', tone: 'new' }],
+    note: 'With REQUIRES_NEW, Spring suspends Transaction A and starts an independent Transaction B on a second connection. B commits or rolls back on its own. Note that the thread now holds two connections at once.',
+  },
+  {
+    h: 264,
+    line: 'transfer fails later  →  A rolls back',
+    result: { text: 'audit row survives', tone: 'ok' },
+    regions: [txA('Transaction A: rolled back', 'bad'), txB('Transaction B: committed', 'ok')],
+    texts: [held(0)],
+    cards: [transfer(['transfer undone'], { tone: 'bad' }), recordOut(['audit row kept'], { tone: 'ok' })],
+    note: 'If the transfer then fails and A rolls back, the audit row in B is already committed and stays. That is right for audit trails and failure logs. The cost is a second connection and no atomicity between the two, so use it on purpose.',
+  },
+];
+
+/* ---------- rollback rules ---------- */
+const method = (lines, o = {}) => ({ id: 'm', x: 14, y: 70, w: 230, title: 'transfer()', lines, mono: true, tone: 'none', ...o });
+const proxy = (lines, o = {}) => ({ id: 'p', x: 282, y: 80, w: 150, title: 'Transaction proxy', lines, tone: 'none', ...o });
+const rows = (lines, o = {}) => ({ id: 'db', x: 470, y: 80, w: 156, title: 'Database', lines, mono: true, tone: 'none', ...o });
+const rbArrows = (t1, t2) => [{ from: 'm', to: 'p', fs: 'r', ts: 'l', tone: t1 }, { from: 'p', to: 'db', fs: 'r', ts: 'l', tone: t2 }];
+
+const rollbackFrames = [
+  {
+    h: 220,
+    line: 'throw new InsufficientFundsException()   // unchecked',
+    result: { text: 'rolled back', tone: 'ok' },
+    cards: [method(['debit(from, 100);', 'throw new Insufficient…', '// extends RuntimeException'], { tone: 'bad' }), proxy(['unchecked exception', '→ rollback'], { tone: 'ok' }), rows(['debit: undone'], { tone: 'ok' })],
+    arrows: rbArrows('bad', 'ok'),
+    note: 'The default rule: a RuntimeException or an Error that leaves a @Transactional method rolls the transaction back. InsufficientFundsException is unchecked, so the debit is undone.',
+  },
+  {
+    h: 220,
+    line: 'throw new BankException()   // checked',
+    result: { text: 'commits half the work', tone: 'bad' },
+    cards: [method(['debit(from, 100);', 'throw new BankException();', '// extends Exception'], { tone: 'warn' }), proxy(['checked exception', '→ commit'], { tone: 'warn' }), rows(['debit: -100 saved', 'credit: missing'], { tone: 'bad', badge: 'wrong' })],
+    arrows: rbArrows('warn', 'bad'),
+    note: 'The surprise: a checked exception does NOT roll back by default. The transaction commits, including the debit made before the exception. The money leaves one account and never arrives in the other.',
+  },
+  {
+    h: 220,
+    line: '@Transactional(rollbackFor = Exception.class)',
+    result: { text: 'rolled back', tone: 'ok' },
+    cards: [method(['debit(from, 100);', 'throw new BankException();', '// rollbackFor covers it'], { tone: 'warn' }), proxy(['listed in rollbackFor', '→ rollback'], { tone: 'ok' }), rows(['debit: undone'], { tone: 'ok' })],
+    arrows: rbArrows('warn', 'ok'),
+    note: 'The fix: add rollbackFor = Exception.class (or the specific type), or make the exception unchecked. Many teams make all domain exceptions RuntimeExceptions to avoid this trap.',
+  },
+  {
+    h: 220,
+    line: 'catch (Exception e) { log.warn(..); }',
+    result: { text: 'commits half the work', tone: 'bad' },
+    cards: [method(['debit(from, 100);', 'try { credit(); }', 'catch (e) { log }'], { tone: 'warn', badge: 'swallowed' }), proxy(['normal return', '→ commit'], { tone: 'warn' }), rows(['debit: -100 saved', 'credit: missing'], { tone: 'bad', badge: 'wrong' })],
+    arrows: rbArrows('ok', 'bad'),
+    note: 'Another silent commit: a try/catch that swallows the exception. The proxy only sees what leaves the method, and a normal return means commit. Rethrow, or call setRollbackOnly() on the current transaction status.',
+  },
+];
+
+/* ---------- events and commit ---------- */
+const tx = (title, tone) => ({ x: 14, y: 30, w: 300, h: 196, title, tone });
+const esvc = (lines, o = {}) => ({ id: 'svc', x: 30, y: 74, w: 268, title: 'TransferService.transfer()', lines, tone: 'new', ...o });
+const erows = (lines, o = {}) => ({ id: 'rows', x: 30, y: 152, w: 268, title: 'rows written', lines, mono: true, tone: 'none', ...o });
+const right1 = (title, lines, o = {}) => ({ id: 'r1', x: 360, y: 74, w: 266, title, lines, tone: 'none', ...o });
+const right2 = (title, lines, o = {}) => ({ id: 'r2', x: 360, y: 160, w: 266, title, lines, tone: 'none', ...o });
+
+const eventFrames = [
+  {
+    h: 244,
+    line: 'kafka.send("transfers", event);   // inside the transaction',
+    regions: [tx('Transaction A: open', 'warn')],
+    cards: [esvc(['saves the transfer', 'sends a message']), erows(['transfer #9  (not committed)']), right1('Message broker', ['TransferCompleted #9'], { tone: 'warn' })],
+    arrows: [{ from: 'svc', to: 'r1', fs: 'r', ts: 'l', tone: 'warn' }],
+    note: 'transfer() saves the transfer and, still inside the transaction, sends a TransferCompleted message to the broker. The database changes are not committed yet.',
+  },
+  {
+    h: 244,
+    line: 'consumer: select * from transfer where id = 9',
+    result: { text: 'not found, or never happened', tone: 'bad' },
+    regions: [tx('Transaction A: still open', 'warn')],
+    cards: [esvc(['saves the transfer', 'sends a message']), erows(['transfer #9  (not committed)']), right1('Message broker', ['TransferCompleted #9']), right2('Consumer', ['reads transfer #9'], { tone: 'bad' })],
+    arrows: [{ from: 'r1', to: 'r2', fs: 'b', ts: 't' }, { from: 'r2', to: 'rows', fs: 'l', ts: 'r', tone: 'bad', cross: true }],
+    note: 'Problem 1: a consumer reacts at once and queries the database, but the row is not committed, so it finds nothing. Problem 2: if the transaction then rolls back, the message describes something that never happened.',
+  },
+  {
+    h: 244,
+    line: '@TransactionalEventListener(phase = AFTER_COMMIT)',
+    result: { text: 'runs only after commit', tone: 'ok' },
+    regions: [tx('Transaction A: committed', 'ok')],
+    cards: [esvc(['publishEvent(TransferCompleted)'], { tone: 'ok' }), erows(['transfer #9  (committed)'], { tone: 'ok' }), right1('NotificationListener', ['AFTER_COMMIT', 'skipped on rollback'], { tone: 'ok' })],
+    arrows: [{ from: 'rows', to: 'r1', fs: 'r', ts: 'l', tone: 'ok' }],
+    note: 'For in-process events, publish an ApplicationEvent and handle it with @TransactionalEventListener(phase = AFTER_COMMIT). Spring holds the listener until the transaction commits, and skips it on rollback.',
+  },
+  {
+    h: 244,
+    line: 'insert into outbox ...   // same transaction',
+    result: { text: 'guaranteed delivery', tone: 'ok' },
+    regions: [tx('Transaction A: committed atomically', 'ok')],
+    cards: [esvc(['saves transfer + outbox row'], { tone: 'ok' }), erows(['transfer #9', 'outbox: TransferCompleted'], { tone: 'ok', badge: 'atomic' }), right1('Outbox relay', ['reads new outbox rows'], { tone: 'ok' }), right2('Message broker', ['at-least-once delivery'], { tone: 'ok' })],
+    arrows: [{ from: 'rows', to: 'r1', fs: 'r', ts: 'l', tone: 'ok' }, { from: 'r1', to: 'r2', fs: 'b', ts: 't', tone: 'ok' }],
+    note: 'AFTER_COMMIT still has a gap: the app can crash between the commit and the send. For guaranteed delivery, write the event to an outbox table in the same transaction, and let a relay publish it. This is the transactional outbox pattern.',
+  },
+];
 
 export const SPRING_TX_SCENES = [
-  {
-    id: 'propagation',
-    label: 'REQUIRED vs REQUIRES_NEW',
-    title: 'An inner call either joins the outer transaction or runs in its own',
-    frames: [
-      {
-        note: 'TransferService.transfer() is @Transactional and starts Transaction A. It calls AuditService.record() on another bean, so the call goes through that bean\'s proxy and Spring has to decide what to do with the existing transaction.',
-        boxes: [b('s', 'Transfer service bean', ['transfer() @Transactional'], 'new'), b('t', 'Transaction A', ['started by transfer()'], 'ok', 'active'), b('a', 'Audit service bean', ['record() called inside'], 'new')],
-        deps: [d('Transfer service bean', 'Audit service bean', 'record()', 'ok')],
-      },
-      {
-        note: 'REQUIRED (the default): record() joins Transaction A. There is one physical transaction, so the audit row and the transfer rows commit or roll back together.',
-        boxes: [b('t', 'Transaction A', ['transfer rows', 'audit row'], 'ok', 'one transaction'), b('a', 'Audit service bean', ['REQUIRED: joined A'], 'ok')],
-        deps: [d('Audit service bean', 'Transaction A', 'joins', 'ok')],
-      },
-      {
-        note: 'The trap: if record() throws a RuntimeException that transfer() catches and swallows, the shared transaction has already been marked rollback-only. When transfer() returns normally and tries to commit, Spring throws UnexpectedRollbackException and everything rolls back.',
-        boxes: [b('a', 'Audit service bean', ['throws RuntimeException'], 'bad'), b('t', 'Transaction A', ['marked rollback-only'], 'bad', 'doomed'), b('s', 'Transfer service bean', ['catches it, returns normally'], 'warn')],
-        deps: [d('Audit service bean', 'Transaction A', 'rollback-only', 'bad')],
-      },
-      {
-        note: 'REQUIRES_NEW: record() suspends Transaction A and starts an independent Transaction B on a separate connection. B commits on its own, regardless of A.',
-        boxes: [b('t1', 'Transaction A', ['suspended'], 'warn', 'waiting'), b('t2', 'Transaction B', ['audit row'], 'ok', 'independent'), b('a', 'Audit service bean', ['REQUIRES_NEW'], 'new')],
-        deps: [d('Audit service bean', 'Transaction B', 'starts new', 'ok')],
-      },
-      {
-        note: 'If the transfer later fails and Transaction A rolls back, the audit row in B is already committed and stays: the right choice for audit trails and failure logs. The cost is a second connection held at the same time and no atomicity between the two, so use it deliberately.',
-        boxes: [b('t1', 'Transaction A', ['rolled back: transfer undone'], 'bad', 'rolled back'), b('t2', 'Transaction B', ['audit row committed'], 'ok', 'committed')],
-        deps: [],
-      },
-    ],
-  },
-  {
-    id: 'rollback',
-    label: 'Rollback rules',
-    title: 'Which exceptions roll back, and which silently commit',
-    frames: [
-      {
-        note: 'Default rule: a RuntimeException (unchecked) or an Error thrown out of a @Transactional method marks the transaction for rollback. Here an InsufficientFundsException extends RuntimeException, so the debit is undone.',
-        boxes: [b('s', 'Transfer service bean', ['throws InsufficientFundsException', '(unchecked)'], 'bad'), b('t', 'Transaction A', ['rolled back'], 'ok', 'rollback')],
-        deps: [d('Transfer service bean', 'Transaction A', 'RuntimeException', 'bad')],
-      },
-      {
-        note: 'Surprise: a checked exception (extends Exception, such as IOException or a custom checked BankException) does NOT roll back by default. The transaction commits, including the half-finished work done before the exception.',
-        boxes: [b('s', 'Transfer service bean', ['debit done, then throws', 'checked BankException'], 'warn'), b('t', 'Transaction A', ['committed with the debit but no credit'], 'bad', 'wrong commit')],
-        deps: [d('Transfer service bean', 'Transaction A', 'checked exception', 'warn')],
-      },
-      {
-        note: 'Fix: @Transactional(rollbackFor = Exception.class) (or the specific type), or make the exception unchecked. Many teams make all domain exceptions RuntimeExceptions to avoid this trap.',
-        boxes: [b('s', 'Transfer service bean', ['@Transactional(rollbackFor = Exception.class)'], 'ok'), b('t', 'Transaction A', ['rolled back on the checked exception'], 'ok', 'correct')],
-        deps: [d('Transfer service bean', 'Transaction A', 'rollbackFor', 'ok')],
-      },
-      {
-        note: 'Another silent commit: a try/catch inside the method that swallows the exception. The proxy only sees what leaves the method, so a normal return means commit. Rethrow, or call TransactionAspectSupport.currentTransactionStatus().setRollbackOnly().',
-        boxes: [b('s', 'Transfer service bean', ['try { credit(); } catch (Exception e) { log }'], 'warn', 'swallowed'), b('t', 'Transaction A', ['commits: partial work saved'], 'bad', 'wrong commit')],
-        deps: [d('Transfer service bean', 'Transaction A', 'returns normally', 'warn')],
-      },
-    ],
-  },
-  {
-    id: 'aftercommit',
-    label: 'Events and commit',
-    title: 'Publish to other systems only after the transaction has committed',
-    frames: [
-      {
-        note: 'transfer() saves the transfer and, still inside the transaction, sends a "TransferCompleted" message to a broker. The database changes are not committed yet.',
-        boxes: [b('s', 'Transfer service bean', ['save transfer', 'publish message'], 'new'), b('t', 'Transaction A', ['not committed yet'], 'warn', 'open'), b('k', 'Message broker', ['TransferCompleted delivered'], 'ok')],
-        deps: [d('Transfer service bean', 'Message broker', 'publish inside the transaction', 'warn')],
-      },
-      {
-        note: 'Problem 1: a consumer reacts at once and queries the database, but the transfer row is not committed, so it sees nothing. Problem 2: if the transaction then rolls back, the message was already sent about something that never happened.',
-        boxes: [b('k', 'Message broker', ['consumer reads the database'], 'bad'), b('t', 'Transaction A', ['row invisible, or later rolled back'], 'bad', 'inconsistent')],
-        deps: [d('Message broker', 'Transaction A', 'reads uncommitted data', 'bad')],
-      },
-      {
-        note: 'Fix for in-process events: publish an ApplicationEvent and handle it with @TransactionalEventListener(phase = AFTER_COMMIT). Spring delays the listener until the transaction has committed and skips it on rollback.',
-        boxes: [b('s', 'Transfer service bean', ['publishEvent(TransferCompleted)'], 'ok'), b('t', 'Transaction A', ['commit, then listeners run'], 'ok', 'committed'), b('l', 'Listener bean', ['@TransactionalEventListener AFTER_COMMIT'], 'ok')],
-        deps: [d('Transaction A', 'Listener bean', 'after commit only', 'ok')],
-      },
-      {
-        note: 'AFTER_COMMIT still has a gap: the application can crash between the commit and the send, losing the message. For guaranteed delivery write the event to an outbox table in the same transaction and let a relay publish it (the transactional outbox pattern).',
-        boxes: [b('t', 'Transaction A', ['transfer row + outbox row committed atomically'], 'ok', 'atomic'), b('r', 'Message relay', ['reads the outbox, publishes'], 'ok'), b('k', 'Message broker', ['at-least-once delivery'], 'ok')],
-        deps: [d('Message relay', 'Message broker', 'publish', 'ok')],
-      },
-    ],
-  },
+  { id: 'propagation', label: 'REQUIRED vs REQUIRES_NEW', title: 'An inner call either joins the outer transaction or runs in its own', stage: BoardStage, frames: propFrames },
+  { id: 'rollback', label: 'Rollback rules', title: 'Which exceptions roll back, and which silently commit', stage: BoardStage, frames: rollbackFrames },
+  { id: 'aftercommit', label: 'Events and commit', title: 'Publish to other systems only after the transaction has committed', stage: BoardStage, frames: eventFrames },
 ];

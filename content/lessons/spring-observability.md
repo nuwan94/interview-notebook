@@ -6,41 +6,54 @@ summary: The three pillars of observability in a Spring Boot service, Actuator e
 tags: [Spring, Observability, Actuator, Micrometer, Tracing, Logging, Metrics]
 order: 92
 topic: Spring / Production and quality
-updated: 2026-11-13
+updated: 2026-11-26
 subnav: true
 ---
 
-"How do you know your service is healthy, and how do you debug a slow request across five services?" is the production-readiness question. Interviewers expect: *the three pillars (logs, metrics, traces), what Actuator exposes, how Micrometer works, how a trace id travels between services, what liveness and readiness mean, and what you would alert on.* It builds on [Spring Boot](lesson:spring-boot#actuator) (Actuator basics), [Spring Cloud](lesson:spring-cloud) and the [microservice patterns](lesson:microservice-patterns) (distributed tracing, health checks). Play the three scenes: a distributed trace, metrics to alerts, and health probes.
+The production-readiness question is: "How do you know your service is healthy, and how do you debug a slow request across five services?" Interviewers expect you to explain:
+
+- the three pillars: logs, metrics and traces,
+- what Actuator exposes,
+- how Micrometer works,
+- how a trace id travels between services,
+- what liveness and readiness mean,
+- what you would alert on.
+
+This lesson builds on [Spring Boot](lesson:spring-boot#actuator) (Actuator basics), [Spring Cloud](lesson:spring-cloud) and the [microservice patterns](lesson:microservice-patterns) (distributed tracing, health checks).
+
+The demo has three scenes: a distributed trace, metrics to alerts, and health probes.
 
 ```demo
 name: spring-obs-walk
 ```
 
-> **One sentence to remember:** *metrics tell you something is wrong, traces tell you where, logs tell you why, and all three must share a correlation id so you can move between them.*
+> **One sentence to remember:** *Metrics say something is wrong, traces say where, logs say why.*
+
+All three must share a correlation id, so you can jump from one to the others.
 
 ## The three pillars {#pillars}
 
 | Pillar | Answers | Spring tooling | Typical backend |
 | --- | --- | --- | --- |
-| **Metrics** | is it healthy, how much, how fast (aggregated numbers over time) | Micrometer + Actuator | Prometheus, Grafana, Datadog |
-| **Traces** | where did the time go in this one request across services | Micrometer Tracing (OpenTelemetry, Brave) | Tempo, Zipkin, Jaeger |
-| **Logs** | what exactly happened (events with context) | SLF4J + Logback, structured JSON | Loki, ELK, CloudWatch |
+| **Metrics** | Is it healthy? How much? How fast? (Numbers added up over time.) | Micrometer + Actuator | Prometheus, Grafana, Datadog |
+| **Traces** | Where did the time go in this one request, across services? | Micrometer Tracing (OpenTelemetry, Brave) | Tempo, Zipkin, Jaeger |
+| **Logs** | What exactly happened? (Events with context.) | SLF4J + Logback, structured JSON | Loki, ELK, CloudWatch |
 
-Observability is the ability to ask new questions about a running system from its outputs, without shipping new code. **Monitoring** watches known failure modes; observability helps with unknown ones.
+**Observability** is the ability to ask new questions about a running system from its outputs, without shipping new code. **Monitoring** watches for failures you already know about. Observability also helps with failures you did not expect.
 
 ## Actuator {#actuator}
 
-`spring-boot-starter-actuator` adds operational endpoints under `/actuator`:
+`spring-boot-starter-actuator` adds operational endpoints under `/actuator`. An **endpoint** here is a URL that reports on the running app.
 
 | Endpoint | Shows |
 | --- | --- |
-| `health` | status with details; liveness and readiness groups |
-| `info` | build and git info |
-| `metrics`, `prometheus` | Micrometer metrics (the second in Prometheus text format) |
-| `env`, `configprops`, `beans`, `mappings`, `conditions` | configuration and wiring (sensitive) |
-| `loggers` | view and **change log levels at runtime** |
-| `threaddump`, `heapdump` | diagnostics (very sensitive) |
-| `httpexchanges`, `scheduledtasks`, `caches`, `flyway` | feature-specific |
+| `health` | The status, with details. Has liveness and readiness groups. |
+| `info` | Build and git information. |
+| `metrics`, `prometheus` | Micrometer metrics. The second uses the Prometheus text format. |
+| `env`, `configprops`, `beans`, `mappings`, `conditions` | Configuration and wiring. Sensitive. |
+| `loggers` | Shows log levels, and lets you **change them at runtime**. |
+| `threaddump`, `heapdump` | Diagnostics. Very sensitive. |
+| `httpexchanges`, `scheduledtasks`, `caches`, `flyway` | Feature-specific details. |
 
 ```yaml
 management:
@@ -51,7 +64,7 @@ management:
   server.port: 9090                       # separate management port, not exposed publicly
 ```
 
-Expose only what you need, **secure the rest** (authentication, a management port bound to an internal network); `env`, `heapdump` and `beans` leak secrets and structure. Never expose all endpoints on the public port.
+Expose only what you need, and **secure the rest**: require authentication, and bind a separate management port to an internal network. `env`, `heapdump` and `beans` leak secrets and the app's structure. Never expose all endpoints on the public port.
 
 ### Health and probes {#health}
 
@@ -68,13 +81,19 @@ class LedgerHealthIndicator implements HealthIndicator {
 }
 ```
 
-- **Liveness** (`/actuator/health/liveness`): the process is running; if it fails the platform **restarts** the container. Keep it simple: no external dependencies in it, or a database outage restarts every pod.
-- **Readiness** (`/actuator/health/readiness`): the instance can take traffic; if it fails the platform **stops routing** to it without restarting. It can include dependencies it cannot work without, and it goes DOWN first on graceful shutdown (`server.shutdown=graceful`).
-- A **startup probe** covers slow starts (the details, tuning and failure modes are in [Kubernetes probes](lesson:kubernetes-probes)). Custom indicators check dependencies; keep them fast and cached. Group them with `management.endpoint.health.group.readiness.include=readinessState,db`.
+A **probe** is a check the platform (such as Kubernetes) runs against your app again and again.
+
+- **Liveness** (`/actuator/health/liveness`) says the process is running. If it fails, the platform **restarts** the container. Keep it simple, with no external dependencies. Otherwise a database outage restarts every pod.
+- **Readiness** (`/actuator/health/readiness`) says the instance can take traffic. If it fails, the platform **stops routing** to it, without a restart. It can include dependencies the app cannot work without. It goes DOWN first on a graceful shutdown (`server.shutdown=graceful`).
+- A **startup probe** covers slow starts. The details, tuning and failure modes are in [Kubernetes probes](lesson:kubernetes-probes).
+
+Custom health indicators check dependencies. Keep them fast, and cache their results. Group them with `management.endpoint.health.group.readiness.include=readinessState,db`.
 
 ## Metrics with Micrometer {#metrics}
 
-**Micrometer** is the metrics facade (like SLF4J for metrics) with registries for Prometheus, Datadog, CloudWatch and others. Boot instruments the JVM (memory, GC, threads), HTTP server and client requests, the connection pool, caches, and Kafka or Rabbit clients.
+**Micrometer** is a metrics facade: one API, like SLF4J is for logging. Its **registries** send the numbers to Prometheus, Datadog, CloudWatch and others.
+
+Spring Boot measures many things for you: the JVM (memory, GC, threads), HTTP server and client requests, the connection pool, caches, and Kafka or Rabbit clients.
 
 ```java
 @Service
@@ -96,42 +115,59 @@ class TransferService {
 
 | Meter | Use |
 | --- | --- |
-| **Counter** | only goes up: requests, errors, transfers completed |
-| **Gauge** | a current value: queue depth, pool usage |
-| **Timer** | duration and count (latency histograms, percentiles) |
-| **DistributionSummary** | sizes of things (payload bytes, amounts) |
+| **Counter** | Only goes up: requests, errors, transfers completed. |
+| **Gauge** | A current value: queue depth, pool usage. |
+| **Timer** | Duration and count: latency histograms and percentiles. |
+| **DistributionSummary** | Sizes of things: payload bytes, amounts. |
 
-- **Tags (labels)** must be **low cardinality** (status, type, outcome). A user id, account number or URL with ids as a tag creates millions of time series and crashes the metrics backend.
-- **Percentiles, not averages:** p95 and p99 latency show the tail users feel; averages hide it. Use histograms (`management.metrics.distribution.percentiles-histogram`) so percentiles can be aggregated across instances.
-- Monitor the **four golden signals**: latency, traffic, errors, saturation. For services: the **RED** method (rate, errors, duration); for resources: **USE** (utilisation, saturation, errors).
+- **Tags (labels)** must have **low cardinality**: only a few possible values, such as status, type or outcome. A tag with a user id, an account number or a URL containing ids creates millions of time series. That can crash the metrics backend.
+- **Use percentiles, not averages.** p95 and p99 latency show the slow tail that users feel. Averages hide it. Use histograms (`management.metrics.distribution.percentiles-histogram`), so percentiles can be combined across instances.
+- Monitor the **four golden signals**: latency, traffic, errors and saturation. For services, use the **RED** method: rate, errors, duration. For resources, use **USE**: utilisation, saturation, errors.
 
 ## Distributed tracing {#tracing}
 
-A **trace** is the whole journey of one request; it is a tree of **spans** (one per operation, with start, duration, tags). A **trace id** is shared by all spans and a **span id** identifies each. Spring Boot 3 uses **Micrometer Tracing** with an **OpenTelemetry** or Brave bridge and an exporter (OTLP, Zipkin).
+A **trace** is the whole journey of one request. It is a tree of **spans**: one per operation, each with a start, a duration and tags.
 
-- The trace context travels in the **W3C `traceparent`** header on HTTP calls and in message headers for Kafka and RabbitMQ; instrumented clients (`RestClient`, `WebClient`, JDBC, messaging) add and read it automatically.
-- Trace and span ids are put into the **MDC**, so every log line carries `traceId` and `spanId`: from a slow trace you jump straight to the logs of that request.
+- A **trace id** is shared by all the spans of one request.
+- A **span id** identifies each span.
+
+Spring Boot 3 uses **Micrometer Tracing**, with an **OpenTelemetry** or Brave bridge, and an exporter (OTLP, Zipkin) that sends the spans out.
+
+- The trace context travels in the **W3C `traceparent`** header on HTTP calls, and in message headers for Kafka and RabbitMQ. Instrumented clients (`RestClient`, `WebClient`, JDBC, messaging) add and read it automatically.
+- Trace and span ids are put into the **MDC** (the logging context), so every log line carries `traceId` and `spanId`. From a slow trace, you jump straight to the logs of that request.
 - The full picture (span model, propagation, OpenTelemetry Collector, tail sampling, reading a waterfall) is in the [distributed tracing lesson](lesson:distributed-tracing).
-- **Sampling** limits cost: trace a percentage (`management.tracing.sampling.probability=0.1`) plus all errors and slow requests (tail-based sampling in the collector).
-- Add business context as span tags (low cardinality), propagate through async boundaries (executors need context propagation), and keep baggage small.
+- **Sampling** limits cost. Trace a percentage of requests (`management.tracing.sampling.probability=0.1`), plus all errors and slow requests (tail-based sampling in the collector).
+- Add business context as span tags, with low cardinality.
+- Carry the context across async boundaries: executors need context propagation.
+- Keep baggage (extra values sent along with the trace) small.
 
-The **Observation API** (Spring Framework 6) unifies this: instrument an operation once (`@Observed` or `ObservationRegistry`) and handlers emit a timer metric, a span and log context from the same observation.
+The **Observation API** (Spring Framework 6) brings this together. You instrument an operation once, with `@Observed` or `ObservationRegistry`. Handlers then produce a timer metric, a span and log context from that one observation.
 
 ## Logging {#logging}
 
-- **SLF4J** API with **Logback** (Boot default; the [logging lesson](lesson:java-logging) covers levels, MDC, JSON logs and Log4j 2 in depth). Use parameterised messages (`log.info("Transfer {} done", id)`), appropriate levels, and never log secrets, full card numbers or personal data (mask them).
-- **Structured logging** (JSON; Boot 3.4 supports it natively with `logging.structured.format.console=ecs`) so fields are searchable: `traceId`, `userId`, `accountId`, `outcome`.
-- **Correlation id:** a filter puts an id in the MDC (and returns it in a response header), or the tracing id does it; services propagate it downstream ([filter example](lesson:spring-mvc#q-coding-filter)).
-- **Levels at runtime:** change with `POST /actuator/loggers/com.bank` while investigating, then revert; avoid DEBUG in production by default.
-- **Log events, not noise:** one line per significant event with context, no logging inside tight loops, log an exception once (where it is handled), and keep audit logs separate and tamper-evident for regulated domains.
-- **Ship to a central store** (stdout collected by the platform; ELK, Loki, CloudWatch); do not write log files inside containers.
+- **API:** the **SLF4J** API with **Logback**, the Boot default. The [logging lesson](lesson:java-logging) covers levels, MDC, JSON logs and Log4j 2 in depth.
+  - Use parameterised messages: `log.info("Transfer {} done", id)`.
+  - Use the right levels.
+  - Never log secrets, full card numbers or personal data. Mask them.
+- **Structured logging:** write logs as JSON, so fields such as `traceId`, `userId`, `accountId` and `outcome` are searchable. Boot 3.4 supports it natively with `logging.structured.format.console=ecs`.
+- **Correlation id:** a filter puts an id in the MDC and returns it in a response header. Or the tracing id does this job. Services pass it on to the services they call ([filter example](lesson:spring-mvc#q-coding-filter)).
+- **Levels at runtime:** change a level with `POST /actuator/loggers/com.bank` while investigating, then change it back. Avoid DEBUG in production by default.
+- **Log events, not noise:**
+  - one line per significant event, with context,
+  - no logging inside tight loops,
+  - log an exception once, where it is handled,
+  - in regulated domains, keep audit logs separate and tamper-evident.
+- **Ship logs to a central store** (ELK, Loki, CloudWatch). Write to stdout and let the platform collect it. Do not write log files inside containers.
 
 ## Alerting and SLOs {#alerting}
 
-- Define **SLIs** (measurements such as the share of successful requests under 500 ms) and **SLOs** (targets, 99.9 percent over 30 days). The remaining **error budget** guides how risky releases may be.
-- **Alert on symptoms users feel** (error rate, latency, saturation, queue backlog, failed payments) and on SLO burn rate, not on every cause (a single CPU spike). Each alert needs an owner, a **runbook** and links to dashboards and traces. Too many alerts cause alert fatigue.
-- Business metrics matter: payments completed per minute, settlement lag, reconciliation breaks, dead-letter queue size.
-- Include **synthetic checks** and dependency metrics (circuit breaker state, pool saturation, consumer lag).
+- An **SLI** (service level indicator) is a measurement, such as the share of successful requests under 500 ms.
+- An **SLO** (service level objective) is a target for it, such as 99.9 percent over 30 days.
+- The **error budget** is the failure the SLO still allows. What is left of it decides how risky releases may be.
+- **Alert on symptoms users feel**: error rate, latency, saturation, queue backlog, failed payments. Also alert on how fast the SLO budget burns. Do not alert on every cause, such as a single CPU spike.
+- Each alert needs an owner, a **runbook** (steps to follow) and links to dashboards and traces. Too many alerts cause alert fatigue: people stop reacting.
+- Business metrics matter too: payments completed per minute, settlement lag, reconciliation breaks, dead-letter queue size.
+- Add **synthetic checks** (fake requests that test the service from outside) and dependency metrics: circuit breaker state, pool saturation, consumer lag.
 
 Try it in the lab: [One request, three signals: logs, metrics, traces](lab:observability-trace-flow).
 
@@ -139,72 +175,127 @@ Try it in the lab: [One request, three signals: logs, metrics, traces](lab:obser
 
 | Topic | Key point |
 | --- | --- |
-| Pillars | metrics (what), traces (where), logs (why) |
-| Actuator | `/actuator/health`, `metrics`, `prometheus`, `loggers`; expose few, secure the rest |
-| Liveness | restart if stuck; no external dependencies |
-| Readiness | route traffic only when able; includes needed dependencies |
-| Micrometer | counter, gauge, timer, summary; vendor-neutral facade |
-| Tags | low cardinality only |
-| Latency | percentiles (p95, p99), not averages |
-| Trace | trace id for the journey, span id per operation; W3C `traceparent` |
-| Correlation | trace id in MDC and logs and response headers |
-| Logging | structured JSON, no secrets, one place per exception |
-| Alerts | symptoms and SLO burn, with runbooks |
-| Golden signals | latency, traffic, errors, saturation |
+| Pillars | Metrics (what), traces (where), logs (why). |
+| Actuator | `/actuator/health`, `metrics`, `prometheus`, `loggers`. Expose few, secure the rest. |
+| Liveness | Restart if stuck. No external dependencies. |
+| Readiness | Route traffic only when able. Includes the dependencies it needs. |
+| Micrometer | Counter, gauge, timer, summary. A vendor-neutral facade. |
+| Tags | Low cardinality only. |
+| Latency | Percentiles (p95, p99), not averages. |
+| Trace | A trace id for the journey, a span id per operation. W3C `traceparent`. |
+| Correlation | The trace id in the MDC, the logs and the response headers. |
+| Logging | Structured JSON, no secrets, each exception logged in one place. |
+| Alerts | On symptoms and SLO burn, with runbooks. |
+| Golden signals | Latency, traffic, errors, saturation. |
 
 ## Interview questions {#questions}
 
 ### [basic] What is observability and what are its pillars? {#pillars-q}
 
-The ability to understand a system's internal state from its outputs. The pillars are metrics (aggregated numbers over time, for alerting and trends), traces (the path and timing of one request across services) and logs (detailed event records). Correlating them by a trace id lets you go from an alert to the slow request to the exact log lines.
+It is the ability to understand a system's internal state from its outputs. The pillars are:
+
+- **metrics:** numbers added up over time, for alerts and trends,
+- **traces:** the path and timing of one request across services,
+- **logs:** detailed records of events.
+
+Linking them by a trace id takes you from an alert, to the slow request, to the exact log lines.
 
 ### [basic] What is Spring Boot Actuator? {#actuator-q}
 
-A starter that exposes production-ready endpoints: health, info, metrics, Prometheus, loggers, environment, thread dump and more under `/actuator`. By default only health is exposed over HTTP; others must be enabled deliberately and secured because several reveal sensitive configuration.
+It is a starter that adds production-ready endpoints under `/actuator`: health, info, metrics, Prometheus, loggers, environment, thread dump and more.
+
+By default only health is exposed over HTTP. You must turn the others on deliberately, and secure them, because several reveal sensitive configuration.
 
 ### [basic] What is Micrometer? {#micrometer-q}
 
-A vendor-neutral metrics facade for JVM applications, comparable to SLF4J for logging. You record counters, gauges, timers and summaries once, and a registry exports them to Prometheus, Datadog, CloudWatch and others. Spring Boot auto-instruments the JVM, HTTP, data source and more with it.
+It is a vendor-neutral metrics facade for JVM applications, like SLF4J is for logging.
+
+You record counters, gauges, timers and summaries once. A registry exports them to Prometheus, Datadog, CloudWatch or others. Spring Boot uses it to measure the JVM, HTTP, the data source and more, automatically.
 
 ### [basic] What is the difference between liveness and readiness probes? {#probes-q}
 
-Liveness answers "is the process alive?": failure makes the platform restart the container. Readiness answers "can it serve traffic now?": failure removes the instance from the load balancer without restarting. Include dependencies in readiness, not in liveness, or a downstream outage restarts every instance.
+**Liveness** answers "is the process alive?". If it fails, the platform restarts the container.
+
+**Readiness** answers "can it serve traffic now?". If it fails, the instance is removed from the load balancer, without a restart.
+
+Include dependencies in readiness, not in liveness. Otherwise an outage further down restarts every instance.
 
 ### [intermediate] How does distributed tracing work across services? {#tracing-q}
 
-The first service creates a trace id and span; when it calls another service, instrumented clients add the trace context to the request (W3C `traceparent` header, or message headers for brokers). The callee extracts it and creates a child span in the same trace. Each service exports its spans to a backend that assembles the tree with timings. Ids in the MDC link traces to logs.
+1. The first service creates a trace id and a span.
+2. When it calls another service, instrumented clients add the trace context to the request: the W3C `traceparent` header, or message headers for brokers.
+3. The called service reads it and creates a child span in the same trace.
+4. Each service exports its spans to a backend, which builds the tree with timings.
+
+The ids in the MDC link traces to logs.
 
 ### [intermediate] What are metric tags and why must their cardinality be low? {#cardinality-q}
 
-Tags (labels) create a separate time series for each unique combination of values. Tags such as status, method or outcome have a handful of values. A user id, account number or raw URL has unbounded values and produces millions of series, exhausting memory and cost in the metrics backend. Put high-cardinality detail in logs and traces.
+Tags (labels) create a separate time series for each unique combination of values.
+
+- Tags such as status, method or outcome have only a few values.
+- A user id, account number or raw URL has unlimited values. It produces millions of series, which uses up memory and money in the metrics backend.
+
+Put detail with many values in logs and traces instead.
 
 ### [intermediate] Why use percentiles instead of averages for latency? {#percentiles-q}
 
-An average hides the slow tail: 99 requests at 50 ms and one at 5 s average to about 100 ms while one user waits 5 seconds. p95 and p99 show what the worst-affected users experience, and SLOs are normally expressed in percentiles. Use histograms so percentiles can be aggregated across instances.
+An average hides the slow tail. For example, 99 requests at 50 ms and one at 5 s average about 100 ms, but one user waits 5 seconds.
+
+p95 and p99 show what the worst-affected users experience, and SLOs are normally written in percentiles. Use histograms, so percentiles can be combined across instances.
 
 ### [intermediate] How do you correlate the logs of a single request across services? {#correlation-q}
 
-Generate or accept a correlation id (or use the trace id) at the edge, put it in the logging MDC for every log line, send it on all downstream calls and messages, and return it in a response header. Then search the central log store for that id to see the request's whole path.
+1. At the edge, accept a correlation id or create one. The trace id can play this role.
+2. Put it in the logging MDC, so it appears on every log line.
+3. Send it on every call and message to other services.
+4. Return it in a response header.
+
+Then search the central log store for that id, to see the request's whole path.
 
 ### [intermediate] What would you alert on for a payments service? {#alerts-q}
 
-Symptoms users feel and that matter to the business: error rate and latency percentiles breaching SLOs (burn rate), failed or stuck payments, dead-letter queue growth, consumer lag, reconciliation differences, plus saturation signals (connection pool, thread pool, queue depth). Each alert has an owner and runbook. Avoid alerting on every internal cause.
+Alert on symptoms that users feel and that matter to the business:
+
+- error rate and latency percentiles breaking the SLOs (burn rate),
+- failed or stuck payments,
+- a growing dead-letter queue,
+- consumer lag,
+- reconciliation differences,
+- saturation: connection pool, thread pool, queue depth.
+
+Each alert has an owner and a runbook. Do not alert on every internal cause.
 
 ### [intermediate] How do you secure Actuator endpoints? {#secure-q}
 
-Expose only needed endpoints (`management.endpoints.web.exposure.include`), put them on a separate management port reachable only internally, require authentication and authorisation for sensitive ones (Spring Security with a dedicated role), mask sensitive values, and avoid `heapdump`, `env` and `shutdown` in production unless protected.
+- Expose only the endpoints you need (`management.endpoints.web.exposure.include`).
+- Put them on a separate management port that only the internal network can reach.
+- Require authentication and authorisation for sensitive ones: Spring Security with a dedicated role.
+- Mask sensitive values.
+- Avoid `heapdump`, `env` and `shutdown` in production unless they are protected.
 
 ### [deep] How would you debug a request that is slow only sometimes? {#slow-q}
 
-Start from metrics to confirm the percentile and affected endpoint, find sample slow traces (exemplars, or tail-based sampling that keeps slow requests), identify the slow span (database, downstream call, lock wait, GC pause), then read that request's logs through the trace id. Check saturation (pool waits, queue depth, thread dumps) and recent deploys or dependency changes.
+1. Use metrics to confirm which percentile is slow, and which endpoint.
+2. Find sample slow traces: exemplars, or tail-based sampling that keeps slow requests.
+3. Find the slow span: database, a call to another service, a lock wait, a GC pause.
+4. Read that request's logs through the trace id.
+
+Also check saturation (pool waits, queue depth, thread dumps), and recent deploys or dependency changes.
 
 ### [deep] What is the Observation API in Spring 6? {#observation-q}
 
-A single instrumentation abstraction (from Micrometer) where you start and stop an observation around an operation (or annotate with `@Observed`) with low- and high-cardinality key values. Registered handlers turn it into a timer metric, a tracing span and log context at once, so code is instrumented once. Spring MVC, WebClient, RestClient, JDBC and messaging already use it in Boot 3.
+It is one instrumentation API, from Micrometer. You start and stop an observation around an operation, or annotate it with `@Observed`. You attach key values with low or high cardinality.
+
+Registered handlers turn the observation into a timer metric, a tracing span and log context, all at once. So the code is instrumented only once. In Boot 3, Spring MVC, WebClient, RestClient, JDBC and messaging already use it.
 
 ### [deep] What is tail-based sampling and why use it? {#sampling-q}
 
-Head-based sampling decides at the start (for example 10 percent of requests) and may miss rare failures. Tail-based sampling lets a collector buffer a whole trace and decide after it finishes, keeping all traces with errors or high latency plus a sample of the rest. It keeps cost down while preserving the traces you need.
+**Head-based sampling** decides at the start, for example "keep 10 percent of requests". It can miss rare failures.
+
+**Tail-based sampling** lets a collector hold a whole trace and decide after it finishes. It keeps every trace with errors or high latency, plus a sample of the rest.
+
+That keeps cost down, and still keeps the traces you need.
 
 ### [coding] Add a business counter and a timer, and expose a Prometheus endpoint. {#coding-meters}
 
@@ -233,7 +324,11 @@ class PaymentService {
 management.endpoints.web.exposure.include: health,prometheus
 ```
 
-Explain the low-cardinality `outcome` tag, the timer histogram for percentiles, and the scrape endpoint `/actuator/prometheus`.
+Explain these points:
+
+- The `outcome` tag has low cardinality.
+- The timer histogram allows percentiles.
+- Prometheus scrapes the endpoint `/actuator/prometheus`.
 
 ### [coding] Write a custom health indicator and group it into readiness. {#coding-health}
 
@@ -258,7 +353,11 @@ management:
     group.liveness.include: livenessState
 ```
 
-Explain that readiness includes the dependencies needed to serve, liveness only the process state, and the details help diagnosis without leaking secrets.
+Explain these points:
+
+- Readiness includes the dependencies needed to serve.
+- Liveness includes only the process state.
+- The details help diagnosis without leaking secrets.
 
 ### [coding] Add a correlation id to every request and to the logs. {#coding-mdc}
 
@@ -278,4 +377,9 @@ class CorrelationFilter extends OncePerRequestFilter {
 <!-- logback pattern: %d %-5level [%X{correlationId}] %logger - %msg%n -->
 ```
 
-Explain that the filter reads or generates the id, the MDC makes it appear in every line of that request, it is returned to the caller, and downstream clients must copy it into their outgoing headers (or rely on trace propagation).
+Explain these points:
+
+- The filter reads the id, or creates one.
+- The MDC makes it appear on every log line of that request.
+- It is returned to the caller.
+- Clients calling other services must copy it into their outgoing headers, or rely on trace propagation.

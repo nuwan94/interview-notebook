@@ -1,61 +1,107 @@
-// Frame data for the "Spring at a glance" walk-through (box-and-arrow player).
-// box.tone: ok | bad | warn | new | none.
+// Frame data for the "Spring at a glance" walk-through, drawn by SpringMapStage.
 
-const b = (id, title, lines = [], tone, badge) => ({ id, title, lines, tone, badge });
-const d = (from, to, label, tone) => ({ from, to, label, tone });
+import { SpringMapStage } from './SpringMapStage.jsx';
+
+const LAYERS = [
+  { id: 'client', name: 'Client', detail: 'POST /payments', project: '' },
+  { id: 'tomcat', name: 'Embedded Tomcat', detail: 'receives HTTP', project: 'Spring Boot' },
+  { id: 'security', name: 'Security filter chain', detail: 'who are you, may you?', project: 'Spring Security' },
+  { id: 'dispatcher', name: 'DispatcherServlet', detail: 'finds the method', project: 'Spring MVC' },
+  { id: 'controller', name: 'PaymentController', detail: 'JSON in, validated', project: 'Spring MVC' },
+  { id: 'proxy', name: 'Transaction proxy', detail: 'begin / commit', project: 'Spring AOP' },
+  { id: 'service', name: 'PaymentService', detail: 'business logic', project: 'Spring Core' },
+  { id: 'repo', name: 'AccountRepository', detail: 'interface only', project: 'Spring Data JPA' },
+  { id: 'hibernate', name: 'Hibernate', detail: 'entities to SQL', project: 'JPA provider' },
+  { id: 'jdbc', name: 'JDBC + HikariCP', detail: 'pooled connection', project: 'Spring Framework' },
+  { id: 'db', name: 'Database', detail: 'rows', project: '' },
+];
+
+const req = (frame) => ({ kind: 'request', layers: LAYERS, dir: 'down', ...frame });
 
 export const SPRING_MAP_SCENES = [
   {
     id: 'request',
     label: 'One request, every layer',
-    title: 'A payment request touches most Spring modules on its way to the database',
+    title: 'A payment request passes through most Spring projects on its way to the database',
+    stage: SpringMapStage,
     frames: [
-      {
-        note: 'The request arrives at the embedded server (Tomcat) that Spring Boot started for you. Spring MVC\'s DispatcherServlet is the single entry point: it finds the controller method for POST /payments, converts the JSON body to an object with a message converter and validates it.',
-        boxes: [b('c', 'Client', ['POST /payments {json}'], 'new'), b('m', 'Spring MVC', ['DispatcherServlet', 'maps URL, binds JSON, validates'], 'ok', 'web layer'), b('t', 'Embedded Tomcat', ['started by Spring Boot'], 'ok')],
-        deps: [d('Client', 'Embedded Tomcat', 'HTTP', 'ok'), d('Embedded Tomcat', 'Spring MVC', 'servlet', 'ok')],
-      },
-      {
-        note: 'Before the controller runs, Spring Security\'s filter chain has already authenticated the caller and checked authorisation. The controller then calls a service bean. The container (Spring Core, the ApplicationContext) created that bean and injected its dependencies.',
-        boxes: [b('s', 'Spring Security', ['filter chain: who are you, may you?'], 'ok', 'security'), b('m', 'Spring MVC', ['PaymentController'], 'ok'), b('i', 'Spring Core container', ['creates and injects beans'], 'new', 'IoC'), b('v', 'PaymentService bean', ['business logic'], 'ok')],
-        deps: [d('Spring Security', 'Spring MVC', 'allowed', 'ok'), d('Spring MVC', 'PaymentService bean', 'calls', 'ok'), d('Spring Core container', 'PaymentService bean', 'injects', 'new')],
-      },
-      {
-        note: 'The service method is annotated @Transactional. Spring AOP wraps the bean in a proxy that opens a transaction before the method and commits or rolls back after it. Logging, caching (@Cacheable) and security annotations work the same way: cross-cutting behaviour added around your code.',
-        boxes: [b('p', 'Spring AOP proxy', ['begin transaction', 'commit or rollback'], 'new', 'proxy'), b('v', 'PaymentService bean', ['transfer(from, to, amount)'], 'ok'), b('x', 'Transaction manager', ['one transaction per request'], 'ok')],
-        deps: [d('Spring AOP proxy', 'PaymentService bean', 'wraps', 'ok'), d('Spring AOP proxy', 'Transaction manager', 'begin / commit', 'ok')],
-      },
-      {
-        note: 'The service calls a Spring Data repository, which is only an interface: Spring Data generates the implementation at start-up. It delegates to JPA, and Hibernate (the JPA provider) turns entity changes into SQL. JDBC and the connection pool send the SQL to the database.',
-        boxes: [b('r', 'Spring Data repository', ['interface only', 'implementation generated'], 'new', 'data'), b('h', 'Hibernate (JPA)', ['entities to SQL'], 'ok'), b('j', 'JDBC and pool', ['HikariCP connections'], 'ok'), b('d', 'Database', ['rows'], 'ok')],
-        deps: [d('Spring Data repository', 'Hibernate (JPA)', 'persist', 'ok'), d('Hibernate (JPA)', 'JDBC and pool', 'SQL', 'ok'), d('JDBC and pool', 'Database', 'query', 'ok')],
-      },
-      {
-        note: 'On the way out, Spring MVC converts the result to JSON, or a @ControllerAdvice turns an exception into a proper error response. Actuator and Micrometer have meanwhile recorded the request duration and a trace id, so operations can see it.',
-        boxes: [b('m', 'Spring MVC', ['JSON response or error body'], 'ok'), b('a', 'Actuator and Micrometer', ['metrics, health, traces'], 'ok', 'operations'), b('c', 'Client', ['201 Created'], 'new')],
-        deps: [d('Spring MVC', 'Client', 'response', 'ok'), d('Spring MVC', 'Actuator and Micrometer', 'metrics', 'ok')],
-      },
+      req({
+        line: 'POST /payments  {"from":"ACC-1","to":"ACC-2","amount":250}',
+        active: ['client', 'tomcat'],
+        note: 'The request arrives at the embedded Tomcat server. Spring Boot started this server for you inside the jar, so no separate server was installed.',
+      }),
+      req({
+        line: 'Security filter chain',
+        active: ['security'],
+        done: ['client', 'tomcat'],
+        note: 'Before any controller runs, the Spring Security filters check who the caller is and whether they may make a payment. A request that fails here never reaches your code.',
+      }),
+      req({
+        line: '@PostMapping("/payments")',
+        active: ['dispatcher', 'controller'],
+        done: ['client', 'tomcat', 'security'],
+        note: 'The DispatcherServlet is the single entry point of Spring MVC. It finds the controller method for POST /payments, turns the JSON body into a Java object and validates it.',
+      }),
+      req({
+        line: '@Transactional transfer(from, to, amount)',
+        active: ['proxy', 'service'],
+        done: ['client', 'tomcat', 'security', 'dispatcher', 'controller'],
+        note: 'The controller calls the service. It actually calls a proxy that Spring AOP put around the service. The proxy starts a transaction, then calls the real PaymentService. The container created this service and passed in its repository.',
+      }),
+      req({
+        line: 'INSERT INTO payment ...',
+        active: ['repo', 'hibernate', 'jdbc', 'db'],
+        done: ['client', 'tomcat', 'security', 'dispatcher', 'controller', 'proxy', 'service'],
+        note: 'The repository is only an interface. Spring Data generated its implementation at start-up. It hands the entity to Hibernate, which writes the SQL. The SQL goes to the database over a connection taken from the HikariCP pool.',
+      }),
+      req({
+        line: 'HTTP/1.1 201 Created',
+        dir: 'up',
+        ops: true,
+        active: ['proxy', 'controller', 'client'],
+        done: ['tomcat', 'security', 'dispatcher', 'service', 'repo', 'hibernate', 'jdbc', 'db'],
+        result: { text: '201 Created', tone: 'ok' },
+        note: 'On the way back, the proxy commits the transaction and Spring MVC turns the result into JSON. If something had failed, a @ControllerAdvice would turn the exception into an error response. Actuator and Micrometer record how long the request took and its trace ID.',
+      }),
     ],
   },
   {
     id: 'container',
     label: 'The container and beans',
-    title: 'Spring Core: you declare objects, Spring creates, wires and manages them',
+    title: 'Spring Core: you write the recipes, and the container creates, connects and wraps the objects',
+    stage: SpringMapStage,
     frames: [
       {
-        note: 'You mark classes (@Component, @Service, @Repository) or declare them in @Configuration classes with @Bean methods. These are bean definitions: recipes, not objects yet.',
-        boxes: [b('a', 'PaymentService', ['@Service'], 'new'), b('b', 'AccountRepository', ['@Repository'], 'new'), b('c', 'Configuration class', ['@Bean ClockProvider'], 'new')],
-        deps: [],
+        kind: 'container',
+        step: 1,
+        line: '@Service class PaymentService { ... }',
+        note: 'You mark classes with @Service or @Repository, or write a @Bean method in a @Configuration class. These are bean definitions. They are recipes, not objects yet.',
       },
       {
-        note: 'At start-up, the ApplicationContext scans for these definitions, creates the objects (beans), and injects each bean\'s dependencies, usually through the constructor. This is Inversion of Control: your classes do not create or look up their collaborators.',
-        boxes: [b('x', 'ApplicationContext', ['scan, create, wire'], 'ok', 'IoC container'), b('a', 'PaymentService', ['needs AccountRepository'], 'ok'), b('b', 'AccountRepository', ['injected into the service'], 'ok')],
-        deps: [d('ApplicationContext', 'PaymentService', 'creates', 'ok'), d('ApplicationContext', 'AccountRepository', 'creates', 'ok'), d('AccountRepository', 'PaymentService', 'injected', 'new')],
+        kind: 'container',
+        step: 2,
+        line: 'SpringApplication.run(App.class)',
+        note: 'When the app starts, the ApplicationContext (the container) scans your packages and reads every recipe.',
       },
       {
-        note: 'Because the container owns the objects, it can add behaviour around them. BeanPostProcessors wrap beans in proxies (transactions, caching, security, async), and the container runs lifecycle callbacks such as @PostConstruct and @PreDestroy. Tests can swap a real bean for a mock the same way.',
-        boxes: [b('p', 'BeanPostProcessor', ['wraps selected beans in proxies'], 'new'), b('a', 'PaymentService proxy', ['@Transactional added'], 'ok', 'proxy'), b('l', 'Lifecycle callbacks', ['@PostConstruct, @PreDestroy'], 'ok')],
-        deps: [d('BeanPostProcessor', 'PaymentService proxy', 'creates', 'new')],
+        kind: 'container',
+        step: 3,
+        line: 'new PaymentService(...)',
+        note: 'The container creates one object for each recipe. These objects are the beans. By default there is exactly one of each, which is called a singleton.',
+      },
+      {
+        kind: 'container',
+        step: 4,
+        line: 'PaymentService(AccountRepository repo, Clock clock)',
+        result: { text: 'constructor injection', tone: 'new' },
+        note: 'PaymentService asks for a repository and a clock in its constructor. The container passes in the beans it already made. This is inversion of control: the service never creates or looks up its own collaborators.',
+      },
+      {
+        kind: 'container',
+        step: 5,
+        line: '@Transactional public void transfer(...)',
+        result: { text: 'callers get the proxy', tone: 'warn' },
+        note: 'Because the container owns the objects, it can wrap them. Here it puts a proxy around PaymentService to add transactions. Other beans receive the proxy, not the bare object. Caching, security annotations and @Async work the same way.',
       },
     ],
   },
@@ -63,26 +109,35 @@ export const SPRING_MAP_SCENES = [
     id: 'projects',
     label: 'Framework, Boot, Data, Cloud',
     title: 'Spring is a family of projects built on one core',
+    stage: SpringMapStage,
     frames: [
       {
-        note: 'Spring Framework is the foundation: the container (IoC and dependency injection), AOP, transactions, Spring MVC and WebFlux for the web, JDBC support, testing support and the events and caching abstractions. Everything else builds on it.',
-        boxes: [b('f', 'Spring Framework', ['container, AOP, transactions', 'MVC, WebFlux, JDBC, testing'], 'ok', 'foundation')],
-        deps: [],
+        kind: 'projects',
+        show: ['framework'],
+        focus: ['framework'],
+        line: 'spring-core, spring-context, spring-webmvc',
+        note: 'Spring Framework is the foundation. It holds the container, AOP, transactions, MVC and WebFlux for the web, JDBC support and testing support. Every other project is built on it.',
       },
       {
-        note: 'Spring Boot is not a new framework but a convenience layer: starters bring compatible dependencies, auto-configuration creates sensible beans from what is on the classpath, and it provides an embedded server, externalised configuration and Actuator. It removes setup, not features.',
-        boxes: [b('f', 'Spring Framework', ['the foundation'], 'ok'), b('o', 'Spring Boot', ['starters, auto-configuration', 'embedded server, Actuator'], 'new', 'convenience')],
-        deps: [d('Spring Boot', 'Spring Framework', 'configures', 'ok')],
+        kind: 'projects',
+        show: ['framework', 'boot'],
+        focus: ['boot'],
+        line: 'spring-boot-starter-web',
+        note: 'Spring Boot is not a new framework. It is a convenience layer: starters bring matching libraries, auto-configuration creates sensible beans, and you get an embedded server and Actuator. It removes setup, not features.',
       },
       {
-        note: 'Other projects add a capability on top. Spring Data gives repository access to databases (JPA, MongoDB, Redis). Spring Security protects the application. Spring Batch runs large jobs. Spring Integration and Spring Kafka and AMQP handle messaging.',
-        boxes: [b('o', 'Spring Boot', ['wires them in'], 'new'), b('d', 'Spring Data', ['repositories for JPA, MongoDB, Redis'], 'ok'), b('s', 'Spring Security', ['authentication, authorisation'], 'ok'), b('b', 'Spring Batch', ['chunked jobs, restart'], 'ok'), b('m', 'Spring Kafka and AMQP', ['messaging'], 'ok')],
-        deps: [d('Spring Boot', 'Spring Data', 'auto-configures', 'ok'), d('Spring Boot', 'Spring Security', 'auto-configures', 'ok'), d('Spring Boot', 'Spring Batch', 'auto-configures', 'ok'), d('Spring Boot', 'Spring Kafka and AMQP', 'auto-configures', 'ok')],
+        kind: 'projects',
+        show: ['framework', 'boot', 'data', 'security', 'batch', 'messaging'],
+        focus: ['data', 'security', 'batch', 'messaging'],
+        line: 'spring-boot-starter-data-jpa, -security, -batch',
+        note: 'Other projects each add one ability on top. Spring Data gives repositories for databases, Spring Security protects the app, Spring Batch runs large jobs, and Spring Kafka and AMQP handle messaging. Boot sets each one up when you add its starter.',
       },
       {
-        note: 'Spring Cloud addresses problems that appear when you have many services: an API gateway, service discovery, central configuration, client-side load balancing and resilience (circuit breakers with Resilience4j). It is only needed once you run a distributed system, and many of its pieces are now provided by Kubernetes.',
-        boxes: [b('c', 'Spring Cloud', ['for many services'], 'new', 'distributed'), b('g', 'Spring Cloud Gateway', ['one entry point'], 'ok'), b('n', 'Config server', ['central configuration'], 'ok'), b('r', 'Resilience4j', ['circuit breaker, retry, rate limit'], 'ok')],
-        deps: [d('Spring Cloud', 'Spring Cloud Gateway', 'includes', 'ok'), d('Spring Cloud', 'Config server', 'includes', 'ok'), d('Spring Cloud', 'Resilience4j', 'integrates', 'ok')],
+        kind: 'projects',
+        show: ['framework', 'boot', 'data', 'security', 'batch', 'messaging', 'cloud'],
+        focus: ['cloud'],
+        line: 'spring-cloud-starter-gateway',
+        note: 'Spring Cloud solves problems that appear only with many services: a gateway, central configuration, service discovery and resilience with Resilience4j. You need it only for a distributed system, and Kubernetes now provides several of its parts.',
       },
     ],
   },

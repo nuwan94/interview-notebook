@@ -6,17 +6,27 @@ summary: What Inversion of Control and dependency injection are, how the Spring 
 tags: [Spring, IoC, Dependency Injection, Beans, ApplicationContext]
 order: 80
 topic: Spring / Fundamentals
-updated: 2026-11-13
+updated: 2026-11-26
 subnav: true
 ---
 
-Every Spring interview starts here: *what is IoC, what is dependency injection, what is a bean, what is the difference between `BeanFactory` and `ApplicationContext`, what are the bean scopes and the lifecycle, and which injection style should you use?* Everything else in Spring (Boot, MVC, Data, transactions, security) is built on this container. The next lessons are [Spring Boot essentials](lesson:spring-boot) and [AOP and proxies](lesson:spring-aop). Examples use a small banking domain. Play the four scenes: container startup, bean scopes, the bean lifecycle, and a circular dependency.
+Every Spring interview starts here. Typical questions are:
+
+- What is IoC, and what is dependency injection?
+- What is a bean?
+- What is the difference between `BeanFactory` and `ApplicationContext`?
+- What are the bean scopes and the bean lifecycle?
+- Which injection style should you use?
+
+Everything else in Spring (Boot, MVC, Data, transactions, security) is built on this container. The next lessons are [Spring Boot essentials](lesson:spring-boot) and [AOP and proxies](lesson:spring-aop). The examples use a small banking domain.
+
+The demo has four scenes: the container starting up, bean scopes, the bean lifecycle, and a circular dependency.
 
 ```demo
 name: spring-core-walk
 ```
 
-> **One sentence to remember:** *you declare what your objects are and what they need; the Spring container creates them, wires them together and manages their lifecycle, so your classes depend on abstractions rather than constructing their own collaborators.*
+> **One sentence to remember:** *You say what each object needs, and the Spring container creates the objects and connects them.*
 
 ## The idea {#idea}
 
@@ -24,7 +34,7 @@ name: spring-core-walk
 
 ### Inversion of Control {#ioc}
 
-Normally your code controls its own dependencies:
+Normally a class creates the objects it needs itself:
 
 ```java
 class TransferService {
@@ -32,7 +42,11 @@ class TransferService {
 }
 ```
 
-With **Inversion of Control (IoC)** the control of *creating and connecting* objects is handed to a framework: your class states what it needs and something else provides it. **Dependency Injection (DI)** is the main way to achieve IoC: the dependencies are passed in (through a constructor, setter or field) rather than created or looked up inside the class.
+Here `TransferService` is tied to one repository class. You cannot swap it, and a test cannot pass in a fake.
+
+**Inversion of Control (IoC)** hands the job of *creating and connecting* objects to a framework. Your class only says what it needs, and something else provides it.
+
+**Dependency Injection (DI)** is the main way to do IoC. The objects a class needs (its *dependencies*) are passed in from outside, through a constructor, a setter or a field. The class does not create them or look them up.
 
 ```java
 @Service
@@ -42,36 +56,47 @@ class TransferService {
 }
 ```
 
-Benefits: **loose coupling** (depend on an interface, swap the implementation), **testability** (pass a mock or fake in a unit test with plain `new`), **centralised configuration**, and the container can add behaviour around beans (transactions, security, caching) through proxies.
+The benefits:
+
+- **Loose coupling.** The class depends on an interface, so you can swap the implementation.
+- **Testability.** A unit test creates the class with plain `new` and passes in a mock or a fake.
+- **One place for configuration.** Which implementation is used is decided in one place, not in every class.
+- **Extra behaviour for free.** Because the container creates the objects, it can wrap them in proxies that add transactions, security or caching.
 
 ### Bean, container and context {#bean}
 
-A **bean** is an object that is instantiated, assembled and managed by the Spring IoC container. The **container** reads **configuration metadata** (annotations, Java `@Configuration` classes, or XML) to build **bean definitions**, then creates, wires and manages the beans.
+A **bean** is an object that the Spring container creates, connects and manages.
+
+The **container** reads **configuration metadata**: annotations, Java `@Configuration` classes or XML. From it, the container builds **bean definitions**. A bean definition is a recipe for one bean. Then the container creates the beans, connects them and manages them.
+
+Spring has two container types:
 
 | | `BeanFactory` | `ApplicationContext` |
 | --- | --- | --- |
-| Role | basic container: creates and wires beans | extends BeanFactory with enterprise features |
-| Bean creation | lazy (on first request) | eager for singletons at startup (fails fast) |
-| Extras | none | events, `MessageSource` (i18n), resource loading, environment and profiles, annotation support, AOP integration |
-| Use | rarely directly | the normal choice (`AnnotationConfigApplicationContext`, or Spring Boot's context) |
+| Role | The basic container. It creates beans and connects them. | It extends `BeanFactory` with features that real applications need. |
+| When beans are created | Lazily, the first time a bean is asked for. | Singletons are created eagerly at startup, so a broken configuration fails straight away. |
+| Extras | None. | Events, `MessageSource` (translated messages), resource loading, environment and profiles, annotation support and AOP integration. |
+| Use | Rarely used directly. | The normal choice: `AnnotationConfigApplicationContext`, or the context that Spring Boot creates. |
 
 ## Defining beans {#defining}
 
 ### Stereotype annotations {#stereotypes}
 
+A **stereotype annotation** marks a class as a bean and says which layer it belongs to.
+
 | Annotation | Meaning |
 | --- | --- |
-| `@Component` | generic Spring-managed class |
-| `@Service` | business logic (a specialisation; no extra behaviour, it documents intent) |
-| `@Repository` | data access; also translates persistence exceptions to Spring's `DataAccessException` |
-| `@Controller` / `@RestController` | web layer |
-| `@Configuration` | a class that declares beans with `@Bean` methods |
+| `@Component` | A general Spring-managed class. |
+| `@Service` | Business logic. It adds no behaviour. It only documents the intent. |
+| `@Repository` | Data access. It also converts database exceptions into Spring's `DataAccessException`. |
+| `@Controller` / `@RestController` | The web layer. |
+| `@Configuration` | A class that declares beans with `@Bean` methods. |
 
-Classes are found by **component scanning**: `@ComponentScan` (included in `@SpringBootApplication`) scans the package of the main class and its sub-packages. A bean outside that package is not found unless you scan it explicitly.
+Spring finds these classes by **component scanning**. `@ComponentScan` scans the package of the main class and all its sub-packages. (`@SpringBootApplication` includes `@ComponentScan`.) A bean outside that package tree is not found unless you scan its package explicitly.
 
 ### Java configuration with @Bean {#java-config}
 
-Use `@Bean` to register objects you cannot annotate (third-party classes) or that need construction logic:
+Use a `@Bean` method for objects you cannot annotate, such as third-party classes, or for objects that need some construction logic:
 
 ```java
 @Configuration
@@ -87,16 +112,18 @@ class AppConfig {
 }
 ```
 
-`@Configuration` classes are proxied so that calling one `@Bean` method from another returns the same singleton instead of creating a new object each time ("full mode"). `@Bean` methods in a plain `@Component` ("lite mode") are not intercepted that way.
+Spring wraps a `@Configuration` class in a proxy. So when one `@Bean` method calls another, it gets back the same singleton instead of a new object. This is called **full mode**.
+
+A `@Bean` method inside a plain `@Component` is not wrapped like this. This is called **lite mode**. There, a call from one `@Bean` method to another is a normal Java call and creates a new object.
 
 ### Choosing between several candidates {#qualifier}
 
-If two beans match a type (two `PaymentGateway` implementations), injection fails with `NoUniqueBeanDefinitionException`. Resolve it with:
+Sometimes two beans match the same type, for example two `PaymentGateway` implementations. Then injection fails with `NoUniqueBeanDefinitionException`. You can fix it in four ways:
 
-- `@Primary` on the default implementation;
-- `@Qualifier("name")` at the injection point to pick one;
-- injecting `List<PaymentGateway>` or `Map<String, PaymentGateway>` to receive all of them;
-- profiles (`@Profile("test")`) or conditions (`@ConditionalOnProperty`) so only one is registered.
+- Put `@Primary` on the default implementation.
+- Put `@Qualifier("name")` at the injection point to pick one by name.
+- Inject `List<PaymentGateway>` or `Map<String, PaymentGateway>` to receive all of them.
+- Use profiles (`@Profile("test")`) or conditions (`@ConditionalOnProperty`) so that only one is registered.
 
 ## Dependency injection styles {#injection}
 
@@ -118,27 +145,36 @@ class TransferService {
 
 | | Constructor | Setter | Field |
 | --- | --- | --- | --- |
-| Immutable (`final`) fields | yes | no | no |
-| Required dependencies obvious | yes | no | no |
-| Usable in a plain unit test without Spring | yes (`new`) | yes | needs reflection or the container |
-| Circular dependencies | detected at startup (good) | tolerated (hides a smell) | tolerated |
-| Verdict | **preferred** | optional dependencies only | avoid |
+| Fields can be `final` (cannot change) | Yes. | No. | No. |
+| Required dependencies are easy to see | Yes. | No. | No. |
+| Usable in a plain unit test without Spring | Yes, with `new`. | Yes. | No. It needs reflection or the container. |
+| Circular dependencies | Detected at startup, which is good. | Allowed, which hides a design problem. | Allowed. |
+| Verdict | **Preferred.** | Only for optional dependencies. | Avoid. |
 
-With a single constructor, `@Autowired` is optional. Constructor injection also reveals a class doing too much: a constructor with eight parameters is a design warning.
+If a class has only one constructor, you do not need `@Autowired` on it.
+
+Constructor injection also shows when a class does too much. A constructor with eight parameters is a design warning.
 
 ## Scopes {#scopes}
 
-| Scope | Instances | Notes |
+The **scope** of a bean decides how many instances exist and how long each one lives.
+
+| Scope | How many instances | Notes |
 | --- | --- | --- |
-| **singleton** (default) | one per container | shared by all threads: keep it stateless or thread-safe |
-| **prototype** | a new one on every request for the bean | container does not call destroy callbacks |
-| **request** | one per HTTP request | web applications |
-| **session** | one per HTTP session | web applications |
-| **application**, **websocket** | one per `ServletContext` or WebSocket session | less common |
+| **singleton** (default) | One per container. | All threads share it, so keep it stateless or thread-safe. |
+| **prototype** | A new one every time the bean is asked for. | The container does not call destroy callbacks on it. |
+| **request** | One per HTTP request. | Web applications only. |
+| **session** | One per HTTP session. | Web applications only. |
+| **application**, **websocket** | One per `ServletContext`, or one per WebSocket session. | Less common. |
 
-"Singleton" in Spring means one per container, not the GoF singleton (one per JVM or class loader). Injecting a **prototype or request-scoped bean into a singleton** gives you only one instance, created at wiring time. Inject an `ObjectProvider<T>` (call `getObject()` each time) or use a scoped proxy (`@Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)`) to get the right instance per call.
+A Spring "singleton" means one per container. It is not the classic Gang of Four singleton, which means one per JVM (or per class loader).
 
-Stateful singletons are a classic bug: a field such as `private BigDecimal lastAmount;` in a `@Service` is shared by every request and thread.
+A common trap: you inject a **prototype or request-scoped bean into a singleton**. The injection happens once, when the singleton is created. So the singleton keeps that one instance forever. To get the right instance on each call, do one of these:
+
+- inject an `ObjectProvider<T>` and call `getObject()` each time, or
+- use a scoped proxy: `@Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)`.
+
+Another classic bug is a singleton that holds state. For example, a field `private BigDecimal lastAmount;` in a `@Service` is shared by every request and every thread.
 
 ## Lifecycle {#lifecycle}
 
@@ -154,10 +190,10 @@ flowchart TD
   use --> destroy["Destroy: PreDestroy, destroy-method on shutdown"]
 ```
 
-- Use `@PostConstruct` for initialisation that needs injected dependencies (validate configuration, preload data) and `@PreDestroy` for cleanup (close pools, flush buffers). Both come from Jakarta annotations (`jakarta.annotation` in Spring 6 and Boot 3).
-- A `BeanPostProcessor` can modify every bean; AOP proxies and `@Autowired` processing are implemented this way. A `BeanFactoryPostProcessor` modifies bean *definitions* before any bean is created (`PropertySourcesPlaceholderConfigurer` resolves `${...}`).
-- **Lazy initialisation:** `@Lazy` delays creation to first use; Spring Boot can make all beans lazy (`spring.main.lazy-initialization=true`) at the cost of failing later instead of at startup.
-- **Circular dependencies:** A needs B and B needs A. With constructor injection startup fails (`BeanCurrentlyInCreationException`); Boot 2.6+ forbids even setter-based cycles by default. Fix the design (extract a third bean, use events); `@Lazy` on one dependency is a workaround.
+- **`@PostConstruct` and `@PreDestroy`.** Use `@PostConstruct` for setup that needs the injected dependencies, such as checking configuration or preloading data. Use `@PreDestroy` for cleanup, such as closing pools or flushing buffers. Both come from the Jakarta annotations (`jakarta.annotation` in Spring 6 and Boot 3).
+- **Post-processors.** A `BeanPostProcessor` can change every bean after it is created. AOP proxies and `@Autowired` processing both work this way. A `BeanFactoryPostProcessor` is different: it changes bean *definitions* before any bean exists. For example, `PropertySourcesPlaceholderConfigurer` fills in `${...}` placeholders.
+- **Lazy initialisation.** `@Lazy` delays creating a bean until it is first used. Spring Boot can make every bean lazy with `spring.main.lazy-initialization=true`. The cost is that errors show up later, not at startup.
+- **Circular dependencies.** A needs B, and B needs A. With constructor injection, startup fails with `BeanCurrentlyInCreationException`. Since Boot 2.6, even cycles through setters are rejected by default. Fix the design: move the shared logic into a third bean, or use events. Putting `@Lazy` on one dependency is only a workaround.
 
 ## Environment, properties and profiles {#environment}
 
@@ -173,11 +209,13 @@ class FeeCalculator {
 class ProdOnlyConfig { ... }
 ```
 
-`@Value` injects single properties; for groups of settings prefer type-safe `@ConfigurationProperties` (covered in [Spring Boot essentials](lesson:spring-boot#properties)). **Profiles** activate sets of beans and properties per environment (`spring.profiles.active=prod`).
+- `@Value` injects one property. The part after `:` is the default value.
+- For a group of related settings, prefer type-safe `@ConfigurationProperties` (see [Spring Boot essentials](lesson:spring-boot#properties)).
+- A **profile** turns on a set of beans and properties for one environment. You choose it with `spring.profiles.active=prod`.
 
 ## Application events {#events}
 
-Beans can communicate without knowing each other through the context's event mechanism:
+Beans can talk to each other without knowing each other, through the context's events:
 
 ```java
 record TransferCompleted(long transferId) {}
@@ -195,7 +233,11 @@ record TransferCompleted(long transferId) {}
 }
 ```
 
-Events decouple beans and break circular dependencies. They are in-process and synchronous by default, not a replacement for a message broker ([messaging](lesson:messaging)).
+- `TransferService` publishes an event. It does not know who listens.
+- `@EventListener` runs straight away, on the same thread and in the same transaction.
+- `@TransactionalEventListener` runs only after the transaction commits.
+
+Events decouple beans and can break circular dependencies. But they stay inside one application and are synchronous by default. They do not replace a message broker ([messaging](lesson:messaging)).
 
 Try it in the lab: [A bean from definition to destruction](lab:spring-bean-lifecycle).
 
@@ -203,89 +245,193 @@ Try it in the lab: [A bean from definition to destruction](lab:spring-bean-lifec
 
 | Topic | Key point |
 | --- | --- |
-| IoC | the container, not your code, creates and wires objects |
-| DI | dependencies are passed in (constructor, setter, field) |
-| Bean | an object managed by the container |
-| `ApplicationContext` | BeanFactory plus events, i18n, profiles, AOP; eager singletons |
-| Stereotypes | `@Component`, `@Service`, `@Repository` (+ exception translation), `@Controller` |
-| `@Bean` | declare a bean from a method, for third-party or computed objects |
-| Disambiguation | `@Primary`, `@Qualifier`, `List<T>`, profiles |
-| Preferred injection | constructor (immutable, testable, explicit) |
-| Scopes | singleton (default), prototype, request, session |
-| Singleton trap | shared state across threads; prototype in singleton gives one instance |
-| Lifecycle | construct, populate, post-process, `@PostConstruct`, use, `@PreDestroy` |
-| Proxies | created in the after-initialisation post-processor |
-| Circular dependency | design smell; constructor cycle fails at startup |
+| IoC | The container creates and connects objects, not your code. |
+| DI | Dependencies are passed in through a constructor, setter or field. |
+| Bean | An object managed by the container. |
+| `ApplicationContext` | `BeanFactory` plus events, messages, profiles and AOP. It creates singletons at startup. |
+| Stereotypes | `@Component`, `@Service`, `@Repository` (also converts exceptions) and `@Controller`. |
+| `@Bean` | Declares a bean from a method, for third-party or computed objects. |
+| Choosing one of several | `@Primary`, `@Qualifier`, `List<T>` or profiles. |
+| Preferred injection | Constructor: fields can be final, the class is testable, dependencies are visible. |
+| Scopes | Singleton (default), prototype, request and session. |
+| Singleton trap | State is shared across threads. A prototype inside a singleton stays one instance. |
+| Lifecycle | Construct, populate, post-process, `@PostConstruct`, use, `@PreDestroy`. |
+| Proxies | Created by the after-initialisation post-processor. |
+| Circular dependency | A design problem. A constructor cycle fails at startup. |
 
 ## Interview questions {#questions}
 
 ### [basic] What is Inversion of Control? {#ioc-q}
 
-A design principle where the control of creating objects and wiring them together moves from your code to a framework. Instead of a class constructing its collaborators with `new` or looking them up, it declares what it needs and the container supplies them. It gives loose coupling, easier testing and centralised configuration.
+IoC is a design principle: the framework creates your objects and connects them, not your code.
+
+A class does not build its collaborators with `new` or look them up. It only declares what it needs, and the container supplies it.
+
+This gives:
+
+1. loose coupling,
+2. easier testing,
+3. configuration kept in one place.
 
 ### [basic] What is dependency injection and what are its types? {#di-q}
 
-DI is the technique that implements IoC: a class receives its dependencies from outside instead of creating them. Spring supports constructor injection (dependencies as constructor parameters), setter injection (through setter methods) and field injection (directly into annotated fields).
+Dependency injection is the technique that implements IoC. A class receives the objects it needs from outside, instead of creating them.
+
+Spring supports three types:
+
+- **Constructor injection**: the dependencies are constructor parameters.
+- **Setter injection**: the dependencies are passed through setter methods.
+- **Field injection**: the dependencies are written straight into annotated fields.
 
 ### [basic] Which injection type should you prefer and why? {#constructor-q}
 
-Constructor injection. It allows `final` fields (immutability), makes required dependencies explicit, lets you create the class in a unit test with plain `new` and mocks, fails fast on missing or circular dependencies at startup, and exposes classes with too many dependencies. Setter injection suits optional dependencies; field injection hides dependencies and needs reflection or the container to test.
+Constructor injection.
+
+1. Fields can be `final`, so they never change.
+2. The required dependencies are easy to see.
+3. A unit test can create the class with plain `new` and mocks.
+4. Missing or circular dependencies fail at startup, not later.
+5. A class with too many dependencies stands out, because its constructor gets long.
+
+Setter injection fits optional dependencies. Field injection hides the dependencies, and a test needs reflection or the container to fill them.
 
 ### [basic] What is a Spring bean? {#bean-q}
 
-An object that is instantiated, assembled and managed by the Spring IoC container, defined through annotations (`@Component` and stereotypes), `@Bean` methods or XML. Anything you create yourself with `new` is not a bean and gets no injection or proxies.
+A bean is an object that the Spring container creates, connects and manages.
+
+You define beans with stereotype annotations such as `@Component`, with `@Bean` methods, or with XML.
+
+An object you create yourself with `new` is not a bean. Spring does not inject anything into it or wrap it in a proxy.
 
 ### [basic] What is the difference between BeanFactory and ApplicationContext? {#context-q}
 
-`BeanFactory` is the basic container that creates and wires beans lazily. `ApplicationContext` extends it with application-level features: event publication, internationalisation, resource loading, environment and profile support, annotation and AOP integration, and eager initialisation of singletons so that configuration errors appear at startup. You almost always use `ApplicationContext`.
+`BeanFactory` is the basic container. `ApplicationContext` is the full one, and you almost always use it.
+
+- `BeanFactory` creates and connects beans, and it creates them lazily.
+- `ApplicationContext` adds events, translated messages, resource loading, environment and profile support, and annotation and AOP integration.
+- `ApplicationContext` also creates singletons at startup, so configuration errors appear straight away.
 
 ### [basic] What are the bean scopes? {#scopes-q}
 
-Singleton (default, one instance per container), prototype (new instance per request for the bean), and web scopes request, session, application and websocket. Singleton here means one per Spring container, not per JVM. Custom scopes can also be registered.
+- **Singleton** (the default): one instance per container.
+- **Prototype**: a new instance every time the bean is asked for.
+- **Web scopes**: request, session, application and websocket.
+
+"Singleton" here means one per Spring container, not one per JVM. You can also register your own custom scopes.
 
 ### [basic] Difference between @Component, @Service, @Repository and @Controller? {#stereotype-q}
 
-All register a bean through component scanning. `@Service` and `@Controller` are specialisations that document the layer. `@Repository` also enables translation of persistence exceptions into Spring's `DataAccessException` hierarchy. `@RestController` is `@Controller` plus `@ResponseBody`.
+All four register a bean through component scanning.
+
+- `@Service` and `@Controller` only document which layer the class belongs to.
+- `@Repository` also converts database exceptions into Spring's `DataAccessException` hierarchy.
+- `@RestController` is `@Controller` plus `@ResponseBody`.
 
 ### [intermediate] Is a Spring singleton bean thread-safe? {#thread-safe-q}
 
-No, Spring does not make it thread-safe. One instance is shared by all threads, so mutable instance state is a race condition. Keep singleton beans stateless (only immutable fields and injected collaborators), keep per-request data in method parameters or locals, or use request scope or thread-safe constructs when state is needed.
+No. Spring does not make it thread-safe.
+
+One instance is shared by all threads, so any field that changes is a race condition. To stay safe:
+
+- keep singleton beans stateless: only final fields and injected collaborators,
+- keep per-request data in method parameters and local variables,
+- if you really need state, use request scope or thread-safe classes.
 
 ### [intermediate] Explain the bean lifecycle. {#lifecycle-q}
 
-The container instantiates the bean (constructor), injects dependencies (setters, fields), calls Aware callbacks, runs `BeanPostProcessor.postProcessBeforeInitialization`, then initialisation callbacks (`@PostConstruct`, `afterPropertiesSet`, custom init-method), then `postProcessAfterInitialization` (where AOP proxies are created). The bean is then in use; on shutdown `@PreDestroy`, `destroy` and the custom destroy-method run for singletons.
+The container goes through these steps for each bean:
+
+1. It creates the bean by calling the constructor.
+2. It injects dependencies through setters and fields.
+3. It calls the Aware callbacks.
+4. It runs `BeanPostProcessor.postProcessBeforeInitialization`.
+5. It runs the init callbacks: `@PostConstruct`, `afterPropertiesSet` and any custom init method.
+6. It runs `postProcessAfterInitialization`. AOP proxies are created here.
+7. The bean is ready and in use.
+8. On shutdown, for singletons, it runs `@PreDestroy`, `destroy` and any custom destroy method.
 
 ### [intermediate] What happens when two beans of the same type exist? {#ambiguity-q}
 
-Injection by type fails with `NoUniqueBeanDefinitionException`. Resolve with `@Primary` (default choice), `@Qualifier` at the injection point (or matching the parameter name to the bean name), by injecting a `List` or `Map` of all implementations, or by making only one registered through profiles or conditions.
+Injection by type fails with `NoUniqueBeanDefinitionException`.
+
+You can fix it by:
+
+- marking the default one with `@Primary`,
+- naming the one you want with `@Qualifier` at the injection point (or naming the parameter the same as the bean),
+- injecting a `List` or `Map` of all implementations,
+- registering only one, through profiles or conditions.
 
 ### [intermediate] What is a circular dependency and how do you handle it? {#circular-q}
 
-Bean A needs B and B needs A. With constructor injection the container cannot create either and startup fails with `BeanCurrentlyInCreationException`; Spring Boot 2.6+ also rejects setter or field cycles by default. Fix the design: extract the shared logic into a third bean, merge the classes, or decouple with events. `@Lazy` on one dependency or setter injection are workarounds that hide the smell.
+A circular dependency is when bean A needs B and bean B needs A.
+
+With constructor injection, the container cannot create either one, so startup fails with `BeanCurrentlyInCreationException`. Since Spring Boot 2.6, cycles through setters or fields are also rejected by default.
+
+Fix the design:
+
+- move the shared logic into a third bean,
+- merge the two classes, or
+- decouple them with events.
+
+`@Lazy` on one dependency, or switching to setter injection, are workarounds. They hide the problem instead of fixing it.
 
 ### [intermediate] What happens if you inject a prototype bean into a singleton? {#prototype-q}
 
-Injection happens once when the singleton is created, so the singleton keeps that single prototype instance forever. To get a new instance per use, inject `ObjectProvider<T>` (or `Provider`) and call `getObject()`, use a `@Lookup` method, or a scoped proxy.
+The singleton keeps one prototype instance forever.
+
+Injection happens only once, when the singleton is created. To get a new instance each time you use it:
+
+- inject `ObjectProvider<T>` (or `Provider`) and call `getObject()`,
+- use a `@Lookup` method, or
+- use a scoped proxy.
 
 ### [intermediate] What is the difference between @Autowired, @Resource and @Inject? {#autowired-q}
 
-`@Autowired` is Spring's annotation: injects by type first (then qualifier or name), supports `required=false`. `@Inject` (JSR-330) is the standard equivalent without the `required` flag. `@Resource` (JSR-250) injects by name first and then by type. In practice use constructor injection, where `@Autowired` is not even needed for a single constructor.
+They differ in where they come from and in how they pick a bean.
+
+- `@Autowired` is Spring's own annotation. It matches by type first, then by qualifier or name. It supports `required=false`.
+- `@Inject` (JSR-330) is the standard Java equivalent. It has no `required` flag.
+- `@Resource` (JSR-250) matches by name first, then by type.
+
+In practice, use constructor injection. With a single constructor, you do not even need `@Autowired`.
 
 ### [intermediate] What is component scanning and why might a bean not be found? {#scan-q}
 
-`@ComponentScan` registers classes annotated with stereotypes found in a base package and its sub-packages (`@SpringBootApplication` scans the main class's package). A bean is missed when it lives outside that package tree, lacks a stereotype annotation, is excluded by a filter or profile, or is created with `new` instead of by the container.
+`@ComponentScan` registers every class with a stereotype annotation in a base package and its sub-packages. `@SpringBootApplication` scans the package of the main class.
+
+A bean is missed when:
+
+- it is outside that package tree,
+- it has no stereotype annotation,
+- a filter or a profile excludes it, or
+- it was created with `new` instead of by the container.
 
 ### [intermediate] What is the difference between @Configuration and @Component for @Bean methods? {#full-lite-q}
 
-In a `@Configuration` class (full mode) Spring subclasses the class with CGLIB so that calling one `@Bean` method from another returns the container's singleton rather than executing the method again. In a `@Component` (lite mode) `@Bean` methods are plain method calls, so inter-bean calls create new objects. Use `@Configuration`, or pass dependencies as method parameters.
+The difference is what happens when one `@Bean` method calls another.
+
+- In a `@Configuration` class (full mode), Spring makes a CGLIB subclass of the class. A call to another `@Bean` method returns the container's singleton. The method body does not run again.
+- In a `@Component` (lite mode), `@Bean` methods are plain Java methods. A call between them creates a new object.
+
+So use `@Configuration`, or pass the dependency in as a method parameter.
 
 ### [deep] How does Spring wrap beans with proxies and why does it matter? {#proxy-q}
 
-A `BeanPostProcessor` replaces the bean after initialisation with a proxy (JDK dynamic proxy for interfaces, CGLIB subclass otherwise) that adds behaviour such as transactions, caching and security around method calls. It matters because only calls that go through the proxy get that behaviour: a method calling another method on `this` (self-invocation) bypasses it ([AOP and proxies](lesson:spring-aop)).
+After a bean is initialised, a `BeanPostProcessor` replaces it with a proxy. The proxy is a JDK dynamic proxy if the bean has an interface, and a CGLIB subclass otherwise. It adds behaviour, such as transactions, caching and security, around the method calls.
+
+It matters because only calls that go through the proxy get that behaviour. If a method calls another method on `this` (self-invocation), the call skips the proxy ([AOP and proxies](lesson:spring-aop)).
 
 ### [deep] How would you design beans so they are easy to unit test? {#testable-q}
 
-Constructor injection of interfaces, no static state or `new` of collaborators inside business methods, no field injection, small classes with few dependencies, and time, randomness and IDs injected (a `Clock` bean) so tests control them. Then the class can be tested with plain JUnit and mocks, without starting the Spring context.
+Make every dependency something a test can replace.
+
+- Use constructor injection with interfaces.
+- Do not use static state, and do not call `new` on collaborators inside business methods.
+- Do not use field injection.
+- Keep classes small, with few dependencies.
+- Inject time, randomness and ID generation (for example a `Clock` bean), so tests can control them.
+
+Then you can test the class with plain JUnit and mocks, without starting the Spring context.
 
 ### [coding] Fix this class so it can be tested without Spring. {#coding-testable}
 
@@ -320,7 +466,11 @@ class FeeService {
 FeeService service = new FeeService(mockRepository, new BigDecimal("0.02"));
 ```
 
-Explain that the constructor makes dependencies explicit and `final`, the rate becomes configuration instead of a magic number, and the test needs no container.
+Explain three things:
+
+- The constructor makes the dependencies visible and `final`.
+- The rate is now configuration, not a magic number in the code.
+- The test needs no container.
 
 ### [coding] Two implementations of one interface: select the right one. {#coding-qualifier}
 
@@ -344,7 +494,11 @@ class PaymentService {
 }
 ```
 
-Explain `@Primary` for the default, `@Qualifier` for an explicit choice, and the map for a strategy lookup by name.
+Explain the three choices:
+
+- `@Primary` gives the default.
+- `@Qualifier` picks one explicitly.
+- The map lets you look up a strategy by name.
 
 ### [coding] Get a fresh prototype bean on each call from a singleton. {#coding-provider}
 
@@ -364,4 +518,4 @@ class QuoteService {
 }
 ```
 
-Explain that injecting `QuoteBuilder` directly would give the singleton one shared builder (a thread-safety bug), and that `ObjectProvider` defers the lookup to each call.
+Explain why this is needed. If you injected `QuoteBuilder` directly, the singleton would get one shared builder, and every thread would use it. That is a thread-safety bug. `ObjectProvider` delays the lookup until each call, so each call gets its own builder.
