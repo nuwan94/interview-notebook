@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LuGithub, LuMenu, LuSearch } from 'react-icons/lu';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { fitDemos } from '../lib/fitDemos.js';
 import { usePrefs } from '../lib/prefs.jsx';
 import { AccessMenu } from './AccessMenu.jsx';
 import { getLesson } from '../lib/content.js';
@@ -11,6 +12,7 @@ import { TipHost } from './Tip.jsx';
 import { Sidebar } from './Sidebar.jsx';
 
 export function Layout() {
+  useEffect(() => fitDemos(), []); // scale tall demos so each fits on one screen
   const { zoom } = usePrefs();
   const loc = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);

@@ -1651,7 +1651,13 @@ mark.reading-word {
 
 /* ---- diagram stage (GraphStage) ---- */
 .g-stage { margin-top: 0.5rem; border: 1px solid var(--color-rule, #d6dde8); border-radius: 0.5rem; background-color: #fff; background-image: radial-gradient(circle, #cfd8e6 1px, transparent 1.2px); background-size: 18px 18px; overflow: hidden; }
-.g-svg { display: block; width: 100%; height: auto; max-height: 34rem; }
+/* keep the whole picture, its note and the controls inside one screen: the svg shrinks (it letterboxes) with the window height */
+.g-svg { display: block; width: 100%; height: auto; max-height: clamp(12rem, calc(100dvh - 19rem), 34rem); }
+@media (max-height: 760px) {
+  .demo { padding: 0.65rem 0.8rem; font-size: 0.9rem; }
+  .demo-tabs { margin-bottom: 0.4rem; }
+  .demo-bar { margin-top: 0.5rem; padding: 0.35rem 0.55rem; }
+}
 .g-node { transition: opacity 0.35s ease; }
 .g-node.is-hidden { opacity: 0; pointer-events: none; }
 .g-title { font: 700 14.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--color-ink, #1b2430); }
