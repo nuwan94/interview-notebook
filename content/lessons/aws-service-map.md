@@ -183,7 +183,7 @@ The third scene shows why one account is not enough:
 | **ALB or NLB?** | **ALB** for HTTP with path and host routing. **NLB** for TCP and TLS passthrough, static IPs and very high throughput |
 | **Secrets Manager or Parameter Store?** | **Secrets Manager** for secrets with automatic rotation. **Parameter Store** for plain configuration and cheap secrets |
 | **API Gateway or ALB?** | **API Gateway** for managed throttling, API keys, authorisers and usage plans. **ALB** for plain routing to containers at lower cost |
-| **CloudFormation, CDK or Terraform?** | CloudFormation is the AWS-native engine, CDK writes it in Java or TypeScript, Terraform is multi-cloud with a large community |
+| **CloudFormation, CDK or Terraform?** | CloudFormation is the AWS-native engine, CDK writes it in Java or TypeScript, Terraform is multi-cloud with a large community ([Terraform lesson](lesson:terraform#what)) |
 
 ## Pricing basics {#pricing}
 
@@ -229,7 +229,7 @@ Try it in the lab: [A request through a typical AWS three-tier app](lab:aws-thre
 | decouple services | SQS, SNS, EventBridge, Kinesis or MSK |
 | workflows | Step Functions |
 | monitor, trace, audit | CloudWatch, X-Ray or OpenTelemetry, CloudTrail |
-| infrastructure as code | CloudFormation, CDK, Terraform |
+| infrastructure as code | CloudFormation, CDK, [Terraform](lesson:terraform#what) |
 | many accounts | Organizations, Control Tower |
 
 ## Interview questions {#questions}

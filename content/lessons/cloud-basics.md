@@ -196,7 +196,7 @@ Try it in the lab: [Regions, availability zones and failure](lab:cloud-regions-a
 | IAM | roles with temporary credentials, least privilege, default deny, MFA, separate accounts |
 | network | VPC, private subnets for apps and data, one public entry point |
 | cost | right-size, reserved or savings plans, spot, tags, budgets, watch data transfer |
-| cloud-native | stateless, config in the environment, IaC, observability, automation |
+| cloud-native | stateless, config in the environment, [IaC](lesson:terraform#what), observability, automation |
 | migration | rehost, replatform, refactor, repurchase, retire, retain |
 | bank | data residency, customer-managed keys, guardrails, exit plan, audit logs |
 

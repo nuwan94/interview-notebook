@@ -46,6 +46,7 @@ import { REACT_PERF_SCENES } from './reactPerfScenes.js';
 import { NODE_SCENES } from './nodeScenes.js';
 import { EXPRESS_SCENES } from './expressScenes.js';
 import { FULLSTACK_SCENES } from './fullstackScenes.js';
+import { TERRAFORM_SCENES } from './terraformScenes.js';
 import { PROMISE_SCENES } from './promiseScenes.js';
 import { STREAM_SCENES } from './streamScenes.js';
 import { MIDDLEWARE_SCENES } from './middlewareScenes.js';
@@ -341,6 +342,7 @@ export const ReactPerfWalk = () => <Walk scenes={REACT_PERF_SCENES} ariaLabel="R
 export const NodeWalk = () => <Walk scenes={NODE_SCENES} ariaLabel="Node.js runtime walk-through" />;
 export const ExpressWalk = () => <Walk scenes={EXPRESS_SCENES} ariaLabel="Express and REST walk-through" />;
 export const FullstackWalk = () => <Walk scenes={FULLSTACK_SCENES} ariaLabel="Full-stack integration walk-through" />;
+export const TerraformWalk = () => <Walk scenes={TERRAFORM_SCENES} ariaLabel="Terraform walk-through" />;
 export const PromiseWalk = () => <Walk scenes={PROMISE_SCENES} ariaLabel="Promises in depth walk-through" />;
 export const StreamWalk = () => <Walk scenes={STREAM_SCENES} ariaLabel="Node.js streams walk-through" />;
 export const MiddlewareWalk = () => <Walk scenes={MIDDLEWARE_SCENES} ariaLabel="Express middleware walk-through" />;

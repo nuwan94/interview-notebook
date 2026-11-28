@@ -1,0 +1,204 @@
+{
+ "questions": [
+  {
+   "t": "Plan and apply",
+   "v": [
+    {
+     "q": "What does `terraform plan` do?",
+     "o": [
+      "Shows what would change and changes nothing",
+      "Creates the resources and shows the result",
+      "Destroys resources that are not in the code",
+      "Uploads the code to the state backend"
+     ],
+     "w": "plan compares the code, the state and the real resources, and lists the changes. Only apply makes them."
+    },
+    {
+     "q": "Which statement about `terraform plan` is NOT true?",
+     "o": [
+      "It creates the resources it lists",
+      "It compares the code with the state",
+      "It marks replacements as `-/+`",
+      "It can be saved with `-out` and applied later"
+     ],
+     "w": "plan is safe because it makes no changes. A saved plan lets apply run exactly what was reviewed."
+    }
+   ]
+  },
+  {
+   "t": "Declarative",
+   "v": [
+    {
+     "q": "Why is running `terraform apply` a second time safe when nothing changed?",
+     "o": [
+      "Terraform is declarative: it sees no difference and does nothing",
+      "Terraform deletes and creates everything again",
+      "Apply always asks the cloud to roll back",
+      "The state file blocks a second run"
+     ],
+     "w": "You describe the end result. If reality already matches, there are no changes to make."
+    },
+    {
+     "q": "What is the difference between declarative and imperative infrastructure code?",
+     "o": [
+      "Declarative describes the end result, imperative lists the steps",
+      "Declarative is for AWS only, imperative works everywhere",
+      "Declarative needs a server, imperative does not",
+      "Declarative cannot be reviewed, imperative can"
+     ],
+     "w": "A shell script of cloud commands is imperative. Terraform works out the steps itself."
+    }
+   ]
+  },
+  {
+   "t": "State",
+   "v": [
+    {
+     "q": "What is the Terraform state file for?",
+     "o": [
+      "It links each resource block to the real resource and its attributes",
+      "It stores the plan history for audits",
+      "It holds the provider source code",
+      "It caches the cloud console pages"
+     ],
+     "w": "Without the state, Terraform could not tell which real resource belongs to which block."
+    },
+    {
+     "q": "Which is NOT a good practice for the state file?",
+     "o": [
+      "Commit it to git so everyone has the latest copy",
+      "Keep it in an encrypted remote backend",
+      "Turn on versioning for the bucket that holds it",
+      "Limit who can read it"
+     ],
+     "w": "The state can contain secrets in plain text, so it must never be committed to git."
+    }
+   ]
+  },
+  {
+   "t": "Backend and locking",
+   "v": [
+    {
+     "q": "What does state locking prevent?",
+     "o": [
+      "Two applies changing the same state at the same time",
+      "Anyone reading the plan",
+      "Changes to the provider version",
+      "Destroying a database by mistake"
+     ],
+     "w": "Without a lock, two runs could write different versions of the state, and the last write would win."
+    },
+    {
+     "q": "Why keep the state in a remote backend instead of on a laptop?",
+     "o": [
+      "The team shares one copy, with locking, encryption and versions",
+      "A remote backend runs the plan faster",
+      "A laptop cannot store a JSON file",
+      "Remote backends remove the need for a lock file"
+     ],
+     "w": "A shared, locked, versioned and encrypted state is what makes teamwork safe."
+    }
+   ]
+  },
+  {
+   "t": "Drift",
+   "v": [
+    {
+     "q": "A teammate opens a port in the cloud console. What is this called, and how do you see it?",
+     "o": [
+      "Drift, and the next plan shows the difference",
+      "A replacement, and apply shows a warning",
+      "A lock conflict, and init reports it",
+      "A module error, and validate reports it"
+     ],
+     "w": "Drift is a change made outside Terraform. The next plan compares reality with the code and lists it."
+    },
+    {
+     "q": "How do you find drift early?",
+     "o": [
+      "Run a plan on a schedule and alert when it shows changes",
+      "Run `terraform fmt` every night",
+      "Delete the state and import everything again",
+      "Run `terraform destroy` in dev"
+     ],
+     "w": "A scheduled plan reports differences before they cause an incident."
+    }
+   ]
+  },
+  {
+   "t": "count and for_each",
+   "v": [
+    {
+     "q": "Why is `for_each` usually better than `count` for a list of resources?",
+     "o": [
+      "Each item has a stable key, so removing one item affects only that item",
+      "It creates resources faster",
+      "It does not need a provider",
+      "It stores no state"
+     ],
+     "w": "With count, removing the first of three items shifts the others, and Terraform plans to re-create them."
+    },
+    {
+     "q": "What happens with `count` when you remove the first item of a list of three resources?",
+     "o": [
+      "The remaining items shift position, and Terraform plans to destroy and re-create some of them",
+      "Only the first item is destroyed",
+      "Terraform refuses to plan",
+      "Nothing changes in the plan"
+     ],
+     "w": "count identifies items by position, not by name."
+    }
+   ]
+  },
+  {
+   "t": "Refactoring state",
+   "v": [
+    {
+     "q": "How do you rename a resource without destroying it?",
+     "o": [
+      "Add a `moved` block from the old address to the new one",
+      "Delete the state file and apply again",
+      "Run `terraform destroy` and re-create it",
+      "Change the name and ignore the plan"
+     ],
+     "w": "The moved block updates the state, so the real resource is kept."
+    },
+    {
+     "q": "What does an `import` block do?",
+     "o": [
+      "Brings an existing real resource under Terraform's control in the state",
+      "Writes the resource code for you",
+      "Copies a module from the registry",
+      "Moves the state to another backend"
+     ],
+     "w": "Import records the resource in the state. You still write the code and make the plan show no changes."
+    }
+   ]
+  },
+  {
+   "t": "Pipeline",
+   "v": [
+    {
+     "q": "Why does a pipeline sign in to the cloud with OIDC instead of a stored access key?",
+     "o": [
+      "It gets a short-lived role, so no long-lived secret sits in the CI system",
+      "OIDC makes the plan faster",
+      "OIDC removes the need for a state file",
+      "OIDC lets anyone apply to production"
+     ],
+     "w": "A stolen long-lived key works until someone notices. A short-lived token expires on its own."
+    },
+    {
+     "q": "Which is NOT part of a good Terraform pipeline?",
+     "o": [
+      "Engineers apply production changes from their laptops",
+      "Plan is posted on the pull request for review",
+      "Policy as code checks the plan",
+      "A scheduled plan reports drift"
+     ],
+     "w": "Production changes go through the pipeline, so every change is reviewed, logged and repeatable."
+    }
+   ]
+  }
+ ]
+}
